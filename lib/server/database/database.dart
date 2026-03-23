@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import 'schema.dart';
+import 'repositories/repositories.dart';
 
 part 'database.g.dart';
 
@@ -30,6 +31,17 @@ part 'database.g.dart';
 ])
 class TuneDatabase extends _$TuneDatabase {
   TuneDatabase() : super(_openConnection());
+
+  // ---------------------------------------------------------------------------
+  // Repositories (T1.3–T1.8) — accès centralisé via la DB
+  // ---------------------------------------------------------------------------
+
+  late final TrackRepository trackRepo = TrackRepository(this);
+  late final AlbumRepository albumRepo = AlbumRepository(this);
+  late final ArtistRepository artistRepo = ArtistRepository(this);
+  late final PlaylistRepository playlistRepo = PlaylistRepository(this);
+  late final ZoneRepository zoneRepo = ZoneRepository(this);
+  late final RadioRepository radioRepo = RadioRepository(this);
 
   // Incrémenté à chaque nouvelle migration
   @override
