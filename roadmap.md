@@ -99,8 +99,8 @@
 ## Phase 8 — Radio & métadonnées
 **Branche :** `phase/8-radio`
 
-- [ ] **T8.1** Implémenter `RadioMetadataService` (polling ICY metadata / RadioFrance API, émet `.radioMetadata` sur EventBus) dans `lib/server/streaming/radio_metadata_service.dart`
-- [ ] **T8.2** Implémenter import/export M3U des radios dans `RadioRepository`
+- [x] **T8.1** Implémenter `RadioMetadataService` (polling ICY metadata / RadioFrance API, émet `.radioMetadata` sur EventBus) dans `lib/server/streaming/radio_metadata_service.dart`
+- [x] **T8.2** Implémenter import/export M3U des radios dans `RadioRepository`
 
 ---
 
