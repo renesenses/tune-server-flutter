@@ -10,11 +10,11 @@
 ## Phase 0 — Fondation projet
 **Branche :** `phase/0-foundation`
 
-- [ ] **T0.1** Créer le projet Flutter (`flutter create --org com.mozaiklabs tune_server`) et configurer `pubspec.yaml` (drift, just_audio, shelf, crypto, xml, http, riverpod ou provider)
-- [ ] **T0.2** Configurer les targets iOS (entitlements, Info.plist : réseau local, background audio, Bonjour services) et Android (permissions réseau, foreground service, Manifest)
-- [ ] **T0.3** Définir la structure de dossiers miroir de l'app iOS (`lib/server/`, `lib/models/`, `lib/state/`, `lib/views/`, `lib/services/`)
-- [ ] **T0.4** Créer les enums de base (`Source`, `AudioFormat`, `PlaybackState`, `RepeatMode`, `OutputType`, `ConnectionState`) dans `lib/models/enums.dart`
-- [ ] **T0.5** Créer les domain models (`Track`, `Album`, `Artist`, `Playlist`, `Zone`, `RadioStation`, `DiscoveredDevice`, etc.) dans `lib/models/domain_models.dart`
+- [x] **T0.1** Créer le projet Flutter (`flutter create --org com.mozaiklabs tune_server`) et configurer `pubspec.yaml` (drift, just_audio, shelf, crypto, xml, http, riverpod ou provider)
+- [x] **T0.2** Configurer les targets iOS (entitlements, Info.plist : réseau local, background audio, Bonjour services) et Android (permissions réseau, foreground service, Manifest)
+- [x] **T0.3** Définir la structure de dossiers miroir de l'app iOS (`lib/server/`, `lib/models/`, `lib/state/`, `lib/views/`, `lib/services/`)
+- [x] **T0.4** Créer les enums de base (`Source`, `AudioFormat`, `PlaybackState`, `RepeatMode`, `OutputType`, `ConnectionState`) dans `lib/models/enums.dart`
+- [x] **T0.5** Créer les domain models (`Track`, `Album`, `Artist`, `Playlist`, `Zone`, `RadioStation`, `DiscoveredDevice`, etc.) dans `lib/models/domain_models.dart`
 
 ---
 
