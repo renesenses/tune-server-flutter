@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>tune_server</string>
+	<string>Tune Server</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -26,6 +26,29 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- Réseau local : discovery UPnP/DLNA et HTTP streamer -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Tune Server utilise le réseau local pour découvrir les appareils DLNA/UPnP et diffuser l'audio.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+		<string>_daap._tcp</string>
+		<string>_raop._tcp</string>
+	</array>
+
+	<!-- Bibliothèque musicale Apple Music -->
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Tune Server accède à votre bibliothèque Apple Music pour la diffuser vers vos appareils audio.</string>
+
+	<!-- Audio en arrière-plan -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+	</array>
+
+	<!-- Orientations -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
