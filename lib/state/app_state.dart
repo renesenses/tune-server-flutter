@@ -1,0 +1,492 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
+import '../models/enums.dart';
+import '../server/database/database.dart';
+import '../server/event_bus.dart';
+import '../server/server_engine.dart';
+import '../server/streaming/radio_metadata_service.dart';
+import '../server/streaming/streaming_service.dart';
+import 'library_state.dart';
+import 'settings_state.dart';
+import 'zone_state.dart';
+
+// ---------------------------------------------------------------------------
+// T9.5 — AppState
+// ChangeNotifier racine. Orchestre ServerEngine + event loop EventBus
+// + délègue vers ZoneState / LibraryState / SettingsState.
+// Miroir de AppState.swift (iOS / @Observable)
+// ---------------------------------------------------------------------------
+
+class AppState extends ChangeNotifier {
+  final ServerEngine engine;
+  final ZoneState zoneState;
+  final LibraryState libraryState;
+  final SettingsState settingsState;
+
+  bool _serverStarted = false;
+  String? _errorMessage;
+
+  final List<StreamSubscription> _subs = [];
+
+  AppState({
+    required this.engine,
+    required this.zoneState,
+    required this.libraryState,
+    required this.settingsState,
+  });
+
+  bool get serverStarted => _serverStarted;
+  String? get errorMessage => _errorMessage;
+
+  // ---------------------------------------------------------------------------
+  // Factory
+  // ---------------------------------------------------------------------------
+
+  static Future<AppState> create({
+    String qobuzAppId = '',
+    String qobuzAppSecret = '',
+  }) async {
+    final engine = await ServerEngine.create(
+      qobuzAppId: qobuzAppId,
+      qobuzAppSecret: qobuzAppSecret,
+    );
+
+    final settingsState = SettingsState(engine.config);
+    final zoneState = ZoneState();
+    final libraryState = LibraryState();
+
+    final app = AppState(
+      engine: engine,
+      zoneState: zoneState,
+      libraryState: libraryState,
+      settingsState: settingsState,
+    );
+
+    app._subscribeToEventBus();
+    return app;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle serveur
+  // ---------------------------------------------------------------------------
+
+  Future<void> startServer() async {
+    try {
+      await engine.start();
+      _serverStarted = true;
+      _errorMessage = null;
+
+      // Charge les données initiales
+      await Future.wait([
+        _refreshZones(),
+        _refreshLibrarySummary(),
+        _refreshRadios(),
+        _refreshPlaylists(),
+        _refreshStreamingStatus(),
+      ]);
+
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> stopServer() async {
+    await engine.stop();
+    _serverStarted = false;
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Event loop — abonnements EventBus
+  // ---------------------------------------------------------------------------
+
+  void _subscribeToEventBus() {
+    // Playback state
+    _subs.add(EventBus.instance
+        .subscribe<PlaybackStateChangedEvent>(_onPlaybackStateChanged));
+
+    // Track changed
+    _subs.add(EventBus.instance
+        .subscribe<TrackChangedEvent>(_onTrackChanged));
+
+    // Position
+    _subs.add(EventBus.instance
+        .subscribe<PlaybackPositionEvent>(_onPosition));
+
+    // Queue
+    _subs.add(EventBus.instance
+        .subscribe<QueueChangedEvent>(_onQueueChanged));
+
+    // Devices
+    _subs.add(EventBus.instance
+        .subscribe<DeviceDiscoveredEvent>(_onDeviceDiscovered));
+    _subs.add(EventBus.instance
+        .subscribe<DeviceLostEvent>(_onDeviceLost));
+
+    // Library scan
+    _subs.add(EventBus.instance
+        .subscribe<LibraryScanStartedEvent>((_) => libraryState.setScanStarted()));
+    _subs.add(EventBus.instance
+        .subscribe<LibraryScanProgressEvent>(_onScanProgress));
+    _subs.add(EventBus.instance
+        .subscribe<LibraryScanCompletedEvent>(_onScanCompleted));
+
+    // Radio metadata
+    _subs.add(EventBus.instance
+        .subscribe<RadioMetadataEvent>(_onRadioMetadata));
+
+    // Server errors
+    _subs.add(EventBus.instance
+        .subscribe<ServerErrorEvent>(_onServerError));
+  }
+
+  void _onPlaybackStateChanged(PlaybackStateChangedEvent e) {
+    final zone = _findZone(e.zoneId);
+    if (zone != null) {
+      final state = PlaybackState.fromRawValue(e.state) ?? PlaybackState.stopped;
+      zoneState.updateZone(zone.copyWith(state: state));
+    }
+  }
+
+  void _onTrackChanged(TrackChangedEvent e) {
+    final zone = _findZone(e.zoneId);
+    if (zone != null) {
+      final track = e.track as Track?;
+      zoneState.updateZone(zone.copyWith(currentTrack: track));
+      if (track != null) libraryState.prependHistory(track);
+    }
+  }
+
+  void _onPosition(PlaybackPositionEvent e) {
+    zoneState.updatePosition(
+      int.tryParse(e.zoneId) ?? -1,
+      e.positionMs,
+    );
+  }
+
+  void _onQueueChanged(QueueChangedEvent e) {
+    final zoneId = int.tryParse(e.zoneId);
+    if (zoneId == null) return;
+    final instance = engine.zoneManager.zone(zoneId);
+    if (instance != null) {
+      zoneState.setQueueSnapshot(instance.queue.snapshot());
+      zoneState.updateZone(instance.snapshot());
+    }
+  }
+
+  void _onDeviceDiscovered(DeviceDiscoveredEvent e) {
+    if (e.device is! Map) {
+      // DiscoveredDevice directement
+      // ignore type dynamic
+    }
+    zoneState.setDevices(engine.allDevices());
+  }
+
+  void _onDeviceLost(DeviceLostEvent e) {
+    zoneState.removeDevice(e.deviceId);
+  }
+
+  void _onScanProgress(LibraryScanProgressEvent e) {
+    libraryState.setScanProgress(e.scanned, e.total);
+  }
+
+  Future<void> _onScanCompleted(LibraryScanCompletedEvent e) async {
+    libraryState.setScanCompleted(e.tracksAdded, e.tracksUpdated);
+    await _refreshLibrarySummary();
+    final stats = await engine.stats();
+    libraryState.setStats(stats);
+  }
+
+  void _onRadioMetadata(RadioMetadataEvent e) {
+    // L'UI écoute RadioMetadataEvent via EventBus directement pour la radio
+    // en cours — pas de stockage dans LibraryState (éphémère)
+  }
+
+  void _onServerError(ServerErrorEvent e) {
+    _errorMessage = e.message;
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Contrôles de lecture
+  // ---------------------------------------------------------------------------
+
+  Future<void> play({Track? track, int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+    final instance = engine.zoneManager.zone(id);
+    if (instance == null) return;
+
+    if (track != null) {
+      // Résolution de l'URL si nécessaire (streaming)
+      final url = await _resolveUrl(track);
+      if (url == null) return;
+      final resolved = url != track.filePath
+          ? track.copyWith(filePath: Value(url))
+          : track;
+      instance.queue.load([resolved], startIndex: 0);
+    }
+    await instance.player.play();
+  }
+
+  Future<void> pause({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.pause();
+  }
+
+  Future<void> resume({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.resume();
+  }
+
+  Future<void> stop({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.stop();
+  }
+
+  Future<void> next({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.next();
+  }
+
+  Future<void> previous({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.previous();
+  }
+
+  Future<void> seek(Duration position, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    await engine.zoneManager.zone(id ?? -1)?.player.seek(position);
+  }
+
+  Future<void> setVolume(double volume, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+    await engine.zoneManager.setVolume(id, volume);
+  }
+
+  Future<void> setShuffle({required bool enabled, int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    instance?.queue.setShuffle(enabled: enabled);
+    if (instance != null) {
+      zoneState.setQueueSnapshot(instance.queue.snapshot());
+    }
+  }
+
+  Future<void> cycleRepeat({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    instance?.queue.cycleRepeat();
+    if (instance != null) {
+      zoneState.setQueueSnapshot(instance.queue.snapshot());
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lecture streaming (résolution URL à la volée)
+  // ---------------------------------------------------------------------------
+
+  Future<void> playStreaming(
+    StreamingSearchResult item, {
+    int? zoneId,
+  }) async {
+    final url = await engine.streamingManager
+        .resolveStreamUrl(item.serviceId, item.id);
+    if (url == null) return;
+
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+
+    // Crée une Track éphémère (source = service)
+    final track = Track(
+      id: 0,
+      title: item.title,
+      albumTitle: item.album,
+      artistName: item.artist,
+      filePath: url,
+      source: item.serviceId,
+      sourceId: item.id,
+    );
+
+    instance.queue.load([track], startIndex: 0);
+    await instance.player.play();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Radio
+  // ---------------------------------------------------------------------------
+
+  Future<void> playRadio(Radio radio, {int? zoneId}) async {
+    final httpUrl = radio.streamUrl.replaceFirst('https://', 'http://');
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+
+    // Track éphémère représentant la radio
+    final track = Track(
+      id: 0,
+      title: radio.name,
+      filePath: httpUrl,
+      source: Source.radio.rawValue,
+      sourceId: radio.id.toString(),
+    );
+
+    instance.queue.load([track], startIndex: 0);
+    await instance.player.play();
+
+    // Démarre le polling de métadonnées
+    RadioMetadataService.instance.startPolling(
+      stationName: radio.name,
+      streamUrl: httpUrl,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bibliothèque
+  // ---------------------------------------------------------------------------
+
+  Future<void> scanLibrary() => engine.scanLibrary();
+
+  Future<void> addMusicFolder(String path) => engine.addMusicFolder(path);
+
+  Future<List<SearchResult>> search(String query) async {
+    libraryState.setSearching(true);
+    try {
+      final results = await engine.search(query);
+      libraryState.setSearchResults(query, results);
+      return results;
+    } catch (_) {
+      libraryState.setSearching(false);
+      return [];
+    }
+  }
+
+  Future<void> clearLibrary() async {
+    await engine.clearLibrary();
+    await _refreshLibrarySummary();
+  }
+
+  Future<void> cleanupOrphans() async {
+    await engine.cleanupOrphans();
+    await _refreshLibrarySummary();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Streaming auth
+  // ---------------------------------------------------------------------------
+
+  Future<StreamingAuthResult> authenticateService(
+    String serviceId,
+    String email,
+    String password,
+  ) async {
+    final result = await engine.streamingManager
+        .authenticateWithCredentials(serviceId, email, password);
+    await _refreshStreamingStatus();
+    return result;
+  }
+
+  Future<StreamingAuthResult> startDeviceCodeFlow(String serviceId) =>
+      engine.streamingManager.startDeviceCodeFlow(serviceId);
+
+  Future<StreamingAuthResult> pollDeviceCodeFlow(
+    String serviceId,
+    StreamingDeviceCodeResult code,
+  ) async {
+    final result =
+        await engine.streamingManager.pollDeviceCodeFlow(serviceId, code);
+    await _refreshStreamingStatus();
+    return result;
+  }
+
+  Future<void> logoutService(String serviceId) async {
+    await engine.streamingManager.logout(serviceId);
+    await _refreshStreamingStatus();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Refresh helpers
+  // ---------------------------------------------------------------------------
+
+  Future<void> _refreshZones() async {
+    final snapshots = engine.zoneManager
+        .allZones()
+        .map((z) => z.snapshot())
+        .toList();
+    zoneState.setZones(snapshots);
+    zoneState.setDevices(engine.allDevices());
+  }
+
+  Future<void> _refreshLibrarySummary() async {
+    final albums = await engine.db.albumRepo.all();
+    final artists = await engine.db.artistRepo.all();
+    libraryState.setAlbums(albums);
+    libraryState.setArtists(artists);
+  }
+
+  Future<void> _refreshRadios() async {
+    final radios = await engine.db.radioRepo.all();
+    libraryState.setRadios(radios);
+  }
+
+  Future<void> _refreshPlaylists() async {
+    final playlists = await engine.db.playlistRepo.all();
+    libraryState.setPlaylists(playlists);
+  }
+
+  Future<void> _refreshStreamingStatus() async {
+    libraryState.setStreamingServices(engine.streamingManager.status);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers internes
+  // ---------------------------------------------------------------------------
+
+  ZoneWithState? _findZone(String zoneId) {
+    final id = int.tryParse(zoneId);
+    if (id == null) return null;
+    try {
+      return zoneState.zones.firstWhere((z) => z.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _resolveUrl(Track track) async {
+    if (track.filePath != null) {
+      // Local : convertit en URL streamer si c'est un chemin fichier
+      if (track.source == 'local' && !track.filePath!.startsWith('http')) {
+        return engine.trackStreamUrl(track.filePath!) ?? track.filePath;
+      }
+      return track.filePath;
+    }
+    // Streaming : résout via StreamingManager
+    if (track.sourceId != null && track.source != 'local') {
+      return engine.streamingManager.resolveStreamUrl(
+        track.source,
+        track.sourceId!,
+      );
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dispose
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<void> dispose() async {
+    for (final sub in _subs) {
+      await sub.cancel();
+    }
+    _subs.clear();
+    await engine.stop();
+    super.dispose();
+  }
+}
