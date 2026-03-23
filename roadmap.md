@@ -21,14 +21,14 @@
 ## Phase 1 — Base de données (drift)
 **Branche :** `phase/1-database`
 
-- [ ] **T1.1** Définir le schéma drift (`lib/server/database/schema.dart`) : tables tracks, albums, artists, playlists, playlist_tracks, zones, queue_items, radios, radio_favorites, music_folders, saved_devices, streaming_config, history
-- [ ] **T1.2** Implémenter `TuneDatabase` avec migrations et mode WAL
-- [ ] **T1.3** Implémenter `TrackRepository` (CRUD + `forAlbum`, `forArtist`, `search` FTS5, `count`)
-- [ ] **T1.4** Implémenter `AlbumRepository` (CRUD + `forArtist`, `search`, `count`, `all`)
-- [ ] **T1.5** Implémenter `ArtistRepository` (CRUD + `search`, `count`, `all`)
-- [ ] **T1.6** Implémenter `PlaylistRepository` (CRUD + `tracks(playlistId:)`)
-- [ ] **T1.7** Implémenter `ZoneRepository` (CRUD)
-- [ ] **T1.8** Implémenter `RadioRepository` (CRUD + `all`)
+- [x] **T1.1** Définir le schéma drift (`lib/server/database/schema.dart`) : tables tracks, albums, artists, playlists, playlist_tracks, zones, queue_items, radios, radio_favorites, music_folders, saved_devices, streaming_config, history
+- [x] **T1.2** Implémenter `TuneDatabase` avec migrations et mode WAL
+- [x] **T1.3** Implémenter `TrackRepository` (CRUD + `forAlbum`, `forArtist`, `search` FTS5, `count`)
+- [x] **T1.4** Implémenter `AlbumRepository` (CRUD + `forArtist`, `search`, `count`, `all`)
+- [x] **T1.5** Implémenter `ArtistRepository` (CRUD + `search`, `count`, `all`)
+- [x] **T1.6** Implémenter `PlaylistRepository` (CRUD + `tracks(playlistId:)`)
+- [x] **T1.7** Implémenter `ZoneRepository` (CRUD)
+- [x] **T1.8** Implémenter `RadioRepository` (CRUD + `all`)
 
 ---
 
