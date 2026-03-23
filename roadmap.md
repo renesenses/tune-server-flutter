@@ -88,11 +88,11 @@
 ## Phase 7 — Bibliothèque locale
 **Branche :** `phase/7-library`
 
-- [ ] **T7.1** Implémenter `MetadataReader` (lecture tags audio : FLAC/MP3/AAC — via `just_audio_media_kit` ou plugin dédié) dans `lib/server/library/metadata_reader.dart` — **`Isolate.run()` obligatoire** : lecture des tags sur des centaines de fichiers est CPU-intensif et bloquerait l'event loop
-- [ ] **T7.2** Implémenter `ArtworkManager` (dossier cache pochettes, URL locale) dans `lib/server/library/artwork_manager.dart`
-- [ ] **T7.3** Implémenter `CoverArtFetcher` (requête iTunes Search API → URL cover) dans `lib/server/library/cover_art_fetcher.dart`
-- [ ] **T7.4** Implémenter `LibraryScanner` (parcours dossiers, orchestre `MetadataReader`, insert/update DB, émet events scan) dans `lib/server/library/library_scanner.dart` — délègue le travail CPU à `MetadataReader` via `Isolate.run()` ; lui-même reste sur l'event loop principal pour la coordination et les écritures DB
-- [ ] **T7.5** Implémenter le platform channel iOS `AppleMusicLibrary` (MethodChannel → MPMediaLibrary) dans `lib/server/library/apple_music_library.dart` + `ios/Runner/AppleMusicPlugin.swift` — **masqué sur Android**
+- [x] **T7.1** Implémenter `MetadataReader` (lecture tags audio : FLAC/MP3/AAC — via `just_audio_media_kit` ou plugin dédié) dans `lib/server/library/metadata_reader.dart` — **`Isolate.run()` obligatoire** : lecture des tags sur des centaines de fichiers est CPU-intensif et bloquerait l'event loop
+- [x] **T7.2** Implémenter `ArtworkManager` (dossier cache pochettes, URL locale) dans `lib/server/library/artwork_manager.dart`
+- [x] **T7.3** Implémenter `CoverArtFetcher` (requête iTunes Search API → URL cover) dans `lib/server/library/cover_art_fetcher.dart`
+- [x] **T7.4** Implémenter `LibraryScanner` (parcours dossiers, orchestre `MetadataReader`, insert/update DB, émet events scan) dans `lib/server/library/library_scanner.dart` — délègue le travail CPU à `MetadataReader` via `Isolate.run()` ; lui-même reste sur l'event loop principal pour la coordination et les écritures DB
+- [x] **T7.5** Implémenter le platform channel iOS `AppleMusicLibrary` (MethodChannel → MPMediaLibrary) dans `lib/server/library/apple_music_library.dart` + `ios/Runner/AppleMusicPlugin.swift` — **masqué sur Android**
 
 ---
 
