@@ -1,0 +1,161 @@
+import 'package:drift/drift.dart';
+
+import '../../models/enums.dart';
+import '../database/database.dart';
+import '../discovery/discovery_manager.dart';
+import '../event_bus.dart';
+import '../outputs/output_factory.dart';
+import 'zone_instance.dart';
+
+// ---------------------------------------------------------------------------
+// T5.4 — ZoneManager
+// Bootstrap depuis DB, cycle de vie des ZoneInstances, volume persisté.
+// Miroir de ZoneManager.swift (iOS)
+// ---------------------------------------------------------------------------
+
+class ZoneManager {
+  final TuneDatabase _db;
+  final DiscoveryManager _discovery;
+
+  final Map<int, ZoneInstance> _instances = {};
+
+  ZoneManager(this._db, this._discovery);
+
+  // ---------------------------------------------------------------------------
+  // Bootstrap
+  // ---------------------------------------------------------------------------
+
+  /// Charge toutes les zones depuis la DB et crée une ZoneInstance par zone.
+  /// Appelé au démarrage par ServerEngine (Phase 9).
+  Future<void> bootstrap() async {
+    final zones = await _db.zoneRepo.all();
+
+    if (zones.isEmpty) {
+      // Aucune zone → crée la zone locale par défaut
+      await createZone('Zone principale', outputType: OutputType.local);
+      return;
+    }
+
+    for (final zone in zones) {
+      await _instantiate(zone);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Accès
+  // ---------------------------------------------------------------------------
+
+  ZoneInstance? zone(int id) => _instances[id];
+
+  List<ZoneInstance> allZones() => List.unmodifiable(_instances.values);
+
+  ZoneInstance? get defaultZone =>
+      _instances.values.isNotEmpty ? _instances.values.first : null;
+
+  // ---------------------------------------------------------------------------
+  // CRUD zones
+  // ---------------------------------------------------------------------------
+
+  /// Crée une nouvelle zone, la persiste en DB et démarre son instance.
+  Future<ZoneInstance> createZone(
+    String name, {
+    OutputType outputType = OutputType.local,
+    DiscoveredDevice? device,
+    double volume = 0.5,
+  }) async {
+    final id = await _db.zoneRepo.insert(
+      ZonesCompanion.insert(
+        name: name,
+        outputType: Value(outputType.rawValue),
+        outputDeviceId: Value(device?.id),
+        volume: Value(volume),
+      ),
+    );
+
+    final zone = await _db.zoneRepo.byId(id);
+    if (zone == null) throw StateError('Zone $id introuvable après insertion');
+
+    return _instantiate(zone, device: device);
+  }
+
+  /// Supprime une zone de la DB et dispose son instance.
+  Future<void> deleteZone(int id) async {
+    final instance = _instances.remove(id);
+    await instance?.dispose();
+    await _db.zoneRepo.delete(id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Volume
+  // ---------------------------------------------------------------------------
+
+  /// Règle le volume d'une zone : persist en DB + applique sur l'output.
+  Future<void> setVolume(int zoneId, double volume) async {
+    await _db.zoneRepo.setVolume(zoneId, volume);
+    await _instances[zoneId]?.player.setVolume(volume);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Output
+  // ---------------------------------------------------------------------------
+
+  /// Change l'output d'une zone (ex: DLNA → Local).
+  Future<void> setOutput(
+    int zoneId, {
+    required OutputType type,
+    DiscoveredDevice? device,
+  }) async {
+    final instance = _instances[zoneId];
+    if (instance == null) return;
+
+    final output = OutputFactory.create(type: type, device: device);
+    await instance.setOutput(output);
+
+    await _db.zoneRepo.setOutput(
+      zoneId,
+      type.rawValue,
+      device?.id,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dispose
+  // ---------------------------------------------------------------------------
+
+  Future<void> dispose() async {
+    for (final instance in _instances.values) {
+      await instance.dispose();
+    }
+    _instances.clear();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers internes
+  // ---------------------------------------------------------------------------
+
+  Future<ZoneInstance> _instantiate(Zone zone,
+      {DiscoveredDevice? device}) async {
+    final instance = ZoneInstance(zone: zone);
+
+    // Reconstruit le device depuis le cache discovery si non fourni
+    final targetDevice = device ??
+        (zone.outputDeviceId != null
+            ? _discovery.deviceById(zone.outputDeviceId!)
+            : null);
+
+    final outputType = zone.outputType != null
+        ? OutputType.fromRawValue(zone.outputType!) ?? OutputType.local
+        : OutputType.local;
+
+    final output = OutputFactory.create(
+      type: outputType,
+      device: targetDevice,
+    );
+
+    await instance.setOutput(output);
+    _instances[zone.id] = instance;
+
+    EventBus.instance.emit(DeviceDiscoveredEvent(instance.snapshot()));
+    return instance;
+  }
+}
