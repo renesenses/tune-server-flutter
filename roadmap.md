@@ -35,10 +35,10 @@
 ## Phase 2 — Noyau serveur
 **Branche :** `phase/2-server-core`
 
-- [ ] **T2.1** Implémenter `EventBus` (`StreamController<Event>` broadcast, `subscribe`, `unsubscribe`, `emit`) dans `lib/server/event_bus.dart`
-- [ ] **T2.2** Implémenter `ServerConfiguration` (préférences persistées, port HTTP, setup completed) dans `lib/server/configuration.dart`
-- [ ] **T2.3** Implémenter `NetworkUtils` (IP locale WiFi, scan subnet) dans `lib/server/utils/network_utils.dart`
-- [ ] **T2.4** Implémenter `HttpAudioStreamer` (serveur HTTP `shelf` embarqué pour servir iPod Library → DLNA) dans `lib/server/outputs/http_audio_streamer.dart`
+- [x] **T2.1** Implémenter `EventBus` (`StreamController<Event>` broadcast, `subscribe`, `unsubscribe`, `emit`) dans `lib/server/event_bus.dart`
+- [x] **T2.2** Implémenter `ServerConfiguration` (préférences persistées, port HTTP, setup completed) dans `lib/server/configuration.dart`
+- [x] **T2.3** Implémenter `NetworkUtils` (IP locale WiFi, scan subnet) dans `lib/server/utils/network_utils.dart`
+- [x] **T2.4** Implémenter `HttpAudioStreamer` (serveur HTTP `shelf` embarqué pour servir iPod Library → DLNA) dans `lib/server/outputs/http_audio_streamer.dart`
 
 ---
 
