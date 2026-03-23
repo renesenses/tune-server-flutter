@@ -93,7 +93,8 @@ enum RepeatMode {
 enum OutputType {
   local,
   dlna,
-  airplay;
+  airplay,
+  bluetooth;
 
   String get rawValue => name;
 
