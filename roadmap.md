@@ -45,11 +45,11 @@
 ## Phase 3 — Discovery UPnP/DLNA
 **Branche :** `phase/3-discovery`
 
-- [ ] **T3.1** Implémenter `SSDPDiscovery` (UDP multicast, M-SEARCH, parse réponses) dans `lib/server/discovery/ssdp_discovery.dart`
-- [ ] **T3.2** Implémenter `UPnPDeviceParser` (parse XML description device, extrait capabilities, content directory URL) dans `lib/server/discovery/upnp_device_parser.dart`
-- [ ] **T3.3** Implémenter `ContentDirectoryClient` (SOAP Browse, DIDL-Lite parser) dans `lib/server/discovery/content_directory_client.dart`
-- [ ] **T3.4** Implémenter `DiscoveryManager` (orchestre SSDP + parsing + cache devices, `allDevices()`, `probeHost()`, `refresh()`) dans `lib/server/discovery/discovery_manager.dart`
-- [ ] **T3.5** Implémenter `UPnPIndexer` (parcours récursif Content Directory → insert tracks/albums/artists en DB) dans `lib/server/discovery/upnp_indexer.dart` — **`Isolate.run()` obligatoire** : parsing DIDL-Lite de milliers de nœuds XML est CPU-intensif et bloquerait l'event loop
+- [x] **T3.1** Implémenter `SSDPDiscovery` (UDP multicast, M-SEARCH, parse réponses) dans `lib/server/discovery/ssdp_discovery.dart`
+- [x] **T3.2** Implémenter `UPnPDeviceParser` (parse XML description device, extrait capabilities, content directory URL) dans `lib/server/discovery/upnp_device_parser.dart`
+- [x] **T3.3** Implémenter `ContentDirectoryClient` (SOAP Browse, DIDL-Lite parser) dans `lib/server/discovery/content_directory_client.dart`
+- [x] **T3.4** Implémenter `DiscoveryManager` (orchestre SSDP + parsing + cache devices, `allDevices()`, `probeHost()`, `refresh()`) dans `lib/server/discovery/discovery_manager.dart`
+- [x] **T3.5** Implémenter `UPnPIndexer` (parcours récursif Content Directory → insert tracks/albums/artists en DB) dans `lib/server/discovery/upnp_indexer.dart` — **`Isolate.run()` obligatoire** : parsing DIDL-Lite de milliers de nœuds XML est CPU-intensif et bloquerait l'event loop
 
 ---
 
