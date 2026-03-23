@@ -107,11 +107,11 @@
 ## Phase 9 — ServerEngine & AppState
 **Branche :** `phase/9-engine-state`
 
-- [ ] **T9.1** Implémenter `ServerEngine` (orchestre tous les services : bootstrap, start, scanLibrary, addMusicFolder, search, stats, saveDevice, clearLibrary, cleanupOrphans) dans `lib/server/server_engine.dart`
-- [ ] **T9.2** Implémenter `ZoneState` (zones, currentZoneId, queue, playback position, shuffle/repeat, devices) dans `lib/state/zone_state.dart`
-- [ ] **T9.3** Implémenter `LibraryState` (albums, artists, tracks, playlists, radios, history, streamingServices) dans `lib/state/library_state.dart`
-- [ ] **T9.4** Implémenter `SettingsState` (thème, langue, defaultZoneId, persistance via shared_preferences) dans `lib/state/settings_state.dart`
-- [ ] **T9.5** Implémenter `AppState` (startServer, stopServer, event loop, playback controls, playback streaming, radio sync, device discovery) dans `lib/state/app_state.dart`
+- [x] **T9.1** Implémenter `ServerEngine` (orchestre tous les services : bootstrap, start, scanLibrary, addMusicFolder, search, stats, saveDevice, clearLibrary, cleanupOrphans) dans `lib/server/server_engine.dart`
+- [x] **T9.2** Implémenter `ZoneState` (zones, currentZoneId, queue, playback position, shuffle/repeat, devices) dans `lib/state/zone_state.dart`
+- [x] **T9.3** Implémenter `LibraryState` (albums, artists, tracks, playlists, radios, history, streamingServices) dans `lib/state/library_state.dart`
+- [x] **T9.4** Implémenter `SettingsState` (thème, langue, defaultZoneId, persistance via shared_preferences) dans `lib/state/settings_state.dart`
+- [x] **T9.5** Implémenter `AppState` (startServer, stopServer, event loop, playback controls, playback streaming, radio sync, device discovery) dans `lib/state/app_state.dart`
 
 ---
 
