@@ -67,10 +67,10 @@
 ## Phase 5 — Playback engine
 **Branche :** `phase/5-playback`
 
-- [ ] **T5.1** Implémenter `PlayQueue` (load, currentTrack, next, previous, addToEnd, addNext, remove, move, jumpTo, shuffle, repeat, snapshot) dans `lib/server/playback/play_queue.dart`
-- [ ] **T5.2** Implémenter `Player` (state machine : stopped/buffering/playing/paused, position timer, track end monitor, contrôles) dans `lib/server/playback/player.dart`
-- [ ] **T5.3** Implémenter `ZoneInstance` (Player + PlayQueue liés à une zone, `snapshot()`) dans `lib/server/zones/zone_instance.dart`
-- [ ] **T5.4** Implémenter `ZoneManager` (bootstrap depuis DB, `createZone`, `deleteZone`, `zone(id)`, `allZones()`, `setVolume`) dans `lib/server/zones/zone_manager.dart`
+- [x] **T5.1** Implémenter `PlayQueue` (load, currentTrack, next, previous, addToEnd, addNext, remove, move, jumpTo, shuffle, repeat, snapshot) dans `lib/server/playback/play_queue.dart`
+- [x] **T5.2** Implémenter `Player` (state machine : stopped/buffering/playing/paused, position timer, track end monitor, contrôles) dans `lib/server/playback/player.dart`
+- [x] **T5.3** Implémenter `ZoneInstance` (Player + PlayQueue liés à une zone, `snapshot()`) dans `lib/server/zones/zone_instance.dart`
+- [x] **T5.4** Implémenter `ZoneManager` (bootstrap depuis DB, `createZone`, `deleteZone`, `zone(id)`, `allZones()`, `setVolume`) dans `lib/server/zones/zone_manager.dart`
 
 ---
 
