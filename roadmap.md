@@ -56,11 +56,11 @@
 ## Phase 4 — Outputs audio
 **Branche :** `phase/4-audio-outputs`
 
-- [ ] **T4.1** Définir l'interface `OutputTarget` (contrat : `prepare`, `play`, `pause`, `resume`, `stop`, `seek`, `setVolume`, `currentPositionMs`) dans `lib/server/outputs/output_target.dart`
-- [ ] **T4.2** Implémenter `LocalAudioOutput` via `just_audio` (lecture locale HTTP + fichier) dans `lib/server/audio/local_audio_output.dart` — `[HI-RES-TODO]` : vérifier support 24-bit/192kHz natif just_audio
-- [ ] **T4.3** Implémenter `DLNAOutput` (SOAP SetAVTransportURI, Play, Pause, Stop, Seek, GetPositionInfo, SetVolume) dans `lib/server/outputs/dlna_output.dart`
-- [ ] **T4.4** Implémenter le platform channel iOS `AirPlayOutput` (MethodChannel vers AVRoutePickerView) dans `lib/server/outputs/airplay_output.dart` + `ios/Runner/AirPlayPlugin.swift` — **masqué sur Android**
-- [ ] **T4.5** Implémenter `OutputFactory` (instancie le bon `OutputTarget` selon `OutputType` et `Platform.isIOS`)
+- [x] **T4.1** Définir l'interface `OutputTarget` (contrat : `prepare`, `play`, `pause`, `resume`, `stop`, `seek`, `setVolume`, `currentPositionMs`) dans `lib/server/outputs/output_target.dart`
+- [x] **T4.2** Implémenter `LocalAudioOutput` via `just_audio` (lecture locale HTTP + fichier) dans `lib/server/audio/local_audio_output.dart` — `[HI-RES-TODO]` : vérifier support 24-bit/192kHz natif just_audio
+- [x] **T4.3** Implémenter `DLNAOutput` (SOAP SetAVTransportURI, Play, Pause, Stop, Seek, GetPositionInfo, SetVolume) dans `lib/server/outputs/dlna_output.dart`
+- [x] **T4.4** Implémenter le platform channel iOS `AirPlayOutput` (MethodChannel vers AVRoutePickerView) dans `lib/server/outputs/airplay_output.dart` + `ios/Runner/AirPlayPlugin.swift` — **masqué sur Android**
+- [x] **T4.5** Implémenter `OutputFactory` (instancie le bon `OutputTarget` selon `OutputType` et `Platform.isIOS`)
 
 ---
 
