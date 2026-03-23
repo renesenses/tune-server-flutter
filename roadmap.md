@@ -77,11 +77,11 @@
 ## Phase 6 — Services streaming
 **Branche :** `phase/6-streaming`
 
-- [ ] **T6.1** Définir l'interface `StreamingService` + types (`StreamingSearchResult`, `StreamingAuthResult`, `StreamingServiceStatus`, `StreamingError`) dans `lib/server/streaming/streaming_service.dart`
-- [ ] **T6.2** Implémenter `QobuzService` (auth email/password, MD5 via `crypto`, search, getTrack, getStreamUrl, getAlbumTracks, getPlaylistTracks, saveAuth/restoreAuth) dans `lib/server/streaming/qobuz_service.dart`
-- [ ] **T6.3** Implémenter `TidalService` (OAuth Device Code, quality fallback, search, getTrack, getStreamUrl, saveAuth/restoreAuth) dans `lib/server/streaming/tidal_service.dart`
-- [ ] **T6.4** Implémenter `YouTubeService` (Piped API + Google OAuth Device Code, search, getStreamUrl, saveAuth/restoreAuth) dans `lib/server/streaming/youtube_service.dart`
-- [ ] **T6.5** Implémenter `StreamingManager` (bootstrap depuis DB, `enableService`, `disableService`, `authenticateService`, `resolveStreamUrl`, `searchAll` en parallèle, `status`) dans `lib/server/streaming/streaming_manager.dart`
+- [x] **T6.1** Définir l'interface `StreamingService` + types (`StreamingSearchResult`, `StreamingAuthResult`, `StreamingServiceStatus`, `StreamingError`) dans `lib/server/streaming/streaming_service.dart`
+- [x] **T6.2** Implémenter `QobuzService` (auth email/password, MD5 via `crypto`, search, getTrack, getStreamUrl, getAlbumTracks, getPlaylistTracks, saveAuth/restoreAuth) dans `lib/server/streaming/qobuz_service.dart`
+- [x] **T6.3** Implémenter `TidalService` (OAuth Device Code, quality fallback, search, getTrack, getStreamUrl, saveAuth/restoreAuth) dans `lib/server/streaming/tidal_service.dart`
+- [x] **T6.4** Implémenter `YouTubeService` (Piped API + Google OAuth Device Code, search, getStreamUrl, saveAuth/restoreAuth) dans `lib/server/streaming/youtube_service.dart`
+- [x] **T6.5** Implémenter `StreamingManager` (bootstrap depuis DB, `enableService`, `disableService`, `authenticateService`, `resolveStreamUrl`, `searchAll` en parallèle, `status`) dans `lib/server/streaming/streaming_manager.dart`
 
 ---
 
