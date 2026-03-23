@@ -1,0 +1,305 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
+
+import 'streaming_service.dart';
+
+// ---------------------------------------------------------------------------
+// T6.2 — QobuzService
+// Auth email/password avec MD5 (= CryptoKit.Insecure.MD5 iOS).
+// Miroir de QobuzService.swift (iOS)
+//
+// API Qobuz v0.2 — endpoints publics documentés.
+// appId / appSecret : à configurer via StreamingManager.
+// ---------------------------------------------------------------------------
+
+class QobuzService implements StreamingService {
+  static const _baseUrl = 'https://www.qobuz.com/api.json/0.2';
+
+  // Ces valeurs sont à renseigner via les settings (non commitées en dur)
+  final String _appId;
+  final String _appSecret;
+  final http.Client _http;
+
+  String? _userAuthToken;
+  String? _userId;
+  String? _accountName;
+
+  QobuzService({
+    required String appId,
+    required String appSecret,
+    http.Client? client,
+  })  : _appId = appId,
+        _appSecret = appSecret,
+        _http = client ?? http.Client();
+
+  // ---------------------------------------------------------------------------
+  // StreamingService
+  // ---------------------------------------------------------------------------
+
+  @override
+  String get serviceId => 'qobuz';
+
+  @override
+  String get displayName => 'Qobuz';
+
+  @override
+  bool get isAuthenticated => _userAuthToken != null;
+
+  // ---------------------------------------------------------------------------
+  // Auth email/password
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<StreamingAuthResult> authenticateWithCredentials(
+    String email,
+    String password,
+  ) async {
+    try {
+      // Signature MD5 : MD5(email + MD5(password) + appSecret)
+      final passwordMd5 = _md5(password);
+      final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+      final signature = _md5('userlogin$email$timestamp$_appSecret');
+
+      final response = await _http.get(
+        Uri.parse('$_baseUrl/user/login').replace(queryParameters: {
+          'email': email,
+          'password': passwordMd5,
+          'app_id': _appId,
+          'timestamp': timestamp,
+          'request_sig': signature,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) {
+        return StreamingAuthFailure(
+            'Qobuz login failed: HTTP ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (data['user_auth_token'] == null) {
+        return StreamingAuthFailure(
+            data['message']?.toString() ?? 'Auth failed');
+      }
+
+      _userAuthToken = data['user_auth_token'] as String;
+      _userId = data['user']?['id']?.toString();
+      _accountName = data['user']?['email'] as String?;
+
+      return StreamingAuthSuccess(_accountName ?? email);
+    } catch (e) {
+      return StreamingAuthFailure(e.toString());
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auth — persistance
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<void> saveAuth(String tokenJson) async {
+    // Appelé par StreamingManager qui persiste en DB
+    final data = jsonDecode(tokenJson) as Map<String, dynamic>;
+    _userAuthToken = data['token'] as String?;
+    _userId = data['userId'] as String?;
+    _accountName = data['accountName'] as String?;
+  }
+
+  @override
+  Future<bool> restoreAuth(String tokenJson) async {
+    try {
+      await saveAuth(tokenJson);
+      return _userAuthToken != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    _userAuthToken = null;
+    _userId = null;
+    _accountName = null;
+  }
+
+  /// Sérialise les tokens pour la persistance DB.
+  String get tokenJson => jsonEncode({
+        'token': _userAuthToken,
+        'userId': _userId,
+        'accountName': _accountName,
+      });
+
+  // ---------------------------------------------------------------------------
+  // Recherche
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<List<StreamingSearchResult>> search(
+    String query, {
+    int limit = 20,
+  }) async {
+    if (!isAuthenticated) return [];
+    try {
+      final data = await _get('catalog/search', {
+        'query': query,
+        'limit': '$limit',
+        'type': 'tracks',
+      });
+      final tracks = (data['tracks']?['items'] as List?) ?? [];
+      return tracks
+          .map((t) => _mapTrack(t as Map<String, dynamic>))
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pistes
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<StreamingSearchResult?> getTrack(String trackId) async {
+    if (!isAuthenticated) return null;
+    try {
+      final data = await _get('track/get', {'track_id': trackId});
+      return _mapTrack(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<String?> getStreamUrl(String trackId) async {
+    if (!isAuthenticated) return null;
+    try {
+      final timestamp =
+          (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+      // Signature : MD5("trackgetFileUrlformat_id27intentstreamtrack_id{id}{ts}{secret}")
+      // [HI-RES-TODO] : format_id=27 = FLAC 24-bit, 6 = FLAC 16-bit, 5 = MP3 320
+      const formatId = '27';
+      final sigStr =
+          'trackgetFileUrlformat_id${formatId}intentstreamtrack_id$trackId$timestamp$_appSecret';
+      final sig = _md5(sigStr);
+
+      final data = await _get('track/getFileUrl', {
+        'track_id': trackId,
+        'format_id': formatId,
+        'intent': 'stream',
+        'request_ts': timestamp,
+        'request_sig': sig,
+      });
+      return data['url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<List<StreamingSearchResult>> getAlbumTracks(String albumId) async {
+    if (!isAuthenticated) return [];
+    try {
+      final data = await _get('album/get', {'album_id': albumId});
+      final tracks = (data['tracks']?['items'] as List?) ?? [];
+      return tracks
+          .map((t) => _mapTrack(t as Map<String, dynamic>))
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Future<List<StreamingSearchResult>> getPlaylistTracks(
+      String playlistId) async {
+    if (!isAuthenticated) return [];
+    try {
+      final data =
+          await _get('playlist/get', {'playlist_id': playlistId, 'extra': 'tracks'});
+      final tracks = (data['tracks']?['items'] as List?) ?? [];
+      return tracks
+          .map((t) => _mapTrack(t as Map<String, dynamic>))
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // État
+  // ---------------------------------------------------------------------------
+
+  @override
+  StreamingServiceStatus get status => StreamingServiceStatus(
+        serviceId: serviceId,
+        enabled: true,
+        authenticated: isAuthenticated,
+        accountName: _accountName,
+        quality: 'hi_res', // format_id=27
+      );
+
+  // ---------------------------------------------------------------------------
+  // Helpers HTTP
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> _get(
+    String endpoint,
+    Map<String, String> params,
+  ) async {
+    final uri = Uri.parse('$_baseUrl/$endpoint').replace(
+      queryParameters: {
+        ...params,
+        'app_id': _appId,
+        if (_userAuthToken != null) 'user_auth_token': _userAuthToken!,
+      },
+    );
+    final response =
+        await _http.get(uri).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw Exception('Qobuz API error ${response.statusCode}: $endpoint');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Mapping
+  // ---------------------------------------------------------------------------
+
+  StreamingSearchResult? _mapTrack(Map<String, dynamic> t) {
+    final id = t['id']?.toString();
+    final title = t['title'] as String?;
+    if (id == null || title == null) return null;
+
+    final artist = t['performer']?['name'] as String? ??
+        t['album']?['artist']?['name'] as String?;
+    final album = t['album']?['title'] as String?;
+    final duration = t['duration'] as int?;
+    final cover = t['album']?['image']?['large'] as String? ??
+        t['album']?['image']?['small'] as String?;
+
+    return StreamingSearchResult(
+      id: id,
+      title: title,
+      artist: artist,
+      album: album,
+      durationMs: duration != null ? duration * 1000 : null,
+      coverUrl: cover,
+      serviceId: serviceId,
+      raw: t,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Crypto
+  // ---------------------------------------------------------------------------
+
+  String _md5(String input) {
+    final bytes = utf8.encode(input);
+    return md5.convert(bytes).toString();
+  }
+}
