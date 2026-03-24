@@ -304,6 +304,32 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Zones
+  // ---------------------------------------------------------------------------
+
+  Future<void> createZone(String name) async {
+    await engine.zoneManager.createZone(name);
+    await _refreshZones();
+  }
+
+  Future<void> deleteZone(int zoneId) async {
+    await engine.zoneManager.deleteZone(zoneId);
+    await _refreshZones();
+  }
+
+  Future<void> setZoneOutput(
+    int zoneId,
+    OutputType outputType, {
+    String? deviceId,
+  }) async {
+    await engine.zoneManager.setOutput(zoneId, outputType,
+        deviceId: deviceId);
+    await _refreshZones();
+  }
+
+  void selectZone(int zoneId) => zoneState.setCurrentZoneId(zoneId);
+
+  // ---------------------------------------------------------------------------
   // Lecture streaming (résolution URL à la volée)
   // ---------------------------------------------------------------------------
 
