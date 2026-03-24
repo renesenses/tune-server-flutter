@@ -130,12 +130,12 @@
 ## Phase 11 — UI Lecture en cours
 **Branche :** `phase/11-ui-now-playing`
 
-- [ ] **T11.1** Implémenter `NowPlayingView` (pochette blur, titre, artiste, contrôles complets)
-- [ ] **T11.2** Implémenter `SeekBarView` (slider position, durée)
-- [ ] **T11.3** Implémenter `VolumeControlView` (slider volume, mute)
-- [ ] **T11.4** Implémenter `QueueView` (liste queue draggable, suppression)
-- [ ] **T11.5** Implémenter `ZoneManagementView` (sélection zone, création zone depuis device)
-- [ ] **T11.6** Implémenter `iPadNowPlayingBar` (barre persistante iPad avec contrôles étendus)
+- [x] **T11.1** Implémenter `NowPlayingView` (pochette blur, titre, artiste, contrôles complets)
+- [x] **T11.2** Implémenter `SeekBarView` (slider position, durée)
+- [x] **T11.3** Implémenter `VolumeControlView` (slider volume, mute)
+- [x] **T11.4** Implémenter `QueueView` (liste queue draggable, suppression)
+- [x] **T11.5** Implémenter `ZoneManagementView` (sélection zone, création zone depuis device)
+- [x] **T11.6** Implémenter `iPadNowPlayingBar` (barre persistante iPad avec contrôles étendus)
 
 ---
 
