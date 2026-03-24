@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/enums.dart';
 import '../server/database/database.dart';
@@ -387,6 +389,64 @@ class AppState extends ChangeNotifier {
     RadioMetadataService.instance.startPolling(
       stationName: radio.name,
       streamUrl: httpUrl,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Radio — CRUD
+  // ---------------------------------------------------------------------------
+
+  Future<void> addRadio({
+    required String name,
+    required String streamUrl,
+    String? logoUrl,
+    String? genre,
+  }) async {
+    await engine.db.radioRepo.insert(RadiosCompanion.insert(
+      name: name,
+      streamUrl: streamUrl,
+      logoUrl: Value(logoUrl),
+      genre: Value(genre),
+    ));
+    await _refreshRadios();
+  }
+
+  Future<void> deleteRadio(int id) async {
+    await engine.db.radioRepo.delete(id);
+    await _refreshRadios();
+  }
+
+  Future<void> toggleRadioFavorite(Radio radio) async {
+    await engine.db.radioRepo.setFavorite(radio.id, favorite: !radio.favorite);
+    await _refreshRadios();
+  }
+
+  /// Importe des stations depuis du contenu M3U (texte brut).
+  Future<int> importM3UContent(String content) async {
+    final dir = await getTemporaryDirectory();
+    final tmp = File(
+        '${dir.path}/import_${DateTime.now().millisecondsSinceEpoch}.m3u');
+    await tmp.writeAsString(content);
+    final added = await engine.db.radioRepo.importM3U(tmp.path);
+    try { await tmp.delete(); } catch (_) {}
+    await _refreshRadios();
+    return added;
+  }
+
+  /// Sauvegarde le morceau en cours dans les favoris radio.
+  Future<void> saveRadioFavorite({
+    required String title,
+    String? artist,
+    required Radio radio,
+  }) async {
+    await engine.db.radioRepo.insertFavorite(
+      RadioFavoritesCompanion.insert(
+        title: title,
+        artist: artist ?? '',
+        stationName: radio.name,
+        streamUrl: radio.streamUrl,
+        savedAt: DateTime.now().toIso8601String(),
+      ),
     );
   }
 

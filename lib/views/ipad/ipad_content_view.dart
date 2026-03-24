@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
+import '../radios/radios_view.dart';
 import '../streaming/streaming_view.dart';
 import 'ipad_now_playing_bar.dart';
 
@@ -79,7 +80,7 @@ class _iPadContentViewState extends State<iPadContentView> {
     const _PlaceholderDetail(icon: Icons.search_rounded,
         label: 'Recherche'),
     const StreamingView(),
-    const _PlaceholderDetail(icon: Icons.radio_rounded, label: 'Radios'),
+    const RadiosView(),
     const _PlaceholderDetail(icon: Icons.settings_rounded,
         label: 'Paramètres'),
   ];

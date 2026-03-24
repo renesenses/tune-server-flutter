@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
+import '../radios/radios_view.dart';
 import '../streaming/streaming_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -78,7 +79,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
     const LibraryView(),
     const _PlaceholderPage(icon: Icons.search_rounded, label: 'Recherche'),
     const StreamingView(),
-    const _PlaceholderPage(icon: Icons.radio_rounded, label: 'Radios'),
+    const RadiosView(),
     const _PlaceholderPage(icon: Icons.settings_rounded,
         label: 'Paramètres'),
   ];
