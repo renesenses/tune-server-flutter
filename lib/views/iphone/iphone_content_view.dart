@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
+import '../streaming/streaming_view.dart';
 
 // ---------------------------------------------------------------------------
 // T10.4 — iPhoneContentView
@@ -76,7 +77,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
   static final _pages = [
     const LibraryView(),
     const _PlaceholderPage(icon: Icons.search_rounded, label: 'Recherche'),
-    const _PlaceholderPage(icon: Icons.cloud_rounded, label: 'Streaming'),
+    const StreamingView(),
     const _PlaceholderPage(icon: Icons.radio_rounded, label: 'Radios'),
     const _PlaceholderPage(icon: Icons.settings_rounded,
         label: 'Paramètres'),
