@@ -118,12 +118,12 @@
 ## Phase 10 — UI Fondation
 **Branche :** `phase/10-ui-foundation`
 
-- [ ] **T10.1** Implémenter le système de thème (`TuneColors`, `TuneFonts`, `AppTheme`) dans `lib/views/helpers/`
-- [ ] **T10.2** Implémenter `ArtworkView` (widget cover art avec fallback) dans `lib/views/helpers/artwork_view.dart`
-- [ ] **T10.3** Implémenter `RootView` (splash/loading, connexion, routing iPhone vs iPad) dans `lib/views/root_view.dart`
-- [ ] **T10.4** Implémenter `iPhoneContentView` (BottomNavigationBar : Library, Search, Streaming, Radios, Settings) dans `lib/views/iphone/`
-- [ ] **T10.5** Implémenter `iPadContentView` (NavigationSplitView : Sidebar + Detail) dans `lib/views/ipad/`
-- [ ] **T10.6** Implémenter `MiniPlayerView` (barre transport bas d'écran : cover, titre, play/pause, next) dans `lib/views/components/mini_player_view.dart`
+- [x] **T10.1** Implémenter le système de thème (`TuneColors`, `TuneFonts`, `AppTheme`) dans `lib/views/helpers/`
+- [x] **T10.2** Implémenter `ArtworkView` (widget cover art avec fallback) dans `lib/views/helpers/artwork_view.dart`
+- [x] **T10.3** Implémenter `RootView` (splash/loading, connexion, routing iPhone vs iPad) dans `lib/views/root_view.dart`
+- [x] **T10.4** Implémenter `iPhoneContentView` (BottomNavigationBar : Library, Search, Streaming, Radios, Settings) dans `lib/views/iphone/`
+- [x] **T10.5** Implémenter `iPadContentView` (NavigationSplitView : Sidebar + Detail) dans `lib/views/ipad/`
+- [x] **T10.6** Implémenter `MiniPlayerView` (barre transport bas d'écran : cover, titre, play/pause, next) dans `lib/views/components/mini_player_view.dart`
 
 ---
 
