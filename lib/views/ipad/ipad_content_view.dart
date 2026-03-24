@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
+import 'ipad_now_playing_bar.dart';
 
 // ---------------------------------------------------------------------------
 // T10.5 — iPadContentView
-// Sidebar NavigationRail + zone de contenu + MiniPlayerView en bas.
+// Sidebar NavigationRail + zone de contenu + iPadNowPlayingBar en bas de sidebar.
 // Les pages seront remplacées par les vraies vues dans les phases 11-16.
 // Miroir de iPadContentView.swift (NavigationSplitView iOS)
 // ---------------------------------------------------------------------------
@@ -66,14 +66,7 @@ class _iPadContentViewState extends State<iPadContentView> {
             onItemTap: (i) => setState(() => _selectedIndex = i),
           ),
           const VerticalDivider(width: 1, thickness: 1),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(child: _pages[_selectedIndex]),
-                const MiniPlayerView(),
-              ],
-            ),
-          ),
+          Expanded(child: _pages[_selectedIndex]),
         ],
       ),
     );
@@ -190,6 +183,8 @@ class _Sidebar extends StatelessWidget {
               },
             ),
           ),
+          // Barre lecteur persistante en bas de la sidebar
+          const iPadNowPlayingBar(),
         ],
       ),
     );
