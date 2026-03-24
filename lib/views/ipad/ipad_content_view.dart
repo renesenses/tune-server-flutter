@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
+import '../search/search_view.dart';
 import '../streaming/streaming_view.dart';
 import 'ipad_now_playing_bar.dart';
 
@@ -77,8 +78,7 @@ class _iPadContentViewState extends State<iPadContentView> {
 
   static final _pages = [
     const LibraryView(),
-    const _PlaceholderDetail(icon: Icons.search_rounded,
-        label: 'Recherche'),
+    const SearchView(),
     const StreamingView(),
     const RadiosView(),
     const _PlaceholderDetail(icon: Icons.settings_rounded,

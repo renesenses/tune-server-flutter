@@ -4,6 +4,7 @@ import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
+import '../search/search_view.dart';
 import '../streaming/streaming_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -77,7 +78,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
 
   static final _pages = [
     const LibraryView(),
-    const _PlaceholderPage(icon: Icons.search_rounded, label: 'Recherche'),
+    const SearchView(),
     const StreamingView(),
     const RadiosView(),
     const _PlaceholderPage(icon: Icons.settings_rounded,

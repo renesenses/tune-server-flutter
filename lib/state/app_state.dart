@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../server/discovery/content_directory_client.dart';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -468,6 +470,33 @@ class AppState extends ChangeNotifier {
       libraryState.setSearching(false);
       return [];
     }
+  }
+
+  void clearSearch() => libraryState.clearSearch();
+
+  void clearHistory() => libraryState.setHistory([]);
+
+  /// Joue un item DIDL-Lite (UPnP/DLNA) directement dans la zone courante.
+  Future<void> playDlnaItem(DIDLItem item, {int? zoneId}) async {
+    final url = item.resourceUrl;
+    if (url == null) return;
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+
+    final track = Track(
+      id: 0,
+      title: item.title,
+      filePath: url,
+      source: Source.local.rawValue,
+      artistName: item.artist,
+      albumTitle: item.album,
+      durationMs: item.durationMs,
+      coverPath: item.albumArtUrl,
+    );
+
+    instance.queue.load([track], startIndex: 0);
+    await instance.player.play();
   }
 
   Future<void> clearLibrary() async {
