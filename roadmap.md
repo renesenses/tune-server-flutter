@@ -166,8 +166,8 @@
 ## Phase 14 — UI Radios
 **Branche :** `phase/14-ui-radios`
 
-- [ ] **T14.1** Implémenter `RadiosView` (liste radios, lecture, import M3U)
-- [ ] **T14.2** Implémenter `RadioFavoritesView` (favoris radio, export CSV)
+- [x] **T14.1** Implémenter `RadiosView` (liste radios, lecture, import M3U)
+- [x] **T14.2** Implémenter `RadioFavoritesView` (favoris radio, export CSV)
 
 ---
 
