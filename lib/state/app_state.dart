@@ -287,6 +287,22 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> moveQueueItem(int fromIndex, int toIndex, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+    instance.queue.move(fromIndex, toIndex);
+    zoneState.setQueueSnapshot(instance.queue.snapshot());
+  }
+
+  Future<void> removeQueueItem(int index, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+    instance.queue.remove(index);
+    zoneState.setQueueSnapshot(instance.queue.snapshot());
+  }
+
   // ---------------------------------------------------------------------------
   // Lecture streaming (résolution URL à la volée)
   // ---------------------------------------------------------------------------
