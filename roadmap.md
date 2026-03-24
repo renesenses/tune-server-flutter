@@ -156,10 +156,10 @@
 ## Phase 13 — UI Streaming
 **Branche :** `phase/13-ui-streaming`
 
-- [ ] **T13.1** Implémenter `StreamingView` (liste services configurés + boutons auth)
-- [ ] **T13.2** Implémenter `StreamingServiceDetailView` (albums récents, playlists du service)
-- [ ] **T13.3** Implémenter `StreamingAlbumDetailView` (tracklist streaming + play)
-- [ ] **T13.4** Implémenter les flows d'auth : Qobuz (email/password form), Tidal/YouTube (Device Code — affiche code + lien)
+- [x] **T13.1** Implémenter `StreamingView` (liste services configurés + boutons auth)
+- [x] **T13.2** Implémenter `StreamingServiceDetailView` (albums récents, playlists du service)
+- [x] **T13.3** Implémenter `StreamingAlbumDetailView` (tracklist streaming + play)
+- [x] **T13.4** Implémenter les flows d'auth : Qobuz (email/password form), Tidal/YouTube (Device Code — affiche code + lien)
 
 ---
 
