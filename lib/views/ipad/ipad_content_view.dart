@@ -4,6 +4,7 @@ import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
 import '../search/search_view.dart';
+import '../settings/settings_view.dart';
 import '../streaming/streaming_view.dart';
 import 'ipad_now_playing_bar.dart';
 
@@ -81,8 +82,7 @@ class _iPadContentViewState extends State<iPadContentView> {
     const SearchView(),
     const StreamingView(),
     const RadiosView(),
-    const _PlaceholderDetail(icon: Icons.settings_rounded,
-        label: 'Paramètres'),
+    const SettingsView(),
   ];
 }
 

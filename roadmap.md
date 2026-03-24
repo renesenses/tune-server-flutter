@@ -174,19 +174,19 @@
 ## Phase 15 — UI Recherche & Divers
 **Branche :** `phase/15-ui-search-misc`
 
-- [ ] **T15.1** Implémenter `SearchView` (recherche fédérée : bibliothèque locale + tous services streaming en parallèle)
-- [ ] **T15.2** Implémenter `HomeView` (récents, statistiques, accès rapide)
-- [ ] **T15.3** Implémenter `HistoryView` (historique de lecture)
-- [ ] **T15.4** Implémenter `BrowseView` (navigation UPnP/DLNA serveur)
+- [x] **T15.1** Implémenter `SearchView` (recherche fédérée : bibliothèque locale + tous services streaming en parallèle)
+- [x] **T15.2** Implémenter `HomeView` (récents, statistiques, accès rapide)
+- [x] **T15.3** Implémenter `HistoryView` (historique de lecture)
+- [x] **T15.4** Implémenter `BrowseView` (navigation UPnP/DLNA serveur)
 
 ---
 
 ## Phase 16 — UI Paramètres
 **Branche :** `phase/16-ui-settings`
 
-- [ ] **T16.1** Implémenter `SettingsView` + `SettingsNavigationView` (thème, langue, zone par défaut, about)
-- [ ] **T16.2** Implémenter `MetadataView` (stats bibliothèque, scan, clear, cleanup orphelins)
-- [ ] **T16.3** Implémenter `LibrarySetupView` (onboarding premier lancement : choisir dossiers musique / UPnP server)
+- [x] **T16.1** Implémenter `SettingsView` + `SettingsNavigationView` (thème, langue, zone par défaut, about)
+- [x] **T16.2** Implémenter `MetadataView` (stats bibliothèque, scan, clear, cleanup orphelins)
+- [x] **T16.3** Implémenter `LibrarySetupView` (onboarding premier lancement : choisir dossiers musique / UPnP server)
 
 ---
 

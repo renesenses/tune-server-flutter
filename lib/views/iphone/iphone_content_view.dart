@@ -5,6 +5,7 @@ import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
 import '../search/search_view.dart';
+import '../settings/settings_view.dart';
 import '../streaming/streaming_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -81,8 +82,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
     const SearchView(),
     const StreamingView(),
     const RadiosView(),
-    const _PlaceholderPage(icon: Icons.settings_rounded,
-        label: 'Paramètres'),
+    const SettingsView(),
   ];
 }
 

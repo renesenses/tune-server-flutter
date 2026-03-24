@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../state/settings_state.dart';
 import 'helpers/tune_colors.dart';
 import 'helpers/tune_fonts.dart';
 import 'ipad/ipad_content_view.dart';
 import 'iphone/iphone_content_view.dart';
+import 'settings/library_setup_view.dart';
 
 // ---------------------------------------------------------------------------
 // T10.3 — RootView
@@ -42,6 +44,12 @@ class _RootViewState extends State<RootView> {
 
     if (_starting) return const _SplashView();
     if (error != null) return _ErrorView(message: error, onRetry: _startServer);
+
+    final setupCompleted =
+        context.select<SettingsState, bool>((s) => s.setupCompleted);
+
+    // Premier lancement : onboarding
+    if (!setupCompleted) return const LibrarySetupView();
 
     // Routing iPhone vs iPad selon la largeur disponible
     return LayoutBuilder(
