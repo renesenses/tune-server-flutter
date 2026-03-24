@@ -142,14 +142,14 @@
 ## Phase 12 — UI Bibliothèque
 **Branche :** `phase/12-ui-library`
 
-- [ ] **T12.1** Implémenter `LibraryView` + `LibraryNavigationView` (onglets Albums/Artistes/Pistes/Genres)
-- [ ] **T12.2** Implémenter `AlbumsGridView` (grille covers) + `AlbumDetailView` (tracklist, play album)
-- [ ] **T12.3** Implémenter `ArtistsListView` + `ArtistDetailView` (albums de l'artiste)
-- [ ] **T12.4** Implémenter `TracksListView` (liste pistes avec badge audio format)
-- [ ] **T12.5** Implémenter `GenresView` (filtrage par genre)
-- [ ] **T12.6** Implémenter `AppleMusicView` (iPod Library locale) — **masqué sur Android**
-- [ ] **T12.7** Implémenter `EditAlbumSheet` + `EditTrackSheet` (édition métadonnées)
-- [ ] **T12.8** Implémenter `PlaylistsView` + `PlaylistDetailView` + `AddToPlaylistSheet`
+- [x] **T12.1** Implémenter `LibraryView` + `LibraryNavigationView` (onglets Albums/Artistes/Pistes/Genres)
+- [x] **T12.2** Implémenter `AlbumsGridView` (grille covers) + `AlbumDetailView` (tracklist, play album)
+- [x] **T12.3** Implémenter `ArtistsListView` + `ArtistDetailView` (albums de l'artiste)
+- [x] **T12.4** Implémenter `TracksListView` (liste pistes avec badge audio format)
+- [x] **T12.5** Implémenter `GenresView` (filtrage par genre)
+- [x] **T12.6** Implémenter `AppleMusicView` (iPod Library locale) — **masqué sur Android**
+- [x] **T12.7** Implémenter `EditAlbumSheet` + `EditTrackSheet` (édition métadonnées)
+- [x] **T12.8** Implémenter `PlaylistsView` + `PlaylistDetailView` + `AddToPlaylistSheet`
 
 ---
 
