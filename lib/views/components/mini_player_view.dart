@@ -8,6 +8,7 @@ import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../nowplaying/now_playing_view.dart';
 
 // ---------------------------------------------------------------------------
 // T10.6 — MiniPlayerView
@@ -60,7 +61,10 @@ class _MiniPlayerContent extends StatelessWidget {
     final isPlaying = state == PlaybackState.playing;
     final isBuffering = state == PlaybackState.buffering;
 
-    return SafeArea(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showNowPlaying(context),
+      child: SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -131,6 +135,7 @@ class _MiniPlayerContent extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
