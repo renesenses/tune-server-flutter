@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../helpers/tune_colors.dart';
+import '../library/library_view.dart';
 import 'ipad_now_playing_bar.dart';
 
 // ---------------------------------------------------------------------------
@@ -73,8 +74,7 @@ class _iPadContentViewState extends State<iPadContentView> {
   }
 
   static final _pages = [
-    const _PlaceholderDetail(icon: Icons.library_music_rounded,
-        label: 'Bibliothèque'),
+    const LibraryView(),
     const _PlaceholderDetail(icon: Icons.search_rounded,
         label: 'Recherche'),
     const _PlaceholderDetail(icon: Icons.cloud_rounded, label: 'Streaming'),

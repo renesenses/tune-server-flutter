@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 
 import '../models/enums.dart';
@@ -417,6 +418,88 @@ class AppState extends ChangeNotifier {
   Future<void> cleanupOrphans() async {
     await engine.cleanupOrphans();
     await _refreshLibrarySummary();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lecture par lot
+  // ---------------------------------------------------------------------------
+
+  /// Charge [tracks] dans la queue (URLs locales résolues) et lance la lecture.
+  Future<void> playTracks(
+    List<Track> tracks, {
+    int startIndex = 0,
+    int? zoneId,
+  }) async {
+    if (tracks.isEmpty) return;
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+    final instance = engine.zoneManager.zone(id);
+    if (instance == null) return;
+
+    final resolved = tracks.map(_resolveTrackSync).toList();
+    instance.queue.load(resolved, startIndex: startIndex);
+    await instance.player.play();
+  }
+
+  /// Résout l'URL d'un track local de manière synchrone (sans await).
+  Track _resolveTrackSync(Track track) {
+    if (track.filePath == null) return track;
+    if (track.source == 'local' && !track.filePath!.startsWith('http')) {
+      final url = engine.trackStreamUrl(track.filePath!);
+      if (url != null && url != track.filePath) {
+        return track.copyWith(filePath: Value(url));
+      }
+    }
+    return track;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Refresh pistes
+  // ---------------------------------------------------------------------------
+
+  Future<void> refreshTracks() async {
+    final tracks = await engine.db.trackRepo.all();
+    libraryState.setTracks(tracks);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Playlists
+  // ---------------------------------------------------------------------------
+
+  Future<void> createPlaylist(String name) async {
+    await engine.db.playlistRepo.insert(
+      PlaylistsCompanion.insert(name: name),
+    );
+    await _refreshPlaylists();
+  }
+
+  Future<void> deletePlaylist(int id) async {
+    await engine.db.playlistRepo.delete(id);
+    await _refreshPlaylists();
+  }
+
+  Future<void> addTrackToPlaylist(int trackId, int playlistId) async {
+    await engine.db.playlistRepo.addTrack(playlistId, trackId);
+    await _refreshPlaylists();
+  }
+
+  Future<void> removeTrackFromPlaylist(int trackId, int playlistId) async {
+    await engine.db.playlistRepo.removeTrack(playlistId, trackId);
+    await _refreshPlaylists();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Édition métadonnées
+  // ---------------------------------------------------------------------------
+
+  Future<void> updateAlbum(Album album) async {
+    await engine.db.albumRepo.update(album);
+    await _refreshLibrarySummary();
+  }
+
+  Future<void> updateTrack(Track track) async {
+    await engine.db.trackRepo.update(track);
+    if (libraryState.tracks.isNotEmpty) await refreshTracks();
   }
 
   // ---------------------------------------------------------------------------

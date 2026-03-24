@@ -46,6 +46,17 @@ class TrackRepository {
             ]))
           .get();
 
+  Future<List<Track>> all({int limit = 5000}) =>
+      (_db.select(_db.tracks)
+            ..orderBy([
+              (t) => OrderingTerm(expression: t.artistName, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.albumTitle, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.discNumber, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.trackNumber, mode: OrderingMode.asc),
+            ])
+            ..limit(limit))
+          .get();
+
   Future<List<Track>> forArtist(int artistId) =>
       (_db.select(_db.tracks)
             ..where((t) => t.artistId.equals(artistId))
