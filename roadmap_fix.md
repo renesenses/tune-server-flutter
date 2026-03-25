@@ -13,7 +13,7 @@ The argument "synthetic-package" no longer has any effect and should be removed.
 ```
 **Correction :** Supprimer la ligne `synthetic-package: false` dans `l10n.yaml`.
 
-- [ ] Supprimer `synthetic-package: false` de `l10n.yaml`
+- [x] Supprimer `synthetic-package: false` de `l10n.yaml`
 
 ---
 
