@@ -186,12 +186,13 @@ class _BrowseContainerViewState extends State<BrowseContainerView> {
             const Icon(Icons.error_outline_rounded,
                 size: 48, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Erreur de navigation', style: TuneFonts.subheadline),
+            Text(AppLocalizations.of(context).browseNavError,
+                style: TuneFonts.subheadline),
             const SizedBox(height: 4),
             TextButton(
                 onPressed: _load,
-                child: const Text('Réessayer',
-                    style: TextStyle(color: TuneColors.accent))),
+                child: Text(AppLocalizations.of(context).btnRetry,
+                    style: const TextStyle(color: TuneColors.accent))),
           ],
         ),
       );
@@ -262,7 +263,8 @@ class _ContainerTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis),
       subtitle: count != null
-          ? Text('$count éléments', style: TuneFonts.footnote)
+          ? Text(AppLocalizations.of(context).browseItemCount(count),
+              style: TuneFonts.footnote)
           : null,
       trailing: const Icon(Icons.chevron_right_rounded,
           color: TuneColors.textTertiary),
@@ -338,7 +340,7 @@ class _NoServers extends StatelessWidget {
           const Icon(Icons.dns_rounded,
               size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 12),
-          const Text('Aucun serveur DLNA détecté',
+          Text(AppLocalizations.of(context).browseNoServers,
               style: TuneFonts.subheadline),
           const SizedBox(height: 8),
           TextButton(

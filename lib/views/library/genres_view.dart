@@ -128,8 +128,9 @@ class GenreAlbumsView extends StatelessWidget {
         ),
       ),
       body: albums.isEmpty
-          ? const LibraryEmptyState(
-              icon: Icons.album_rounded, message: 'Aucun album')
+          ? LibraryEmptyState(
+              icon: Icons.album_rounded,
+              message: AppLocalizations.of(context).libraryEmptyAlbums)
           : GridView.builder(
               padding: const EdgeInsets.all(12),
               gridDelegate:

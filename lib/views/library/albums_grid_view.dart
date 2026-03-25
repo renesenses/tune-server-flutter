@@ -151,7 +151,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
                   Expanded(
                     child: FilledButton.icon(
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('Lire l\'album'),
+                      label: Text(AppLocalizations.of(context).libraryPlayAlbum),
                       style: FilledButton.styleFrom(
                           backgroundColor: TuneColors.accent),
                       onPressed: _tracks == null || _tracks!.isEmpty
@@ -162,7 +162,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
                   const SizedBox(width: 8),
                   FilledButton.icon(
                     icon: const Icon(Icons.shuffle_rounded),
-                    label: const Text('Aléatoire'),
+                    label: Text(AppLocalizations.of(context).btnShuffle),
                     style: FilledButton.styleFrom(
                       backgroundColor: TuneColors.surfaceVariant,
                       foregroundColor: TuneColors.textPrimary,
@@ -186,10 +186,10 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (_tracks!.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               child: LibraryEmptyState(
                   icon: Icons.music_off_rounded,
-                  message: 'Aucune piste'),
+                  message: AppLocalizations.of(context).playlistEmpty),
             )
           else
             SliverList(

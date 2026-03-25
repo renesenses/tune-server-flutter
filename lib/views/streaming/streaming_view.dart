@@ -189,9 +189,9 @@ class _ServiceCard extends StatelessWidget {
                     OutlinedButton.icon(
                       icon: const Icon(Icons.logout_rounded,
                           size: 18, color: TuneColors.textSecondary),
-                      label: const Text('Déconnecter',
+                      label: Text(AppLocalizations.of(context).btnDisconnect,
                           style:
-                              TextStyle(color: TuneColors.textSecondary)),
+                              const TextStyle(color: TuneColors.textSecondary)),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
                             color: TuneColors.divider),
@@ -234,21 +234,23 @@ class _ServiceCard extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Déconnecter ${info.name}', style: TuneFonts.title3),
+        title: Text(
+            AppLocalizations.of(context).streamingLogoutBody(info.name),
+            style: TuneFonts.title3),
         content: Text(
-          'Votre compte sera déconnecté.',
+          AppLocalizations.of(context).streamingLogoutContent,
           style: TuneFonts.body,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler',
-                style: TextStyle(color: TuneColors.textSecondary)),
+            child: Text(AppLocalizations.of(context).btnCancel,
+                style: const TextStyle(color: TuneColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Déconnecter',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(AppLocalizations.of(context).btnDisconnect,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),
@@ -575,7 +577,7 @@ class _WaitingCodeBody extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Rendez-vous sur cette URL et entrez le code ci-dessus :',
+          AppLocalizations.of(context).streamingDeviceCodeHint,
           style: TuneFonts.subheadline,
           textAlign: TextAlign.center,
         ),
@@ -585,7 +587,7 @@ class _WaitingCodeBody extends StatelessWidget {
             Clipboard.setData(
                 ClipboardData(text: codeResult.verificationUrl));
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('URL copiée dans le presse-papiers')),
+              SnackBar(content: Text(AppLocalizations.of(context).streamingUrlCopied)),
             );
           },
           child: Text(
@@ -603,7 +605,7 @@ class _WaitingCodeBody extends StatelessWidget {
           width: double.infinity,
           child: FilledButton.icon(
             icon: const Icon(Icons.check_rounded),
-            label: const Text('J\'ai entré le code'),
+            label: Text(AppLocalizations.of(context).streamingCodeEntered),
             style: FilledButton.styleFrom(
                 backgroundColor: TuneColors.accent),
             onPressed: onContinue,
@@ -640,12 +642,13 @@ class _SuccessBody extends StatelessWidget {
   const _SuccessBody();
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        Icon(Icons.check_circle_rounded,
+        const Icon(Icons.check_circle_rounded,
             size: 56, color: TuneColors.success),
-        SizedBox(height: 12),
-        Text('Connecté !', style: TuneFonts.title3),
+        const SizedBox(height: 12),
+        Text(AppLocalizations.of(context).streamingConnectedSuccess,
+            style: TuneFonts.title3),
       ],
     );
   }
@@ -668,7 +671,7 @@ class _ErrorBody extends StatelessWidget {
           onPressed: onRetry,
           style:
               FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-          child: const Text('Réessayer'),
+          child: Text(AppLocalizations.of(context).btnRetry),
         ),
       ],
     );

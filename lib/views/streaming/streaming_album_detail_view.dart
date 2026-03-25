@@ -110,7 +110,7 @@ class _StreamingAlbumDetailViewState
                     Expanded(
                       child: FilledButton.icon(
                         icon: const Icon(Icons.play_arrow_rounded),
-                        label: const Text('Lire l\'album'),
+                        label: Text(AppLocalizations.of(context).libraryPlayAlbum),
                         style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent),
                         onPressed: () => _playAll(app),
@@ -119,7 +119,7 @@ class _StreamingAlbumDetailViewState
                     const SizedBox(width: 8),
                     FilledButton.icon(
                       icon: const Icon(Icons.shuffle_rounded),
-                      label: const Text('Aléatoire'),
+                      label: Text(AppLocalizations.of(context).btnShuffle),
                       style: FilledButton.styleFrom(
                         backgroundColor: TuneColors.surfaceVariant,
                         foregroundColor: TuneColors.textPrimary,
@@ -143,7 +143,7 @@ class _StreamingAlbumDetailViewState
           else if (_tracks!.isEmpty)
             const SliverFillRemaining(
               child: Center(
-                child: Text('Aucune piste',
+                child: Text(AppLocalizations.of(context).playlistEmpty,
                     style: TuneFonts.subheadline),
               ),
             )
@@ -324,7 +324,7 @@ class _ErrorState extends StatelessWidget {
             onPressed: onRetry,
             style: FilledButton.styleFrom(
                 backgroundColor: TuneColors.accent),
-            child: const Text('Réessayer'),
+            child: Text(AppLocalizations.of(context).btnRetry),
           ),
         ],
       ),

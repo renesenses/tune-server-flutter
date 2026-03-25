@@ -52,6 +52,7 @@ class _MetadataViewState extends State<MetadataView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final lib = context.watch<LibraryState>();
     final app = context.read<AppState>();
     final stats = lib.stats;
@@ -60,13 +61,12 @@ class _MetadataViewState extends State<MetadataView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title:
-            const Text('Musique & Métadonnées', style: TuneFonts.title3),
+        title: Text(l.metadataTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Actualiser les stats',
+            tooltip: l.metadataRefreshStats,
             onPressed: () async {
               await _loadStats();
               await _loadFolders();
@@ -78,7 +78,7 @@ class _MetadataViewState extends State<MetadataView> {
         padding: const EdgeInsets.only(bottom: 80),
         children: [
           // ---- Statistiques ----
-          const _SectionHeader('Statistiques'),
+          _SectionHeader(l.metadataSectionStats),
           Container(
             color: TuneColors.surface,
             padding: const EdgeInsets.all(16),
@@ -92,30 +92,29 @@ class _MetadataViewState extends State<MetadataView> {
                     runSpacing: 10,
                     children: [
                       _StatChip(
-                          label: 'Pistes',
+                          label: l.metadataStatTracks,
                           value: stats.trackCount.toString()),
                       _StatChip(
-                          label: 'Albums',
+                          label: l.metadataStatAlbums,
                           value: stats.albumCount.toString()),
                       _StatChip(
-                          label: 'Artistes',
+                          label: l.metadataStatArtists,
                           value: stats.artistCount.toString()),
                       _StatChip(
-                          label: 'Playlists',
+                          label: l.metadataStatPlaylists,
                           value: stats.playlistCount.toString()),
                       _StatChip(
-                          label: 'Radios',
+                          label: l.metadataStatRadios,
                           value: stats.radioCount.toString()),
                       _StatChip(
-                          label: 'Cache pochettes',
-                          value: _formatBytes(
-                              stats.artworkCacheBytes)),
+                          label: l.metadataStatArtwork,
+                          value: _formatBytes(stats.artworkCacheBytes)),
                     ],
                   ),
           ),
 
           // ---- Scan ----
-          const _SectionHeader('Scan bibliothèque'),
+          _SectionHeader(l.metadataSectionScan),
           Container(
             color: TuneColors.surface,
             child: Column(
@@ -128,7 +127,8 @@ class _MetadataViewState extends State<MetadataView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Scan en cours… ${lib.scanProgress}/${lib.scanTotal}',
+                          l.metadataScanInProgress(
+                              lib.scanProgress, lib.scanTotal),
                           style: TuneFonts.footnote,
                         ),
                         const SizedBox(height: 6),
@@ -148,8 +148,8 @@ class _MetadataViewState extends State<MetadataView> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Text(
-                      'Dernier scan : +${lib.scanTracksAdded} ajoutées, '
-                      '${lib.scanTracksUpdated} mises à jour',
+                      l.metadataScanResult(
+                          lib.scanTracksAdded, lib.scanTracksUpdated),
                       style: TuneFonts.footnote
                           .copyWith(color: TuneColors.success),
                     ),
@@ -161,10 +161,8 @@ class _MetadataViewState extends State<MetadataView> {
                         ? TuneColors.textTertiary
                         : TuneColors.accent,
                   ),
-                  title: const Text('Scanner la bibliothèque',
-                      style: TuneFonts.body),
-                  subtitle: const Text(
-                      'Indexe tous les dossiers configurés',
+                  title: Text(l.metadataScanBtn, style: TuneFonts.body),
+                  subtitle: Text(l.metadataScanDesc,
                       style: TuneFonts.footnote),
                   enabled: !lib.isScanning,
                   onTap: () async {
@@ -177,7 +175,7 @@ class _MetadataViewState extends State<MetadataView> {
           ),
 
           // ---- Dossiers musique ----
-          const _SectionHeader('Dossiers musique'),
+          _SectionHeader(l.metadataSectionFolders),
           Container(
             color: TuneColors.surface,
             child: _loadingFolders
@@ -191,11 +189,11 @@ class _MetadataViewState extends State<MetadataView> {
                 : Column(
                     children: [
                       if (_folders.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 14),
-                          child: Text('Aucun dossier configuré',
-                              style: TextStyle(
+                          child: Text(l.metadataFoldersNone,
+                              style: const TextStyle(
                                   color: TuneColors.textTertiary)),
                         ),
                       ..._folders.asMap().entries.map((entry) {
@@ -237,7 +235,8 @@ class _MetadataViewState extends State<MetadataView> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis),
                                 subtitle: Text(
-                                  'Ajouté le ${_formatDate(folder.addedAt)}',
+                                  l.metadataFolderAddedOn(
+                                      _formatDate(folder.addedAt)),
                                   style: TuneFonts.footnote,
                                 ),
                               ),
@@ -251,7 +250,7 @@ class _MetadataViewState extends State<MetadataView> {
                       ListTile(
                         leading: const Icon(Icons.add_rounded,
                             color: TuneColors.accent),
-                        title: const Text('Ajouter un dossier',
+                        title: Text(l.metadataAddFolder,
                             style: TuneFonts.body),
                         onTap: () => _addFolder(context, app),
                       ),
@@ -260,7 +259,7 @@ class _MetadataViewState extends State<MetadataView> {
           ),
 
           // ---- Nettoyage ----
-          const _SectionHeader('Nettoyage'),
+          _SectionHeader(l.metadataSectionCleanup),
           Container(
             color: TuneColors.surface,
             child: Column(
@@ -268,10 +267,9 @@ class _MetadataViewState extends State<MetadataView> {
                 ListTile(
                   leading: const Icon(Icons.cleaning_services_rounded,
                       color: TuneColors.warning),
-                  title: const Text('Supprimer les orphelins',
+                  title: Text(l.metadataCleanupOrphans,
                       style: TuneFonts.body),
-                  subtitle: const Text(
-                      'Albums et artistes sans pistes associées',
+                  subtitle: Text(l.metadataCleanupOrphansDesc,
                       style: TuneFonts.footnote),
                   onTap: () => _confirmCleanup(context, app),
                 ),
@@ -282,10 +280,9 @@ class _MetadataViewState extends State<MetadataView> {
                 ListTile(
                   leading: const Icon(Icons.delete_forever_rounded,
                       color: TuneColors.error),
-                  title: const Text('Vider la bibliothèque',
+                  title: Text(l.metadataClearLibrary,
                       style: TuneFonts.body),
-                  subtitle: const Text(
-                      'Supprime toutes les pistes locales',
+                  subtitle: Text(l.metadataClearLibraryDesc,
                       style: TuneFonts.footnote),
                   onTap: () => _confirmClear(context, app),
                 ),
@@ -302,30 +299,30 @@ class _MetadataViewState extends State<MetadataView> {
   // ---------------------------------------------------------------------------
 
   Future<void> _addFolder(BuildContext context, AppState app) async {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title:
-            const Text('Ajouter un dossier', style: TuneFonts.title3),
+        title: Text(l.metadataAddFolder, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.body,
-          decoration: const InputDecoration(
-            labelText: 'Chemin du dossier',
-            hintText: '/storage/emulated/0/Music',
+          decoration: InputDecoration(
+            labelText: l.metadataFolderPath,
+            hintText: l.metadataFolderHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ajouter',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.btnAdd,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -342,25 +339,23 @@ class _MetadataViewState extends State<MetadataView> {
 
   Future<void> _confirmCleanup(
       BuildContext context, AppState app) async {
+    final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Supprimer les orphelins ?',
+        title: Text(l.metadataCleanupOrphansTitle,
             style: TuneFonts.title3),
-        content: const Text(
-          'Les albums et artistes sans aucune piste associée seront supprimés de la base de données.',
-          style: TuneFonts.body,
-        ),
+        content: Text(l.metadataCleanupOrphansBody, style: TuneFonts.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: TuneColors.warning)),
+            child: Text(l.metadataDeleteBtn,
+                style: const TextStyle(color: TuneColors.warning)),
           ),
         ],
       ),
@@ -370,7 +365,8 @@ class _MetadataViewState extends State<MetadataView> {
       await _loadStats();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Orphelins supprimés')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context).metadataOrphansDeleted)),
         );
       }
     }
@@ -378,25 +374,23 @@ class _MetadataViewState extends State<MetadataView> {
 
   Future<void> _confirmClear(
       BuildContext context, AppState app) async {
+    final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Vider la bibliothèque ?',
+        title: Text(l.metadataClearLibraryTitle,
             style: TuneFonts.title3),
-        content: const Text(
-          'Toutes les pistes locales, albums et artistes seront supprimés de la base de données. Cette action est irréversible.',
-          style: TuneFonts.body,
-        ),
+        content: Text(l.metadataClearLibraryBody, style: TuneFonts.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Vider',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(l.metadataClearBtn,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),
@@ -406,7 +400,8 @@ class _MetadataViewState extends State<MetadataView> {
       await _loadStats();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bibliothèque vidée')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context).metadataLibraryCleared)),
         );
       }
     }

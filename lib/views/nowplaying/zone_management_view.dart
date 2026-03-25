@@ -139,7 +139,7 @@ class _ZoneList extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            _outputLabel(zone.outputType),
+            _outputLabel(context, zone.outputType),
             style: TuneFonts.caption,
           ),
           trailing: isActive
@@ -166,8 +166,8 @@ class _ZoneList extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.delete_rounded,
                 color: TuneColors.error),
-            title: const Text('Supprimer la zone',
-                style: TextStyle(color: TuneColors.error)),
+            title: Text(AppLocalizations.of(context).zonesDelete,
+                style: const TextStyle(color: TuneColors.error)),
             onTap: () {
               Navigator.pop(context);
               Navigator.pop(context);
@@ -193,17 +193,17 @@ class _ZoneList extends StatelessWidget {
     }
   }
 
-  static String _outputLabel(OutputType? type) {
-    // Note: these labels are also available via l.zonesOutputXxx
+  String _outputLabel(BuildContext context, OutputType? type) {
+    final l = AppLocalizations.of(context);
     switch (type) {
       case OutputType.dlna:
-        return 'DLNA / UPnP';
+        return l.zonesOutputDlna;
       case OutputType.airplay:
-        return 'AirPlay';
+        return l.zonesOutputAirplay;
       case OutputType.bluetooth:
-        return 'Bluetooth';
+        return l.zonesOutputBluetooth;
       default:
-        return 'Local';
+        return l.zonesOutputLocal;
     }
   }
 }

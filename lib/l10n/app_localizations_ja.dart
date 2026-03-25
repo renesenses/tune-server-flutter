@@ -642,4 +642,50 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get setupFinish => '設定を完了';
+
+  @override
+  String get libraryPlayAlbum => 'アルバムを再生';
+
+  @override
+  String get libraryPlayNext => '次に再生';
+
+  @override
+  String radioFavExportDone(String path) {
+    return 'CSVをエクスポートしました：$path';
+  }
+
+  @override
+  String get radioFavExportError => 'エクスポートエラー';
+
+  @override
+  String get streamingViewAlbum => 'アルバムを見る';
+
+  @override
+  String get streamingLogoutContent => 'アカウントが切断されます。';
+
+  @override
+  String get streamingUrlCopied => 'URLをクリップボードにコピーしました';
+
+  @override
+  String get streamingDeviceCodeHint => 'このURLにアクセスして、上記のコードを入力してください：';
+
+  @override
+  String get searchHintFull => 'アーティスト、アルバム、トラックを検索…';
+
+  @override
+  String get browseNavError => 'ナビゲーションエラー';
+
+  @override
+  String get streamingCodeEntered => 'コードを入力しました';
+
+  @override
+  String get appleMusicAuthorize => 'アクセスを許可';
+
+  @override
+  String get streamingConnectedSuccess => '接続しました！';
+
+  @override
+  String browseItemCount(int count) {
+    return '$count 件';
+  }
 }

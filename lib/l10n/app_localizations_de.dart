@@ -645,4 +645,51 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get setupFinish => 'Konfiguration abschließen';
+
+  @override
+  String get libraryPlayAlbum => 'Album abspielen';
+
+  @override
+  String get libraryPlayNext => 'Als Nächstes spielen';
+
+  @override
+  String radioFavExportDone(String path) {
+    return 'CSV exportiert: $path';
+  }
+
+  @override
+  String get radioFavExportError => 'Exportfehler';
+
+  @override
+  String get streamingViewAlbum => 'Album anzeigen';
+
+  @override
+  String get streamingLogoutContent => 'Ihr Konto wird getrennt.';
+
+  @override
+  String get streamingUrlCopied => 'URL in die Zwischenablage kopiert';
+
+  @override
+  String get streamingDeviceCodeHint =>
+      'Rufen Sie diese URL auf und geben Sie den obigen Code ein:';
+
+  @override
+  String get searchHintFull => 'Künstler, Alben, Titel suchen…';
+
+  @override
+  String get browseNavError => 'Navigationsfehler';
+
+  @override
+  String get streamingCodeEntered => 'Code eingegeben';
+
+  @override
+  String get appleMusicAuthorize => 'Zugriff erlauben';
+
+  @override
+  String get streamingConnectedSuccess => 'Verbunden!';
+
+  @override
+  String browseItemCount(int count) {
+    return '$count Elemente';
+  }
 }

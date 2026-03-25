@@ -48,13 +48,14 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Favoris sauvegardés', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).radioFavTitle,
+            style: TuneFonts.title3),
         actions: [
           if (_favorites?.isNotEmpty == true)
             IconButton(
               icon: const Icon(Icons.download_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Exporter CSV',
+              tooltip: AppLocalizations.of(context).radioFavExportCsv,
               onPressed: _exportCsv,
             ),
         ],
@@ -75,7 +76,8 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
             Icon(Icons.bookmark_border_rounded,
                 size: 56, color: TuneColors.textTertiary),
             SizedBox(height: 12),
-            Text('Aucun morceau sauvegardé', style: TuneFonts.subheadline),
+            Text(AppLocalizations.of(context).radioFavEmpty,
+                style: TuneFonts.subheadline),
           ],
         ),
       );
@@ -115,13 +117,15 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
       await file.writeAsString(buffer.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('CSV exporté : ${file.path}')),
+          SnackBar(content: Text(AppLocalizations.of(context)
+              .radioFavExportDone(file.path))),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur lors de l'export")),
+          SnackBar(content: Text(
+              AppLocalizations.of(context).radioFavExportError)),
         );
       }
     }

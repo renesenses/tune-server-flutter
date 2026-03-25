@@ -642,4 +642,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setupFinish => '설정 완료';
+
+  @override
+  String get libraryPlayAlbum => '앨범 재생';
+
+  @override
+  String get libraryPlayNext => '다음에 재생';
+
+  @override
+  String radioFavExportDone(String path) {
+    return 'CSV 내보내기 완료: $path';
+  }
+
+  @override
+  String get radioFavExportError => '내보내기 오류';
+
+  @override
+  String get streamingViewAlbum => '앨범 보기';
+
+  @override
+  String get streamingLogoutContent => '계정 연결이 끊어집니다.';
+
+  @override
+  String get streamingUrlCopied => 'URL이 클립보드에 복사되었습니다';
+
+  @override
+  String get streamingDeviceCodeHint => '이 URL로 이동하여 위의 코드를 입력하세요:';
+
+  @override
+  String get searchHintFull => '아티스트, 앨범, 트랙 검색…';
+
+  @override
+  String get browseNavError => '탐색 오류';
+
+  @override
+  String get streamingCodeEntered => '코드를 입력했습니다';
+
+  @override
+  String get appleMusicAuthorize => '접근 허용';
+
+  @override
+  String get streamingConnectedSuccess => '연결됨!';
+
+  @override
+  String browseItemCount(int count) {
+    return '$count 항목';
+  }
 }

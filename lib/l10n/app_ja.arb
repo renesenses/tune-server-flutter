@@ -205,5 +205,28 @@
   "setupFeatureSsdp": "自動SSDP検出",
   "setupFeatureContentDir": "ContentDirectoryナビゲーション",
   "setupFeaturePlayback": "DLNAファイルの直接再生",
-  "setupFinish": "設定を完了"
+  "setupFinish": "設定を完了",
+
+  "libraryPlayAlbum": "アルバムを再生",
+  "libraryPlayNext": "次に再生",
+  "radioFavExportDone": "CSVをエクスポートしました：{path}",
+  "@radioFavExportDone": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "radioFavExportError": "エクスポートエラー",
+  "streamingViewAlbum": "アルバムを見る",
+  "streamingLogoutContent": "アカウントが切断されます。",
+  "streamingUrlCopied": "URLをクリップボードにコピーしました",
+  "streamingDeviceCodeHint": "このURLにアクセスして、上記のコードを入力してください：",
+  "searchHintFull": "アーティスト、アルバム、トラックを検索\u2026",
+  "browseNavError": "ナビゲーションエラー"
+,
+  "streamingCodeEntered": "コードを入力しました",
+  "appleMusicAuthorize": "アクセスを許可"
+,
+  "streamingConnectedSuccess": "接続しました！",
+  "browseItemCount": "{count} 件",
+  "@browseItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

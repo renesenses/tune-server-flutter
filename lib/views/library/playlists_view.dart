@@ -192,9 +192,9 @@ class _PlaylistDetailViewState extends State<PlaylistDetailView> {
       body: _tracks == null
           ? const Center(child: CircularProgressIndicator())
           : _tracks!.isEmpty
-              ? const LibraryEmptyState(
+              ? LibraryEmptyState(
                   icon: Icons.queue_music_rounded,
-                  message: 'Playlist vide',
+                  message: AppLocalizations.of(context).playlistEmpty,
                 )
               : ReorderableListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),

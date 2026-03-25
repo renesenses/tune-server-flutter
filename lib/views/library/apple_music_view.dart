@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../server/library/apple_music_library.dart';
 import '../../server/library/metadata_reader.dart';
@@ -143,7 +144,7 @@ class _PermissionPrompt extends StatelessWidget {
               style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.accent),
               onPressed: onRequest,
-              child: const Text('Autoriser l\'accès'),
+              child: Text(AppLocalizations.of(context).appleMusicAuthorize),
             ),
           ],
         ),

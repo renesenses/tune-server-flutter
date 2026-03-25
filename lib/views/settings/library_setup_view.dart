@@ -118,16 +118,14 @@ class _WelcomePage extends StatelessWidget {
           const Icon(Icons.wifi_tethering_rounded,
               size: 84, color: TuneColors.accent),
           const SizedBox(height: 32),
-          const Text(
-            'Bienvenue dans\nTune Server',
+          Text(
+            AppLocalizations.of(context).setupWelcomeTitle,
             style: TuneFonts.largeTitle,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Votre serveur musical multi-room embarqué. '
-            'Diffusez votre bibliothèque locale, vos services de streaming '
-            'et vos radios vers n\'importe quelle enceinte DLNA ou AirPlay.',
+          Text(
+            AppLocalizations.of(context).setupWelcomeBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
@@ -140,8 +138,8 @@ class _WelcomePage extends StatelessWidget {
                 backgroundColor: TuneColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: const Text('Commencer',
-                  style: TextStyle(fontSize: 16)),
+              child: Text(AppLocalizations.of(context).setupStart,
+                  style: const TextStyle(fontSize: 16)),
             ),
           ),
         ],
@@ -191,12 +189,11 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
           const Icon(Icons.folder_open_rounded,
               size: 64, color: TuneColors.accent),
           const SizedBox(height: 24),
-          const Text('Bibliothèque locale', style: TuneFonts.title1),
+          Text(AppLocalizations.of(context).setupLocalTitle,
+              style: TuneFonts.title1),
           const SizedBox(height: 12),
-          const Text(
-            'Indiquez le chemin d\'un dossier contenant vos fichiers audio '
-            '(FLAC, MP3, AAC…). Vous pourrez en ajouter d\'autres plus '
-            'tard dans Paramètres.',
+          Text(
+            AppLocalizations.of(context).setupLocalBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
@@ -208,8 +205,8 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
             decoration: InputDecoration(
               filled: true,
               fillColor: TuneColors.surface,
-              hintText: '/storage/emulated/0/Music',
-              labelText: 'Chemin du dossier',
+              hintText: AppLocalizations.of(context).setupFolderHint,
+              labelText: AppLocalizations.of(context).setupFolderPath,
               border: const OutlineInputBorder(),
               suffixIcon: _adding
                   ? const SizedBox(
@@ -234,14 +231,14 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: _adding ? null : _add,
-                child: const Text('Ajouter ce dossier'),
+                child: Text(AppLocalizations.of(context).setupAddFolder),
               ),
             ),
           if (_added)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                'Dossier ajouté — scan en cours…',
+                AppLocalizations.of(context).setupFolderAdded,
                 style: TuneFonts.footnote
                     .copyWith(color: TuneColors.success),
               ),
@@ -256,7 +253,9 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                _added ? 'Suivant' : 'Passer cette étape',
+                _added
+                    ? AppLocalizations.of(context).btnNext
+                    : AppLocalizations.of(context).btnSkip,
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -285,12 +284,11 @@ class _UPnPPage extends StatelessWidget {
           const Icon(Icons.router_rounded,
               size: 64, color: TuneColors.accent),
           const SizedBox(height: 24),
-          const Text('Serveurs UPnP/DLNA', style: TuneFonts.title1),
+          Text(AppLocalizations.of(context).setupUPnPTitle,
+              style: TuneFonts.title1),
           const SizedBox(height: 12),
-          const Text(
-            'Tune Server découvre automatiquement les serveurs UPnP/DLNA '
-            'sur votre réseau local. Naviguez dans leurs bibliothèques '
-            'via l\'onglet Recherche → Parcourir.',
+          Text(
+            AppLocalizations.of(context).setupUPnPBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
@@ -301,21 +299,21 @@ class _UPnPPage extends StatelessWidget {
               color: TuneColors.surface,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 _FeatureRow(
                   icon: Icons.wifi_find_rounded,
-                  text: 'Découverte SSDP automatique',
+                  text: AppLocalizations.of(context).setupFeatureSsdp,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 _FeatureRow(
                   icon: Icons.folder_open_rounded,
-                  text: 'Navigation ContentDirectory',
+                  text: AppLocalizations.of(context).setupFeatureContentDir,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 _FeatureRow(
                   icon: Icons.play_circle_outline_rounded,
-                  text: 'Lecture directe des fichiers DLNA',
+                  text: AppLocalizations.of(context).setupFeaturePlayback,
                 ),
               ],
             ),
@@ -329,8 +327,8 @@ class _UPnPPage extends StatelessWidget {
                 backgroundColor: TuneColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: const Text('Terminer la configuration',
-                  style: TextStyle(fontSize: 16)),
+              child: Text(AppLocalizations.of(context).setupFinish,
+                  style: const TextStyle(fontSize: 16)),
             ),
           ),
         ],

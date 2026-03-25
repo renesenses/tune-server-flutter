@@ -26,7 +26,7 @@ class SettingsView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Paramètres', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).settingsTitle, style: TuneFonts.title3),
       ),
       body: const _SettingsList(),
     );
@@ -46,26 +46,27 @@ class _SettingsList extends StatelessWidget {
     final zones = context.select<ZoneState, List<ZoneWithState>>((z) => z.zones);
     final app = context.read<AppState>();
 
+    final l = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
         // ---- Apparence ----
-        const _SectionHeader('Apparence'),
+        _SectionHeader(l.settingsSectionAppearance),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _SettingsTile(
-                title: 'Thème',
+                title: l.settingsTheme,
                 trailing: DropdownButton<String>(
                   value: settings.theme,
                   dropdownColor: TuneColors.surfaceVariant,
                   underline: const SizedBox(),
                   style: TuneFonts.body,
-                  items: const [
-                    DropdownMenuItem(value: 'system', child: Text('Système')),
-                    DropdownMenuItem(value: 'light', child: Text('Clair')),
-                    DropdownMenuItem(value: 'dark', child: Text('Sombre')),
+                  items: [
+                    DropdownMenuItem(value: 'system', child: Text(l.settingsThemeSystem)),
+                    DropdownMenuItem(value: 'light', child: Text(l.settingsThemeLight)),
+                    DropdownMenuItem(value: 'dark', child: Text(l.settingsThemeDark)),
                   ],
                   onChanged: (v) {
                     if (v != null) settings.setTheme(v);
@@ -74,21 +75,22 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Langue',
+                title: l.settingsLanguage,
                 trailing: DropdownButton<String?>(
                   value: settings.language,
                   dropdownColor: TuneColors.surfaceVariant,
                   underline: const SizedBox(),
                   style: TuneFonts.body,
-                  items: const [
-                    DropdownMenuItem<String?>(value: null, child: Text('Système')),
-                    DropdownMenuItem(value: 'fr', child: Text('Français')),
-                    DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                    DropdownMenuItem(value: 'es', child: Text('Español')),
-                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
-                    DropdownMenuItem(value: 'zh', child: Text('中文')),
-                    DropdownMenuItem(value: 'ja', child: Text('日本語')),
+                  items: [
+                    DropdownMenuItem<String?>(value: null, child: Text(l.settingsLangSystem)),
+                    // Les noms de langues restent dans leur propre langue (pas localisés)
+                    const DropdownMenuItem(value: 'fr', child: Text('Français')),
+                    const DropdownMenuItem(value: 'en', child: Text('English')),
+                    const DropdownMenuItem(value: 'de', child: Text('Deutsch')),
+                    const DropdownMenuItem(value: 'es', child: Text('Español')),
+                    const DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                    const DropdownMenuItem(value: 'zh', child: Text('中文')),
+                    const DropdownMenuItem(value: 'ja', child: Text('日本語')),
                   ],
                   onChanged: (v) => settings.setLanguage(v),
                 ),
@@ -98,22 +100,22 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- Zones ----
-        const _SectionHeader('Zones'),
+        _SectionHeader(l.settingsSectionZones),
         Container(
           color: TuneColors.surface,
           child: _SettingsTile(
-            title: 'Zone par défaut',
+            title: l.settingsDefaultZone,
             trailing: zones.isEmpty
-                ? const Text('Aucune zone',
-                    style: TextStyle(color: TuneColors.textTertiary))
+                ? Text(l.settingsNoZones,
+                    style: const TextStyle(color: TuneColors.textTertiary))
                 : DropdownButton<int?>(
                     value: settings.defaultZoneId,
                     dropdownColor: TuneColors.surfaceVariant,
                     underline: const SizedBox(),
                     style: TuneFonts.body,
                     items: [
-                      const DropdownMenuItem<int?>(
-                          value: null, child: Text('Automatique')),
+                      DropdownMenuItem<int?>(
+                          value: null, child: Text(l.settingsDefaultZoneAuto)),
                       ...zones.map((z) => DropdownMenuItem<int?>(
                             value: z.id,
                             child: Text(z.name),
@@ -125,14 +127,14 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- Serveur ----
-        const _SectionHeader('Serveur'),
+        _SectionHeader(l.settingsSectionServer),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _SettingsTile(
-                title: 'Port HTTP',
-                subtitle: 'Port du serveur principal',
+                title: l.settingsHttpPort,
+                subtitle: l.settingsHttpPortDesc,
                 trailing: Text(
                   settings.serverPort.toString(),
                   style: const TextStyle(color: TuneColors.textSecondary),
@@ -141,7 +143,7 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Adresse IP locale',
+                title: l.settingsLocalIp,
                 trailing: Text(
                   app.engine.localIp ?? '—',
                   style: const TextStyle(
@@ -153,14 +155,14 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- Bibliothèque ----
-        const _SectionHeader('Bibliothèque'),
+        _SectionHeader(l.settingsSectionLibrary),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _SettingsTile(
-                title: 'Musique & Métadonnées',
-                subtitle: 'Dossiers, scan, statistiques',
+                title: l.settingsMetadata,
+                subtitle: l.settingsMetadataDesc,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -170,8 +172,8 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Assistant de configuration',
-                subtitle: 'Reconfigurer les sources musicales',
+                title: l.settingsSetupWizard,
+                subtitle: l.settingsSetupWizardDesc,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -185,20 +187,20 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- À propos ----
-        const _SectionHeader('À propos'),
+        _SectionHeader(l.settingsSectionAbout),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
-              const _SettingsTile(
+              _SettingsTile(
                 title: 'Tune Server',
-                subtitle: 'Version 0.1.0',
-                trailing: Icon(Icons.wifi_tethering_rounded,
+                subtitle: l.settingsVersion,
+                trailing: const Icon(Icons.wifi_tethering_rounded,
                     color: TuneColors.accent),
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Réinitialiser la configuration',
+                title: l.settingsResetConfig,
                 trailing: const Icon(Icons.restart_alt_rounded,
                     color: TuneColors.error),
                 onTap: () => _confirmReset(context, settings),
@@ -218,18 +220,19 @@ class _SettingsList extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Port HTTP', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).settingsPortTitle,
+            style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.number,
-          decoration:
-              const InputDecoration(labelText: 'Port (1024–65535)'),
+          decoration: InputDecoration(
+              labelText: AppLocalizations.of(context).settingsPortHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -253,20 +256,19 @@ class _SettingsList extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Réinitialiser ?', style: TuneFonts.title3),
-        content: const Text(
-          'Toutes les préférences seront réinitialisées. L\'assistant de démarrage s\'affichera au prochain lancement.',
-          style: TuneFonts.body,
-        ),
+        title: Text(AppLocalizations.of(context).settingsResetTitle,
+            style: TuneFonts.title3),
+        content: Text(AppLocalizations.of(context).settingsResetBody,
+            style: TuneFonts.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Réinitialiser',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(AppLocalizations.of(context).btnReset,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),

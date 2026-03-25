@@ -99,7 +99,7 @@ class _StreamingServiceDetailViewState
               onChanged: _onSearchChanged,
               style: TuneFonts.body,
               decoration: InputDecoration(
-                hintText: 'Rechercher…',
+                hintText: AppLocalizations.of(context).searchHint,
                 hintStyle: TuneFonts.footnote,
                 prefixIcon:
                     const Icon(Icons.search_rounded, size: 20),
@@ -237,7 +237,8 @@ class _ResultTile extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.album_rounded,
                     color: TuneColors.textSecondary),
-                title: const Text('Voir l\'album', style: TuneFonts.body),
+                title: Text(AppLocalizations.of(context).streamingViewAlbum,
+                  style: TuneFonts.body),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.of(context).push(
@@ -251,7 +252,8 @@ class _ResultTile extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.queue_rounded,
                   color: TuneColors.textSecondary),
-              title: const Text('Ajouter à la suite', style: TuneFonts.body),
+              title: Text(AppLocalizations.of(context).libraryPlayNext,
+                  style: TuneFonts.body),
               onTap: () {
                 Navigator.pop(context);
                 final zoneId = app.zoneState.currentZoneId;
@@ -281,10 +283,10 @@ class _SearchPrompt extends StatelessWidget {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.search_rounded, size: 56, color: TuneColors.textTertiary),
-          SizedBox(height: 12),
-          Text('Recherchez artistes, albums, pistes…',
+        children: [
+          const Icon(Icons.search_rounded, size: 56, color: TuneColors.textTertiary),
+          const SizedBox(height: 12),
+          Text(AppLocalizations.of(context).searchHintFull,
               style: TuneFonts.subheadline),
         ],
       ),
@@ -296,14 +298,15 @@ class _NoResults extends StatelessWidget {
   const _NoResults();
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.music_off_rounded,
+          const Icon(Icons.music_off_rounded,
               size: 48, color: TuneColors.textTertiary),
-          SizedBox(height: 12),
-          Text('Aucun résultat', style: TuneFonts.subheadline),
+          const SizedBox(height: 12),
+          Text(AppLocalizations.of(context).searchNoResults,
+              style: TuneFonts.subheadline),
         ],
       ),
     );

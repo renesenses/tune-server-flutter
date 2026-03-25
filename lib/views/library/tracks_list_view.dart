@@ -187,7 +187,7 @@ class _TrackMenu extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.queue_rounded,
                 color: TuneColors.textSecondary),
-            title: const Text('Ajouter à la suite', style: TuneFonts.body),
+            title: Text(AppLocalizations.of(context).libraryPlayNext, style: TuneFonts.body),
             onTap: () {
               Navigator.pop(context);
               final zoneId = app.zoneState.currentZoneId;

@@ -639,4 +639,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setupFinish => '完成配置';
+
+  @override
+  String get libraryPlayAlbum => '播放专辑';
+
+  @override
+  String get libraryPlayNext => '下一首播放';
+
+  @override
+  String radioFavExportDone(String path) {
+    return 'CSV 已导出：$path';
+  }
+
+  @override
+  String get radioFavExportError => '导出错误';
+
+  @override
+  String get streamingViewAlbum => '查看专辑';
+
+  @override
+  String get streamingLogoutContent => '您的账户将断开连接。';
+
+  @override
+  String get streamingUrlCopied => 'URL 已复制到剪贴板';
+
+  @override
+  String get streamingDeviceCodeHint => '前往此网址并输入上方代码：';
+
+  @override
+  String get searchHintFull => '搜索艺术家、专辑、曲目…';
+
+  @override
+  String get browseNavError => '导航错误';
+
+  @override
+  String get streamingCodeEntered => '我已输入代码';
+
+  @override
+  String get appleMusicAuthorize => '允许访问';
+
+  @override
+  String get streamingConnectedSuccess => '已连接！';
+
+  @override
+  String browseItemCount(int count) {
+    return '$count 项目';
+  }
 }

@@ -1345,6 +1345,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finish configuration'**
   String get setupFinish;
+
+  /// No description provided for @libraryPlayAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Play album'**
+  String get libraryPlayAlbum;
+
+  /// No description provided for @libraryPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Play next'**
+  String get libraryPlayNext;
+
+  /// No description provided for @radioFavExportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV exported: {path}'**
+  String radioFavExportDone(String path);
+
+  /// No description provided for @radioFavExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Export error'**
+  String get radioFavExportError;
+
+  /// No description provided for @streamingViewAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'View album'**
+  String get streamingViewAlbum;
+
+  /// No description provided for @streamingLogoutContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be disconnected.'**
+  String get streamingLogoutContent;
+
+  /// No description provided for @streamingUrlCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'URL copied to clipboard'**
+  String get streamingUrlCopied;
+
+  /// No description provided for @streamingDeviceCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to this URL and enter the code above:'**
+  String get streamingDeviceCodeHint;
+
+  /// No description provided for @searchHintFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Search artists, albums, tracks…'**
+  String get searchHintFull;
+
+  /// No description provided for @browseNavError.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation error'**
+  String get browseNavError;
+
+  /// No description provided for @streamingCodeEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve entered the code'**
+  String get streamingCodeEntered;
+
+  /// No description provided for @appleMusicAuthorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access'**
+  String get appleMusicAuthorize;
+
+  /// No description provided for @streamingConnectedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected!'**
+  String get streamingConnectedSuccess;
+
+  /// No description provided for @browseItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String browseItemCount(int count);
 }
 
 class _AppLocalizationsDelegate

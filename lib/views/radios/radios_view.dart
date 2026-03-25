@@ -453,7 +453,7 @@ class _RadioTileState extends State<_RadioTile> {
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Morceau sauvegardé')),
+        SnackBar(content: Text(AppLocalizations.of(context).radiosFavSaved)),
       );
     }
   }

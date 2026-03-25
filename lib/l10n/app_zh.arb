@@ -205,5 +205,28 @@
   "setupFeatureSsdp": "自动SSDP发现",
   "setupFeatureContentDir": "ContentDirectory导航",
   "setupFeaturePlayback": "直接DLNA文件播放",
-  "setupFinish": "完成配置"
+  "setupFinish": "完成配置",
+
+  "libraryPlayAlbum": "播放专辑",
+  "libraryPlayNext": "下一首播放",
+  "radioFavExportDone": "CSV 已导出：{path}",
+  "@radioFavExportDone": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "radioFavExportError": "导出错误",
+  "streamingViewAlbum": "查看专辑",
+  "streamingLogoutContent": "您的账户将断开连接。",
+  "streamingUrlCopied": "URL 已复制到剪贴板",
+  "streamingDeviceCodeHint": "前往此网址并输入上方代码：",
+  "searchHintFull": "搜索艺术家、专辑、曲目\u2026",
+  "browseNavError": "导航错误"
+,
+  "streamingCodeEntered": "我已输入代码",
+  "appleMusicAuthorize": "允许访问"
+,
+  "streamingConnectedSuccess": "已连接！",
+  "browseItemCount": "{count} 项目",
+  "@browseItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

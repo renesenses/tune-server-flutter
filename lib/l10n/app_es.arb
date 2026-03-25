@@ -205,5 +205,28 @@
   "setupFeatureSsdp": "Descubrimiento SSDP automático",
   "setupFeatureContentDir": "Navegación ContentDirectory",
   "setupFeaturePlayback": "Reproducción directa de archivos DLNA",
-  "setupFinish": "Finalizar configuración"
+  "setupFinish": "Finalizar configuración",
+
+  "libraryPlayAlbum": "Reproducir álbum",
+  "libraryPlayNext": "Reproducir después",
+  "radioFavExportDone": "CSV exportado: {path}",
+  "@radioFavExportDone": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "radioFavExportError": "Error de exportación",
+  "streamingViewAlbum": "Ver álbum",
+  "streamingLogoutContent": "Tu cuenta será desconectada.",
+  "streamingUrlCopied": "URL copiada al portapapeles",
+  "streamingDeviceCodeHint": "Ve a esta URL e ingresa el código de arriba:",
+  "searchHintFull": "Buscar artistas, álbumes, pistas\u2026",
+  "browseNavError": "Error de navegación"
+,
+  "streamingCodeEntered": "He introducido el código",
+  "appleMusicAuthorize": "Permitir acceso"
+,
+  "streamingConnectedSuccess": "¡Conectado!",
+  "browseItemCount": "{count} elementos",
+  "@browseItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

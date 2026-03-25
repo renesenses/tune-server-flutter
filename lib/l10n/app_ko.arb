@@ -205,5 +205,28 @@
   "setupFeatureSsdp": "자동 SSDP 검색",
   "setupFeatureContentDir": "ContentDirectory 탐색",
   "setupFeaturePlayback": "DLNA 파일 직접 재생",
-  "setupFinish": "설정 완료"
+  "setupFinish": "설정 완료",
+
+  "libraryPlayAlbum": "앨범 재생",
+  "libraryPlayNext": "다음에 재생",
+  "radioFavExportDone": "CSV 내보내기 완료: {path}",
+  "@radioFavExportDone": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "radioFavExportError": "내보내기 오류",
+  "streamingViewAlbum": "앨범 보기",
+  "streamingLogoutContent": "계정 연결이 끊어집니다.",
+  "streamingUrlCopied": "URL이 클립보드에 복사되었습니다",
+  "streamingDeviceCodeHint": "이 URL로 이동하여 위의 코드를 입력하세요:",
+  "searchHintFull": "아티스트, 앨범, 트랙 검색\u2026",
+  "browseNavError": "탐색 오류"
+,
+  "streamingCodeEntered": "코드를 입력했습니다",
+  "appleMusicAuthorize": "접근 허용"
+,
+  "streamingConnectedSuccess": "연결됨!",
+  "browseItemCount": "{count} 항목",
+  "@browseItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }
