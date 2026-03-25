@@ -19,7 +19,7 @@ class OutputFactory {
   /// Crée l'output approprié pour le [type] et le [device] fournis.
   ///
   /// [device] est requis pour DLNA (contient les URLs SOAP).
-  /// Sur Android, OutputType.airPlay est redirigé vers Local.
+  /// Sur Android, OutputType.airplay est redirigé vers Local.
   static OutputTarget create({
     required OutputType type,
     DiscoveredDevice? device,
@@ -45,7 +45,7 @@ class OutputFactory {
           renderingControlUrl: device.capabilities.renderingControlUrl,
         );
 
-      case OutputType.airPlay:
+      case OutputType.airplay:
         if (Platform.isIOS) {
           return AirPlayOutput();
         }
@@ -63,7 +63,7 @@ class OutputFactory {
     return [
       OutputType.local,
       OutputType.dlna,
-      if (Platform.isIOS) OutputType.airPlay,
+      if (Platform.isIOS) OutputType.airplay,
       OutputType.bluetooth,
     ];
   }

@@ -42,7 +42,7 @@ class ArtistRepository {
       (_db.select(_db.artists)
             ..orderBy([
               (a) => OrderingTerm(
-                    expression: a.sortName.coalesce([a.name]),
+                    expression: coalesce([a.sortName, a.name]),
                     mode: OrderingMode.asc,
                   ),
             ]))
@@ -53,7 +53,7 @@ class ArtistRepository {
     final q = _sanitizeFts(query);
     if (q.isEmpty) return [];
 
-    return _db
+    final rows = await _db
         .customSelect(
           'SELECT a.* FROM artists a '
           'INNER JOIN artists_fts ON artists_fts.rowid = a.id '
@@ -63,8 +63,8 @@ class ArtistRepository {
           variables: [Variable(q), Variable(limit)],
           readsFrom: {_db.artists},
         )
-        .map((row) => _db.artists.mapFromRow(row))
         .get();
+    return Future.wait(rows.map((row) => _db.artists.mapFromRow(row)));
   }
 
   Future<int> count() async {

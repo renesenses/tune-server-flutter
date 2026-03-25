@@ -69,13 +69,13 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_favorites!.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bookmark_border_rounded,
+            const Icon(Icons.bookmark_border_rounded,
                 size: 56, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(AppLocalizations.of(context).radioFavEmpty,
                 style: TuneFonts.subheadline),
           ],

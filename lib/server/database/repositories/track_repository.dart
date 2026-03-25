@@ -74,7 +74,7 @@ class TrackRepository {
     if (q.isEmpty) return [];
 
     // Récupère les rowids triés par rank FTS5 puis mappe vers Track
-    return _db
+    final rows = await _db
         .customSelect(
           'SELECT t.* FROM tracks t '
           'INNER JOIN tracks_fts ON tracks_fts.rowid = t.id '
@@ -84,8 +84,8 @@ class TrackRepository {
           variables: [Variable(q), Variable(limit)],
           readsFrom: {_db.tracks},
         )
-        .map((row) => _db.tracks.mapFromRow(row))
         .get();
+    return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
   }
 
   Future<int> count() async {

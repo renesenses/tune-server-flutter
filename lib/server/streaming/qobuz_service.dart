@@ -48,6 +48,20 @@ class QobuzService implements StreamingService {
   bool get isAuthenticated => _userAuthToken != null;
 
   // ---------------------------------------------------------------------------
+  // Device Code flow — non supporté par Qobuz
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<StreamingAuthResult> startDeviceCodeFlow() async =>
+      const StreamingAuthFailure('Device Code non supporté pour Qobuz');
+
+  @override
+  Future<StreamingAuthResult> pollDeviceCodeFlow(
+    StreamingDeviceCodeResult deviceCode,
+  ) async =>
+      const StreamingAuthFailure('Device Code non supporté pour Qobuz');
+
+  // ---------------------------------------------------------------------------
   // Auth email/password
   // ---------------------------------------------------------------------------
 

@@ -45,6 +45,17 @@ class TidalService implements StreamingService {
       (_tokenExpiry == null || DateTime.now().isBefore(_tokenExpiry!));
 
   // ---------------------------------------------------------------------------
+  // Auth email/password — non supporté par Tidal
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<StreamingAuthResult> authenticateWithCredentials(
+    String email,
+    String password,
+  ) async =>
+      const StreamingAuthFailure('Authentification par email non supportée pour Tidal');
+
+  // ---------------------------------------------------------------------------
   // OAuth Device Code
   // ---------------------------------------------------------------------------
 

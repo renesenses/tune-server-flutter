@@ -87,21 +87,21 @@ class LocalAudioOutput implements OutputTarget {
       if (url.startsWith('http://') || url.startsWith('https://')) {
         source = AudioSource.uri(
           Uri.parse(url),
-          tag: MediaItem(
-            id: url,
-            title: title ?? '',
-            artist: artist,
-            artUri: albumArtUrl != null ? Uri.tryParse(albumArtUrl) : null,
-          ),
+          tag: {
+            'id': url,
+            'title': title ?? '',
+            'artist': artist,
+            'artUri': albumArtUrl,
+          },
         );
       } else {
         source = AudioSource.file(
           url,
-          tag: MediaItem(
-            id: url,
-            title: title ?? '',
-            artist: artist,
-          ),
+          tag: {
+            'id': url,
+            'title': title ?? '',
+            'artist': artist,
+          },
         );
       }
 

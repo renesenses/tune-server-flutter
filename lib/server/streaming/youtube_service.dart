@@ -53,6 +53,17 @@ class YouTubeService implements StreamingService {
   bool get isAuthenticated => _authenticated;
 
   // ---------------------------------------------------------------------------
+  // Auth email/password — non supporté par YouTube
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<StreamingAuthResult> authenticateWithCredentials(
+    String email,
+    String password,
+  ) async =>
+      const StreamingAuthFailure('Authentification par email non supportée pour YouTube');
+
+  // ---------------------------------------------------------------------------
   // OAuth Device Code (Google)
   // ---------------------------------------------------------------------------
 

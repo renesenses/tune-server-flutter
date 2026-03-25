@@ -141,7 +141,7 @@ class _StreamingAlbumDetailViewState
               child: _ErrorState(message: _error!, onRetry: _loadAlbum),
             )
           else if (_tracks!.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               child: Center(
                 child: Text(AppLocalizations.of(context).playlistEmpty,
                     style: TuneFonts.subheadline),

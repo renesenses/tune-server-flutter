@@ -54,7 +54,7 @@ class AlbumRepository {
     final q = _sanitizeFts(query);
     if (q.isEmpty) return [];
 
-    return _db
+    final rows = await _db
         .customSelect(
           'SELECT a.* FROM albums a '
           'INNER JOIN albums_fts ON albums_fts.rowid = a.id '
@@ -64,8 +64,8 @@ class AlbumRepository {
           variables: [Variable(q), Variable(limit)],
           readsFrom: {_db.albums},
         )
-        .map((row) => _db.albums.mapFromRow(row))
         .get();
+    return Future.wait(rows.map((row) => _db.albums.mapFromRow(row)));
   }
 
   Future<int> count() async {

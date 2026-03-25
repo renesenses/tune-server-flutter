@@ -33,10 +33,10 @@ The argument "synthetic-package" no longer has any effect and should be removed.
 - Remplacer les appels nommés par positionnels : `l.metadataScanInProgress(current, total)` → `l.metadataScanInProgress(current, total)`
 - Retirer les `const` sur les `Center`/`Column` qui contiennent des appels `AppLocalizations.of(context)`
 
-- [ ] `radio_favorites_view.dart` : retirer `const` du `Center` + corriger `radioFavExportDone(file.path)`
-- [ ] `streaming_album_detail_view.dart` : retirer `const` du `SliverFillRemaining`/`Center` englobant
-- [ ] `streaming_view.dart` : vérifier l'appel `streamingLogoutBody(info.name)` (positionnel)
-- [ ] `metadata_view.dart` : vérifier tous les appels ARB paramétrés (positionnels)
+- [x] `radio_favorites_view.dart` : retirer `const` du `Center` + corriger `radioFavExportDone(file.path)`
+- [x] `streaming_album_detail_view.dart` : retirer `const` du `SliverFillRemaining`/`Center` englobant
+- [x] `streaming_view.dart` : vérifier l'appel `streamingLogoutBody(info.name)` (positionnel)
+- [x] `metadata_view.dart` : vérifier tous les appels ARB paramétrés (positionnels)
 
 ---
 
@@ -59,8 +59,8 @@ import 'package:flutter/material.dart' hide RepeatMode;
 ```
 ou qualifier explicitement : `models.RepeatMode`.
 
-- [ ] `ipad_now_playing_bar.dart` : ajouter `hide RepeatMode` sur l'import Flutter
-- [ ] `now_playing_view.dart` : ajouter `hide RepeatMode` sur l'import Flutter
+- [x] `ipad_now_playing_bar.dart` : ajouter `hide RepeatMode` sur l'import Flutter
+- [x] `now_playing_view.dart` : ajouter `hide RepeatMode` sur l'import Flutter
 
 ---
 
@@ -77,7 +77,7 @@ ou qualifier explicitement : `models.RepeatMode`.
 
 **Correction :** Supprimer l'import redondant de `discovery_manager.dart` dans `zone_state.dart`, ou masquer `DiscoveredDevice` de l'un des deux.
 
-- [ ] `zone_state.dart` : supprimer l'import `discovery_manager.dart` ou ajouter `hide DiscoveredDevice`
+- [x] `zone_state.dart` : supprimer l'import `discovery_manager.dart` ou ajouter `hide DiscoveredDevice`
 
 ---
 
@@ -98,8 +98,8 @@ ou qualifier explicitement : `models.RepeatMode`.
 - Vérifier l'import de `ZoneWithState` (devrait venir de `domain_models.dart`).
 - Adapter l'appel `setOutput` à la signature actuelle de `ZoneManager`.
 
-- [ ] `app_state.dart:665` : ajouter/corriger l'import `ZoneWithState`
-- [ ] `app_state.dart:330` : adapter l'appel `setOutput` à la bonne signature
+- [x] `app_state.dart:665` : ajouter/corriger l'import `ZoneWithState`
+- [x] `app_state.dart:330` : adapter l'appel `setOutput` à la bonne signature
 
 ---
 
@@ -116,7 +116,7 @@ ou qualifier explicitement : `models.RepeatMode`.
 
 **Correction :** Remplacer `OutputType.airPlay` par `OutputType.airplay` dans `output_factory.dart`.
 
-- [ ] `output_factory.dart` : corriger la casse `airPlay` → `airplay` (2 occurrences)
+- [x] `output_factory.dart` : corriger la casse `airPlay` → `airplay` (2 occurrences)
 
 ---
 
@@ -137,8 +137,8 @@ _controller.stream.whereType<T>()
 _controller.stream.where((e) => e is T).cast<T>()
 ```
 
-- [ ] `event_bus.dart:128` : remplacer `whereType<T>()` par `.where((e) => e is T).cast<T>()`
-- [ ] `event_bus.dart:133` : idem
+- [x] `event_bus.dart:128` : remplacer `whereType<T>()` par `.where((e) => e is T).cast<T>()`
+- [x] `event_bus.dart:133` : idem
 
 ---
 
@@ -163,10 +163,10 @@ return await Future.wait(rows.map((r) => _toModel(r)));
 ```
 Ou restructurer la requête pour éviter le mapping async.
 
-- [ ] `track_repository.dart` : aplatir le type avec `Future.wait`
-- [ ] `playlist_repository.dart` : idem
-- [ ] `artist_repository.dart` : idem + corriger `coalesce` (voir FX-09)
-- [ ] `album_repository.dart` : idem
+- [x] `track_repository.dart` : aplatir le type avec `Future.wait`
+- [x] `playlist_repository.dart` : idem
+- [x] `artist_repository.dart` : idem + corriger `coalesce` (voir FX-09)
+- [x] `album_repository.dart` : idem
 
 ---
 
@@ -181,7 +181,7 @@ The method 'coalesce' isn't defined for the type 'GeneratedColumn<String>'.
 
 **Correction :** Utiliser `coalesce([a.sortName, a.name])` comme fonction top-level drift, ou `a.sortName.coalesceWith(a.name)` selon la version. Vérifier la version drift installée (`pubspec.lock`) et adapter.
 
-- [ ] `artist_repository.dart:45` : corriger l'appel `coalesce` pour drift 2.x
+- [x] `artist_repository.dart:45` : corriger l'appel `coalesce` pour drift 2.x
 
 ---
 
@@ -199,7 +199,7 @@ The method 'MediaItem' isn't defined for the type 'LocalAudioOutput'.
 import 'package:audio_service/audio_service.dart';
 ```
 
-- [ ] `local_audio_output.dart` : ajouter l'import `audio_service`
+- [x] `local_audio_output.dart` : remplacer `MediaItem` par `Map` (audio_service absent de pubspec)
 
 ---
 
@@ -221,9 +221,9 @@ QobuzService   : missing 'pollDeviceCodeFlow', 'startDeviceCodeFlow'
 - `YouTubeService` et `TidalService` : ajouter une implémentation stub de `authenticateWithCredentials` (retourne une erreur "not supported").
 - `QobuzService` : ajouter des stubs pour `pollDeviceCodeFlow` et `startDeviceCodeFlow`.
 
-- [ ] `youtube_service.dart` : ajouter stub `authenticateWithCredentials`
-- [ ] `tidal_service.dart` : ajouter stub `authenticateWithCredentials`
-- [ ] `qobuz_service.dart` : ajouter stubs `startDeviceCodeFlow` + `pollDeviceCodeFlow`
+- [x] `youtube_service.dart` : ajouter stub `authenticateWithCredentials`
+- [x] `tidal_service.dart` : ajouter stub `authenticateWithCredentials`
+- [x] `qobuz_service.dart` : ajouter stubs `startDeviceCodeFlow` + `pollDeviceCodeFlow`
 
 ---
 

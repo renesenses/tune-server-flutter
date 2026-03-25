@@ -7,8 +7,10 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../models/domain_models.dart' hide DiscoveredDevice;
 import '../models/enums.dart';
 import '../server/database/database.dart';
+import '../server/discovery/discovery_manager.dart';
 import '../server/event_bus.dart';
 import '../server/server_engine.dart';
 import '../server/streaming/radio_metadata_service.dart';
@@ -327,8 +329,13 @@ class AppState extends ChangeNotifier {
     OutputType outputType, {
     String? deviceId,
   }) async {
-    await engine.zoneManager.setOutput(zoneId, outputType,
-        deviceId: deviceId);
+    DiscoveredDevice? device;
+    if (deviceId != null) {
+      try {
+        device = zoneState.devices.firstWhere((d) => d.id == deviceId);
+      } catch (_) {}
+    }
+    await engine.zoneManager.setOutput(zoneId, type: outputType, device: device);
     await _refreshZones();
   }
 

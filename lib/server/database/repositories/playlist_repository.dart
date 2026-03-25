@@ -42,8 +42,8 @@ class PlaylistRepository {
   // ---------------------------------------------------------------------------
 
   /// Retourne les tracks d'une playlist, triées par position.
-  Future<List<Track>> tracks(int playlistId) {
-    return _db
+  Future<List<Track>> tracks(int playlistId) async {
+    final rows = await _db
         .customSelect(
           'SELECT t.* FROM tracks t '
           'INNER JOIN playlist_tracks pt ON pt.track_id = t.id '
@@ -52,8 +52,8 @@ class PlaylistRepository {
           variables: [Variable(playlistId)],
           readsFrom: {_db.tracks, _db.playlistTracks},
         )
-        .map((row) => _db.tracks.mapFromRow(row))
         .get();
+    return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
   }
 
   /// Ajoute une piste en fin de playlist.

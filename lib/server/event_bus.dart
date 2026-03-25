@@ -125,12 +125,12 @@ class EventBus {
   StreamSubscription<T> subscribe<T extends AppEvent>(
     void Function(T event) handler,
   ) {
-    return _controller.stream.whereType<T>().listen(handler);
+    return _controller.stream.where((e) => e is T).cast<T>().listen(handler);
   }
 
   /// Expose le stream brut pour les cas avancés (Riverpod, etc.).
   Stream<T> on<T extends AppEvent>() =>
-      _controller.stream.whereType<T>();
+      _controller.stream.where((e) => e is T).cast<T>();
 
   /// À appeler uniquement en fin de vie de l'application.
   Future<void> dispose() => _controller.close();
