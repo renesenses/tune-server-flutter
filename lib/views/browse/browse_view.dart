@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/discovery/content_directory_client.dart';
 import '../../server/discovery/discovery_manager.dart';
 import '../../state/app_state.dart';

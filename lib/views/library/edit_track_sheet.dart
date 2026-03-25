@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -53,6 +54,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20, 20, 20,
@@ -73,7 +75,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Modifier la piste', style: TuneFonts.title3),
+          Text(l.libraryEditTrack, style: TuneFonts.title3),
           const SizedBox(height: 20),
           _Field(label: 'Titre', controller: _titleCtrl),
           const SizedBox(height: 12),
@@ -112,7 +114,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
-                  : const Text('Enregistrer'),
+                  : Text(l.btnSave),
             ),
           ),
         ],

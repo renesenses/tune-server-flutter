@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';

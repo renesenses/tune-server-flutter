@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -21,11 +22,12 @@ class AlbumsGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final albums = context.watch<LibraryState>().albums;
     if (albums.isEmpty) {
-      return const LibraryEmptyState(
+      return LibraryEmptyState(
         icon: Icons.album_rounded,
-        message: 'Aucun album dans la bibliothèque',
+        message: l.libraryEmptyAlbums,
       );
     }
     return GridView.builder(

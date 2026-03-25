@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -44,15 +45,16 @@ class _TracksListViewState extends State<TracksListView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final tracks = context.watch<LibraryState>().tracks;
 
     if (!_loaded) {
       return const Center(child: CircularProgressIndicator());
     }
     if (tracks.isEmpty) {
-      return const LibraryEmptyState(
+      return LibraryEmptyState(
         icon: Icons.music_note_rounded,
-        message: 'Aucune piste dans la bibliothèque',
+        message: l.libraryEmptyTracks,
       );
     }
 
@@ -176,7 +178,7 @@ class _TrackMenu extends StatelessWidget {
           ListTile(
             leading:
                 const Icon(Icons.play_arrow_rounded, color: TuneColors.accent),
-            title: const Text('Lire', style: TuneFonts.body),
+            title: Text(AppLocalizations.of(context).libraryPlay, style: TuneFonts.body),
             onTap: () {
               Navigator.pop(context);
               app.playTracks([track]);
@@ -198,7 +200,7 @@ class _TrackMenu extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.playlist_add_rounded,
                 color: TuneColors.textSecondary),
-            title: const Text('Ajouter à une playlist', style: TuneFonts.body),
+            title: Text(AppLocalizations.of(context).playlistAddTo, style: TuneFonts.body),
             onTap: () {
               Navigator.pop(context);
               onAddToPlaylist();
@@ -207,7 +209,7 @@ class _TrackMenu extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.edit_rounded,
                 color: TuneColors.textSecondary),
-            title: const Text('Modifier', style: TuneFonts.body),
+            title: Text(AppLocalizations.of(context).libraryEditTrack, style: TuneFonts.body),
             onTap: () {
               Navigator.pop(context);
               onEdit();

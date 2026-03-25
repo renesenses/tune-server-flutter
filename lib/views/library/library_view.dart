@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'albums_grid_view.dart';
@@ -47,11 +48,12 @@ class _LibraryViewState extends State<LibraryView>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Bibliothèque', style: TuneFonts.title2),
+        title: Text(l.libraryTitle, style: TuneFonts.title2),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -61,12 +63,12 @@ class _LibraryViewState extends State<LibraryView>
           unselectedLabelColor: TuneColors.textSecondary,
           dividerColor: TuneColors.divider,
           tabs: [
-            const Tab(text: 'Albums'),
-            const Tab(text: 'Artistes'),
-            const Tab(text: 'Pistes'),
-            const Tab(text: 'Genres'),
-            const Tab(text: 'Playlists'),
-            if (_showAppleMusic) const Tab(text: 'Apple Music'),
+            Tab(text: l.tabAlbums),
+            Tab(text: l.tabArtists),
+            Tab(text: l.tabTracks),
+            Tab(text: l.tabGenres),
+            Tab(text: l.tabPlaylists),
+            if (_showAppleMusic) Tab(text: l.tabAppleMusic),
           ],
         ),
       ),

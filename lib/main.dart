@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'l10n/app_localizations.dart';
 import 'state/app_state.dart';
 import 'state/library_state.dart';
 import 'state/settings_state.dart';
@@ -42,6 +44,13 @@ class TuneServerApp extends StatelessWidget {
       title: 'Tune Server',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const RootView(),
     );
   }

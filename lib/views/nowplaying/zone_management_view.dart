@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../models/enums.dart';
 import '../../state/app_state.dart';
@@ -39,11 +40,11 @@ class ZoneManagementView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Row(
             children: [
-              Text('Zones', style: TuneFonts.title3),
+              Text(AppLocalizations.of(context).zonesTitle, style: TuneFonts.title3),
               const Spacer(),
               TextButton.icon(
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Nouvelle zone'),
+                label: Text(AppLocalizations.of(context).zonesNew),
                 style: TextButton.styleFrom(
                     foregroundColor: TuneColors.accent),
                 onPressed: () => _showCreateZoneDialog(context),
@@ -61,25 +62,26 @@ class ZoneManagementView extends StatelessWidget {
   }
 
   void _showCreateZoneDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Nouvelle zone'),
+        title: Text(l.zonesNew),
         content: TextField(
           controller: controller,
           autofocus: true,
           style: const TextStyle(color: TuneColors.textPrimary),
-          decoration: const InputDecoration(
-            hintText: 'Nom de la zone',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            hintText: l.zonesNewName,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -89,7 +91,7 @@ class ZoneManagementView extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: const Text('Créer'),
+            child: Text(l.btnCreate),
           ),
         ],
       ),
@@ -108,10 +110,10 @@ class _ZoneList extends StatelessWidget {
     final currentId = context.watch<ZoneState>().currentZoneId;
 
     if (zones.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Text('Aucune zone',
-            style: TextStyle(color: TuneColors.textTertiary)),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Text(AppLocalizations.of(context).zonesNone,
+            style: const TextStyle(color: TuneColors.textTertiary)),
       );
     }
 
@@ -192,6 +194,7 @@ class _ZoneList extends StatelessWidget {
   }
 
   static String _outputLabel(OutputType? type) {
+    // Note: these labels are also available via l.zonesOutputXxx
     switch (type) {
       case OutputType.dlna:
         return 'DLNA / UPnP';
@@ -223,7 +226,7 @@ class _DiscoveredDevicesSection extends StatelessWidget {
         const Divider(height: 1),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text('Appareils disponibles',
+          child: Text(AppLocalizations.of(context).zonesDevices,
               style: TuneFonts.subheadline),
         ),
         ListView.builder(
@@ -241,8 +244,8 @@ class _DiscoveredDevicesSection extends StatelessWidget {
               trailing: TextButton(
                 onPressed: () =>
                     _assignDeviceToCurrentZone(context, device),
-                child: const Text('Utiliser',
-                    style: TextStyle(color: TuneColors.accent)),
+                child: Text(AppLocalizations.of(context).btnUse,
+                    style: const TextStyle(color: TuneColors.accent)),
               ),
             );
           },

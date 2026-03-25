@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/library_state.dart';
@@ -21,13 +22,14 @@ class GenresView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final albums = context.watch<LibraryState>().albums;
     final genres = _buildGenres(albums);
 
     if (genres.isEmpty) {
-      return const LibraryEmptyState(
+      return LibraryEmptyState(
         icon: Icons.category_rounded,
-        message: 'Aucun genre dans la bibliothèque',
+        message: l.libraryEmptyGenres,
       );
     }
 

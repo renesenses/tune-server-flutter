@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
@@ -25,43 +26,24 @@ class iPadContentView extends StatefulWidget {
 class _iPadContentViewState extends State<iPadContentView> {
   int _selectedIndex = 0;
 
-  static const _navItems = [
-    (
-      icon: Icons.library_music_outlined,
-      activeIcon: Icons.library_music_rounded,
-      label: 'Bibliothèque',
-    ),
-    (
-      icon: Icons.search_rounded,
-      activeIcon: Icons.search_rounded,
-      label: 'Recherche',
-    ),
-    (
-      icon: Icons.cloud_outlined,
-      activeIcon: Icons.cloud_rounded,
-      label: 'Streaming',
-    ),
-    (
-      icon: Icons.radio_outlined,
-      activeIcon: Icons.radio_rounded,
-      label: 'Radios',
-    ),
-    (
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      label: 'Paramètres',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final navItems = [
+      (icon: Icons.library_music_outlined, activeIcon: Icons.library_music_rounded, label: l.navLibrary),
+      (icon: Icons.search_rounded,         activeIcon: Icons.search_rounded,         label: l.navSearch),
+      (icon: Icons.cloud_outlined,         activeIcon: Icons.cloud_rounded,          label: l.navStreaming),
+      (icon: Icons.radio_outlined,         activeIcon: Icons.radio_rounded,          label: l.navRadios),
+      (icon: Icons.settings_outlined,      activeIcon: Icons.settings_rounded,       label: l.navSettings),
+    ];
+
     return Scaffold(
       backgroundColor: TuneColors.background,
       body: Row(
         children: [
           _Sidebar(
             selectedIndex: _selectedIndex,
-            items: _navItems
+            items: navItems
                 .map((n) => _SidebarItem(
                       icon: n.icon,
                       activeIcon: n.activeIcon,

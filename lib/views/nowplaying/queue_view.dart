@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
@@ -45,15 +46,15 @@ class QueueView extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Row(
             children: [
-              Text('File de lecture', style: TuneFonts.title3),
+              Text(AppLocalizations.of(context).queueTitle, style: TuneFonts.title3),
               const Spacer(),
               if (tracks.isNotEmpty)
                 TextButton(
                   onPressed: () => context
                       .read<AppState>()
                       .setShuffle(enabled: true),
-                  child: const Text('Mélanger',
-                      style: TextStyle(color: TuneColors.accent)),
+                  child: Text(AppLocalizations.of(context).btnShuffle,
+                      style: const TextStyle(color: TuneColors.accent)),
                 ),
             ],
           ),
@@ -173,16 +174,16 @@ class _EmptyQueue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 40),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.queue_music_rounded,
+          const Icon(Icons.queue_music_rounded,
               size: 40, color: TuneColors.textTertiary),
-          SizedBox(height: 12),
-          Text('File vide',
-              style: TextStyle(color: TuneColors.textTertiary)),
+          const SizedBox(height: 12),
+          Text(AppLocalizations.of(context).queueEmpty,
+              style: const TextStyle(color: TuneColors.textTertiary)),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../../state/zone_state.dart';
@@ -22,6 +23,7 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final lib = context.watch<LibraryState>();
     final zones = context.watch<ZoneState>();
 
@@ -31,8 +33,8 @@ class HomeView extends StatelessWidget {
         // ---- Récents ----
         if (lib.history.isNotEmpty) ...[
           _SectionTitle(
-            title: 'Récemment joué',
-            trailingLabel: 'Tout voir',
+            title: l.homeRecentlyPlayed,
+            trailingLabel: l.btnSeeAll,
             onTrailingTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const HistoryView()),
             ),
@@ -43,13 +45,13 @@ class HomeView extends StatelessWidget {
 
         // ---- Statistiques bibliothèque ----
         if (lib.stats != null || lib.totalTracks > 0) ...[
-          const _SectionTitle(title: 'Bibliothèque'),
+          _SectionTitle(title: l.homeLibrary),
           _StatsRow(lib: lib),
           const SizedBox(height: 16),
         ],
 
         // ---- Accès rapide ----
-        const _SectionTitle(title: 'Accès rapide'),
+        _SectionTitle(title: l.homeQuickAccess),
         _QuickAccessGrid(
           hasServers: zones.servers.isNotEmpty,
         ),
@@ -159,6 +161,7 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -166,17 +169,17 @@ class _StatsRow extends StatelessWidget {
           _StatChip(
               icon: Icons.music_note_rounded,
               value: lib.totalTracks,
-              label: 'pistes'),
+              label: l.homeStatTracks),
           const SizedBox(width: 8),
           _StatChip(
               icon: Icons.album_rounded,
               value: lib.totalAlbums,
-              label: 'albums'),
+              label: l.homeStatAlbums),
           const SizedBox(width: 8),
           _StatChip(
               icon: Icons.people_rounded,
               value: lib.totalArtists,
-              label: 'artistes'),
+              label: l.homeStatArtists),
         ],
       ),
     );
@@ -235,7 +238,7 @@ class _QuickAccessGrid extends StatelessWidget {
         children: [
           _QuickCard(
             icon: Icons.history_rounded,
-            label: 'Historique',
+            label: AppLocalizations.of(context).homeHistory,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const HistoryView()),
             ),
@@ -243,7 +246,7 @@ class _QuickAccessGrid extends StatelessWidget {
           if (hasServers)
             _QuickCard(
               icon: Icons.devices_rounded,
-              label: 'Parcourir DLNA',
+              label: AppLocalizations.of(context).homeBrowseDlna,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const BrowseView()),
               ),

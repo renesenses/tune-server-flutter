@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../server/server_engine.dart';
 import '../../server/streaming/streaming_service.dart';
@@ -72,7 +73,7 @@ class _SearchViewState extends State<SearchView> {
           onChanged: _onChanged,
           style: TuneFonts.body,
           decoration: InputDecoration(
-            hintText: 'Rechercher…',
+            hintText: AppLocalizations.of(context).searchHint,
             hintStyle: TuneFonts.footnote,
             prefixIcon: const Icon(Icons.search_rounded, size: 20),
             filled: true,
@@ -130,21 +131,22 @@ class _SearchResults extends StatelessWidget {
     final artists = results.whereType<ArtistSearchResult>().toList();
     final streaming = results.whereType<StreamingResult>().toList();
 
+    final l = AppLocalizations.of(context);
     final sections = <Widget>[
       if (tracks.isNotEmpty) ...[
-        _SectionHeader(label: 'Pistes', count: tracks.length),
+        _SectionHeader(label: l.searchSectionTracks, count: tracks.length),
         ...tracks.map((r) => _TrackTile(result: r)),
       ],
       if (albums.isNotEmpty) ...[
-        _SectionHeader(label: 'Albums', count: albums.length),
+        _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
         ...albums.map((r) => _AlbumTile(result: r)),
       ],
       if (artists.isNotEmpty) ...[
-        _SectionHeader(label: 'Artistes', count: artists.length),
+        _SectionHeader(label: l.searchSectionArtists, count: artists.length),
         ...artists.map((r) => _ArtistTile(result: r)),
       ],
       if (streaming.isNotEmpty) ...[
-        _SectionHeader(label: 'Streaming', count: streaming.length),
+        _SectionHeader(label: l.searchSectionStreaming, count: streaming.length),
         ...streaming.map((r) => _StreamingTile(result: r)),
       ],
       const SizedBox(height: 80),
@@ -332,13 +334,13 @@ class _NoResults extends StatelessWidget {
   const _NoResults();
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off_rounded, size: 48, color: TuneColors.textTertiary),
-          SizedBox(height: 12),
-          Text('Aucun résultat', style: TuneFonts.subheadline),
+          const Icon(Icons.search_off_rounded, size: 48, color: TuneColors.textTertiary),
+          const SizedBox(height: 12),
+          Text(AppLocalizations.of(context).searchNoResults, style: TuneFonts.subheadline),
         ],
       ),
     );

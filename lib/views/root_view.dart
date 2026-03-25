@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../state/app_state.dart';
 import '../state/settings_state.dart';
 import 'helpers/tune_colors.dart';
@@ -118,7 +119,7 @@ class _ErrorView extends StatelessWidget {
               const Icon(Icons.error_outline_rounded,
                   size: 48, color: TuneColors.error),
               const SizedBox(height: 16),
-              const Text('Erreur de démarrage', style: TuneFonts.title3),
+              Text(AppLocalizations.of(context).rootStartError, style: TuneFonts.title3),
               const SizedBox(height: 8),
               Text(message,
                   style: TuneFonts.footnote,
@@ -126,7 +127,7 @@ class _ErrorView extends StatelessWidget {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: onRetry,
-                child: const Text('Réessayer'),
+                child: Text(AppLocalizations.of(context).btnRetry),
               ),
             ],
           ),

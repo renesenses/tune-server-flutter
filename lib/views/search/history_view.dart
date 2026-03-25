@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
@@ -18,6 +19,7 @@ class HistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final history = context.watch<LibraryState>().history;
     final app = context.read<AppState>();
 
@@ -25,13 +27,13 @@ class HistoryView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Historique', style: TuneFonts.title3),
+        title: Text(l.historyTitle, style: TuneFonts.title3),
         actions: [
           if (history.isNotEmpty)
             TextButton(
               onPressed: () => _confirmClear(context, app),
-              child: const Text('Effacer',
-                  style: TextStyle(color: TuneColors.accent)),
+              child: Text(l.historyClear,
+                  style: const TextStyle(color: TuneColors.accent)),
             ),
         ],
       ),
@@ -51,22 +53,22 @@ class HistoryView extends StatelessWidget {
   }
 
   Future<void> _confirmClear(BuildContext context, AppState app) async {
+    final l = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Effacer l\'historique', style: TuneFonts.title3),
-        content: const Text('Cette action est irréversible.',
-            style: TuneFonts.body),
+        title: Text(l.historyClearTitle, style: TuneFonts.title3),
+        content: Text(l.actionIrreversible, style: TuneFonts.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Effacer',
-                style: TextStyle(color: Colors.red)),
+            child: Text(l.historyClear,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -122,13 +124,13 @@ class _EmptyHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history_rounded, size: 56, color: TuneColors.textTertiary),
-          SizedBox(height: 12),
-          Text('Aucun historique', style: TuneFonts.subheadline),
+          const Icon(Icons.history_rounded, size: 56, color: TuneColors.textTertiary),
+          const SizedBox(height: 12),
+          Text(AppLocalizations.of(context).historyEmpty, style: TuneFonts.subheadline),
         ],
       ),
     );

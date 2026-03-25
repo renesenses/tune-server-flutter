@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
@@ -25,36 +26,17 @@ class iPhoneContentView extends StatefulWidget {
 class _iPhoneContentViewState extends State<iPhoneContentView> {
   int _selectedIndex = 0;
 
-  static const _tabs = [
-    (
-      icon: Icons.library_music_outlined,
-      activeIcon: Icons.library_music_rounded,
-      label: 'Bibliothèque',
-    ),
-    (
-      icon: Icons.search_rounded,
-      activeIcon: Icons.search_rounded,
-      label: 'Recherche',
-    ),
-    (
-      icon: Icons.cloud_outlined,
-      activeIcon: Icons.cloud_rounded,
-      label: 'Streaming',
-    ),
-    (
-      icon: Icons.radio_outlined,
-      activeIcon: Icons.radio_rounded,
-      label: 'Radios',
-    ),
-    (
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      label: 'Paramètres',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final tabs = [
+      (icon: Icons.library_music_outlined, activeIcon: Icons.library_music_rounded, label: l.navLibrary),
+      (icon: Icons.search_rounded,         activeIcon: Icons.search_rounded,         label: l.navSearch),
+      (icon: Icons.cloud_outlined,         activeIcon: Icons.cloud_rounded,          label: l.navStreaming),
+      (icon: Icons.radio_outlined,         activeIcon: Icons.radio_rounded,          label: l.navRadios),
+      (icon: Icons.settings_outlined,      activeIcon: Icons.settings_rounded,       label: l.navSettings),
+    ];
+
     return Scaffold(
       backgroundColor: TuneColors.background,
       body: Column(
@@ -66,7 +48,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (i) => setState(() => _selectedIndex = i),
-        items: _tabs
+        items: tabs
             .map((t) => BottomNavigationBarItem(
                   icon: Icon(t.icon),
                   activeIcon: Icon(t.activeIcon),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Radio;
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../server/event_bus.dart';
 import '../../state/app_state.dart';
@@ -45,16 +46,17 @@ class _RadiosViewState extends State<RadiosView>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Radios', style: TuneFonts.title3),
+        title: Text(l.radiosTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmark_rounded,
                 size: 22, color: TuneColors.textSecondary),
-            tooltip: 'Favoris sauvegardés',
+            tooltip: l.radiosSavedFavorites,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const RadioFavoritesView()),
             ),
@@ -69,31 +71,34 @@ class _RadiosViewState extends State<RadiosView>
                 _showImportUrlDialog();
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _MenuAction.importText,
-                child: ListTile(
-                  leading: Icon(Icons.paste_rounded),
-                  title: Text('Coller un M3U'),
-                  contentPadding: EdgeInsets.zero,
+            itemBuilder: (_) {
+              final l = AppLocalizations.of(context);
+              return [
+                PopupMenuItem(
+                  value: _MenuAction.importText,
+                  child: ListTile(
+                    leading: const Icon(Icons.paste_rounded),
+                    title: Text(l.radiosPasteM3u),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: _MenuAction.importUrl,
-                child: ListTile(
-                  leading: Icon(Icons.download_rounded),
-                  title: Text('Importer depuis une URL'),
-                  contentPadding: EdgeInsets.zero,
+                PopupMenuItem(
+                  value: _MenuAction.importUrl,
+                  child: ListTile(
+                    leading: const Icon(Icons.download_rounded),
+                    title: Text(l.radiosImportUrl),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
-            ],
+              ];
+            },
           ),
         ],
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [
-            Tab(text: 'Toutes'),
-            Tab(text: 'Favoris'),
+          tabs: [
+            Tab(text: l.radiosTabAll),
+            Tab(text: l.radiosTabFavorites),
           ],
         ),
       ),
@@ -119,44 +124,44 @@ class _RadiosViewState extends State<RadiosView>
     final urlCtrl = TextEditingController();
     final genreCtrl = TextEditingController();
 
+    final l = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Ajouter une radio', style: TuneFonts.title3),
+        title: Text(l.radiosAdd, style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
               style: TuneFonts.body,
-              decoration: const InputDecoration(labelText: 'Nom'),
+              decoration: InputDecoration(labelText: l.radiosName),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: urlCtrl,
               style: TuneFonts.body,
-              decoration: const InputDecoration(labelText: 'URL du flux'),
+              decoration: InputDecoration(labelText: l.radiosStreamUrl),
               keyboardType: TextInputType.url,
             ),
             const SizedBox(height: 8),
             TextField(
               controller: genreCtrl,
               style: TuneFonts.body,
-              decoration:
-                  const InputDecoration(labelText: 'Genre (optionnel)'),
+              decoration: InputDecoration(labelText: l.radiosGenre),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ajouter',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.btnAdd,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -179,11 +184,12 @@ class _RadiosViewState extends State<RadiosView>
 
   Future<void> _showImportTextDialog() async {
     final ctrl = TextEditingController();
+    final l = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Coller un M3U', style: TuneFonts.title3),
+        title: Text(l.radiosPasteM3u, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.footnote,
@@ -196,12 +202,12 @@ class _RadiosViewState extends State<RadiosView>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Importer',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.btnImport,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -214,7 +220,7 @@ class _RadiosViewState extends State<RadiosView>
             await context.read<AppState>().importM3UContent(content);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$added station(s) importée(s)')),
+            SnackBar(content: Text(AppLocalizations.of(context).radiosImportResult(added))),
           );
         }
       }
@@ -223,30 +229,30 @@ class _RadiosViewState extends State<RadiosView>
 
   Future<void> _showImportUrlDialog() async {
     final ctrl = TextEditingController();
+    final l = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title:
-            const Text('Importer depuis une URL', style: TuneFonts.title3),
+        title: Text(l.radiosImportUrl, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.body,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'https://example.com/radios.m3u',
-            labelText: 'URL du fichier M3U',
+            labelText: l.radiosImportUrlLabel,
           ),
           keyboardType: TextInputType.url,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Télécharger',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.btnDownload,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -265,19 +271,19 @@ class _RadiosViewState extends State<RadiosView>
                 await context.read<AppState>().importM3UContent(resp.body);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$added station(s) importée(s)')),
+                SnackBar(content: Text(AppLocalizations.of(context).radiosImportResult(added))),
               );
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erreur HTTP ${resp.statusCode}')),
+              SnackBar(content: Text(AppLocalizations.of(context).radiosImportHttpError(resp.statusCode))),
             );
           }
         } catch (_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Impossible de télécharger le fichier')),
+              SnackBar(
+                  content: Text(AppLocalizations.of(context).radiosImportFailed)),
             );
           }
         }

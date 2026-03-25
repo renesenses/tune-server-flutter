@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/enums.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
@@ -265,7 +266,7 @@ class _TrackInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                track?.title ?? 'Aucune piste',
+                track?.title ?? AppLocalizations.of(context).nowPlayingNoTrack,
                 style: TuneFonts.title2,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

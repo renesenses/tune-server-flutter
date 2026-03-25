@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -20,11 +21,12 @@ class ArtistsListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final artists = context.watch<LibraryState>().artists;
     if (artists.isEmpty) {
-      return const LibraryEmptyState(
+      return LibraryEmptyState(
         icon: Icons.people_rounded,
-        message: 'Aucun artiste dans la bibliothèque',
+        message: l.libraryEmptyArtists,
       );
     }
     return ListView.separated(

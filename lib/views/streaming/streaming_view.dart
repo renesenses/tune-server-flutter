@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/streaming/streaming_service.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -28,6 +29,7 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final playlists = context.watch<LibraryState>().playlists;
     final app = context.read<AppState>();
 
@@ -58,13 +60,12 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Ajouter à une playlist',
-                      style: TuneFonts.title3),
+                  Text(l.playlistAddTo, style: TuneFonts.title3),
                   TextButton.icon(
                     icon: const Icon(Icons.add_rounded,
                         color: TuneColors.accent),
-                    label: const Text('Nouvelle',
-                        style: TextStyle(color: TuneColors.accent)),
+                    label: Text(l.playlistNewPlaylist,
+                        style: const TextStyle(color: TuneColors.accent)),
                     onPressed: _adding
                         ? null
                         : () => _createAndAdd(context, app),
@@ -75,8 +76,8 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
             const Divider(),
             Expanded(
               child: playlists.isEmpty
-                  ? const Center(
-                      child: Text('Aucune playlist',
+                  ? Center(
+                      child: Text(l.libraryEmptyPlaylists,
                           style: TuneFonts.subheadline),
                     )
                   : ListView.builder(
@@ -122,28 +123,29 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
   }
 
   Future<String?> _askPlaylistName(BuildContext context) async {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController();
     return showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Nouvelle playlist', style: TuneFonts.title3),
+        title: Text(l.playlistNewPlaylist, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           style: TuneFonts.body,
-          decoration: const InputDecoration(hintText: 'Nom de la playlist'),
+          decoration: InputDecoration(hintText: l.playlistName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Annuler',
-                style: TextStyle(color: TuneColors.textSecondary)),
+            child: Text(l.btnCancel,
+                style: const TextStyle(color: TuneColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(ctrl.text),
-            child: const Text('Créer',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.btnCreate,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
