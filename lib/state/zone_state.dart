@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/domain_models.dart' hide DiscoveredDevice;
+import '../models/domain_models.dart';
 import '../models/enums.dart';
 import '../server/database/database.dart';
 import '../server/discovery/discovery_manager.dart';

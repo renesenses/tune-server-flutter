@@ -9,7 +9,6 @@ import 'enums.dart';
 //
 // Ce fichier contient :
 //   - ZoneWithState    : Zone DB + état runtime (playback, currentTrack…)
-//   - DiscoveredDevice : device UPnP/DLNA découvert sur le réseau
 //   - QueueSnapshot    : snapshot de la file de lecture
 //   - HistoryEntry     : entrée d'historique de lecture
 //   - GenreInfo        : genre + compteur pour la vue Genres
@@ -90,55 +89,6 @@ class ZoneWithState {
   int get hashCode => id.hashCode;
 }
 
-// ---------------------------------------------------------------------------
-// DiscoveredDevice
-// ---------------------------------------------------------------------------
-
-class DiscoveredDevice {
-  final String id;
-  final String name;
-  final OutputType type;
-  final String host;
-  final int port;
-  final bool? available;
-  final Map<String, dynamic>? capabilities;
-
-  const DiscoveredDevice({
-    required this.id,
-    required this.name,
-    required this.type,
-    required this.host,
-    required this.port,
-    this.available,
-    this.capabilities,
-  });
-
-  DiscoveredDevice copyWith({
-    String? id,
-    String? name,
-    OutputType? type,
-    String? host,
-    int? port,
-    bool? available,
-    Map<String, dynamic>? capabilities,
-  }) =>
-      DiscoveredDevice(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        type: type ?? this.type,
-        host: host ?? this.host,
-        port: port ?? this.port,
-        available: available ?? this.available,
-        capabilities: capabilities ?? this.capabilities,
-      );
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || (other is DiscoveredDevice && other.id == id);
-
-  @override
-  int get hashCode => id.hashCode;
-}
 
 // ---------------------------------------------------------------------------
 // QueueSnapshot
