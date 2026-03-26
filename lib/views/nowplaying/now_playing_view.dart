@@ -193,6 +193,7 @@ class _BlurredBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coverPath = track?.coverPath;
+    final isHttp = coverPath != null && coverPath.startsWith('http');
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -202,11 +203,11 @@ class _BlurredBackground extends StatelessWidget {
         if (coverPath != null)
           ImageFiltered(
             imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-            child: Image.file(
-              File(coverPath),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
+            child: isHttp
+                ? Image.network(coverPath, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink())
+                : Image.file(File(coverPath), fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink()),
           ),
         // Overlay sombre
         ColoredBox(

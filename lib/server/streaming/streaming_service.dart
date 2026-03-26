@@ -18,6 +18,7 @@ class StreamingSearchResult {
   final String? coverUrl;
   final String? previewUrl;
   final String serviceId; // 'qobuz' | 'tidal' | 'youtube'
+  final String type; // 'track' | 'album' | 'artist'
   final Map<String, dynamic> raw; // données brutes pour getStreamUrl
 
   const StreamingSearchResult({
@@ -29,6 +30,7 @@ class StreamingSearchResult {
     this.coverUrl,
     this.previewUrl,
     required this.serviceId,
+    this.type = 'track',
     this.raw = const {},
   });
 }

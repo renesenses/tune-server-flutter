@@ -167,13 +167,117 @@ class _ResultsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Groupe les résultats par album pour afficher un bouton "Voir l'album"
-    return ListView.separated(
+    final l = AppLocalizations.of(context);
+    // Sépare par type : tracks, albums, artistes
+    final tracks = results.where((r) => r.type == 'track').toList();
+    final albums = results.where((r) => r.type == 'album').toList();
+    final artists = results.where((r) => r.type == 'artist').toList();
+
+    return ListView(
       padding: const EdgeInsets.only(bottom: 80),
-      itemCount: results.length,
-      separatorBuilder: (_, __) =>
-          const Divider(height: 1, indent: 72, color: TuneColors.divider),
-      itemBuilder: (_, i) => _ResultTile(result: results[i]),
+      children: [
+        // --- Albums (carousel horizontal) ---
+        if (albums.isNotEmpty) ...[
+          _SectionHeader(title: l.tabAlbums),
+          SizedBox(
+            height: 180,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: albums.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _AlbumCard(result: albums[i], serviceId: serviceId),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        // --- Artistes ---
+        if (artists.isNotEmpty) ...[
+          _SectionHeader(title: l.tabArtists),
+          ...artists.map((r) => _ArtistTile(result: r)),
+          const SizedBox(height: 16),
+        ],
+        // --- Pistes ---
+        if (tracks.isNotEmpty) ...[
+          _SectionHeader(title: l.tabTracks),
+          ...tracks.map((r) => Column(
+            children: [
+              _ResultTile(result: r),
+              const Divider(height: 1, indent: 72, color: TuneColors.divider),
+            ],
+          )),
+        ],
+        // --- Fallback si pas de type (flat list) ---
+        if (tracks.isEmpty && albums.isEmpty && artists.isEmpty)
+          ...results.map((r) => Column(
+            children: [
+              _ResultTile(result: r),
+              const Divider(height: 1, indent: 72, color: TuneColors.divider),
+            ],
+          )),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+    child: Text(title, style: TuneFonts.title3),
+  );
+}
+
+class _AlbumCard extends StatelessWidget {
+  final StreamingSearchResult result;
+  final String serviceId;
+  const _AlbumCard({required this.result, required this.serviceId});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => StreamingAlbumDetailView(track: result),
+        ),
+      ),
+      child: SizedBox(
+        width: 130,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ArtworkView(url: result.coverUrl, size: 130, cornerRadius: 8),
+            const SizedBox(height: 6),
+            Text(result.title, style: TuneFonts.caption,
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+            if (result.artist != null)
+              Text(result.artist!, style: TuneFonts.caption.copyWith(
+                  color: TuneColors.textTertiary),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArtistTile extends StatelessWidget {
+  final StreamingSearchResult result;
+  const _ArtistTile({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 22,
+        backgroundColor: TuneColors.surfaceVariant,
+        child: result.coverUrl != null
+            ? ClipOval(child: ArtworkView(url: result.coverUrl, size: 44))
+            : const Icon(Icons.person_rounded, color: TuneColors.textTertiary),
+      ),
+      title: Text(result.title, style: TuneFonts.body),
     );
   }
 }
