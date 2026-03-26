@@ -125,20 +125,11 @@ class LibraryScanner {
           ? await _upsertArtist(meta.artist!, meta.albumArtist)
           : null;
 
-      // Artwork : embedded d'abord, puis iTunes/MusicBrainz
-      String? coverPath =
+      // Artwork : uniquement depuis le fichier (embarqué).
+      // Le fetch réseau (iTunes/MusicBrainz) est exclu du scan pour ne pas
+      // bloquer — il peut être lancé séparément via fetchArtworkForLibrary().
+      final String? coverPath =
           meta.hasCoverData ? await _artworkManager.coverPathForTrack(meta.filePath) : null;
-
-      if (coverPath == null && meta.album != null) {
-        final fetched = await _coverFetcher.fetchForAlbum(
-          album: meta.album!,
-          artist: meta.artist,
-        );
-        if (fetched != null) {
-          coverPath =
-              await _artworkManager.coverPathForUrl(fetched.artworkUrl);
-        }
-      }
 
       // Album
       final albumId = meta.album != null
