@@ -180,6 +180,14 @@ class ZoneManager {
     );
 
     await instance.setOutput(output);
+
+    // Synchronise le volume de la zone avec celui lu du renderer DLNA
+    final rendererVolume = output.currentVolume;
+    if (rendererVolume != null && (rendererVolume - zone.volume).abs() > 0.01) {
+      instance.zone = instance.zone.copyWith(volume: rendererVolume);
+      await _db.zoneRepo.setVolume(zone.id, rendererVolume);
+    }
+
     _instances[zone.id] = instance;
 
     EventBus.instance.emit(DeviceDiscoveredEvent(instance.snapshot()));

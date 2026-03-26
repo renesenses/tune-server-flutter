@@ -44,7 +44,37 @@ class DLNAOutput implements OutputTarget {
   @override
   Future<OutputResult> prepare() async {
     _readyState = OutputReadyState.ready;
+    // Lire le volume réel du renderer DLNA
+    await _fetchCurrentVolume();
     return const OutputSuccess();
+  }
+
+  /// Interroge le RenderingControl pour obtenir le volume actuel du renderer.
+  Future<void> _fetchCurrentVolume() async {
+    if (renderingControlUrl == null) return;
+    try {
+      final response = await _soapRequest(
+        url: renderingControlUrl!,
+        service: 'RenderingControl',
+        action: 'GetVolume',
+        args: {
+          'InstanceID': '0',
+          'Channel': 'Master',
+        },
+      );
+      if (response == null) return;
+      final doc = XmlDocument.parse(response);
+      final volStr = doc.descendants
+          .whereType<XmlElement>()
+          .firstWhere((e) => e.localName == 'CurrentVolume',
+              orElse: () => XmlElement(XmlName('CurrentVolume')))
+          .innerText
+          .trim();
+      final dlnaVol = int.tryParse(volStr);
+      if (dlnaVol != null) {
+        _volume = (dlnaVol / 100).clamp(0.0, 1.0);
+      }
+    } catch (_) {}
   }
 
   @override

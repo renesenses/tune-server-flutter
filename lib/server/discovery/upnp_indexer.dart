@@ -193,6 +193,7 @@ class UPnPIndexer {
                 year: item.year,
                 genre: item.genre,
                 source: device.id,
+                coverPath: item.albumArtUrl,
               )
             : null;
 
@@ -256,6 +257,7 @@ class UPnPIndexer {
     int? year,
     String? genre,
     required String source,
+    String? coverPath,
   }) async {
     final existing = await (_db.select(_db.albums)
           ..where((a) =>
@@ -264,7 +266,14 @@ class UPnPIndexer {
                   ? a.artistId.equals(artistId)
                   : a.artistId.isNull())))
         .getSingleOrNull();
-    if (existing != null) return existing.id;
+    if (existing != null) {
+      // Met à jour la cover si absente
+      if (existing.coverPath == null && coverPath != null) {
+        await (_db.update(_db.albums)..where((a) => a.id.equals(existing.id)))
+            .write(AlbumsCompanion(coverPath: Value(coverPath)));
+      }
+      return existing.id;
+    }
 
     return _db.into(_db.albums).insert(
           AlbumsCompanion.insert(
@@ -274,6 +283,7 @@ class UPnPIndexer {
             year: Value(year),
             genre: Value(genre),
             source: Value(source),
+            coverPath: Value(coverPath),
           ),
         );
   }
