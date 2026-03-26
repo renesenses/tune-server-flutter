@@ -217,6 +217,7 @@ class UPnPIndexer {
           trackNumber: Value(item.trackNumber),
           durationMs: Value(item.durationMs),
           filePath: Value(item.resourceUrl),
+          format: Value(_formatFromMime(item.mimeType, item.resourceUrl)),
           sampleRate: Value(item.sampleRate),
           bitDepth: Value(item.bitDepth),
           channels: Value(item.channels),
@@ -296,6 +297,34 @@ class UPnPIndexer {
         GROUP BY COALESCE(title,'') || '|' || COALESCE(artist_name,'') || '|' || COALESCE(album_id,'') || '|' || COALESCE(track_number,0)
       )
     ''');
+  }
+
+  String? _formatFromMime(String? mimeType, String? url) {
+    // Depuis le MIME type
+    if (mimeType != null) {
+      final m = mimeType.toLowerCase();
+      if (m.contains('flac')) return 'flac';
+      if (m.contains('alac') || m.contains('m4a') && url != null && url.toLowerCase().endsWith('.m4a')) return 'alac';
+      if (m.contains('wav') || m.contains('wave')) return 'wav';
+      if (m.contains('aiff')) return 'aiff';
+      if (m.contains('ogg')) return 'ogg';
+      if (m.contains('opus')) return 'opus';
+      if (m.contains('mp3') || m.contains('mpeg')) return 'mp3';
+      if (m.contains('aac') || m.contains('mp4')) return 'aac';
+      if (m.contains('dsf') || m.contains('dsd')) return 'dsd';
+      if (m.contains('wma')) return 'wma';
+    }
+    // Fallback depuis l'extension du fichier
+    if (url != null) {
+      final ext = url.split('.').last.split('?').first.toLowerCase();
+      const map = {
+        'flac': 'flac', 'mp3': 'mp3', 'aac': 'aac', 'm4a': 'alac',
+        'wav': 'wav', 'aiff': 'aiff', 'aif': 'aiff', 'ogg': 'ogg',
+        'opus': 'opus', 'dsf': 'dsd', 'dff': 'dsd', 'wma': 'wma',
+      };
+      if (map.containsKey(ext)) return map[ext];
+    }
+    return null;
   }
 
   bool _isAudio(String? mimeType) {
