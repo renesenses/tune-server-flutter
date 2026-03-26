@@ -153,9 +153,7 @@ class _ServerTile extends StatelessWidget {
         trailing: lib.isScanning
             ? _ScanProgress(progress: lib.scanProgress)
             : _IndexButton(
-                onTap: device.available
-                    ? () => context.read<AppState>().indexUPnPServer(device)
-                    : null,
+                onTap: () => context.read<AppState>().indexUPnPServer(device),
                 label: l.sourcesIndexBtn,
               ),
       ),
