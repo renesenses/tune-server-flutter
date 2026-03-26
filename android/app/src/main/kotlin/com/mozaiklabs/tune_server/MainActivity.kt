@@ -103,7 +103,7 @@ class MainActivity : FlutterActivity() {
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(path)
-            retriever.embeddedPicture?.toList()
+            retriever.embeddedPicture?.map { it.toInt() and 0xFF }
         } catch (_: Exception) {
             null
         } finally {
