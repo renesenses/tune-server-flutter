@@ -141,14 +141,15 @@ class ServerEngine {
     // 2. HTTP streamer
     await httpStreamer.start();
 
-    // 3. Bootstrap DB → zones
+    // 3. Discovery — charger les saved_devices AVANT les zones
+    //    pour que les zones retrouvent leurs outputs DLNA
+    await discoveryManager.start();
+
+    // 4. Bootstrap DB → zones (utilise les devices du cache discovery)
     await zoneManager.bootstrap();
 
-    // 4. Streaming services (restaure les tokens)
+    // 5. Streaming services (restaure les tokens)
     await streamingManager.bootstrap();
-
-    // 5. Discovery UPnP/DLNA
-    await discoveryManager.start();
 
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));
