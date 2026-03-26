@@ -71,24 +71,18 @@ class QobuzService implements StreamingService {
     String password,
   ) async {
     try {
-      // Signature MD5 : MD5(email + MD5(password) + appSecret)
-      final passwordMd5 = _md5(password);
-      final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-      final signature = _md5('userlogin$email$timestamp$_appSecret');
-
-      final response = await _http.get(
-        Uri.parse('$_baseUrl/user/login').replace(queryParameters: {
-          'email': email,
-          'password': passwordMd5,
-          'app_id': _appId,
-          'timestamp': timestamp,
-          'request_sig': signature,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final uri = Uri.https('www.qobuz.com', '/api.json/0.2/user/login', {
+        'email': email,
+        'password': password,
+        'app_id': _appId,
+      });
+      final response = await _http.get(uri, headers: {
+        'User-Agent': 'TuneServer/1.0',
+      }).timeout(const Duration(seconds: 15));
 
       if (response.statusCode != 200) {
         return StreamingAuthFailure(
-            'Qobuz login failed: HTTP ${response.statusCode}');
+            'Qobuz: ${response.body.length > 150 ? response.body.substring(0, 150) : response.body}');
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;

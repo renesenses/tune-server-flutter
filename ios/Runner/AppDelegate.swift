@@ -11,6 +11,10 @@ import UIKit
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let registry = engineBridge.pluginRegistry
+    GeneratedPluginRegistrant.register(with: registry)
+    AirPlayPlugin.register(with: registry.registrar(forPlugin: "AirPlayPlugin")!)
+    LibraryPlugin.register(with: registry.registrar(forPlugin: "LibraryPlugin")!)
+    AppleMusicPlugin.register(with: registry.registrar(forPlugin: "AppleMusicPlugin")!)
   }
 }

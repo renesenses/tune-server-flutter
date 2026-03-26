@@ -88,6 +88,24 @@ class RadioMetadataEvent extends AppEvent {
   const RadioMetadataEvent(this.stationName, {this.title, this.artist});
 }
 
+// --- Zones ---
+
+class ZoneCreatedEvent extends AppEvent {
+  final int zoneId;
+  final String name;
+  const ZoneCreatedEvent(this.zoneId, this.name);
+}
+
+class ZoneDeletedEvent extends AppEvent {
+  final int zoneId;
+  const ZoneDeletedEvent(this.zoneId);
+}
+
+class ZoneUpdatedEvent extends AppEvent {
+  final int zoneId;
+  const ZoneUpdatedEvent(this.zoneId);
+}
+
 // --- Server lifecycle ---
 
 class ServerStartedEvent extends AppEvent {

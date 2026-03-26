@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import '../../models/enums.dart';
 import '../audio/local_audio_output.dart';
 import '../discovery/discovery_manager.dart';
@@ -31,7 +33,7 @@ class OutputFactory {
 
       case OutputType.dlna:
         if (device == null) {
-          // Pas de device → fallback local
+          debugPrint('[output_factory] DLNA requested but no device — fallback to Local');
           return LocalAudioOutput(displayName: 'Local (fallback)');
         }
         final avUrl = device.capabilities.avTransportControlUrl;

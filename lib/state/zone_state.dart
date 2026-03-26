@@ -107,6 +107,15 @@ class ZoneState extends ChangeNotifier {
   List<DiscoveredDevice> get servers =>
       _devices.where((d) => d.type == 'server').toList();
 
+  /// Renderers non encore assignés à une zone.
+  List<DiscoveredDevice> get unboundRenderers {
+    final boundIds = _zones
+        .where((z) => z.outputDeviceId != null)
+        .map((z) => z.outputDeviceId!)
+        .toSet();
+    return renderers.where((d) => !boundIds.contains(d.id)).toList();
+  }
+
   void setDevices(List<DiscoveredDevice> devices) {
     _devices = devices;
     notifyListeners();

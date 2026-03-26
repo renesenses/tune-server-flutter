@@ -93,8 +93,8 @@ class ServerEngine {
 
   /// Crée et initialise le ServerEngine.
   static Future<ServerEngine> create({
-    String qobuzAppId = '',
-    String qobuzAppSecret = '',
+    String qobuzAppId = '798273057',
+    String qobuzAppSecret = 'abb21364945c0583309667d13ca3d93a',
   }) async {
     final db = TuneDatabase();
     final config = ServerConfiguration.instance;

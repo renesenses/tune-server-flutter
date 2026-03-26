@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../server/discovery/discovery_manager.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
+import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 
@@ -197,6 +198,30 @@ class _RendererTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final zones = context.watch<ZoneState>().zones;
+    final assignedZone = zones.cast<dynamic>().firstWhere(
+      (z) => z.outputDeviceId == device.id,
+      orElse: () => null,
+    );
+    final isAssigned = assignedZone != null;
+
+    // Label et couleur du badge
+    final String badgeLabel;
+    final Color badgeColor;
+    final Color badgeBg;
+    if (isAssigned) {
+      badgeLabel = assignedZone.name;
+      badgeColor = TuneColors.accent;
+      badgeBg = TuneColors.accent.withValues(alpha: 0.12);
+    } else if (device.available) {
+      badgeLabel = l.sourcesAvailable;
+      badgeColor = TuneColors.accent;
+      badgeBg = TuneColors.accent.withValues(alpha: 0.12);
+    } else {
+      badgeLabel = l.sourcesUnavailable;
+      badgeColor = TuneColors.textTertiary;
+      badgeBg = TuneColors.surfaceVariant;
+    }
 
     return Dismissible(
       key: ValueKey(device.id),
@@ -208,7 +233,7 @@ class _RendererTile extends StatelessWidget {
         tileColor: TuneColors.surface,
         leading: _DeviceIcon(
           icon: Icons.cast_rounded,
-          available: device.available,
+          available: device.available || isAssigned,
         ),
         title: Text(device.name, style: TuneFonts.body),
         subtitle: Text(
@@ -218,18 +243,12 @@ class _RendererTile extends StatelessWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: device.available
-                ? TuneColors.accent.withValues(alpha: 0.12)
-                : TuneColors.surfaceVariant,
+            color: badgeBg,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            device.available ? l.sourcesAvailable : l.sourcesUnavailable,
-            style: TuneFonts.caption.copyWith(
-              color: device.available
-                  ? TuneColors.accent
-                  : TuneColors.textTertiary,
-            ),
+            badgeLabel,
+            style: TuneFonts.caption.copyWith(color: badgeColor),
           ),
         ),
       ),
@@ -325,7 +344,7 @@ class _ProbeDialogState extends State<_ProbeDialog> {
           TextField(
             controller: widget.ipCtrl,
             style: TuneFonts.body,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.url,
             decoration: InputDecoration(
               labelText: l.sourcesIpLabel,
               hintText: l.sourcesIpHint,

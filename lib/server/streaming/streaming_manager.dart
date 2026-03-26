@@ -20,16 +20,14 @@ class StreamingManager {
   final Map<String, StreamingService> _services = {};
 
   StreamingManager(this._db, {
-    String qobuzAppId = '',
-    String qobuzAppSecret = '',
+    String qobuzAppId = '798273057',
+    String qobuzAppSecret = 'abb21364945c0583309667d13ca3d93a',
   }) {
-    // Enregistre les services disponibles
-    if (qobuzAppId.isNotEmpty) {
-      _services['qobuz'] = QobuzService(
-        appId: qobuzAppId,
-        appSecret: qobuzAppSecret,
-      );
-    }
+    // Enregistre tous les services (auth configurée plus tard via UI)
+    _services['qobuz'] = QobuzService(
+      appId: qobuzAppId,
+      appSecret: qobuzAppSecret,
+    );
     _services['tidal'] = TidalService();
     _services['youtube'] = YouTubeService();
   }

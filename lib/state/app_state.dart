@@ -54,8 +54,8 @@ class AppState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   static Future<AppState> create({
-    String qobuzAppId = '',
-    String qobuzAppSecret = '',
+    String qobuzAppId = '798273057',
+    String qobuzAppSecret = 'abb21364945c0583309667d13ca3d93a',
   }) async {
     final engine = await ServerEngine.create(
       qobuzAppId: qobuzAppId,
@@ -95,6 +95,10 @@ class AppState extends ChangeNotifier {
         _refreshPlaylists(),
         _refreshStreamingStatus(),
       ]);
+
+      // Charge les devices déjà connus + relance le discovery SSDP
+      zoneState.setDevices(engine.allDevices());
+      engine.discoveryManager.refresh();
 
       notifyListeners();
     } catch (e) {
@@ -149,6 +153,14 @@ class AppState extends ChangeNotifier {
     // Radio metadata
     _subs.add(EventBus.instance
         .subscribe<RadioMetadataEvent>(_onRadioMetadata));
+
+    // Zone lifecycle — auto-refresh zones list on changes
+    _subs.add(EventBus.instance
+        .subscribe<ZoneCreatedEvent>((_) => _refreshZones()));
+    _subs.add(EventBus.instance
+        .subscribe<ZoneDeletedEvent>((_) => _refreshZones()));
+    _subs.add(EventBus.instance
+        .subscribe<ZoneUpdatedEvent>((_) => _refreshZones()));
 
     // Server errors
     _subs.add(EventBus.instance

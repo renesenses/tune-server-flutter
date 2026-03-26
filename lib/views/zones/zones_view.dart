@@ -95,7 +95,7 @@ class _ZonesBody extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final zones = context.watch<ZoneState>().zones;
     final currentId = context.watch<ZoneState>().currentZoneId;
-    final renderers = context.watch<ZoneState>().renderers;
+    final renderers = context.watch<ZoneState>().unboundRenderers;
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
@@ -471,7 +471,7 @@ class _OutputPickerSheet extends StatelessWidget {
       (z) => z.id == zoneId,
       orElse: () => zoneState.zones.first,
     );
-    final renderers = zoneState.renderers;
+    final renderers = zoneState.unboundRenderers;
     final l = AppLocalizations.of(context);
     final currentType = zone.outputType ?? OutputType.local;
 

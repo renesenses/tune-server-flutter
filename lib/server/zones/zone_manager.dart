@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../models/enums.dart';
 import '../database/database.dart';
@@ -75,24 +76,36 @@ class ZoneManager {
     final zone = await _db.zoneRepo.byId(id);
     if (zone == null) throw StateError('Zone $id introuvable après insertion');
 
-    return _instantiate(zone, device: device);
+    final instance = await _instantiate(zone, device: device);
+    EventBus.instance.emit(ZoneCreatedEvent(id, name));
+    return instance;
   }
 
   /// Supprime une zone de la DB et dispose son instance.
+  /// Refuse de supprimer la dernière zone.
   Future<void> deleteZone(int id) async {
+    if (_instances.length <= 1) {
+      debugPrint('[zone_manager] cannot delete last zone');
+      return;
+    }
     final instance = _instances.remove(id);
     await instance?.dispose();
     await _db.zoneRepo.delete(id);
+    EventBus.instance.emit(ZoneDeletedEvent(id));
   }
 
   // ---------------------------------------------------------------------------
   // Volume
   // ---------------------------------------------------------------------------
 
-  /// Règle le volume d'une zone : persist en DB + applique sur l'output.
+  /// Règle le volume d'une zone : persist en DB + mémoire + output.
   Future<void> setVolume(int zoneId, double volume) async {
     await _db.zoneRepo.setVolume(zoneId, volume);
-    await _instances[zoneId]?.player.setVolume(volume);
+    final instance = _instances[zoneId];
+    if (instance != null) {
+      instance.zone = instance.zone.copyWith(volume: volume);
+      await instance.player.setVolume(volume);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -119,15 +132,17 @@ class ZoneManager {
       outputType: Value(type.rawValue),
       outputDeviceId: Value(device?.id),
     );
+    EventBus.instance.emit(ZoneUpdatedEvent(zoneId));
   }
 
-  /// Renomme une zone (DB + mémoire).
+  /// Renomme une zone (DB + mémoire + événement).
   Future<void> renameZone(int zoneId, String newName) async {
     await _db.zoneRepo.rename(zoneId, newName);
     final instance = _instances[zoneId];
     if (instance != null) {
       instance.zone = instance.zone.copyWith(name: newName);
     }
+    EventBus.instance.emit(ZoneUpdatedEvent(zoneId));
   }
 
   // ---------------------------------------------------------------------------
