@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../server/streaming/qobuz_service.dart';
 import '../../server/streaming/streaming_service.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
@@ -143,7 +144,7 @@ class _StreamingServiceDetailViewState
 
   Widget _buildBody() {
     if (_lastQuery == null) {
-      return const _SearchPrompt();
+      return _CatalogView(serviceId: widget.status.serviceId);
     }
     if (_results.isEmpty && !_loading) {
       return const _NoResults();
@@ -372,6 +373,112 @@ class _ResultTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue — vue par défaut (featured + playlists)
+// ---------------------------------------------------------------------------
+
+class _CatalogView extends StatefulWidget {
+  final String serviceId;
+  const _CatalogView({required this.serviceId});
+
+  @override
+  State<_CatalogView> createState() => _CatalogViewState();
+}
+
+class _CatalogViewState extends State<_CatalogView> {
+  final Map<String, List<StreamingSearchResult>> _sections = {};
+  List<StreamingSearchResult> _playlists = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCatalog();
+  }
+
+  Future<void> _loadCatalog() async {
+    final app = context.read<AppState>();
+    final service = app.engine.streamingManager.service(widget.serviceId);
+    if (service == null) return;
+
+    // Chargement des sections featured (Qobuz uniquement pour l'instant)
+    if (service is QobuzService) {
+      for (final (id, label) in QobuzService.featuredSections) {
+        final albums = await service.getFeaturedAlbums(id, limit: 15);
+        if (albums.isNotEmpty && mounted) {
+          setState(() => _sections[label] = albums);
+        }
+      }
+      final playlists = await service.getUserPlaylists();
+      if (mounted) {
+        setState(() {
+          _playlists = playlists;
+          _loading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading && _sections.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: TuneColors.accent),
+      );
+    }
+
+    if (_sections.isEmpty && _playlists.isEmpty) {
+      return const _SearchPrompt();
+    }
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 80),
+      children: [
+        // Sections featured
+        for (final entry in _sections.entries) ...[
+          _SectionHeader(title: entry.key),
+          SizedBox(
+            height: 180,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: entry.value.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _AlbumCard(
+                result: entry.value[i],
+                serviceId: widget.serviceId,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        // Playlists utilisateur
+        if (_playlists.isNotEmpty) ...[
+          _SectionHeader(title: 'Mes Playlists'),
+          ..._playlists.map((p) => ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: ArtworkView(url: p.coverUrl, size: 48),
+                ),
+                title: Text(p.title, style: TuneFonts.body,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: p.artist != null
+                    ? Text(p.artist!, style: TuneFonts.caption)
+                    : null,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StreamingAlbumDetailView(track: p),
+                  ),
+                ),
+              )),
+        ],
+      ],
     );
   }
 }
