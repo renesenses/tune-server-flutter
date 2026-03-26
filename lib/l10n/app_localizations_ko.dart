@@ -108,6 +108,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get navRadios => '라디오';
 
   @override
+  String get navZones => '구역';
+
+  @override
   String get navSettings => '설정';
 
   @override
@@ -261,6 +264,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get zonesNone => '구역 없음';
 
   @override
+  String get zonesRename => '구역 이름 바꾸기';
+
+  @override
   String get zonesDelete => '구역 삭제';
 
   @override
@@ -277,6 +283,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get zonesOutputBluetooth => '블루투스';
+
+  @override
+  String get zonesChangeOutput => '출력 변경';
+
+  @override
+  String get zonesOutputTitle => '오디오 출력';
+
+  @override
+  String get zonesAssignDevice => '할당';
+
+  @override
+  String get zonesTransferTitle => '재생 위치...';
+
+  @override
+  String get zonesNowPlaying => '여기서 재생 중';
+
+  @override
+  String zonesActivated(String name) {
+    return '활성 구역: $name';
+  }
 
   @override
   String get radiosTitle => '라디오';
@@ -688,4 +714,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String browseItemCount(int count) {
     return '$count 항목';
   }
+
+  @override
+  String get settingsSources => '소스 및 기기';
+
+  @override
+  String get settingsSourcesDesc => 'UPnP 서버, DLNA 렌더러';
+
+  @override
+  String get sourcesTitle => '소스 및 기기';
+
+  @override
+  String get sourcesServersSection => 'UPnP 콘텐츠 서버';
+
+  @override
+  String get sourcesRenderersSection => 'DLNA 렌더러';
+
+  @override
+  String get sourcesNoDevices => '발견된 기기 없음';
+
+  @override
+  String get sourcesTypeServer => '서버';
+
+  @override
+  String get sourcesTypeRenderer => '렌더러';
+
+  @override
+  String get sourcesAvailable => '사용 가능';
+
+  @override
+  String get sourcesUnavailable => '오프라인';
+
+  @override
+  String get sourcesIndexBtn => '라이브러리 인덱싱';
+
+  @override
+  String get sourcesForget => '삭제';
+
+  @override
+  String get sourcesAddManually => '수동으로 추가';
+
+  @override
+  String get sourcesAddTitle => '수동 검색';
+
+  @override
+  String get sourcesIpLabel => 'IP 주소';
+
+  @override
+  String get sourcesIpHint => '192.168.1.100';
+
+  @override
+  String get sourcesPortLabel => '포트';
+
+  @override
+  String get sourcesPortHint => '49152';
+
+  @override
+  String get sourcesProbing => '검색 중…';
+
+  @override
+  String get sourcesNotFound => '이 주소에서 UPnP 기기를 찾을 수 없습니다';
 }

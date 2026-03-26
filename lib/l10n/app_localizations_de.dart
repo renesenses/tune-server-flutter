@@ -109,6 +109,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navRadios => 'Radios';
 
   @override
+  String get navZones => 'Zonen';
+
+  @override
   String get navSettings => 'Einstellungen';
 
   @override
@@ -262,6 +265,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get zonesNone => 'Keine Zonen';
 
   @override
+  String get zonesRename => 'Zone umbenennen';
+
+  @override
   String get zonesDelete => 'Zone löschen';
 
   @override
@@ -278,6 +284,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get zonesOutputBluetooth => 'Bluetooth';
+
+  @override
+  String get zonesChangeOutput => 'Ausgabe ändern';
+
+  @override
+  String get zonesOutputTitle => 'Audioausgabe';
+
+  @override
+  String get zonesAssignDevice => 'Zuweisen';
+
+  @override
+  String get zonesTransferTitle => 'Wiedergabe auf...';
+
+  @override
+  String get zonesNowPlaying => 'Läuft hier';
+
+  @override
+  String zonesActivated(String name) {
+    return 'Aktive Zone: $name';
+  }
 
   @override
   String get radiosTitle => 'Radios';
@@ -692,4 +718,64 @@ class AppLocalizationsDe extends AppLocalizations {
   String browseItemCount(int count) {
     return '$count Elemente';
   }
+
+  @override
+  String get settingsSources => 'Quellen & Geräte';
+
+  @override
+  String get settingsSourcesDesc => 'UPnP-Server, DLNA-Renderer';
+
+  @override
+  String get sourcesTitle => 'Quellen & Geräte';
+
+  @override
+  String get sourcesServersSection => 'UPnP-Inhaltsserver';
+
+  @override
+  String get sourcesRenderersSection => 'DLNA-Renderer';
+
+  @override
+  String get sourcesNoDevices => 'Kein Gerät gefunden';
+
+  @override
+  String get sourcesTypeServer => 'Server';
+
+  @override
+  String get sourcesTypeRenderer => 'Renderer';
+
+  @override
+  String get sourcesAvailable => 'Verfügbar';
+
+  @override
+  String get sourcesUnavailable => 'Offline';
+
+  @override
+  String get sourcesIndexBtn => 'Bibliothek indizieren';
+
+  @override
+  String get sourcesForget => 'Vergessen';
+
+  @override
+  String get sourcesAddManually => 'Manuell hinzufügen';
+
+  @override
+  String get sourcesAddTitle => 'Manueller Scan';
+
+  @override
+  String get sourcesIpLabel => 'IP-Adresse';
+
+  @override
+  String get sourcesIpHint => '192.168.1.100';
+
+  @override
+  String get sourcesPortLabel => 'Port';
+
+  @override
+  String get sourcesPortHint => '49152';
+
+  @override
+  String get sourcesProbing => 'Suche läuft…';
+
+  @override
+  String get sourcesNotFound => 'Kein UPnP-Gerät unter dieser Adresse gefunden';
 }

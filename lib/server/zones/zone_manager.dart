@@ -111,11 +111,23 @@ class ZoneManager {
     final output = OutputFactory.create(type: type, device: device);
     await instance.setOutput(output);
 
-    await _db.zoneRepo.setOutput(
-      zoneId,
-      type.rawValue,
-      device?.id,
+    await _db.zoneRepo.setOutput(zoneId, type.rawValue, device?.id);
+
+    // Met à jour le modèle en mémoire pour que snapshot() reflète le changement
+    // immédiatement, sans attendre un prochain chargement depuis la DB.
+    instance.zone = instance.zone.copyWith(
+      outputType: Value(type.rawValue),
+      outputDeviceId: Value(device?.id),
     );
+  }
+
+  /// Renomme une zone (DB + mémoire).
+  Future<void> renameZone(int zoneId, String newName) async {
+    await _db.zoneRepo.rename(zoneId, newName);
+    final instance = _instances[zoneId];
+    if (instance != null) {
+      instance.zone = instance.zone.copyWith(name: newName);
+    }
   }
 
   // ---------------------------------------------------------------------------

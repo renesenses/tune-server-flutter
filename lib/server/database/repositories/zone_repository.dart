@@ -41,6 +41,12 @@ class ZoneRepository {
   // Helpers
   // ---------------------------------------------------------------------------
 
+  /// Renomme une zone.
+  Future<void> rename(int zoneId, String newName) async {
+    await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))
+        .write(ZonesCompanion(name: Value(newName)));
+  }
+
   /// Met à jour uniquement le volume persisté d'une zone.
   Future<void> setVolume(int zoneId, double volume) async {
     await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))

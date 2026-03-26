@@ -37,6 +37,7 @@
   "navSearch": "Recherche",
   "navStreaming": "Streaming",
   "navRadios": "Radios",
+  "navZones": "Zones",
   "navSettings": "Paramètres",
 
   "libraryTitle": "Bibliothèque",
@@ -97,12 +98,20 @@
   "zonesNew": "Nouvelle zone",
   "zonesNewName": "Nom de la zone",
   "zonesNone": "Aucune zone",
+  "zonesRename": "Renommer la zone",
   "zonesDelete": "Supprimer la zone",
   "zonesDevices": "Appareils disponibles",
   "zonesOutputLocal": "Local",
   "zonesOutputDlna": "DLNA / UPnP",
   "zonesOutputAirplay": "AirPlay",
   "zonesOutputBluetooth": "Bluetooth",
+  "zonesChangeOutput": "Changer la sortie",
+  "zonesOutputTitle": "Sortie audio",
+  "zonesAssignDevice": "Assigner",
+  "zonesTransferTitle": "Diffuser sur...",
+  "zonesNowPlaying": "En cours ici",
+  "zonesActivated": "Zone active : {name}",
+  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
 
   "radiosTitle": "Radios",
   "radiosTabAll": "Toutes",
@@ -248,5 +257,26 @@
   "browseItemCount": "{count} éléments",
   "@browseItemCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "settingsSources": "Sources & Appareils",
+  "settingsSourcesDesc": "Serveurs UPnP, renderers DLNA",
+  "sourcesTitle": "Sources & Appareils",
+  "sourcesServersSection": "Serveurs de contenu UPnP",
+  "sourcesRenderersSection": "Renderers DLNA",
+  "sourcesNoDevices": "Aucun appareil découvert",
+  "sourcesTypeServer": "Serveur",
+  "sourcesTypeRenderer": "Renderer",
+  "sourcesAvailable": "Disponible",
+  "sourcesUnavailable": "Hors ligne",
+  "sourcesIndexBtn": "Indexer la bibliothèque",
+  "sourcesForget": "Oublier",
+  "sourcesAddManually": "Ajouter manuellement",
+  "sourcesAddTitle": "Sonde manuelle",
+  "sourcesIpLabel": "Adresse IP",
+  "sourcesIpHint": "192.168.1.100",
+  "sourcesPortLabel": "Port",
+  "sourcesPortHint": "49152",
+  "sourcesProbing": "Sondage en cours…",
+  "sourcesNotFound": "Aucun appareil UPnP trouvé à cette adresse"
 }

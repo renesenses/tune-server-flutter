@@ -108,6 +108,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navRadios => 'Radios';
 
   @override
+  String get navZones => 'Zonas';
+
+  @override
   String get navSettings => 'Ajustes';
 
   @override
@@ -261,6 +264,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get zonesNone => 'Sin zonas';
 
   @override
+  String get zonesRename => 'Renombrar zona';
+
+  @override
   String get zonesDelete => 'Eliminar zona';
 
   @override
@@ -277,6 +283,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get zonesOutputBluetooth => 'Bluetooth';
+
+  @override
+  String get zonesChangeOutput => 'Cambiar salida';
+
+  @override
+  String get zonesOutputTitle => 'Salida de audio';
+
+  @override
+  String get zonesAssignDevice => 'Asignar';
+
+  @override
+  String get zonesTransferTitle => 'Reproducir en...';
+
+  @override
+  String get zonesNowPlaying => 'Sonando aquí';
+
+  @override
+  String zonesActivated(String name) {
+    return 'Zona activa: $name';
+  }
 
   @override
   String get radiosTitle => 'Radios';
@@ -691,4 +717,65 @@ class AppLocalizationsEs extends AppLocalizations {
   String browseItemCount(int count) {
     return '$count elementos';
   }
+
+  @override
+  String get settingsSources => 'Fuentes y dispositivos';
+
+  @override
+  String get settingsSourcesDesc => 'Servidores UPnP, reproductores DLNA';
+
+  @override
+  String get sourcesTitle => 'Fuentes y dispositivos';
+
+  @override
+  String get sourcesServersSection => 'Servidores de contenido UPnP';
+
+  @override
+  String get sourcesRenderersSection => 'Reproductores DLNA';
+
+  @override
+  String get sourcesNoDevices => 'Ningún dispositivo encontrado';
+
+  @override
+  String get sourcesTypeServer => 'Servidor';
+
+  @override
+  String get sourcesTypeRenderer => 'Reproductor';
+
+  @override
+  String get sourcesAvailable => 'Disponible';
+
+  @override
+  String get sourcesUnavailable => 'Sin conexión';
+
+  @override
+  String get sourcesIndexBtn => 'Indexar biblioteca';
+
+  @override
+  String get sourcesForget => 'Olvidar';
+
+  @override
+  String get sourcesAddManually => 'Añadir manualmente';
+
+  @override
+  String get sourcesAddTitle => 'Escaneo manual';
+
+  @override
+  String get sourcesIpLabel => 'Dirección IP';
+
+  @override
+  String get sourcesIpHint => '192.168.1.100';
+
+  @override
+  String get sourcesPortLabel => 'Puerto';
+
+  @override
+  String get sourcesPortHint => '49152';
+
+  @override
+  String get sourcesProbing => 'Buscando…';
+
+  @override
+  String get sourcesNotFound =>
+      'No se encontró ningún dispositivo UPnP en esta dirección';
 }

@@ -108,6 +108,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get navRadios => 'ラジオ';
 
   @override
+  String get navZones => 'ゾーン';
+
+  @override
   String get navSettings => '設定';
 
   @override
@@ -261,6 +264,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get zonesNone => 'ゾーンなし';
 
   @override
+  String get zonesRename => 'ゾーン名を変更';
+
+  @override
   String get zonesDelete => 'ゾーンを削除';
 
   @override
@@ -277,6 +283,26 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get zonesOutputBluetooth => 'Bluetooth';
+
+  @override
+  String get zonesChangeOutput => '出力を変更';
+
+  @override
+  String get zonesOutputTitle => '音声出力';
+
+  @override
+  String get zonesAssignDevice => '割り当て';
+
+  @override
+  String get zonesTransferTitle => '再生先...';
+
+  @override
+  String get zonesNowPlaying => 'ここで再生中';
+
+  @override
+  String zonesActivated(String name) {
+    return 'アクティブゾーン: $name';
+  }
 
   @override
   String get radiosTitle => 'ラジオ';
@@ -688,4 +714,64 @@ class AppLocalizationsJa extends AppLocalizations {
   String browseItemCount(int count) {
     return '$count 件';
   }
+
+  @override
+  String get settingsSources => 'ソースとデバイス';
+
+  @override
+  String get settingsSourcesDesc => 'UPnPサーバー、DLNAレンダラー';
+
+  @override
+  String get sourcesTitle => 'ソースとデバイス';
+
+  @override
+  String get sourcesServersSection => 'UPnPコンテンツサーバー';
+
+  @override
+  String get sourcesRenderersSection => 'DLNAレンダラー';
+
+  @override
+  String get sourcesNoDevices => 'デバイスが見つかりません';
+
+  @override
+  String get sourcesTypeServer => 'サーバー';
+
+  @override
+  String get sourcesTypeRenderer => 'レンダラー';
+
+  @override
+  String get sourcesAvailable => '利用可能';
+
+  @override
+  String get sourcesUnavailable => 'オフライン';
+
+  @override
+  String get sourcesIndexBtn => 'ライブラリをインデックス';
+
+  @override
+  String get sourcesForget => '削除';
+
+  @override
+  String get sourcesAddManually => '手動で追加';
+
+  @override
+  String get sourcesAddTitle => '手動スキャン';
+
+  @override
+  String get sourcesIpLabel => 'IPアドレス';
+
+  @override
+  String get sourcesIpHint => '192.168.1.100';
+
+  @override
+  String get sourcesPortLabel => 'ポート';
+
+  @override
+  String get sourcesPortHint => '49152';
+
+  @override
+  String get sourcesProbing => 'スキャン中…';
+
+  @override
+  String get sourcesNotFound => 'このアドレスにUPnPデバイスが見つかりません';
 }

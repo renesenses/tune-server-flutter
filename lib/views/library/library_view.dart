@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../search/search_view.dart';
 import 'albums_grid_view.dart';
 import 'apple_music_view.dart';
 import 'artists_list_view.dart';
@@ -54,6 +55,17 @@ class _LibraryViewState extends State<LibraryView>
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
         title: Text(l.libraryTitle, style: TuneFonts.title2),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded,
+                color: TuneColors.textSecondary),
+            tooltip: l.navSearch,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SearchView()),
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

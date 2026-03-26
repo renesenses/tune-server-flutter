@@ -308,6 +308,12 @@ abstract class AppLocalizations {
   /// **'Radios'**
   String get navRadios;
 
+  /// No description provided for @navZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones'**
+  String get navZones;
+
   /// No description provided for @navSettings.
   ///
   /// In en, this message translates to:
@@ -614,6 +620,12 @@ abstract class AppLocalizations {
   /// **'No zones'**
   String get zonesNone;
 
+  /// No description provided for @zonesRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename zone'**
+  String get zonesRename;
+
   /// No description provided for @zonesDelete.
   ///
   /// In en, this message translates to:
@@ -649,6 +661,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bluetooth'**
   String get zonesOutputBluetooth;
+
+  /// No description provided for @zonesChangeOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Change output'**
+  String get zonesChangeOutput;
+
+  /// No description provided for @zonesOutputTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get zonesOutputTitle;
+
+  /// No description provided for @zonesAssignDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign'**
+  String get zonesAssignDevice;
+
+  /// No description provided for @zonesTransferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on...'**
+  String get zonesTransferTitle;
+
+  /// No description provided for @zonesNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing here'**
+  String get zonesNowPlaying;
+
+  /// No description provided for @zonesActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Active zone: {name}'**
+  String zonesActivated(String name);
 
   /// No description provided for @radiosTitle.
   ///
@@ -1429,6 +1477,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} items'**
   String browseItemCount(int count);
+
+  /// No description provided for @settingsSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources & Devices'**
+  String get settingsSources;
+
+  /// No description provided for @settingsSourcesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'UPnP servers, DLNA renderers'**
+  String get settingsSourcesDesc;
+
+  /// No description provided for @sourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources & Devices'**
+  String get sourcesTitle;
+
+  /// No description provided for @sourcesServersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'UPnP Content Servers'**
+  String get sourcesServersSection;
+
+  /// No description provided for @sourcesRenderersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'DLNA Renderers'**
+  String get sourcesRenderersSection;
+
+  /// No description provided for @sourcesNoDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'No device discovered'**
+  String get sourcesNoDevices;
+
+  /// No description provided for @sourcesTypeServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get sourcesTypeServer;
+
+  /// No description provided for @sourcesTypeRenderer.
+  ///
+  /// In en, this message translates to:
+  /// **'Renderer'**
+  String get sourcesTypeRenderer;
+
+  /// No description provided for @sourcesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get sourcesAvailable;
+
+  /// No description provided for @sourcesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get sourcesUnavailable;
+
+  /// No description provided for @sourcesIndexBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Index library'**
+  String get sourcesIndexBtn;
+
+  /// No description provided for @sourcesForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget'**
+  String get sourcesForget;
+
+  /// No description provided for @sourcesAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get sourcesAddManually;
+
+  /// No description provided for @sourcesAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual probe'**
+  String get sourcesAddTitle;
+
+  /// No description provided for @sourcesIpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address'**
+  String get sourcesIpLabel;
+
+  /// No description provided for @sourcesIpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'192.168.1.100'**
+  String get sourcesIpHint;
+
+  /// No description provided for @sourcesPortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get sourcesPortLabel;
+
+  /// No description provided for @sourcesPortHint.
+  ///
+  /// In en, this message translates to:
+  /// **'49152'**
+  String get sourcesPortHint;
+
+  /// No description provided for @sourcesProbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Probing…'**
+  String get sourcesProbing;
+
+  /// No description provided for @sourcesNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No UPnP device found at this address'**
+  String get sourcesNotFound;
 }
 
 class _AppLocalizationsDelegate

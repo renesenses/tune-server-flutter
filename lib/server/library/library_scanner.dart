@@ -6,7 +6,6 @@ import 'package:path/path.dart' as p;
 import '../database/database.dart';
 import '../event_bus.dart';
 import 'artwork_manager.dart';
-import 'cover_art_fetcher.dart';
 import 'metadata_reader.dart';
 
 // ---------------------------------------------------------------------------
@@ -29,16 +28,12 @@ const _audioExtensions = {
 class LibraryScanner {
   final TuneDatabase _db;
   final ArtworkManager _artworkManager;
-  final CoverArtFetcher _coverFetcher;
 
   bool _scanning = false;
   bool _cancelRequested = false;
 
-  LibraryScanner(this._db, {
-    ArtworkManager? artworkManager,
-    CoverArtFetcher? coverFetcher,
-  })  : _artworkManager = artworkManager ?? ArtworkManager.instance,
-        _coverFetcher = coverFetcher ?? CoverArtFetcher();
+  LibraryScanner(this._db, {ArtworkManager? artworkManager})
+      : _artworkManager = artworkManager ?? ArtworkManager.instance;
 
   bool get isScanning => _scanning;
 
@@ -189,13 +184,17 @@ class LibraryScanner {
     final dir = Directory(folderPath);
     if (!await dir.exists()) return results;
 
-    await for (final entity in dir.list(recursive: true, followLinks: false)) {
-      if (entity is File) {
-        final ext = p.extension(entity.path).toLowerCase();
-        if (_audioExtensions.contains(ext)) {
-          results.add(entity.path);
+    try {
+      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          final ext = p.extension(entity.path).toLowerCase();
+          if (_audioExtensions.contains(ext)) {
+            results.add(entity.path);
+          }
         }
       }
+    } catch (_) {
+      // Permission refusée ou chemin invalide — retourne les fichiers collectés jusqu'ici
     }
     return results;
   }

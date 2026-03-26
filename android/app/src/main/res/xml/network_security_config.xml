@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Autorise le trafic HTTP non chiffré.
+    Requis pour :
+      - Le serveur HTTP embarqué (http://192.168.x.x:8081) accédé par
+        just_audio/ExoPlayer pour la lecture locale.
+      - Les renderers DLNA/UPnP sur le réseau local.
+      - Les flux radio Internet en HTTP.
+    Android 9+ (API 28+) bloque HTTP par défaut sans cette config.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

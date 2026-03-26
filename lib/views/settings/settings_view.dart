@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/domain_models.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
-import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'library_setup_view.dart';
 import 'metadata_view.dart';
+import 'sources_view.dart';
 
 // ---------------------------------------------------------------------------
 // T16.1 — SettingsView
@@ -43,7 +42,6 @@ class _SettingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsState>();
-    final zones = context.select<ZoneState, List<ZoneWithState>>((z) => z.zones);
     final app = context.read<AppState>();
 
     final l = AppLocalizations.of(context);
@@ -99,33 +97,6 @@ class _SettingsList extends StatelessWidget {
           ),
         ),
 
-        // ---- Zones ----
-        _SectionHeader(l.settingsSectionZones),
-        Container(
-          color: TuneColors.surface,
-          child: _SettingsTile(
-            title: l.settingsDefaultZone,
-            trailing: zones.isEmpty
-                ? Text(l.settingsNoZones,
-                    style: const TextStyle(color: TuneColors.textTertiary))
-                : DropdownButton<int?>(
-                    value: settings.defaultZoneId,
-                    dropdownColor: TuneColors.surfaceVariant,
-                    underline: const SizedBox(),
-                    style: TuneFonts.body,
-                    items: [
-                      DropdownMenuItem<int?>(
-                          value: null, child: Text(l.settingsDefaultZoneAuto)),
-                      ...zones.map((z) => DropdownMenuItem<int?>(
-                            value: z.id,
-                            child: Text(z.name),
-                          )),
-                    ],
-                    onChanged: (v) => settings.setDefaultZoneId(v),
-                  ),
-          ),
-        ),
-
         // ---- Serveur ----
         _SectionHeader(l.settingsSectionServer),
         Container(
@@ -160,6 +131,17 @@ class _SettingsList extends StatelessWidget {
           color: TuneColors.surface,
           child: Column(
             children: [
+              _SettingsTile(
+                title: l.settingsSources,
+                subtitle: l.settingsSourcesDesc,
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SourcesView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
                 title: l.settingsMetadata,
                 subtitle: l.settingsMetadataDesc,

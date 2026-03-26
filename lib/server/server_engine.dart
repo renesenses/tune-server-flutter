@@ -4,6 +4,7 @@ import '../models/enums.dart';
 import 'configuration.dart';
 import 'database/database.dart';
 import 'discovery/discovery_manager.dart';
+import 'discovery/upnp_indexer.dart';
 import 'event_bus.dart';
 import 'library/apple_music_library.dart';
 import 'library/artwork_manager.dart';
@@ -71,6 +72,7 @@ class ServerEngine {
   final ServerConfiguration config;
   final ZoneManager zoneManager;
   final DiscoveryManager discoveryManager;
+  final UPnPIndexer upnpIndexer;
   final StreamingManager streamingManager;
   final LibraryScanner libraryScanner;
   final HttpAudioStreamer httpStreamer;
@@ -83,6 +85,7 @@ class ServerEngine {
     required this.config,
     required this.zoneManager,
     required this.discoveryManager,
+    required this.upnpIndexer,
     required this.streamingManager,
     required this.libraryScanner,
     required this.httpStreamer,
@@ -98,6 +101,7 @@ class ServerEngine {
     await config.load();
 
     final discoveryManager = DiscoveryManager(db);
+    final upnpIndexer = UPnPIndexer(db);
     final zoneManager = ZoneManager(db, discoveryManager);
     final streamingManager = StreamingManager(
       db,
@@ -114,6 +118,7 @@ class ServerEngine {
       config: config,
       zoneManager: zoneManager,
       discoveryManager: discoveryManager,
+      upnpIndexer: upnpIndexer,
       streamingManager: streamingManager,
       libraryScanner: libraryScanner,
       httpStreamer: httpStreamer,
@@ -249,8 +254,18 @@ class ServerEngine {
   // ---------------------------------------------------------------------------
 
   List<DiscoveredDevice> allDevices() => discoveryManager.allDevices();
+  List<DiscoveredDevice> upnpServers() => discoveryManager.servers();
+  List<DiscoveredDevice> dlnaRenderers() => discoveryManager.renderers();
 
   Future<void> forgetDevice(String id) => discoveryManager.forgetDevice(id);
+
+  /// Indexe récursivement le ContentDirectory d'un serveur UPnP.
+  Future<void> indexUPnPDevice(DiscoveredDevice device) =>
+      upnpIndexer.indexDevice(device);
+
+  /// Probe manuel d'un hôte pour y trouver un device UPnP (port 49152 par défaut).
+  Future<DiscoveredDevice?> probeDevice(String host, {int port = 49152}) =>
+      discoveryManager.probeHost(host, port: port);
 
   // ---------------------------------------------------------------------------
   // Nettoyage bibliothèque
@@ -321,13 +336,14 @@ class ServerEngine {
   // ---------------------------------------------------------------------------
 
   /// Construit l'URL locale du streamer pour un filePath.
-  String? trackStreamUrl(String filePath) {
-    if (_localIp == null) return null;
-    return httpStreamer.trackUrl(_localIp!, filePath);
+  /// Utilise 127.0.0.1 si l'IP LAN n'est pas encore disponible.
+  String trackStreamUrl(String filePath) {
+    final ip = _localIp ?? '127.0.0.1';
+    return httpStreamer.trackUrl(ip, filePath);
   }
 
-  String? coverStreamUrl(String coverPath) {
-    if (_localIp == null) return null;
-    return httpStreamer.coverUrl(_localIp!, coverPath);
+  String coverStreamUrl(String coverPath) {
+    final ip = _localIp ?? '127.0.0.1';
+    return httpStreamer.coverUrl(ip, coverPath);
   }
 }

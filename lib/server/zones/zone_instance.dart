@@ -13,8 +13,9 @@ import '../playback/player.dart';
 // ---------------------------------------------------------------------------
 
 class ZoneInstance {
-  /// Données persistées (drift Zone data class)
-  final Zone zone;
+  /// Données persistées (drift Zone data class) — mutable pour refléter les
+  /// mises à jour de nom/sortie sans re-lire la DB à chaque snapshot().
+  Zone zone;
 
   final PlayQueue queue;
   late final Player player;

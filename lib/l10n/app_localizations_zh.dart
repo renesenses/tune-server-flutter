@@ -108,6 +108,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navRadios => '收音机';
 
   @override
+  String get navZones => '区域';
+
+  @override
   String get navSettings => '设置';
 
   @override
@@ -261,6 +264,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get zonesNone => '没有区域';
 
   @override
+  String get zonesRename => '重命名区域';
+
+  @override
   String get zonesDelete => '删除区域';
 
   @override
@@ -277,6 +283,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get zonesOutputBluetooth => '蓝牙';
+
+  @override
+  String get zonesChangeOutput => '更改输出';
+
+  @override
+  String get zonesOutputTitle => '音频输出';
+
+  @override
+  String get zonesAssignDevice => '分配';
+
+  @override
+  String get zonesTransferTitle => '播放到...';
+
+  @override
+  String get zonesNowPlaying => '正在播放';
+
+  @override
+  String zonesActivated(String name) {
+    return '活动区域: $name';
+  }
 
   @override
   String get radiosTitle => '收音机';
@@ -685,4 +711,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String browseItemCount(int count) {
     return '$count 项目';
   }
+
+  @override
+  String get settingsSources => '来源与设备';
+
+  @override
+  String get settingsSourcesDesc => 'UPnP服务器、DLNA渲染器';
+
+  @override
+  String get sourcesTitle => '来源与设备';
+
+  @override
+  String get sourcesServersSection => 'UPnP内容服务器';
+
+  @override
+  String get sourcesRenderersSection => 'DLNA渲染器';
+
+  @override
+  String get sourcesNoDevices => '未发现设备';
+
+  @override
+  String get sourcesTypeServer => '服务器';
+
+  @override
+  String get sourcesTypeRenderer => '渲染器';
+
+  @override
+  String get sourcesAvailable => '可用';
+
+  @override
+  String get sourcesUnavailable => '离线';
+
+  @override
+  String get sourcesIndexBtn => '索引媒体库';
+
+  @override
+  String get sourcesForget => '忘记';
+
+  @override
+  String get sourcesAddManually => '手动添加';
+
+  @override
+  String get sourcesAddTitle => '手动扫描';
+
+  @override
+  String get sourcesIpLabel => 'IP地址';
+
+  @override
+  String get sourcesIpHint => '192.168.1.100';
+
+  @override
+  String get sourcesPortLabel => '端口';
+
+  @override
+  String get sourcesPortHint => '49152';
+
+  @override
+  String get sourcesProbing => '扫描中…';
+
+  @override
+  String get sourcesNotFound => '在此地址未找到UPnP设备';
 }

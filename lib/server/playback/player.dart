@@ -81,6 +81,10 @@ class Player {
         } else if (ps.processingState == ProcessingState.buffering ||
             ps.processingState == ProcessingState.loading) {
           _setState(PlaybackState.buffering);
+        } else if (ps.processingState == ProcessingState.ready) {
+          // just_audio repasse à "ready" après un buffering (streaming HTTP).
+          // Sans ce cas, _state reste coincé sur buffering → pause() ignorée.
+          _setState(ps.playing ? PlaybackState.playing : PlaybackState.paused);
         }
       });
     } else {
@@ -132,7 +136,7 @@ class Player {
   }
 
   Future<void> pause() async {
-    if (_state != PlaybackState.playing) return;
+    if (_state != PlaybackState.playing && _state != PlaybackState.buffering) return;
     final result = await _output?.pause();
     if (result is! OutputFailure) {
       _setState(PlaybackState.paused);

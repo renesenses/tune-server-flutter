@@ -5,9 +5,9 @@ import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../radios/radios_view.dart';
-import '../search/search_view.dart';
 import '../settings/settings_view.dart';
 import '../streaming/streaming_view.dart';
+import '../zones/zones_view.dart';
 
 // ---------------------------------------------------------------------------
 // T10.4 — iPhoneContentView
@@ -30,11 +30,11 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final tabs = [
-      (icon: Icons.library_music_outlined, activeIcon: Icons.library_music_rounded, label: l.navLibrary),
-      (icon: Icons.search_rounded,         activeIcon: Icons.search_rounded,         label: l.navSearch),
-      (icon: Icons.cloud_outlined,         activeIcon: Icons.cloud_rounded,          label: l.navStreaming),
-      (icon: Icons.radio_outlined,         activeIcon: Icons.radio_rounded,          label: l.navRadios),
-      (icon: Icons.settings_outlined,      activeIcon: Icons.settings_rounded,       label: l.navSettings),
+      (icon: Icons.library_music_outlined,   activeIcon: Icons.library_music_rounded,   label: l.navLibrary),
+      (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
+      (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
+      (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
+      (icon: Icons.settings_outlined,        activeIcon: Icons.settings_rounded,        label: l.navSettings),
     ];
 
     return Scaffold(
@@ -61,8 +61,8 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
 
   static final _pages = [
     const LibraryView(),
-    const SearchView(),
     const StreamingView(),
+    const ZonesView(),
     const RadiosView(),
     const SettingsView(),
   ];

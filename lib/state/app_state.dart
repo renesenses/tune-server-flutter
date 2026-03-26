@@ -143,6 +143,8 @@ class AppState extends ChangeNotifier {
         .subscribe<LibraryScanProgressEvent>(_onScanProgress));
     _subs.add(EventBus.instance
         .subscribe<LibraryScanCompletedEvent>(_onScanCompleted));
+    _subs.add(EventBus.instance
+        .subscribe<LibraryScanErrorEvent>(_onScanError));
 
     // Radio metadata
     _subs.add(EventBus.instance
@@ -188,15 +190,13 @@ class AppState extends ChangeNotifier {
   }
 
   void _onDeviceDiscovered(DeviceDiscoveredEvent e) {
-    if (e.device is! Map) {
-      // DiscoveredDevice directement
-      // ignore type dynamic
-    }
     zoneState.setDevices(engine.allDevices());
+    notifyListeners();
   }
 
   void _onDeviceLost(DeviceLostEvent e) {
     zoneState.removeDevice(e.deviceId);
+    notifyListeners();
   }
 
   void _onScanProgress(LibraryScanProgressEvent e) {
@@ -208,6 +208,10 @@ class AppState extends ChangeNotifier {
     await _refreshLibrarySummary();
     final stats = await engine.stats();
     libraryState.setStats(stats);
+  }
+
+  void _onScanError(LibraryScanErrorEvent e) {
+    libraryState.setScanCompleted(0, 0);
   }
 
   void _onRadioMetadata(RadioMetadataEvent e) {
@@ -326,6 +330,11 @@ class AppState extends ChangeNotifier {
     await _refreshZones();
   }
 
+  Future<void> renameZone(int zoneId, String newName) async {
+    await engine.zoneManager.renameZone(zoneId, newName);
+    await _refreshZones();
+  }
+
   Future<void> setZoneOutput(
     int zoneId,
     OutputType outputType, {
@@ -341,7 +350,40 @@ class AppState extends ChangeNotifier {
     await _refreshZones();
   }
 
-  void selectZone(int zoneId) => zoneState.setCurrentZoneId(zoneId);
+  /// Sélectionne une zone et migre la lecture en cours si nécessaire.
+  ///
+  /// Si l'ancienne zone jouait, la file + position sont transférées vers la
+  /// nouvelle zone, et l'ancienne est stoppée — une seule zone joue à la fois.
+  Future<void> selectZone(int newZoneId) async {
+    final oldId = zoneState.currentZoneId;
+    if (oldId == newZoneId) return;
+
+    final oldInstance = engine.zoneManager.zone(oldId ?? -1);
+    final newInstance = engine.zoneManager.zone(newZoneId);
+
+    if (oldInstance != null &&
+        newInstance != null &&
+        oldInstance.player.isPlaying) {
+      final tracks = List<Track>.from(oldInstance.queue.tracks);
+      final idx = oldInstance.queue.currentIndex;
+      final pos = oldInstance.player.position;
+
+      await oldInstance.player.stop();
+
+      if (tracks.isNotEmpty && idx >= 0) {
+        newInstance.queue.load(tracks, startIndex: idx);
+        await newInstance.player.play();
+        if (pos > const Duration(seconds: 1)) {
+          await newInstance.player.seek(pos);
+        }
+      }
+    } else if (oldInstance != null && oldInstance.player.isPlaying) {
+      await oldInstance.player.stop();
+    }
+
+    zoneState.setCurrentZoneId(newZoneId);
+    await _refreshZones();
+  }
 
   // ---------------------------------------------------------------------------
   // Lecture streaming (résolution URL à la volée)
@@ -560,7 +602,7 @@ class AppState extends ChangeNotifier {
     if (track.filePath == null) return track;
     if (track.source == 'local' && !track.filePath!.startsWith('http')) {
       final url = engine.trackStreamUrl(track.filePath!);
-      if (url != null && url != track.filePath) {
+      if (url != track.filePath) {
         return track.copyWith(filePath: Value(url));
       }
     }
@@ -650,6 +692,30 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Devices / Sources
+  // ---------------------------------------------------------------------------
+
+  List<DiscoveredDevice> get discoveredDevices => engine.allDevices();
+
+  /// Lance l'indexation récursive du ContentDirectory d'un serveur UPnP.
+  Future<void> indexUPnPServer(DiscoveredDevice device) =>
+      engine.indexUPnPDevice(device);
+
+  /// Probe manuel d'un hôte pour découvrir un device UPnP.
+  /// Retourne null si aucun device trouvé.
+  Future<DiscoveredDevice?> probeDevice(String host, {int port = 49152}) async {
+    final device = await engine.probeDevice(host, port: port);
+    if (device != null) notifyListeners();
+    return device;
+  }
+
+  /// Oublie un device (supprime de la DB + du cache mémoire).
+  Future<void> forgetDevice(String id) async {
+    await engine.forgetDevice(id);
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
   // Refresh helpers
   // ---------------------------------------------------------------------------
 
@@ -701,7 +767,7 @@ class AppState extends ChangeNotifier {
     if (track.filePath != null) {
       // Local : convertit en URL streamer si c'est un chemin fichier
       if (track.source == 'local' && !track.filePath!.startsWith('http')) {
-        return engine.trackStreamUrl(track.filePath!) ?? track.filePath;
+        return engine.trackStreamUrl(track.filePath!);
       }
       return track.filePath;
     }
