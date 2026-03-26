@@ -45,9 +45,12 @@ class ArtworkView extends StatelessWidget {
     if (bytes != null && bytes!.isNotEmpty) {
       return Image.memory(bytes!, fit: fit, errorBuilder: _fallback);
     }
-    if (url != null && url!.startsWith('http')) {
+    // URL explicite ou filePath qui est en fait une URL HTTP (UPnP covers)
+    final httpUrl = url ??
+        (filePath != null && filePath!.startsWith('http') ? filePath : null);
+    if (httpUrl != null && httpUrl.startsWith('http')) {
       return Image.network(
-        url!,
+        httpUrl,
         fit: fit,
         loadingBuilder: (_, child, progress) =>
             progress == null ? child : _placeholder(),

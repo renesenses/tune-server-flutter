@@ -60,6 +60,9 @@ class UPnPIndexer {
 
     EventBus.instance.emit(const LibraryScanStartedEvent());
 
+    // Purge les doublons existants (même filePath) avant de réindexer
+    await _purgeDuplicateTracks();
+
     int tracksAdded = 0;
     int tracksUpdated = 0;
 
@@ -193,11 +196,15 @@ class UPnPIndexer {
               )
             : null;
 
-        // Track — déduplique par (sourceId = item.id, source = device.id)
+        // Track — déduplique par (title + artist + album + trackNumber)
+        // car Asset UPnP expose le même morceau dans plusieurs containers
+        // avec des resource URLs et DIDL IDs différents
         final existing = await (_db.select(_db.tracks)
               ..where((t) =>
-                  t.sourceId.equals(item.id) &
-                  t.source.equals(device.id)))
+                  t.title.equals(item.title) &
+                  t.artistName.equals(item.artist ?? '') &
+                  t.albumId.equalsNullable(albumId) &
+                  t.trackNumber.equals(item.trackNumber ?? 0)))
             .getSingleOrNull();
 
         final companion = TracksCompanion(
@@ -269,6 +276,16 @@ class UPnPIndexer {
             source: Value(source),
           ),
         );
+  }
+
+  /// Supprime les tracks en doublon, garde le plus ancien (id min).
+  Future<void> _purgeDuplicateTracks() async {
+    await _db.customStatement('''
+      DELETE FROM tracks WHERE id NOT IN (
+        SELECT MIN(id) FROM tracks
+        GROUP BY COALESCE(title,'') || '|' || COALESCE(artist_name,'') || '|' || COALESCE(album_id,'') || '|' || COALESCE(track_number,0)
+      )
+    ''');
   }
 
   bool _isAudio(String? mimeType) {

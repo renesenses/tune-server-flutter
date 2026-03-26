@@ -145,6 +145,16 @@ class ServerEngine {
     //    pour que les zones retrouvent leurs outputs DLNA
     await discoveryManager.start();
 
+    // 3b. Purge les tracks en doublon hérités d'indexations UPnP
+    //     Asset UPnP expose le même morceau sous plusieurs containers
+    //     avec des resource URLs différentes → dedup par contenu
+    await db.customStatement('''
+      DELETE FROM tracks WHERE id NOT IN (
+        SELECT MIN(id) FROM tracks
+        GROUP BY COALESCE(title,'') || '|' || COALESCE(artist_name,'') || '|' || COALESCE(album_id,'') || '|' || COALESCE(track_number,0)
+      )
+    ''');
+
     // 4. Bootstrap DB → zones (utilise les devices du cache discovery)
     await zoneManager.bootstrap();
 
