@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:permission_handler/permission_handler.dart';
+
 import '../server/discovery/content_directory_client.dart';
 
 import 'package:drift/drift.dart' show Value;
@@ -463,9 +465,25 @@ class AppState extends ChangeNotifier {
   // Bibliothèque
   // ---------------------------------------------------------------------------
 
-  Future<void> scanLibrary() => engine.scanLibrary();
+  Future<bool> requestStoragePermission() async {
+    if (!Platform.isAndroid) return true;
+    // Android 13+ : READ_MEDIA_AUDIO ; Android ≤12 : READ_EXTERNAL_STORAGE
+    // On essaie les deux — le système ignorera celui qui n'est pas pertinent.
+    final audioStatus = await Permission.audio.request();
+    if (audioStatus.isGranted) return true;
+    final storageStatus = await Permission.storage.request();
+    return storageStatus.isGranted || storageStatus.isLimited;
+  }
 
-  Future<void> addMusicFolder(String path) => engine.addMusicFolder(path);
+  Future<void> scanLibrary() async {
+    await requestStoragePermission();
+    return engine.scanLibrary();
+  }
+
+  Future<void> addMusicFolder(String path) async {
+    await requestStoragePermission();
+    return engine.addMusicFolder(path);
+  }
 
   Future<List<SearchResult>> search(String query) async {
     libraryState.setSearching(true);

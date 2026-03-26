@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -301,18 +302,44 @@ class _MetadataViewState extends State<MetadataView> {
   Future<void> _addFolder(BuildContext context, AppState app) async {
     final l = AppLocalizations.of(context);
     final ctrl = TextEditingController();
+
+    // Essaie d'ouvrir le sélecteur de dossier natif
+    final picked = await FilePicker.platform.getDirectoryPath();
+    if (picked != null) {
+      ctrl.text = picked;
+    }
+
+    if (!mounted) return;
+
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
         title: Text(l.metadataAddFolder, style: TuneFonts.title3),
-        content: TextField(
-          controller: ctrl,
-          style: TuneFonts.body,
-          decoration: InputDecoration(
-            labelText: l.metadataFolderPath,
-            hintText: l.metadataFolderHint,
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: ctrl,
+              style: TuneFonts.body,
+              decoration: InputDecoration(
+                labelText: l.metadataFolderPath,
+                hintText: l.metadataFolderHint,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.folder_open_rounded, size: 16),
+                label: Text(l.btnAddFolder),
+                onPressed: () async {
+                  final p = await FilePicker.platform.getDirectoryPath();
+                  if (p != null) ctrl.text = p;
+                },
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(

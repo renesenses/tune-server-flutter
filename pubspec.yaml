@@ -45,6 +45,10 @@ dependencies:
   # --- Background service Android (foreground service) ---
   flutter_foreground_task: ^8.13.0
 
+  # --- Fichiers & Permissions ---
+  file_picker: ^8.1.2
+  permission_handler: ^11.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

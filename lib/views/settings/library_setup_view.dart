@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -171,6 +172,13 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
     super.dispose();
   }
 
+  Future<void> _pickFolder() async {
+    final path = await FilePicker.platform.getDirectoryPath();
+    if (path != null && mounted) {
+      setState(() => _ctrl.text = path);
+    }
+  }
+
   Future<void> _add() async {
     final path = _ctrl.text.trim();
     if (path.isEmpty) return;
@@ -225,11 +233,23 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
                       : null,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           if (!_added)
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.folder_open_rounded, size: 18),
+                label: Text(AppLocalizations.of(context).btnAddFolder),
+                onPressed: _adding ? null : _pickFolder,
+              ),
+            ),
+          const SizedBox(height: 4),
+          if (!_added)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: TuneColors.accent),
                 onPressed: _adding ? null : _add,
                 child: Text(AppLocalizations.of(context).setupAddFolder),
               ),
