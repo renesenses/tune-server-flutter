@@ -117,7 +117,7 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
         for item in id3Items {
             guard let id = item.identifier else { continue }
             switch id {
-            case .id3MetadataAlbumArtist:
+            case .id3MetadataBand:
                 dict["albumArtist"] = item.stringValue
             case .id3MetadataTrackNumber:
                 dict["trackNumber"] = parseTrackNumber(item.stringValue)
