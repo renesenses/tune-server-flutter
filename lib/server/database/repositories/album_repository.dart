@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../models/domain_models.dart';
 import '../database.dart';
 
 // ---------------------------------------------------------------------------
@@ -73,6 +74,46 @@ class AlbumRepository {
         .customSelect('SELECT COUNT(*) AS c FROM albums')
         .getSingle();
     return result.read<int>('c');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Audio quality info per album (derived from tracks)
+  // ---------------------------------------------------------------------------
+
+  /// Returns a map of albumId -> AlbumAudioInfo with format, sample rate,
+  /// bit depth, and computed quality for each album.
+  Future<Map<int, AlbumAudioInfo>> allAudioInfo() async {
+    final rows = await _db.customSelect(
+      '''
+      SELECT
+        album_id,
+        format,
+        MAX(sample_rate) AS max_sample_rate,
+        MAX(bit_depth) AS max_bit_depth,
+        COUNT(*) AS track_count
+      FROM tracks
+      WHERE album_id IS NOT NULL
+      GROUP BY album_id
+      ''',
+      readsFrom: {_db.tracks},
+    ).get();
+
+    final map = <int, AlbumAudioInfo>{};
+    for (final row in rows) {
+      final albumId = row.read<int>('album_id');
+      final format = row.readNullable<String>('format');
+      final sampleRate = row.readNullable<int>('max_sample_rate');
+      final bitDepth = row.readNullable<int>('max_bit_depth');
+
+      map[albumId] = AlbumAudioInfo(
+        albumId: albumId,
+        format: format,
+        sampleRate: sampleRate,
+        bitDepth: bitDepth,
+        quality: AlbumAudioInfo.computeQuality(format, sampleRate, bitDepth),
+      );
+    }
+    return map;
   }
 
   // ---------------------------------------------------------------------------

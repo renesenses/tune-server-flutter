@@ -767,10 +767,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _refreshLibrarySummary() async {
-    final albums = await engine.db.albumRepo.all();
-    final artists = await engine.db.artistRepo.all();
-    libraryState.setAlbums(albums);
-    libraryState.setArtists(artists);
+    final results = await Future.wait([
+      engine.db.albumRepo.all(),
+      engine.db.artistRepo.all(),
+      engine.db.albumRepo.allAudioInfo(),
+    ]);
+    libraryState.setAlbums(results[0] as List<Album>);
+    libraryState.setArtists(results[1] as List<Artist>);
+    libraryState.setAlbumAudioInfo(results[2] as Map<int, AlbumAudioInfo>);
   }
 
   Future<void> _refreshRadios() async {

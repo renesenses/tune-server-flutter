@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -14,6 +15,7 @@ import 'edit_album_sheet.dart';
 // ---------------------------------------------------------------------------
 // T12.2 — AlbumsGridView + AlbumDetailView
 // Grille de covers, détail album avec tracklist + bouton lecture.
+// Filter chips: Quality (DSD/Hi-Res/CD/Lossy), Format, Sample Rate.
 // Miroir de AlbumsView.swift + AlbumDetailView.swift (iOS)
 // ---------------------------------------------------------------------------
 
@@ -23,24 +25,247 @@ class AlbumsGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final albums = context.watch<LibraryState>().albums;
-    if (albums.isEmpty) {
+    final lib = context.watch<LibraryState>();
+    final allAlbums = lib.albums;
+
+    if (allAlbums.isEmpty) {
       return LibraryEmptyState(
         icon: Icons.album_rounded,
         message: l.libraryEmptyAlbums,
       );
     }
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.72,
-      ),
-      itemCount: albums.length,
-      itemBuilder: (_, i) => _AlbumCard(album: albums[i]),
+
+    final displayedAlbums = lib.filteredAlbums;
+    final hasAudioInfo = lib.albumAudioInfo.isNotEmpty;
+
+    return Column(
+      children: [
+        // Filter chips row
+        if (hasAudioInfo) _AlbumFilterChips(lib: lib),
+
+        // Album grid
+        Expanded(
+          child: displayedAlbums.isEmpty
+              ? LibraryEmptyState(
+                  icon: Icons.filter_list_off_rounded,
+                  message: l.libraryNoFilterResults,
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemCount: displayedAlbums.length,
+                  itemBuilder: (_, i) =>
+                      _AlbumCard(album: displayedAlbums[i]),
+                ),
+        ),
+      ],
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _AlbumFilterChips — Quality / Format / Sample Rate filter row
+// ---------------------------------------------------------------------------
+
+class _AlbumFilterChips extends StatelessWidget {
+  final LibraryState lib;
+  const _AlbumFilterChips({required this.lib});
+
+  static const _sampleRateThresholds = [
+    (label: '44.1kHz+', minRate: 44100),
+    (label: '96kHz+', minRate: 96000),
+    (label: '192kHz+', minRate: 192000),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final formats = lib.availableFormats;
+    final hasFilters = lib.hasActiveFilters;
+
+    return Container(
+      color: TuneColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Row(
+              children: [
+                // Clear all button
+                if (hasFilters) ...[
+                  ActionChip(
+                    avatar: const Icon(Icons.clear_rounded, size: 16),
+                    label: const Text('Clear'),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      color: TuneColors.textSecondary,
+                    ),
+                    backgroundColor: TuneColors.surfaceVariant,
+                    side: BorderSide.none,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: lib.clearFilters,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+
+                // Quality chips
+                for (final quality in AudioQuality.values) ...[
+                  _buildQualityChip(quality),
+                  const SizedBox(width: 6),
+                ],
+
+                // Divider
+                if (formats.isNotEmpty) ...[
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: TuneColors.divider,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                  ),
+                ],
+
+                // Format chips
+                for (final fmt in formats) ...[
+                  _buildFormatChip(fmt),
+                  const SizedBox(width: 6),
+                ],
+
+                // Sample rate chips (with divider if any are visible)
+                if (_sampleRateThresholds.any(
+                    (sr) => lib.countForMinSampleRate(sr.minRate) > 0)) ...[
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: TuneColors.divider,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                  ),
+                  for (final sr in _sampleRateThresholds)
+                    if (lib.countForMinSampleRate(sr.minRate) > 0) ...[
+                      _buildSampleRateChip(sr.label, sr.minRate),
+                      const SizedBox(width: 6),
+                    ],
+                ],
+              ],
+            ),
+          ),
+
+          // Result count when filters active
+          if (hasFilters)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, bottom: 6),
+              child: Text(
+                '${lib.filteredAlbums.length} / ${lib.albums.length} albums',
+                style: TuneFonts.caption,
+              ),
+            ),
+
+          const Divider(height: 1, color: TuneColors.divider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQualityChip(AudioQuality quality) {
+    final count = lib.countForQuality(quality);
+    if (count == 0) return const SizedBox.shrink();
+    final selected = lib.selectedQuality == quality;
+
+    return FilterChip(
+      label: Text('${quality.label} ($count)'),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+        color: selected ? TuneColors.textPrimary : TuneColors.textSecondary,
+      ),
+      selected: selected,
+      selectedColor: _qualityColor(quality).withValues(alpha: 0.25),
+      backgroundColor: TuneColors.surfaceVariant,
+      checkmarkColor: _qualityColor(quality),
+      side: selected
+          ? BorderSide(color: _qualityColor(quality).withValues(alpha: 0.5))
+          : BorderSide.none,
+      visualDensity: VisualDensity.compact,
+      showCheckmark: false,
+      avatar: selected
+          ? Icon(Icons.check_rounded, size: 14, color: _qualityColor(quality))
+          : null,
+      onSelected: (_) => lib.setQualityFilter(quality),
+    );
+  }
+
+  Widget _buildFormatChip(String format) {
+    final count = lib.countForFormat(format);
+    if (count == 0) return const SizedBox.shrink();
+    final selected = lib.selectedFormat == format;
+
+    return FilterChip(
+      label: Text('$format ($count)'),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+        color: selected ? TuneColors.textPrimary : TuneColors.textSecondary,
+      ),
+      selected: selected,
+      selectedColor: TuneColors.accent.withValues(alpha: 0.25),
+      backgroundColor: TuneColors.surfaceVariant,
+      checkmarkColor: TuneColors.accent,
+      side: selected
+          ? BorderSide(color: TuneColors.accent.withValues(alpha: 0.5))
+          : BorderSide.none,
+      visualDensity: VisualDensity.compact,
+      showCheckmark: false,
+      avatar: selected
+          ? const Icon(Icons.check_rounded,
+              size: 14, color: TuneColors.accent)
+          : null,
+      onSelected: (_) => lib.setFormatFilter(format),
+    );
+  }
+
+  Widget _buildSampleRateChip(String label, int minRate) {
+    final count = lib.countForMinSampleRate(minRate);
+    final selected = lib.selectedMinSampleRate == minRate;
+
+    return FilterChip(
+      label: Text('$label ($count)'),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+        color: selected ? TuneColors.textPrimary : TuneColors.textSecondary,
+      ),
+      selected: selected,
+      selectedColor: TuneColors.accentLight.withValues(alpha: 0.25),
+      backgroundColor: TuneColors.surfaceVariant,
+      checkmarkColor: TuneColors.accentLight,
+      side: selected
+          ? BorderSide(
+              color: TuneColors.accentLight.withValues(alpha: 0.5))
+          : BorderSide.none,
+      visualDensity: VisualDensity.compact,
+      showCheckmark: false,
+      avatar: selected
+          ? const Icon(Icons.check_rounded,
+              size: 14, color: TuneColors.accentLight)
+          : null,
+      onSelected: (_) => lib.setSampleRateFilter(minRate),
+    );
+  }
+
+  Color _qualityColor(AudioQuality quality) {
+    switch (quality) {
+      case AudioQuality.dsd:   return const Color(0xFFFFD700); // gold
+      case AudioQuality.hiRes: return TuneColors.accent;
+      case AudioQuality.cd:    return TuneColors.success;
+      case AudioQuality.lossy: return TuneColors.textSecondary;
+    }
   }
 }
 

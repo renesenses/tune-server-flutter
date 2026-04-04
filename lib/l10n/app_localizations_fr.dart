@@ -150,6 +150,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get libraryEmptyPlaylists => 'Aucune playlist';
 
   @override
+  String get libraryNoFilterResults => 'Aucun album ne correspond aux filtres';
+
+  @override
   String get libraryPlayAll => 'Écouter tout';
 
   @override

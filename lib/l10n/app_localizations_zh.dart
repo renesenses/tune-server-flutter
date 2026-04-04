@@ -150,6 +150,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryEmptyPlaylists => '没有播放列表';
 
   @override
+  String get libraryNoFilterResults => '没有匹配筛选条件的专辑';
+
+  @override
   String get libraryPlayAll => '全部播放';
 
   @override

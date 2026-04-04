@@ -143,3 +143,55 @@ class GenreInfo {
   @override
   int get hashCode => name.hashCode;
 }
+
+// ---------------------------------------------------------------------------
+// AlbumAudioInfo — audio quality metadata for an album (derived from tracks)
+// ---------------------------------------------------------------------------
+
+enum AudioQuality {
+  dsd,
+  hiRes,
+  cd,
+  lossy;
+
+  String get label {
+    switch (this) {
+      case AudioQuality.dsd:   return 'DSD';
+      case AudioQuality.hiRes: return 'Hi-Res';
+      case AudioQuality.cd:    return 'CD';
+      case AudioQuality.lossy: return 'Lossy';
+    }
+  }
+}
+
+class AlbumAudioInfo {
+  final int albumId;
+  final String? format;       // dominant format (FLAC, MP3, etc.)
+  final int? sampleRate;      // max sample rate across tracks
+  final int? bitDepth;        // max bit depth across tracks
+  final AudioQuality quality; // computed quality tier
+
+  const AlbumAudioInfo({
+    required this.albumId,
+    this.format,
+    this.sampleRate,
+    this.bitDepth,
+    required this.quality,
+  });
+
+  /// Compute quality from format / sampleRate / bitDepth.
+  /// Same logic as the Tune server: DSD format = dsd, mp3/aac/ogg/opus/wma =
+  /// lossy, >48kHz or >16bit = hi-res, otherwise cd.
+  static AudioQuality computeQuality(String? format, int? sampleRate, int? bitDepth) {
+    final lo = format?.toLowerCase() ?? '';
+    if (lo == 'dsd' || lo == 'dsf' || lo == 'dff') return AudioQuality.dsd;
+    if (lo == 'mp3' || lo == 'aac' || lo == 'ogg' || lo == 'opus' || lo == 'wma') {
+      return AudioQuality.lossy;
+    }
+    if ((sampleRate != null && sampleRate > 48000) ||
+        (bitDepth != null && bitDepth > 16)) {
+      return AudioQuality.hiRes;
+    }
+    return AudioQuality.cd;
+  }
+}

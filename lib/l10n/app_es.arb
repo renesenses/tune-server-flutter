@@ -47,6 +47,7 @@
   "libraryEmptyTracks": "No hay pistas en la biblioteca",
   "libraryEmptyGenres": "No hay géneros",
   "libraryEmptyPlaylists": "No hay listas de reproducción",
+  "libraryNoFilterResults": "Ningún álbum coincide con los filtros",
   "libraryPlayAll": "Reproducir todo",
   "libraryAddTo": "Añadir a…",
   "libraryEditAlbum": "Editar álbum",

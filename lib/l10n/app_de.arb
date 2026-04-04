@@ -47,6 +47,7 @@
   "libraryEmptyTracks": "Keine Titel in der Bibliothek",
   "libraryEmptyGenres": "Keine Genres",
   "libraryEmptyPlaylists": "Keine Playlists",
+  "libraryNoFilterResults": "Keine Alben entsprechen den Filtern",
   "libraryPlayAll": "Alle abspielen",
   "libraryAddTo": "Hinzufügen zu…",
   "libraryEditAlbum": "Album bearbeiten",

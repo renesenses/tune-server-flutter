@@ -392,6 +392,12 @@ abstract class AppLocalizations {
   /// **'No playlists'**
   String get libraryEmptyPlaylists;
 
+  /// No description provided for @libraryNoFilterResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No albums match filters'**
+  String get libraryNoFilterResults;
+
   /// No description provided for @libraryPlayAll.
   ///
   /// In en, this message translates to:

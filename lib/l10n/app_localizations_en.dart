@@ -150,6 +150,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryEmptyPlaylists => 'No playlists';
 
   @override
+  String get libraryNoFilterResults => 'No albums match filters';
+
+  @override
   String get libraryPlayAll => 'Play all';
 
   @override

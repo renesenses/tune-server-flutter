@@ -150,6 +150,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get libraryEmptyPlaylists => '플레이리스트 없음';
 
   @override
+  String get libraryNoFilterResults => '필터와 일치하는 앨범 없음';
+
+  @override
   String get libraryPlayAll => '모두 재생';
 
   @override

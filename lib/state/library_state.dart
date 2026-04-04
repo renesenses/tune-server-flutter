@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/domain_models.dart';
 import '../server/database/database.dart';
 import '../server/server_engine.dart';
 import '../server/streaming/streaming_service.dart';
@@ -22,6 +23,112 @@ class LibraryState extends ChangeNotifier {
     _albums = albums;
     notifyListeners();
   }
+
+  // ---------------------------------------------------------------------------
+  // Album audio info (format, sample rate, quality — derived from tracks)
+  // ---------------------------------------------------------------------------
+
+  Map<int, AlbumAudioInfo> _albumAudioInfo = {};
+  Map<int, AlbumAudioInfo> get albumAudioInfo => _albumAudioInfo;
+
+  void setAlbumAudioInfo(Map<int, AlbumAudioInfo> info) {
+    _albumAudioInfo = info;
+    notifyListeners();
+  }
+
+  /// Convenience: get audio info for a specific album.
+  AlbumAudioInfo? audioInfoFor(int albumId) => _albumAudioInfo[albumId];
+
+  // ---------------------------------------------------------------------------
+  // Album filters
+  // ---------------------------------------------------------------------------
+
+  AudioQuality? _selectedQuality;
+  String? _selectedFormat;
+  int? _selectedMinSampleRate;
+
+  AudioQuality? get selectedQuality => _selectedQuality;
+  String? get selectedFormat => _selectedFormat;
+  int? get selectedMinSampleRate => _selectedMinSampleRate;
+
+  void setQualityFilter(AudioQuality? quality) {
+    _selectedQuality = (_selectedQuality == quality) ? null : quality;
+    notifyListeners();
+  }
+
+  void setFormatFilter(String? format) {
+    _selectedFormat = (_selectedFormat == format) ? null : format;
+    notifyListeners();
+  }
+
+  void setSampleRateFilter(int? minRate) {
+    _selectedMinSampleRate = (_selectedMinSampleRate == minRate) ? null : minRate;
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    _selectedQuality = null;
+    _selectedFormat = null;
+    _selectedMinSampleRate = null;
+    notifyListeners();
+  }
+
+  bool get hasActiveFilters =>
+      _selectedQuality != null ||
+      _selectedFormat != null ||
+      _selectedMinSampleRate != null;
+
+  /// Returns albums filtered by current quality/format/sampleRate filters.
+  List<Album> get filteredAlbums {
+    if (!hasActiveFilters) return albums;
+    return _albums.where((album) {
+      final info = _albumAudioInfo[album.id];
+      if (info == null) return false;
+
+      if (_selectedQuality != null && info.quality != _selectedQuality) {
+        return false;
+      }
+      if (_selectedFormat != null &&
+          info.format?.toUpperCase() != _selectedFormat) {
+        return false;
+      }
+      if (_selectedMinSampleRate != null) {
+        if (info.sampleRate == null ||
+            info.sampleRate! < _selectedMinSampleRate!) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Available formats derived from album audio info.
+  List<String> get availableFormats {
+    final formats = <String>{};
+    for (final info in _albumAudioInfo.values) {
+      if (info.format != null && info.format!.isNotEmpty) {
+        formats.add(info.format!.toUpperCase());
+      }
+    }
+    final list = formats.toList()..sort();
+    return list;
+  }
+
+  /// Count of albums matching a given quality.
+  int countForQuality(AudioQuality quality) =>
+      _albumAudioInfo.values.where((i) => i.quality == quality).length;
+
+  /// Count of albums matching a given format.
+  int countForFormat(String format) =>
+      _albumAudioInfo.values
+          .where((i) => i.format?.toUpperCase() == format)
+          .length;
+
+  /// Count of albums with sample rate >= minRate.
+  int countForMinSampleRate(int minRate) =>
+      _albumAudioInfo.values
+          .where((i) => i.sampleRate != null && i.sampleRate! >= minRate)
+          .length;
 
   // ---------------------------------------------------------------------------
   // Artistes

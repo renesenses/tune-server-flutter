@@ -47,6 +47,7 @@
   "libraryEmptyTracks": "媒体库中没有曲目",
   "libraryEmptyGenres": "没有流派",
   "libraryEmptyPlaylists": "没有播放列表",
+  "libraryNoFilterResults": "没有匹配筛选条件的专辑",
   "libraryPlayAll": "全部播放",
   "libraryAddTo": "添加到…",
   "libraryEditAlbum": "编辑专辑",

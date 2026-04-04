@@ -52,6 +52,7 @@
   "libraryEmptyTracks": "No tracks in library",
   "libraryEmptyGenres": "No genres",
   "libraryEmptyPlaylists": "No playlists",
+  "libraryNoFilterResults": "No albums match filters",
   "libraryPlayAll": "Play all",
   "libraryAddTo": "Add to...",
   "libraryEditAlbum": "Edit album",

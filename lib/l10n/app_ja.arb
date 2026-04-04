@@ -47,6 +47,7 @@
   "libraryEmptyTracks": "ライブラリに曲がありません",
   "libraryEmptyGenres": "ジャンルなし",
   "libraryEmptyPlaylists": "プレイリストなし",
+  "libraryNoFilterResults": "フィルターに一致するアルバムがありません",
   "libraryPlayAll": "すべて再生",
   "libraryAddTo": "追加先…",
   "libraryEditAlbum": "アルバムを編集",

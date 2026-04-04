@@ -150,6 +150,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryEmptyPlaylists => 'プレイリストなし';
 
   @override
+  String get libraryNoFilterResults => 'フィルターに一致するアルバムがありません';
+
+  @override
   String get libraryPlayAll => 'すべて再生';
 
   @override

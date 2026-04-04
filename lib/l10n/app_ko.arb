@@ -47,6 +47,7 @@
   "libraryEmptyTracks": "라이브러리에 트랙이 없습니다",
   "libraryEmptyGenres": "장르 없음",
   "libraryEmptyPlaylists": "플레이리스트 없음",
+  "libraryNoFilterResults": "필터와 일치하는 앨범 없음",
   "libraryPlayAll": "모두 재생",
   "libraryAddTo": "추가 대상…",
   "libraryEditAlbum": "앨범 편집",
