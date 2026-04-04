@@ -258,5 +258,26 @@
   "sourcesPortLabel": "ポート",
   "sourcesPortHint": "49152",
   "sourcesProbing": "スキャン中\u2026",
-  "sourcesNotFound": "このアドレスにUPnPデバイスが見つかりません"
+  "sourcesNotFound": "このアドレスにUPnPデバイスが見つかりません",
+
+  "zonesMultiRoom": "マルチルーム",
+  "zonesCreateGroup": "グループ作成",
+  "zonesGroupLeader": "リーダー",
+  "zonesGroupFollower": "フォロワー",
+  "zonesGroupDissolve": "グループ解除",
+  "zonesGroupSyncDelay": "同期遅延",
+  "zonesGroupSyncDelayMs": "{ms} ms",
+  "@zonesGroupSyncDelayMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesGroupSelectZones": "ゾーン選択",
+  "zonesGroupSelectLeader": "リーダー選択",
+  "zonesGroupNoZones": "アクティブなグループなし",
+  "zonesGroupNeedTwo": "2つ以上のゾーンを選択してください",
+  "zonesGroupCreated": "グループを作成しました",
+  "zonesGroupDissolved": "グループを解除しました"
 }

@@ -63,4 +63,24 @@ class ZoneRepository {
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Multi-room grouping
+  // ---------------------------------------------------------------------------
+
+  /// Assigne un groupId à une zone (null pour retirer du groupe).
+  Future<void> setGroupId(int zoneId, String? groupId) async {
+    await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))
+        .write(ZonesCompanion(groupId: Value(groupId)));
+  }
+
+  /// Met à jour le délai de synchronisation d'une zone.
+  Future<void> setSyncDelay(int zoneId, int delayMs) async {
+    await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))
+        .write(ZonesCompanion(syncDelayMs: Value(delayMs)));
+  }
+
+  /// Retourne toutes les zones appartenant à un groupe donné.
+  Future<List<Zone>> getZonesByGroup(String groupId) =>
+      (_db.select(_db.zones)..where((z) => z.groupId.equals(groupId))).get();
 }

@@ -93,9 +93,11 @@ class _ZonesBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final zones = context.watch<ZoneState>().zones;
-    final currentId = context.watch<ZoneState>().currentZoneId;
-    final renderers = context.watch<ZoneState>().unboundRenderers;
+    final zoneState = context.watch<ZoneState>();
+    final zones = zoneState.zones;
+    final currentId = zoneState.currentZoneId;
+    final renderers = zoneState.unboundRenderers;
+    final groups = zoneState.groups;
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
@@ -144,6 +146,51 @@ class _ZonesBody extends StatelessWidget {
             ),
           ),
 
+        // ---- Multi-Room ----
+        _SectionHeader(l.zonesMultiRoom),
+        if (groups.isEmpty)
+          Container(
+            color: TuneColors.surface,
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: Text(
+                l.zonesGroupNoZones,
+                style: const TextStyle(color: TuneColors.textTertiary),
+              ),
+            ),
+          )
+        else
+          Container(
+            color: TuneColors.surface,
+            child: Column(
+              children: groups.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final group = entry.value;
+                return Column(
+                  children: [
+                    if (idx > 0)
+                      const Divider(
+                          height: 1, indent: 56, color: TuneColors.divider),
+                    _GroupTile(group: group, zones: zones),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        if (zones.length >= 2)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: TuneColors.accent,
+                minimumSize: const Size.fromHeight(44),
+              ),
+              icon: const Icon(Icons.group_add_rounded, size: 20),
+              label: Text(l.zonesCreateGroup),
+              onPressed: () => _showCreateGroupDialog(context),
+            ),
+          ),
+
         // ---- Appareils UPnP/DLNA ----
         if (renderers.isNotEmpty) ...[
           _SectionHeader(l.zonesDevices),
@@ -166,6 +213,13 @@ class _ZonesBody extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  void _showCreateGroupDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _CreateGroupDialog(),
     );
   }
 }
@@ -277,10 +331,7 @@ class _ZoneTile extends StatelessWidget {
       ),
       onDismissed: (_) => context.read<AppState>().deleteZone(zone.id),
       child: ListTile(
-        leading: Icon(
-          _outputIcon(zone.outputType),
-          color: isActive ? TuneColors.accent : TuneColors.textSecondary,
-        ),
+        leading: _buildLeadingIcon(context),
         title: Text(
           zone.name,
           style: TextStyle(
@@ -322,6 +373,31 @@ class _ZoneTile extends StatelessWidget {
         },
         onLongPress: () => _showZoneActions(context),
       ),
+    );
+  }
+
+  Widget _buildLeadingIcon(BuildContext context) {
+    final group = context.read<ZoneState>().groupForZone(zone.id);
+    final baseColor = isActive ? TuneColors.accent : TuneColors.textSecondary;
+    final icon = Icon(_outputIcon(zone.outputType), color: baseColor);
+
+    if (group == null) return icon;
+
+    final isLeader = group.leaderId == zone.id;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        Positioned(
+          right: -4,
+          bottom: -4,
+          child: Icon(
+            isLeader ? Icons.star_rounded : Icons.link_rounded,
+            size: 14,
+            color: TuneColors.accent,
+          ),
+        ),
+      ],
     );
   }
 
@@ -674,6 +750,376 @@ class _DeviceTile extends StatelessWidget {
                         style: const TextStyle(color: TuneColors.accent)),
                   ),
                 ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tuile groupe multi-room
+// ---------------------------------------------------------------------------
+
+class _GroupTile extends StatelessWidget {
+  final ZoneGroup group;
+  final List<ZoneWithState> zones;
+
+  const _GroupTile({required this.group, required this.zones});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    // Résout les noms des zones du groupe
+    String zoneName(int id) {
+      final z = zones.cast<ZoneWithState?>().firstWhere(
+        (z) => z!.id == id,
+        orElse: () => null,
+      );
+      return z?.name ?? '#$id';
+    }
+
+    final leaderName = zoneName(group.leaderId);
+    final followerNames = group.zoneIds
+        .where((id) => id != group.leaderId)
+        .map(zoneName)
+        .join(', ');
+
+    return Dismissible(
+      key: ValueKey('group_${group.groupId}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete_rounded, color: Colors.white),
+      ),
+      onDismissed: (_) {
+        context.read<AppState>().ungroupZones(group.groupId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.zonesGroupDissolved),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: ListTile(
+        leading: const Icon(Icons.speaker_group_rounded,
+            color: TuneColors.accent),
+        title: Row(
+          children: [
+            const Icon(Icons.star_rounded,
+                size: 16, color: TuneColors.accent),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                leaderName,
+                style: const TextStyle(
+                  color: TuneColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        subtitle: Row(
+          children: [
+            const Icon(Icons.link_rounded,
+                size: 14, color: TuneColors.textTertiary),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                followerNames,
+                style: TuneFonts.caption,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.tune_rounded,
+              color: TuneColors.textTertiary, size: 20),
+          tooltip: l.zonesGroupSyncDelay,
+          onPressed: () => _showSyncDelaySheet(context),
+        ),
+        onTap: () => _showSyncDelaySheet(context),
+      ),
+    );
+  }
+
+  void _showSyncDelaySheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => _SyncDelaySheet(group: group),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dialog de création de groupe
+// ---------------------------------------------------------------------------
+
+class _CreateGroupDialog extends StatefulWidget {
+  const _CreateGroupDialog();
+
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  final Set<int> _selectedIds = {};
+  int? _leaderId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final zones = context.read<ZoneState>().zones;
+
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text(l.zonesCreateGroup, style: TuneFonts.title3),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Zone selection
+            Text(
+              l.zonesGroupSelectZones,
+              style: TuneFonts.subheadline,
+            ),
+            const SizedBox(height: 8),
+            ...zones.map((zone) => CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: TuneColors.accent,
+                  checkColor: TuneColors.textPrimary,
+                  value: _selectedIds.contains(zone.id),
+                  title: Text(
+                    zone.name,
+                    style: const TextStyle(color: TuneColors.textPrimary),
+                  ),
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _selectedIds.add(zone.id);
+                      } else {
+                        _selectedIds.remove(zone.id);
+                        if (_leaderId == zone.id) _leaderId = null;
+                      }
+                    });
+                  },
+                )),
+
+            // Leader selection
+            if (_selectedIds.length >= 2) ...[
+              const SizedBox(height: 16),
+              Text(
+                l.zonesGroupSelectLeader,
+                style: TuneFonts.subheadline,
+              ),
+              const SizedBox(height: 8),
+              ...zones
+                  .where((z) => _selectedIds.contains(z.id))
+                  .map((zone) => RadioListTile<int>(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: TuneColors.accent,
+                        value: zone.id,
+                        groupValue: _leaderId,
+                        title: Text(
+                          zone.name,
+                          style: const TextStyle(
+                              color: TuneColors.textPrimary),
+                        ),
+                        onChanged: (id) => setState(() => _leaderId = id),
+                      )),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.btnCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+          onPressed: _canCreate ? _onCreate : null,
+          child: Text(l.btnCreate),
+        ),
+      ],
+    );
+  }
+
+  bool get _canCreate => _selectedIds.length >= 2 && _leaderId != null;
+
+  void _onCreate() {
+    final l = AppLocalizations.of(context);
+    final leaderId = _leaderId!;
+    final followerIds =
+        _selectedIds.where((id) => id != leaderId).toList();
+    context.read<AppState>().groupZones(leaderId, followerIds);
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l.zonesGroupCreated),
+        duration: const Duration(seconds: 2),
+        backgroundColor: TuneColors.accent,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bottom sheet sync delay
+// ---------------------------------------------------------------------------
+
+class _SyncDelaySheet extends StatefulWidget {
+  final ZoneGroup group;
+  const _SyncDelaySheet({required this.group});
+
+  @override
+  State<_SyncDelaySheet> createState() => _SyncDelaySheetState();
+}
+
+class _SyncDelaySheetState extends State<_SyncDelaySheet> {
+  // Copie locale des valeurs de delay pour le slider
+  final Map<int, int> _delays = {};
+  bool _initialized = false;
+
+  void _initDelays(List<ZoneWithState> zones) {
+    if (_initialized) return;
+    _initialized = true;
+    for (final id in widget.group.zoneIds) {
+      final zone = zones.cast<ZoneWithState?>().firstWhere(
+        (z) => z!.id == id,
+        orElse: () => null,
+      );
+      _delays[id] = zone?.syncDelayMs ?? 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final zones = context.watch<ZoneState>().zones;
+    _initDelays(zones);
+
+    String zoneName(int id) {
+      final z = zones.cast<ZoneWithState?>().firstWhere(
+        (z) => z!.id == id,
+        orElse: () => null,
+      );
+      return z?.name ?? '#$id';
+    }
+
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child:
+                      Text(l.zonesGroupSyncDelay, style: TuneFonts.title3),
+                ),
+                TextButton(
+                  onPressed: () {
+                    context
+                        .read<AppState>()
+                        .ungroupZones(widget.group.groupId);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l.zonesGroupDissolved),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    l.zonesGroupDissolve,
+                    style: const TextStyle(color: TuneColors.error),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          ...widget.group.zoneIds.map((id) {
+            final isLeader = id == widget.group.leaderId;
+            final delay = _delays[id] ?? 0;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isLeader ? Icons.star_rounded : Icons.link_rounded,
+                        size: 16,
+                        color: TuneColors.accent,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          zoneName(id),
+                          style: TextStyle(
+                            color: TuneColors.textPrimary,
+                            fontWeight: isLeader
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        l.zonesGroupSyncDelayMs(delay),
+                        style: TuneFonts.caption,
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: delay.toDouble(),
+                    min: 0,
+                    max: 500,
+                    divisions: 50,
+                    activeColor: TuneColors.accent,
+                    inactiveColor: TuneColors.surfaceHigh,
+                    onChanged: (value) {
+                      setState(() => _delays[id] = value.round());
+                    },
+                    onChangeEnd: (value) {
+                      context
+                          .read<AppState>()
+                          .updateSyncDelay(id, value.round());
+                    },
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }

@@ -12,6 +12,22 @@ import '../server/discovery/discovery_manager.dart';
 // Miroir de ZoneState.swift (iOS / @Observable)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// ZoneGroup — modèle léger pour un groupe multi-room
+// ---------------------------------------------------------------------------
+
+class ZoneGroup {
+  final String groupId;
+  final int leaderId;
+  final List<int> zoneIds;
+
+  const ZoneGroup({
+    required this.groupId,
+    required this.leaderId,
+    required this.zoneIds,
+  });
+}
+
 class ZoneState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Zones
@@ -134,6 +150,45 @@ class ZoneState extends ChangeNotifier {
   void removeDevice(String deviceId) {
     _devices = _devices.where((d) => d.id != deviceId).toList();
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Multi-room groups
+  // ---------------------------------------------------------------------------
+
+  /// Groupes actifs calculés à partir des zones courantes.
+  /// Le leader est la première zone du groupe (plus petit ID dans le groupe).
+  List<ZoneGroup> get groups {
+    final Map<String, List<int>> map = {};
+    for (final zone in _zones) {
+      final gid = zone.groupId;
+      if (gid != null && gid.isNotEmpty) {
+        map.putIfAbsent(gid, () => []).add(zone.id);
+      }
+    }
+    return map.entries.map((e) {
+      final ids = e.value..sort();
+      return ZoneGroup(
+        groupId: e.key,
+        leaderId: ids.first,
+        zoneIds: ids,
+      );
+    }).toList();
+  }
+
+  /// Retourne le groupe auquel appartient une zone, ou null.
+  ZoneGroup? groupForZone(int zoneId) {
+    final zone = _zones.cast<ZoneWithState?>().firstWhere(
+      (z) => z!.id == zoneId,
+      orElse: () => null,
+    );
+    if (zone == null || zone.groupId == null || zone.groupId!.isEmpty) {
+      return null;
+    }
+    return groups.cast<ZoneGroup?>().firstWhere(
+      (g) => g!.groupId == zone.groupId,
+      orElse: () => null,
+    );
   }
 
   // ---------------------------------------------------------------------------

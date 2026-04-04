@@ -774,4 +774,45 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sourcesNotFound => '이 주소에서 UPnP 기기를 찾을 수 없습니다';
+
+  @override
+  String get zonesMultiRoom => '멀티룸';
+
+  @override
+  String get zonesCreateGroup => '그룹 만들기';
+
+  @override
+  String get zonesGroupLeader => '리더';
+
+  @override
+  String get zonesGroupFollower => '팔로워';
+
+  @override
+  String get zonesGroupDissolve => '그룹 해제';
+
+  @override
+  String get zonesGroupSyncDelay => '동기화 지연';
+
+  @override
+  String zonesGroupSyncDelayMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get zonesGroupSelectZones => '존 선택';
+
+  @override
+  String get zonesGroupSelectLeader => '리더 선택';
+
+  @override
+  String get zonesGroupNoZones => '활성 그룹 없음';
+
+  @override
+  String get zonesGroupNeedTwo => '최소 2개 존을 선택하세요';
+
+  @override
+  String get zonesGroupCreated => '그룹 생성됨';
+
+  @override
+  String get zonesGroupDissolved => '그룹 해제됨';
 }

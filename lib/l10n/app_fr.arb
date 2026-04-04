@@ -278,5 +278,26 @@
   "sourcesPortLabel": "Port",
   "sourcesPortHint": "49152",
   "sourcesProbing": "Sondage en cours…",
-  "sourcesNotFound": "Aucun appareil UPnP trouvé à cette adresse"
+  "sourcesNotFound": "Aucun appareil UPnP trouvé à cette adresse",
+
+  "zonesMultiRoom": "Multi-Room",
+  "zonesCreateGroup": "Créer un groupe",
+  "zonesGroupLeader": "Leader",
+  "zonesGroupFollower": "Suiveur",
+  "zonesGroupDissolve": "Dissoudre le groupe",
+  "zonesGroupSyncDelay": "Délai de synchro",
+  "zonesGroupSyncDelayMs": "{ms} ms",
+  "@zonesGroupSyncDelayMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesGroupSelectZones": "Sélectionner les zones",
+  "zonesGroupSelectLeader": "Sélectionner le leader",
+  "zonesGroupNoZones": "Aucun groupe actif",
+  "zonesGroupNeedTwo": "Sélectionnez au moins 2 zones",
+  "zonesGroupCreated": "Groupe créé",
+  "zonesGroupDissolved": "Groupe dissous"
 }

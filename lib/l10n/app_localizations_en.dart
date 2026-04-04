@@ -777,4 +777,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sourcesNotFound => 'No UPnP device found at this address';
+
+  @override
+  String get zonesMultiRoom => 'Multi-Room';
+
+  @override
+  String get zonesCreateGroup => 'Create group';
+
+  @override
+  String get zonesGroupLeader => 'Leader';
+
+  @override
+  String get zonesGroupFollower => 'Follower';
+
+  @override
+  String get zonesGroupDissolve => 'Dissolve group';
+
+  @override
+  String get zonesGroupSyncDelay => 'Sync delay';
+
+  @override
+  String zonesGroupSyncDelayMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get zonesGroupSelectZones => 'Select zones';
+
+  @override
+  String get zonesGroupSelectLeader => 'Select leader';
+
+  @override
+  String get zonesGroupNoZones => 'No active groups';
+
+  @override
+  String get zonesGroupNeedTwo => 'Select at least 2 zones';
+
+  @override
+  String get zonesGroupCreated => 'Group created';
+
+  @override
+  String get zonesGroupDissolved => 'Group dissolved';
 }

@@ -162,6 +162,12 @@ class AppState extends ChangeNotifier {
     _subs.add(EventBus.instance
         .subscribe<ZoneUpdatedEvent>((_) => _refreshZones()));
 
+    // Zone grouping
+    _subs.add(EventBus.instance
+        .subscribe<ZoneGroupedEvent>((_) => _refreshZones()));
+    _subs.add(EventBus.instance
+        .subscribe<ZoneUngroupedEvent>((_) => _refreshZones()));
+
     // Server errors
     _subs.add(EventBus.instance
         .subscribe<ServerErrorEvent>(_onServerError));
@@ -359,6 +365,26 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
     }
     await engine.zoneManager.setOutput(zoneId, type: outputType, device: device);
+    await _refreshZones();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Multi-room grouping
+  // ---------------------------------------------------------------------------
+
+  Future<void> groupZones(int leaderId, List<int> followerIds) async {
+    final allIds = [leaderId, ...followerIds];
+    await engine.zoneManager.groupZones(leaderId, allIds);
+    await _refreshZones();
+  }
+
+  Future<void> ungroupZones(String groupId) async {
+    await engine.zoneManager.ungroupZones(groupId);
+    await _refreshZones();
+  }
+
+  Future<void> updateSyncDelay(int zoneId, int delayMs) async {
+    await engine.zoneManager.setSyncDelay(zoneId, delayMs);
     await _refreshZones();
   }
 

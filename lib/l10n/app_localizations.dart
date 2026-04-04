@@ -1597,6 +1597,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No UPnP device found at this address'**
   String get sourcesNotFound;
+
+  /// No description provided for @zonesMultiRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Room'**
+  String get zonesMultiRoom;
+
+  /// No description provided for @zonesCreateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get zonesCreateGroup;
+
+  /// No description provided for @zonesGroupLeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Leader'**
+  String get zonesGroupLeader;
+
+  /// No description provided for @zonesGroupFollower.
+  ///
+  /// In en, this message translates to:
+  /// **'Follower'**
+  String get zonesGroupFollower;
+
+  /// No description provided for @zonesGroupDissolve.
+  ///
+  /// In en, this message translates to:
+  /// **'Dissolve group'**
+  String get zonesGroupDissolve;
+
+  /// No description provided for @zonesGroupSyncDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync delay'**
+  String get zonesGroupSyncDelay;
+
+  /// No description provided for @zonesGroupSyncDelayMs.
+  ///
+  /// In en, this message translates to:
+  /// **'{ms} ms'**
+  String zonesGroupSyncDelayMs(int ms);
+
+  /// No description provided for @zonesGroupSelectZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Select zones'**
+  String get zonesGroupSelectZones;
+
+  /// No description provided for @zonesGroupSelectLeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Select leader'**
+  String get zonesGroupSelectLeader;
+
+  /// No description provided for @zonesGroupNoZones.
+  ///
+  /// In en, this message translates to:
+  /// **'No active groups'**
+  String get zonesGroupNoZones;
+
+  /// No description provided for @zonesGroupNeedTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least 2 zones'**
+  String get zonesGroupNeedTwo;
+
+  /// No description provided for @zonesGroupCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Group created'**
+  String get zonesGroupCreated;
+
+  /// No description provided for @zonesGroupDissolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Group dissolved'**
+  String get zonesGroupDissolved;
 }
 
 class _AppLocalizationsDelegate

@@ -774,4 +774,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sourcesNotFound => 'このアドレスにUPnPデバイスが見つかりません';
+
+  @override
+  String get zonesMultiRoom => 'マルチルーム';
+
+  @override
+  String get zonesCreateGroup => 'グループ作成';
+
+  @override
+  String get zonesGroupLeader => 'リーダー';
+
+  @override
+  String get zonesGroupFollower => 'フォロワー';
+
+  @override
+  String get zonesGroupDissolve => 'グループ解除';
+
+  @override
+  String get zonesGroupSyncDelay => '同期遅延';
+
+  @override
+  String zonesGroupSyncDelayMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get zonesGroupSelectZones => 'ゾーン選択';
+
+  @override
+  String get zonesGroupSelectLeader => 'リーダー選択';
+
+  @override
+  String get zonesGroupNoZones => 'アクティブなグループなし';
+
+  @override
+  String get zonesGroupNeedTwo => '2つ以上のゾーンを選択してください';
+
+  @override
+  String get zonesGroupCreated => 'グループを作成しました';
+
+  @override
+  String get zonesGroupDissolved => 'グループを解除しました';
 }

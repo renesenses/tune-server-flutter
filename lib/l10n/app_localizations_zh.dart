@@ -771,4 +771,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sourcesNotFound => '在此地址未找到UPnP设备';
+
+  @override
+  String get zonesMultiRoom => '多房间';
+
+  @override
+  String get zonesCreateGroup => '创建分组';
+
+  @override
+  String get zonesGroupLeader => '主控';
+
+  @override
+  String get zonesGroupFollower => '跟随';
+
+  @override
+  String get zonesGroupDissolve => '解散分组';
+
+  @override
+  String get zonesGroupSyncDelay => '同步延迟';
+
+  @override
+  String zonesGroupSyncDelayMs(int ms) {
+    return '$ms 毫秒';
+  }
+
+  @override
+  String get zonesGroupSelectZones => '选择区域';
+
+  @override
+  String get zonesGroupSelectLeader => '选择主控';
+
+  @override
+  String get zonesGroupNoZones => '无活动分组';
+
+  @override
+  String get zonesGroupNeedTwo => '请至少选择2个区域';
+
+  @override
+  String get zonesGroupCreated => '分组已创建';
+
+  @override
+  String get zonesGroupDissolved => '分组已解散';
 }

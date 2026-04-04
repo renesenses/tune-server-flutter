@@ -258,5 +258,26 @@
   "sourcesPortLabel": "端口",
   "sourcesPortHint": "49152",
   "sourcesProbing": "扫描中\u2026",
-  "sourcesNotFound": "在此地址未找到UPnP设备"
+  "sourcesNotFound": "在此地址未找到UPnP设备",
+
+  "zonesMultiRoom": "多房间",
+  "zonesCreateGroup": "创建分组",
+  "zonesGroupLeader": "主控",
+  "zonesGroupFollower": "跟随",
+  "zonesGroupDissolve": "解散分组",
+  "zonesGroupSyncDelay": "同步延迟",
+  "zonesGroupSyncDelayMs": "{ms} 毫秒",
+  "@zonesGroupSyncDelayMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesGroupSelectZones": "选择区域",
+  "zonesGroupSelectLeader": "选择主控",
+  "zonesGroupNoZones": "无活动分组",
+  "zonesGroupNeedTwo": "请至少选择2个区域",
+  "zonesGroupCreated": "分组已创建",
+  "zonesGroupDissolved": "分组已解散"
 }

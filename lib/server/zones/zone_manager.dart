@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 
@@ -143,6 +145,66 @@ class ZoneManager {
       instance.zone = instance.zone.copyWith(name: newName);
     }
     EventBus.instance.emit(ZoneUpdatedEvent(zoneId));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Multi-room grouping
+  // ---------------------------------------------------------------------------
+
+  /// Groupe plusieurs zones sous un même groupId (UUID v4).
+  /// [leaderId] est la zone leader, [zoneIds] contient toutes les zones
+  /// (leader + followers). Retourne le groupId généré.
+  Future<String> groupZones(int leaderId, List<int> zoneIds) async {
+    final groupId = _generateUuid();
+
+    // Place le leader en premier dans la liste
+    final ordered = [leaderId, ...zoneIds.where((id) => id != leaderId)];
+
+    for (final zoneId in ordered) {
+      await _db.zoneRepo.setGroupId(zoneId, groupId);
+      final instance = _instances[zoneId];
+      if (instance != null) {
+        instance.zone = instance.zone.copyWith(groupId: Value(groupId));
+      }
+    }
+
+    EventBus.instance.emit(ZoneGroupedEvent(groupId, ordered));
+    return groupId;
+  }
+
+  /// Dissout un groupe : remet groupId à null sur toutes les zones du groupe.
+  Future<void> ungroupZones(String groupId) async {
+    final zones = await _db.zoneRepo.getZonesByGroup(groupId);
+    for (final zone in zones) {
+      await _db.zoneRepo.setGroupId(zone.id, null);
+      final instance = _instances[zone.id];
+      if (instance != null) {
+        instance.zone = instance.zone.copyWith(groupId: const Value(null));
+      }
+    }
+    EventBus.instance.emit(ZoneUngroupedEvent(groupId));
+  }
+
+  /// Met à jour le délai de synchronisation d'une zone (DB + mémoire).
+  Future<void> setSyncDelay(int zoneId, int delayMs) async {
+    await _db.zoneRepo.setSyncDelay(zoneId, delayMs);
+    final instance = _instances[zoneId];
+    if (instance != null) {
+      instance.zone = instance.zone.copyWith(syncDelayMs: delayMs);
+    }
+    EventBus.instance.emit(ZoneUpdatedEvent(zoneId));
+  }
+
+  /// Génère un UUID v4 simple sans dépendance externe.
+  static String _generateUuid() {
+    final rng = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 1
+    String hex(int byte) => byte.toRadixString(16).padLeft(2, '0');
+    final s = bytes.map(hex).join();
+    return '${s.substring(0, 8)}-${s.substring(8, 12)}-'
+        '${s.substring(12, 16)}-${s.substring(16, 20)}-${s.substring(20)}';
   }
 
   // ---------------------------------------------------------------------------

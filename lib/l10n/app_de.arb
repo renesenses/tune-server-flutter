@@ -258,5 +258,26 @@
   "sourcesPortLabel": "Port",
   "sourcesPortHint": "49152",
   "sourcesProbing": "Suche l\u00e4uft\u2026",
-  "sourcesNotFound": "Kein UPnP-Ger\u00e4t unter dieser Adresse gefunden"
+  "sourcesNotFound": "Kein UPnP-Ger\u00e4t unter dieser Adresse gefunden",
+
+  "zonesMultiRoom": "Multi-Room",
+  "zonesCreateGroup": "Gruppe erstellen",
+  "zonesGroupLeader": "Leader",
+  "zonesGroupFollower": "Follower",
+  "zonesGroupDissolve": "Gruppe aufl\u00f6sen",
+  "zonesGroupSyncDelay": "Sync-Verz\u00f6gerung",
+  "zonesGroupSyncDelayMs": "{ms} ms",
+  "@zonesGroupSyncDelayMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesGroupSelectZones": "Zonen ausw\u00e4hlen",
+  "zonesGroupSelectLeader": "Leader ausw\u00e4hlen",
+  "zonesGroupNoZones": "Keine aktiven Gruppen",
+  "zonesGroupNeedTwo": "Mindestens 2 Zonen ausw\u00e4hlen",
+  "zonesGroupCreated": "Gruppe erstellt",
+  "zonesGroupDissolved": "Gruppe aufgel\u00f6st"
 }

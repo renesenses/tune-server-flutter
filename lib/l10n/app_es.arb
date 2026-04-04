@@ -258,5 +258,26 @@
   "sourcesPortLabel": "Puerto",
   "sourcesPortHint": "49152",
   "sourcesProbing": "Buscando\u2026",
-  "sourcesNotFound": "No se encontr\u00f3 ning\u00fan dispositivo UPnP en esta direcci\u00f3n"
+  "sourcesNotFound": "No se encontr\u00f3 ning\u00fan dispositivo UPnP en esta direcci\u00f3n",
+
+  "zonesMultiRoom": "Multi-Room",
+  "zonesCreateGroup": "Crear grupo",
+  "zonesGroupLeader": "L\u00edder",
+  "zonesGroupFollower": "Seguidor",
+  "zonesGroupDissolve": "Disolver grupo",
+  "zonesGroupSyncDelay": "Retardo de sincronizaci\u00f3n",
+  "zonesGroupSyncDelayMs": "{ms} ms",
+  "@zonesGroupSyncDelayMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesGroupSelectZones": "Seleccionar zonas",
+  "zonesGroupSelectLeader": "Seleccionar l\u00edder",
+  "zonesGroupNoZones": "Sin grupos activos",
+  "zonesGroupNeedTwo": "Seleccione al menos 2 zonas",
+  "zonesGroupCreated": "Grupo creado",
+  "zonesGroupDissolved": "Grupo disuelto"
 }

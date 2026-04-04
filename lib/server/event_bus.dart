@@ -106,6 +106,17 @@ class ZoneUpdatedEvent extends AppEvent {
   const ZoneUpdatedEvent(this.zoneId);
 }
 
+class ZoneGroupedEvent extends AppEvent {
+  final String groupId;
+  final List<int> zoneIds;
+  const ZoneGroupedEvent(this.groupId, this.zoneIds);
+}
+
+class ZoneUngroupedEvent extends AppEvent {
+  final String groupId;
+  const ZoneUngroupedEvent(this.groupId);
+}
+
 // --- Server lifecycle ---
 
 class ServerStartedEvent extends AppEvent {
