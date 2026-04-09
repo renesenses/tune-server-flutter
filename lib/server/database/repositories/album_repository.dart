@@ -41,6 +41,14 @@ class AlbumRepository {
             ]))
           .get();
 
+  Future<List<Album>> recent({int limit = 30}) =>
+      (_db.select(_db.albums)
+            ..orderBy([
+              (a) => OrderingTerm(expression: a.id, mode: OrderingMode.desc),
+            ])
+            ..limit(limit))
+          .get();
+
   Future<List<Album>> forArtist(int artistId) =>
       (_db.select(_db.albums)
             ..where((a) => a.artistId.equals(artistId))
