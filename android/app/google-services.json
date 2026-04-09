@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "859451012274",
+    "project_id": "tune-mozaiklabs",
+    "storage_bucket": "tune-mozaiklabs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:859451012274:android:363491697a5c0d96d585ab",
+        "android_client_info": {
+          "package_name": "com.mozaiklabs.tune"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFSsMvGAiSnxMYjRQgZhA1-5xfs2LEh28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
