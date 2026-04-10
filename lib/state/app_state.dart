@@ -775,6 +775,10 @@ class AppState extends ChangeNotifier {
     libraryState.setAlbums(results[0] as List<Album>);
     libraryState.setArtists(results[1] as List<Artist>);
     libraryState.setAlbumAudioInfo(results[2] as Map<int, AlbumAudioInfo>);
+
+    // Load recently added albums
+    final recent = await engine.db.albumRepo.recent(limit: 30);
+    libraryState.setRecentAlbums(recent);
   }
 
   Future<void> _refreshRadios() async {

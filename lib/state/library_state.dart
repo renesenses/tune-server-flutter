@@ -19,8 +19,16 @@ class LibraryState extends ChangeNotifier {
   List<Album> _albums = [];
   List<Album> get albums => List.unmodifiable(_albums);
 
+  List<Album> _recentAlbums = [];
+  List<Album> get recentAlbums => List.unmodifiable(_recentAlbums);
+
   void setAlbums(List<Album> albums) {
     _albums = albums;
+    notifyListeners();
+  }
+
+  void setRecentAlbums(List<Album> albums) {
+    _recentAlbums = albums;
     notifyListeners();
   }
 

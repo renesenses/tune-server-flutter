@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../../state/zone_state.dart';
@@ -40,6 +41,13 @@ class HomeView extends StatelessWidget {
             ),
           ),
           _RecentsList(tracks: lib.history),
+          const SizedBox(height: 16),
+        ],
+
+        // ---- Récemment ajouté ----
+        if (lib.recentAlbums.isNotEmpty) ...[
+          _SectionTitle(title: 'Récemment ajouté'),
+          _RecentAlbumsList(albums: lib.recentAlbums),
           const SizedBox(height: 16),
         ],
 
@@ -141,6 +149,52 @@ class _RecentsList extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Récemment ajouté — défilement horizontal d'albums
+// ---------------------------------------------------------------------------
+
+class _RecentAlbumsList extends StatelessWidget {
+  final List<Album> albums;
+  const _RecentAlbumsList({required this.albums});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = albums.take(20).toList();
+    return SizedBox(
+      height: 160,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final album = items[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: SizedBox(
+              width: 120,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ArtworkView(coverPath: album.coverPath, size: 120),
+                  const SizedBox(height: 4),
+                  Text(album.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: TuneColors.textPrimary)),
+                  Text(album.artistName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, color: TuneColors.textSecondary)),
                 ],
               ),
             ),
