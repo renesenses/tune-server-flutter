@@ -48,6 +48,54 @@ class _SettingsList extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
+        // ---- Mode ----
+        const _SectionHeader('Mode'),
+        Container(
+          color: TuneColors.surface,
+          child: Column(
+            children: [
+              _SettingsTile(
+                title: 'Mode',
+                subtitle: settings.isRemoteMode
+                    ? 'Connecté à ${settings.remoteHost}:${settings.remotePort}'
+                    : 'Serveur embarqué',
+                trailing: SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'server', label: Text('Serveur')),
+                    ButtonSegment(value: 'remote', label: Text('Remote')),
+                  ],
+                  selected: {settings.appMode},
+                  onSelectionChanged: (v) => settings.setAppMode(v.first),
+                  style: ButtonStyle(
+                    textStyle: WidgetStatePropertyAll(TuneFonts.caption),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
+              if (settings.isRemoteMode) ...[
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Adresse serveur',
+                  trailing: Text(
+                    settings.remoteHost.isEmpty ? 'Non configuré' : settings.remoteHost,
+                    style: const TextStyle(color: TuneColors.textSecondary),
+                  ),
+                  onTap: () => _editRemoteHost(context, settings),
+                ),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Port',
+                  trailing: Text(
+                    settings.remotePort.toString(),
+                    style: const TextStyle(color: TuneColors.textSecondary),
+                  ),
+                  onTap: () => _editRemotePort(context, settings),
+                ),
+              ],
+            ],
+          ),
+        ),
+
         // ---- Apparence ----
         _SectionHeader(l.settingsSectionAppearance),
         Container(
@@ -228,6 +276,70 @@ class _SettingsList extends StatelessWidget {
       final port = int.tryParse(ctrl.text.trim());
       if (port != null && port >= 1024 && port <= 65535) {
         await settings.setServerPort(port);
+      }
+    }
+  }
+
+  Future<void> _editRemoteHost(
+      BuildContext context, SettingsState settings) async {
+    final ctrl = TextEditingController(text: settings.remoteHost);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: Text('Adresse serveur', style: TuneFonts.title3),
+        content: TextField(
+          controller: ctrl,
+          style: TuneFonts.body,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(
+              labelText: 'IP ou hostname (ex: 192.168.1.18)'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('OK',
+                  style: TextStyle(color: TuneColors.accent))),
+        ],
+      ),
+    );
+    if (result == true && ctrl.text.trim().isNotEmpty) {
+      await settings.setRemoteHost(ctrl.text.trim());
+    }
+  }
+
+  Future<void> _editRemotePort(
+      BuildContext context, SettingsState settings) async {
+    final ctrl = TextEditingController(text: settings.remotePort.toString());
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: Text('Port serveur', style: TuneFonts.title3),
+        content: TextField(
+          controller: ctrl,
+          style: TuneFonts.body,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Port (défaut: 8888)'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('OK',
+                  style: TextStyle(color: TuneColors.accent))),
+        ],
+      ),
+    );
+    if (result == true) {
+      final port = int.tryParse(ctrl.text.trim());
+      if (port != null && port >= 1 && port <= 65535) {
+        await settings.setRemotePort(port);
       }
     }
   }

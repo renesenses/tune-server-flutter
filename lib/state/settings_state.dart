@@ -59,6 +59,37 @@ class SettingsState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // App mode (server / remote)
+  // ---------------------------------------------------------------------------
+
+  String get appMode => _config.appMode;
+  bool get isRemoteMode => _config.isRemoteMode;
+
+  Future<void> setAppMode(String mode) async {
+    await _config.setAppMode(mode);
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Remote connection
+  // ---------------------------------------------------------------------------
+
+  String get remoteHost => _config.remoteHost;
+  int get remotePort => _config.remotePort;
+  String get remoteBaseUrl => _config.remoteBaseUrl;
+  String get remoteWsUrl => _config.remoteWsUrl;
+
+  Future<void> setRemoteHost(String host) async {
+    await _config.setRemoteHost(host);
+    notifyListeners();
+  }
+
+  Future<void> setRemotePort(int port) async {
+    await _config.setRemotePort(port);
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
   // Onboarding
   // ---------------------------------------------------------------------------
 

@@ -19,6 +19,9 @@ dependencies:
   drift_flutter: ^0.2.2
   sqlite3_flutter_libs: ^0.5.26
 
+  # --- WebSocket (remote mode) ---
+  web_socket_channel: ^3.0.1
+
   # --- Audio ---
   just_audio: ^0.10.2
   audio_session: ^0.1.21         # gestion session audio iOS/Android

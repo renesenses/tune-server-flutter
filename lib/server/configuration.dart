@@ -17,6 +17,9 @@ class ServerConfiguration {
   static const _kTheme = 'app_theme'; // 'system' | 'light' | 'dark'
   static const _kLanguage = 'app_language'; // code BCP-47, null = système
   static const _kHttpStreamerPort = 'http_streamer_port';
+  static const _kAppMode = 'app_mode'; // 'server' | 'remote'
+  static const _kRemoteHost = 'remote_host';
+  static const _kRemotePort = 'remote_port';
 
   // Valeurs par défaut
   static const int defaultPort = 8080;
@@ -99,6 +102,30 @@ class ServerConfiguration {
       await _p.setString(_kLanguage, code);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // App mode (server / remote)
+  // ---------------------------------------------------------------------------
+
+  String get appMode => _p.getString(_kAppMode) ?? 'server';
+  bool get isRemoteMode => appMode == 'remote';
+
+  Future<void> setAppMode(String value) => _p.setString(_kAppMode, value);
+
+  // ---------------------------------------------------------------------------
+  // Remote server connection
+  // ---------------------------------------------------------------------------
+
+  String get remoteHost => _p.getString(_kRemoteHost) ?? '';
+
+  Future<void> setRemoteHost(String value) => _p.setString(_kRemoteHost, value);
+
+  int get remotePort => _p.getInt(_kRemotePort) ?? 8888;
+
+  Future<void> setRemotePort(int value) => _p.setInt(_kRemotePort, value);
+
+  String get remoteBaseUrl => 'http://$remoteHost:$remotePort/api/v1';
+  String get remoteWsUrl => 'ws://$remoteHost:$remotePort/api/v1/ws';
 
   // ---------------------------------------------------------------------------
   // Reset (tests / onboarding)
