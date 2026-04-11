@@ -206,7 +206,7 @@ class AppState extends ChangeNotifier {
     if (_apiClient == null) return;
     try {
       final radiosJson = await _apiClient!.getRadios();
-      final radios = radiosJson.map((r) => Radio.fromJson(r as Map<String, dynamic>)).toList();
+      final radios = radiosJson.map((r) => radioFromJson(r as Map<String, dynamic>)).toList();
       libraryState.setRadios(radios);
     } catch (e) {
       debugPrint('[Remote] refreshRadios error: $e');
@@ -217,11 +217,11 @@ class AppState extends ChangeNotifier {
     if (_apiClient == null) return;
     try {
       final albumsJson = await _apiClient!.getAlbums();
-      final albums = albumsJson.map((a) => Album.fromJson(a as Map<String, dynamic>)).toList();
+      final albums = albumsJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setAlbums(albums);
 
       final artistsJson = await _apiClient!.getArtists();
-      final artists = artistsJson.map((a) => Artist.fromJson(a as Map<String, dynamic>)).toList();
+      final artists = artistsJson.map((a) => artistFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setArtists(artists);
     } catch (e) {
       debugPrint('[Remote] refreshLibrary error: $e');

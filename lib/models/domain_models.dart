@@ -1,4 +1,70 @@
+import '../server/database/database.dart' show Album, Artist, Track, Radio;
 import 'enums.dart';
+
+// ---------------------------------------------------------------------------
+// JSON deserializers for Drift models (used in remote mode)
+// Drift-generated classes don't have fromJson — we create them here.
+// ---------------------------------------------------------------------------
+
+Album albumFromJson(Map<String, dynamic> j) => Album(
+      id: j['id'] as int? ?? 0,
+      title: j['title'] as String? ?? '',
+      artistId: j['artist_id'] as int?,
+      artistName: j['artist_name'] as String?,
+      year: j['year'] as int?,
+      genre: j['genre'] as String?,
+      discCount: j['disc_count'] as int?,
+      trackCount: j['track_count'] as int?,
+      coverPath: j['cover_path'] as String?,
+      source: j['source'] as String?,
+      sourceId: j['source_id'] as String?,
+      format: j['format'] as String?,
+      sampleRate: j['sample_rate'] as int?,
+      bitDepth: j['bit_depth'] as int?,
+    );
+
+Artist artistFromJson(Map<String, dynamic> j) => Artist(
+      id: j['id'] as int? ?? 0,
+      name: j['name'] as String? ?? '',
+      sortName: j['sort_name'] as String?,
+      musicbrainzId: j['musicbrainz_id'] as String?,
+      discogsId: j['discogs_id'] as String?,
+      bio: j['bio'] as String?,
+      imagePath: j['image_path'] as String?,
+    );
+
+Track trackFromJson(Map<String, dynamic> j) => Track(
+      id: j['id'] as int? ?? 0,
+      title: j['title'] as String? ?? '',
+      albumId: j['album_id'] as int?,
+      albumTitle: j['album_title'] as String?,
+      artistId: j['artist_id'] as int?,
+      artistName: j['artist_name'] as String?,
+      discNumber: j['disc_number'] as int? ?? 1,
+      trackNumber: j['track_number'] as int? ?? 0,
+      durationMs: j['duration_ms'] as int? ?? 0,
+      filePath: j['file_path'] as String?,
+      format: j['format'] as String?,
+      sampleRate: j['sample_rate'] as int?,
+      bitDepth: j['bit_depth'] as int?,
+      channels: j['channels'] as int? ?? 2,
+      coverPath: j['cover_path'] as String?,
+      source: j['source'] as String?,
+      sourceId: j['source_id'] as String?,
+    );
+
+Radio radioFromJson(Map<String, dynamic> j) => Radio(
+      id: j['id'] as int? ?? 0,
+      name: j['name'] as String? ?? '',
+      streamUrl: j['stream_url'] as String? ?? '',
+      logoUrl: j['logo_url'] as String?,
+      genre: j['genre'] as String?,
+      tags: j['tags'] as String?,
+      codec: j['codec'] as String?,
+      country: j['country'] as String?,
+      homepageUrl: j['homepage_url'] as String?,
+      favorite: j['favorite'] as bool? ?? false,
+    );
 
 // ---------------------------------------------------------------------------
 // domain_models.dart — types NON-DB uniquement
@@ -84,6 +150,7 @@ class ZoneWithState {
   factory ZoneWithState.fromJson(Map<String, dynamic> json) {
     final stateStr = json['state'] as String? ?? 'stopped';
     final outputTypeStr = json['output_type'] as String?;
+    final trackJson = json['current_track'] as Map<String, dynamic>?;
     return ZoneWithState(
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
@@ -93,6 +160,7 @@ class ZoneWithState {
       groupId: json['group_id'] as String?,
       syncDelayMs: json['sync_delay_ms'] as int? ?? 0,
       state: PlaybackState.fromRawValue(stateStr) ?? PlaybackState.stopped,
+      currentTrack: trackJson != null ? trackFromJson(trackJson) : null,
       positionMs: json['position_ms'] as int? ?? 0,
       queueLength: json['queue_length'] as int? ?? 0,
     );
