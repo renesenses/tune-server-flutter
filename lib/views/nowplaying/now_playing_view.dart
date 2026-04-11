@@ -13,6 +13,8 @@ import '../helpers/artwork_view.dart';
 import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../library/albums_grid_view.dart';
+import '../library/artists_list_view.dart';
 import 'queue_view.dart';
 import 'seek_bar_view.dart';
 import 'volume_control_view.dart';
@@ -280,18 +282,23 @@ class _TrackInfo extends StatelessWidget {
                 const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () {
-                    // Navigate to artist
                     final artists = app.libraryState.artists;
-                    final artist = artists.cast<dynamic>().where(
-                      (a) => a.name == track!.artistName,
+                    final artist = artists.cast<Artist?>().where(
+                      (a) => a?.name == track!.artistName,
                     ).firstOrNull;
                     if (artist != null) {
-                      Navigator.of(context).pop(); // close now playing
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => ArtistDetailView(artist: artist),
+                      ));
                     }
                   },
                   child: Text(
                     track!.artistName!,
-                    style: TuneFonts.subheadline,
+                    style: TuneFonts.subheadline.copyWith(
+                      decoration: TextDecoration.underline,
+                      decorationColor: TuneColors.textSecondary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -299,11 +306,28 @@ class _TrackInfo extends StatelessWidget {
               ],
               if (track?.albumTitle != null) ...[
                 const SizedBox(height: 2),
-                Text(
-                  track!.albumTitle!,
-                  style: TuneFonts.footnote,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                GestureDetector(
+                  onTap: () {
+                    final albums = app.libraryState.albums;
+                    final album = albums.cast<Album?>().where(
+                      (a) => a?.title == track!.albumTitle && a?.artistName == track!.artistName,
+                    ).firstOrNull;
+                    if (album != null) {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => AlbumDetailView(album: album),
+                      ));
+                    }
+                  },
+                  child: Text(
+                    track!.albumTitle!,
+                    style: TuneFonts.footnote.copyWith(
+                      decoration: TextDecoration.underline,
+                      decorationColor: TuneColors.textTertiary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ],

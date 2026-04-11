@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../podcasts/podcasts_view.dart';
+import '../radios/radio_favorites_view.dart';
 import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
 import '../streaming/streaming_view.dart';
@@ -35,6 +36,7 @@ class _iPadContentViewState extends State<iPadContentView> {
       (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
       (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
       (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
+      (icon: Icons.favorite_outline_rounded, activeIcon: Icons.favorite_rounded,        label: 'Favoris Radio'),
       (icon: Icons.podcasts_outlined,        activeIcon: Icons.podcasts_rounded,        label: l.navPodcasts),
       (icon: Icons.settings_outlined,        activeIcon: Icons.settings_rounded,        label: l.navSettings),
     ];
@@ -66,6 +68,7 @@ class _iPadContentViewState extends State<iPadContentView> {
     const StreamingView(),
     const ZonesView(),
     const RadiosView(),
+    const RadioFavoritesView(),
     const PodcastsView(),
     const SettingsView(),
   ];
