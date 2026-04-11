@@ -33,12 +33,29 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
   }
 
   Future<void> _load() async {
-    final favs = await context
-        .read<AppState>()
-        .engine
-        .db
-        .radioRepo
-        .allFavorites();
+    final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final resp = await app.apiClient!.getRadioFavorites();
+        final favs = (resp as List).map((j) {
+          final m = j as Map<String, dynamic>;
+          return RadioFavorite(
+            id: m['id'] as int? ?? 0,
+            title: m['title'] as String? ?? '',
+            artist: m['artist'] as String? ?? '',
+            stationName: m['station_name'] as String? ?? '',
+            streamUrl: m['stream_url'] as String? ?? '',
+            savedAt: m['saved_at'] as String? ?? '',
+          );
+        }).toList();
+        if (mounted) setState(() => _favorites = favs);
+      } catch (e) {
+        debugPrint('[Remote] load radio favorites error: $e');
+        if (mounted) setState(() => _favorites = []);
+      }
+      return;
+    }
+    final favs = await app.engine.db.radioRepo.allFavorites();
     if (mounted) setState(() => _favorites = favs);
   }
 

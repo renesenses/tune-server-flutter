@@ -175,6 +175,9 @@ class TuneApiClient {
   Future<void> saveRadioFavorite(Map<String, dynamic> body) =>
       _post('/radio-favorites', body: body);
 
+  Future<List<dynamic>> getRadioFavorites({int limit = 500}) =>
+      _get('/radio-favorites?limit=$limit').then((d) => d as List);
+
   // ---------------------------------------------------------------------------
   // System
   // ---------------------------------------------------------------------------

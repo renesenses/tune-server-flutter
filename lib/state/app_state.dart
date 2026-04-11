@@ -161,6 +161,7 @@ class AppState extends ChangeNotifier {
         _refreshZonesRemote(),
         _refreshRadiosRemote(),
         _refreshLibraryRemote(),
+        _refreshStreamingServicesRemote(),
       ]);
 
       // Start polling for position updates (every 3s)
@@ -263,6 +264,25 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
     } catch (e) {
       debugPrint('[Remote] refreshLibrary error: $e');
+    }
+  }
+
+  Future<void> _refreshStreamingServicesRemote() async {
+    if (_apiClient == null) return;
+    try {
+      final data = await _apiClient!.getStreamingServices();
+      final services = data.entries.map((e) {
+        final info = e.value as Map<String, dynamic>;
+        return StreamingServiceStatus(
+          serviceId: e.key,
+          enabled: info['authenticated'] as bool? ?? false,
+          authenticated: info['authenticated'] as bool? ?? false,
+          quality: info['quality'] as String?,
+        );
+      }).toList();
+      libraryState.setStreamingServices(services);
+    } catch (e) {
+      debugPrint('[Remote] refreshStreamingServices error: $e');
     }
   }
 
