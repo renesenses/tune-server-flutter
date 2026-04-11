@@ -331,6 +331,16 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
 
   Future<void> _loadTracks() async {
     final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final data = await app.apiClient!.getAlbumTracks(widget.album.id);
+        final tracks = data.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
+        if (mounted) setState(() => _tracks = tracks);
+      } catch (e) {
+        debugPrint('[Remote] loadAlbumTracks error: $e');
+      }
+      return;
+    }
     final tracks =
         await app.engine.db.trackRepo.forAlbum(widget.album.id);
     if (mounted) setState(() => _tracks = tracks);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -96,6 +97,19 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
 
   Future<void> _loadData() async {
     final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final albumsJson = await app.apiClient!.getArtistAlbums(widget.artist.id);
+        final tracksJson = await app.apiClient!.getArtistTracks(widget.artist.id);
+        if (mounted) setState(() {
+          _albums = albumsJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
+          _tracks = tracksJson.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
+        });
+      } catch (e) {
+        debugPrint('[Remote] loadArtistData error: $e');
+      }
+      return;
+    }
     final results = await Future.wait([
       app.engine.db.albumRepo.forArtist(widget.artist.id),
       app.engine.db.trackRepo.forArtist(widget.artist.id),

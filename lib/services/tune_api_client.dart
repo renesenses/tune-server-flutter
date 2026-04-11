@@ -101,6 +101,9 @@ class TuneApiClient {
   Future<List<dynamic>> getArtistTracks(int artistId) =>
       _get('/library/artists/$artistId/tracks').then((d) => d as List);
 
+  Future<List<dynamic>> getAlbumTracks(int albumId) =>
+      _get('/library/albums/$albumId/tracks').then((d) => d as List);
+
   Future<dynamic> searchLibrary(String query, {int limit = 30}) =>
       _get('/library/search?q=${Uri.encodeComponent(query)}&limit=$limit');
 
