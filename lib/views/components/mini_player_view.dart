@@ -104,6 +104,31 @@ class _MiniPlayerContent extends StatelessWidget {
               ),
             ),
 
+            // Bouton coeur
+            IconButton(
+              icon: const Icon(Icons.favorite_border_rounded),
+              iconSize: 20,
+              color: TuneColors.textTertiary,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              onPressed: () {
+                if (track != null && track.source == Source.radio.rawValue) {
+                  final radios = app.libraryState.radios;
+                  final radio = radios.cast<dynamic>().where(
+                    (r) => track.sourceId == r.id.toString(),
+                  ).firstOrNull;
+                  if (radio != null) {
+                    app.saveRadioFavorite(
+                      title: track.title, artist: track.artistName, radio: radio,
+                    );
+                  }
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Ajouté aux favoris'), duration: Duration(seconds: 1)),
+                );
+              },
+            ),
+
             // Bouton play/pause
             if (isBuffering)
               const SizedBox(

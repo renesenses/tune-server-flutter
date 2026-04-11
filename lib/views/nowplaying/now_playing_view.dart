@@ -261,6 +261,9 @@ class _TrackInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final isRadio = track?.source == Source.radio.rawValue;
+
     return Row(
       children: [
         Expanded(
@@ -275,9 +278,30 @@ class _TrackInfo extends StatelessWidget {
               ),
               if (track?.artistName != null) ...[
                 const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to artist
+                    final artists = app.libraryState.artists;
+                    final artist = artists.cast<dynamic>().where(
+                      (a) => a.name == track!.artistName,
+                    ).firstOrNull;
+                    if (artist != null) {
+                      Navigator.of(context).pop(); // close now playing
+                    }
+                  },
+                  child: Text(
+                    track!.artistName!,
+                    style: TuneFonts.subheadline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              if (track?.albumTitle != null) ...[
+                const SizedBox(height: 2),
                 Text(
-                  track!.artistName!,
-                  style: TuneFonts.subheadline,
+                  track!.albumTitle!,
+                  style: TuneFonts.footnote,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -285,6 +309,48 @@ class _TrackInfo extends StatelessWidget {
             ],
           ),
         ),
+        // Heart / favorite button
+        if (isRadio)
+          IconButton(
+            icon: const Icon(Icons.favorite_border_rounded),
+            color: TuneColors.textSecondary,
+            iconSize: 28,
+            onPressed: () {
+              if (track != null) {
+                final radios = app.libraryState.radios;
+                final radio = radios.cast<dynamic>().where(
+                  (r) => track!.sourceId == r.id.toString(),
+                ).firstOrNull;
+                if (radio != null) {
+                  app.saveRadioFavorite(
+                    title: track!.title,
+                    artist: track!.artistName,
+                    radio: radio,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Ajouté aux favoris radio'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }
+            },
+          )
+        else if (track?.id != null && track!.id != 0)
+          IconButton(
+            icon: const Icon(Icons.favorite_border_rounded),
+            color: TuneColors.textSecondary,
+            iconSize: 28,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ajouté aux favoris'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
       ],
     );
   }
