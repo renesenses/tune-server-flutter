@@ -151,6 +151,70 @@ class TuneApiClient {
       _get('/playlists').then((d) => d as List);
 
   // ---------------------------------------------------------------------------
+  // Playlist Manager
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getPlaylistManagerServices() =>
+      _get('/playlist-manager/services').then((d) => d as Map<String, dynamic>);
+
+  Future<dynamic> transferPlaylist({
+    required String sourceService, required String sourcePlaylistId,
+    String targetService = 'local', String? targetName,
+    double matchThreshold = 0.6, bool dryRun = false,
+    bool createOnTarget = false, bool includeApproximate = true,
+  }) => _post('/playlist-manager/transfer', body: {
+    'source_service': sourceService, 'source_playlist_id': sourcePlaylistId,
+    'target_service': targetService, 'target_name': targetName,
+    'match_threshold': matchThreshold, 'dry_run': dryRun,
+    'create_on_target': createOnTarget, 'include_approximate': includeApproximate,
+  });
+
+  Future<dynamic> batchTransfer({
+    required String sourceService, String targetService = 'local',
+    List<String>? playlistIds, double matchThreshold = 0.6,
+  }) => _post('/playlist-manager/batch-transfer', body: {
+    'source_service': sourceService, 'target_service': targetService,
+    'playlist_ids': playlistIds, 'match_threshold': matchThreshold,
+  });
+
+  Future<dynamic> mergePlaylists({
+    required List<Map<String, String>> playlists, required String targetName,
+    bool deduplicate = true, String targetService = 'local',
+  }) => _post('/playlist-manager/merge', body: {
+    'playlists': playlists, 'target_name': targetName,
+    'deduplicate': deduplicate, 'target_service': targetService,
+  });
+
+  Future<dynamic> backupPlaylists({List<String>? services}) =>
+      _post('/playlist-manager/backup', body: {'services': services, 'include_tracks': true});
+
+  Future<dynamic> exportPlaylist(String service, String playlistId, String format) =>
+      _post('/playlist-manager/export', body: {'service': service, 'playlist_id': playlistId, 'format': format});
+
+  Future<List<dynamic>> getPlaylistLinks() =>
+      _get('/playlist-manager/links').then((d) => d as List);
+
+  Future<dynamic> createPlaylistLink({
+    required int localPlaylistId, required String service,
+    required String servicePlaylistId, String syncDirection = 'pull',
+  }) => _post('/playlist-manager/links', body: {
+    'local_playlist_id': localPlaylistId, 'service': service,
+    'service_playlist_id': servicePlaylistId, 'sync_direction': syncDirection,
+  });
+
+  Future<dynamic> triggerPlaylistSync(int linkId) =>
+      _post('/playlist-manager/links/$linkId/sync');
+
+  Future<void> deletePlaylistLink(int linkId) =>
+      _delete('/playlist-manager/links/$linkId');
+
+  Future<List<dynamic>> getTransferHistory({int limit = 50}) =>
+      _get('/playlist-manager/history?limit=$limit').then((d) => d as List);
+
+  Future<dynamic> getTransferDetail(int transferId) =>
+      _get('/playlist-manager/history/$transferId');
+
+  // ---------------------------------------------------------------------------
   // Podcasts
   // ---------------------------------------------------------------------------
 
