@@ -129,6 +129,14 @@ class _MiniPlayerContent extends StatelessWidget {
               },
             ),
 
+            // Bouton précédent
+            SkipButton(
+              isForward: false,
+              size: 20,
+              color: TuneColors.textPrimary,
+              onPressed: () => app.previous(),
+            ),
+
             // Bouton play/pause
             if (isBuffering)
               const SizedBox(
