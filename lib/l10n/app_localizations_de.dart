@@ -715,6 +715,89 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appleMusicAuthorize => 'Zugriff erlauben';
 
   @override
+  String get smbNavTitle => 'SMB-Quelle';
+
+  @override
+  String get smbTitle => 'SMB-Verbindung';
+
+  @override
+  String get smbHostHint => 'IP-Adresse des SMB-Servers eingeben';
+
+  @override
+  String get smbHostLabel => 'IP-Adresse (z.B. 192.168.1.23)';
+
+  @override
+  String get smbUser => 'Benutzername';
+
+  @override
+  String get smbPassword => 'Passwort';
+
+  @override
+  String get smbConnect => 'Verbinden';
+
+  @override
+  String get smbSelectShare => 'Freigabe auswählen';
+
+  @override
+  String get smbBack => 'Zurück';
+
+  @override
+  String get smbManualHint =>
+      'Freigaben konnten nicht automatisch aufgelistet werden.\nFreigabenamen manuell eingeben:';
+
+  @override
+  String get smbShareName => 'Freigabename (z.B. Share, Music)';
+
+  @override
+  String get smbScan => 'Scannen';
+
+  @override
+  String get smbScanning => 'Scan läuft…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count Audiodateien gefunden';
+  }
+
+  @override
+  String get smbDoneTitle => 'Indizierung abgeschlossen';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$count Tracks importiert von $share';
+  }
+
+  @override
+  String get smbAddAnother => 'Weitere Freigabe hinzufügen';
+
+  @override
+  String get settingsSmb => 'SMB / Samba-Quellen';
+
+  @override
+  String get settingsSmbDesc => 'Bibliotheken von Netzwerkfreigaben indizieren';
+
+  @override
+  String get podcastsTitle => 'Podcasts';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => 'Suchen';
+
+  @override
+  String get podcastsEmpty => 'Keine Podcasts';
+
+  @override
+  String get podcastsSearchHint => 'Podcast suchen…';
+
+  @override
+  String get podcastsNoEpisodes => 'Keine Episoden';
+
+  @override
+  String get navPodcasts => 'Podcasts';
+
+  @override
   String get streamingConnectedSuccess => 'Verbunden!';
 
   @override

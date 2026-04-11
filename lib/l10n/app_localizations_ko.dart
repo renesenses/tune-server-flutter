@@ -711,6 +711,88 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appleMusicAuthorize => '접근 허용';
 
   @override
+  String get smbNavTitle => 'SMB 소스';
+
+  @override
+  String get smbTitle => 'SMB 연결';
+
+  @override
+  String get smbHostHint => 'SMB 서버 주소를 입력하세요';
+
+  @override
+  String get smbHostLabel => 'IP 주소（예：192.168.1.23）';
+
+  @override
+  String get smbUser => '사용자 이름';
+
+  @override
+  String get smbPassword => '비밀번호';
+
+  @override
+  String get smbConnect => '연결';
+
+  @override
+  String get smbSelectShare => '공유 선택';
+
+  @override
+  String get smbBack => '뒤로';
+
+  @override
+  String get smbManualHint => '공유를 자동으로 나열할 수 없습니다.\n공유 이름을 수동으로 입력하세요:';
+
+  @override
+  String get smbShareName => '공유 이름（예：Share, Music）';
+
+  @override
+  String get smbScan => '스캔';
+
+  @override
+  String get smbScanning => '스캔 중…';
+
+  @override
+  String smbScanCount(int count) {
+    return '오디오 파일 $count개 발견';
+  }
+
+  @override
+  String get smbDoneTitle => '인덱싱 완료';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$share에서 $count개 트랙 가져옴';
+  }
+
+  @override
+  String get smbAddAnother => '다른 공유 추가';
+
+  @override
+  String get settingsSmb => 'SMB / Samba 소스';
+
+  @override
+  String get settingsSmbDesc => '네트워크 공유에서 라이브러리 인덱싱';
+
+  @override
+  String get podcastsTitle => '팟캐스트';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => '검색';
+
+  @override
+  String get podcastsEmpty => '팟캐스트 없음';
+
+  @override
+  String get podcastsSearchHint => '팟캐스트 검색…';
+
+  @override
+  String get podcastsNoEpisodes => '에피소드 없음';
+
+  @override
+  String get navPodcasts => '팟캐스트';
+
+  @override
   String get streamingConnectedSuccess => '연결됨!';
 
   @override

@@ -708,6 +708,88 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appleMusicAuthorize => '允许访问';
 
   @override
+  String get smbNavTitle => 'SMB来源';
+
+  @override
+  String get smbTitle => 'SMB连接';
+
+  @override
+  String get smbHostHint => '输入SMB服务器地址';
+
+  @override
+  String get smbHostLabel => 'IP地址（例：192.168.1.23）';
+
+  @override
+  String get smbUser => '用户名';
+
+  @override
+  String get smbPassword => '密码';
+
+  @override
+  String get smbConnect => '连接';
+
+  @override
+  String get smbSelectShare => '选择共享';
+
+  @override
+  String get smbBack => '返回';
+
+  @override
+  String get smbManualHint => '无法自动列出共享。\n请手动输入共享名称：';
+
+  @override
+  String get smbShareName => '共享名称（例：Share, Music）';
+
+  @override
+  String get smbScan => '扫描';
+
+  @override
+  String get smbScanning => '扫描中…';
+
+  @override
+  String smbScanCount(int count) {
+    return '找到$count个音频文件';
+  }
+
+  @override
+  String get smbDoneTitle => '索引完成';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '从$share导入了$count首曲目';
+  }
+
+  @override
+  String get smbAddAnother => '添加其他共享';
+
+  @override
+  String get settingsSmb => 'SMB / Samba来源';
+
+  @override
+  String get settingsSmbDesc => '从网络共享索引音乐库';
+
+  @override
+  String get podcastsTitle => '播客';
+
+  @override
+  String get podcastsTabRadioFrance => '法国广播电台';
+
+  @override
+  String get podcastsTabSearch => '搜索';
+
+  @override
+  String get podcastsEmpty => '无播客';
+
+  @override
+  String get podcastsSearchHint => '搜索播客…';
+
+  @override
+  String get podcastsNoEpisodes => '无剧集';
+
+  @override
+  String get navPodcasts => '播客';
+
+  @override
   String get streamingConnectedSuccess => '已连接！';
 
   @override

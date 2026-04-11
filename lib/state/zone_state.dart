@@ -49,6 +49,13 @@ class ZoneState extends ChangeNotifier {
     }
   }
 
+  void reset() {
+    _zones = [];
+    _currentZoneId = null;
+    _queueSnapshot = null;
+    notifyListeners();
+  }
+
   void setZones(List<ZoneWithState> zones) {
     _zones = zones;
     if (_currentZoneId == null && zones.isNotEmpty) {

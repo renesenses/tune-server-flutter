@@ -47,7 +47,9 @@ class QueueChangedEvent extends AppEvent {
 // --- Library ---
 
 class LibraryScanStartedEvent extends AppEvent {
-  const LibraryScanStartedEvent();
+  /// ID du device UPnP en cours d'indexation, ou null pour un scan local/SMB.
+  final String? deviceId;
+  const LibraryScanStartedEvent({this.deviceId});
 }
 
 class LibraryScanProgressEvent extends AppEvent {

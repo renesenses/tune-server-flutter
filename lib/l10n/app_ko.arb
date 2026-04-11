@@ -232,7 +232,41 @@
   "browseNavError": "탐색 오류"
 ,
   "streamingCodeEntered": "코드를 입력했습니다",
-  "appleMusicAuthorize": "접근 허용"
+  "appleMusicAuthorize": "접근 허용",
+
+  "smbNavTitle": "SMB 소스",
+  "smbTitle": "SMB 연결",
+  "smbHostHint": "SMB 서버 주소를 입력하세요",
+  "smbHostLabel": "IP 주소（예：192.168.1.23）",
+  "smbUser": "사용자 이름",
+  "smbPassword": "비밀번호",
+  "smbConnect": "연결",
+  "smbSelectShare": "공유 선택",
+  "smbBack": "뒤로",
+  "smbManualHint": "공유를 자동으로 나열할 수 없습니다.\n공유 이름을 수동으로 입력하세요:",
+  "smbShareName": "공유 이름（예：Share, Music）",
+  "smbScan": "스캔",
+  "smbScanning": "스캔 중…",
+  "smbScanCount": "오디오 파일 {count}개 발견",
+  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "smbDoneTitle": "인덱싱 완료",
+  "smbDoneBody": "{share}에서 {count}개 트랙 가져옴",
+  "@smbDoneBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "share": { "type": "String" }
+    }
+  },
+  "smbAddAnother": "다른 공유 추가",
+  "settingsSmb": "SMB / Samba 소스",
+  "settingsSmbDesc": "네트워크 공유에서 라이브러리 인덱싱",
+  "podcastsTitle": "팟캐스트",
+  "podcastsTabRadioFrance": "Radio France",
+  "podcastsTabSearch": "검색",
+  "podcastsEmpty": "팟캐스트 없음",
+  "podcastsSearchHint": "팟캐스트 검색…",
+  "podcastsNoEpisodes": "에피소드 없음",
+  "navPodcasts": "팟캐스트"
 ,
   "streamingConnectedSuccess": "연결됨!",
   "browseItemCount": "{count} 항목",

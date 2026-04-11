@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../components/mini_player_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
+import '../podcasts/podcasts_view.dart';
 import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
 import '../streaming/streaming_view.dart';
@@ -34,6 +35,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
       (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
       (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
+      (icon: Icons.podcasts_outlined,        activeIcon: Icons.podcasts_rounded,        label: l.navPodcasts),
       (icon: Icons.settings_outlined,        activeIcon: Icons.settings_rounded,        label: l.navSettings),
     ];
 
@@ -64,6 +66,7 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
     const StreamingView(),
     const ZonesView(),
     const RadiosView(),
+    const PodcastsView(),
     const SettingsView(),
   ];
 }

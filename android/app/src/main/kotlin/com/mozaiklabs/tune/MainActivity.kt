@@ -1,5 +1,7 @@
-package com.mozaiklabs.tune_server
+package com.mozaiklabs.tune
 
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -66,6 +68,10 @@ class MainActivity : FlutterActivity() {
 
             val hasCoverData = retriever.embeddedPicture != null
 
+            // MediaMetadataRetriever n'expose pas sampleRate/bitDepth —
+            // on utilise MediaExtractor pour lire le MediaFormat de la piste audio.
+            val (sampleRate, channels, bitDepth) = readAudioFormat(path)
+
             mapOf(
                 "filePath"    to path,
                 "title"       to title,
@@ -79,9 +85,9 @@ class MainActivity : FlutterActivity() {
                 "year"        to year,
                 "format"      to formatFromExtension(path),
                 "hasCoverData" to hasCoverData,
-                "sampleRate"  to null,
-                "channels"    to null,
-                "bitDepth"    to null,
+                "sampleRate"  to sampleRate,
+                "channels"    to channels,
+                "bitDepth"    to bitDepth,
             )
         } catch (e: Exception) {
             // Fallback : nom de fichier uniquement
@@ -108,6 +114,44 @@ class MainActivity : FlutterActivity() {
             null
         } finally {
             try { retriever.release() } catch (_: Exception) {}
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // readAudioFormat — sampleRate, channels, bitDepth via MediaExtractor
+    // -------------------------------------------------------------------------
+    private fun readAudioFormat(path: String): Triple<Int?, Int?, Int?> {
+        val extractor = MediaExtractor()
+        return try {
+            extractor.setDataSource(path)
+            var sampleRate: Int? = null
+            var channels: Int? = null
+            var bitDepth: Int? = null
+            for (i in 0 until extractor.trackCount) {
+                val fmt = extractor.getTrackFormat(i)
+                val mime = fmt.getString(MediaFormat.KEY_MIME) ?: continue
+                if (!mime.startsWith("audio/")) continue
+                if (fmt.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
+                    sampleRate = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                }
+                if (fmt.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
+                    channels = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                }
+                if (fmt.containsKey(MediaFormat.KEY_PCM_ENCODING)) {
+                    bitDepth = when (fmt.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
+                        2 -> 16  // AudioFormat.ENCODING_PCM_16BIT
+                        4 -> 32  // AudioFormat.ENCODING_PCM_32BIT
+                        101 -> 24 // AudioFormat.ENCODING_PCM_24BIT_PACKED
+                        else -> null
+                    }
+                }
+                break
+            }
+            Triple(sampleRate, channels, bitDepth)
+        } catch (_: Exception) {
+            Triple(null, null, null)
+        } finally {
+            extractor.release()
         }
     }
 

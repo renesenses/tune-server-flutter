@@ -714,6 +714,89 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appleMusicAuthorize => 'Permitir acceso';
 
   @override
+  String get smbNavTitle => 'Fuente SMB';
+
+  @override
+  String get smbTitle => 'Conexión SMB';
+
+  @override
+  String get smbHostHint => 'Introduzca la dirección del servidor SMB';
+
+  @override
+  String get smbHostLabel => 'Dirección IP (ej: 192.168.1.23)';
+
+  @override
+  String get smbUser => 'Usuario';
+
+  @override
+  String get smbPassword => 'Contraseña';
+
+  @override
+  String get smbConnect => 'Conectar';
+
+  @override
+  String get smbSelectShare => 'Seleccionar recurso compartido';
+
+  @override
+  String get smbBack => 'Volver';
+
+  @override
+  String get smbManualHint =>
+      'No se pudieron listar los recursos automáticamente.\nIntroduzca el nombre manualmente:';
+
+  @override
+  String get smbShareName => 'Nombre del recurso (ej: Share, Music)';
+
+  @override
+  String get smbScan => 'Escanear';
+
+  @override
+  String get smbScanning => 'Escaneando…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count archivos de audio encontrados';
+  }
+
+  @override
+  String get smbDoneTitle => 'Indexación completada';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$count pistas importadas desde $share';
+  }
+
+  @override
+  String get smbAddAnother => 'Añadir otro recurso';
+
+  @override
+  String get settingsSmb => 'Fuentes SMB / Samba';
+
+  @override
+  String get settingsSmbDesc => 'Indexar bibliotecas en recursos de red';
+
+  @override
+  String get podcastsTitle => 'Podcasts';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => 'Buscar';
+
+  @override
+  String get podcastsEmpty => 'Sin podcasts';
+
+  @override
+  String get podcastsSearchHint => 'Buscar un podcast…';
+
+  @override
+  String get podcastsNoEpisodes => 'Sin episodios';
+
+  @override
+  String get navPodcasts => 'Podcasts';
+
+  @override
   String get streamingConnectedSuccess => '¡Conectado!';
 
   @override

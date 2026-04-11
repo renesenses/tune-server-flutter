@@ -173,7 +173,6 @@ class HttpAudioStreamer {
     if (lower.endsWith('.ogg')) return 'audio/ogg';
     if (lower.endsWith('.wav')) return 'audio/wav';
     if (lower.endsWith('.dsf') || lower.endsWith('.dff')) return 'audio/x-dsf';
-    // [HI-RES-TODO] : vérifier MIME type FLAC 24-bit/192kHz pour DLNA
     return 'application/octet-stream';
   }
 

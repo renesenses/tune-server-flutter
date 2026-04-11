@@ -714,6 +714,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appleMusicAuthorize => 'Allow access';
 
   @override
+  String get smbNavTitle => 'SMB Source';
+
+  @override
+  String get smbTitle => 'SMB Connection';
+
+  @override
+  String get smbHostHint => 'Enter the address of the SMB server';
+
+  @override
+  String get smbHostLabel => 'IP Address (e.g. 192.168.1.23)';
+
+  @override
+  String get smbUser => 'Username';
+
+  @override
+  String get smbPassword => 'Password';
+
+  @override
+  String get smbConnect => 'Connect';
+
+  @override
+  String get smbSelectShare => 'Select a share';
+
+  @override
+  String get smbBack => 'Back';
+
+  @override
+  String get smbManualHint =>
+      'Unable to list shares automatically.\nEnter the share name manually:';
+
+  @override
+  String get smbShareName => 'Share name (e.g. Share, Music)';
+
+  @override
+  String get smbScan => 'Scan';
+
+  @override
+  String get smbScanning => 'Scanning…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count audio files found';
+  }
+
+  @override
+  String get smbDoneTitle => 'Indexing complete';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$count tracks imported from $share';
+  }
+
+  @override
+  String get smbAddAnother => 'Add another share';
+
+  @override
+  String get settingsSmb => 'SMB / Samba Sources';
+
+  @override
+  String get settingsSmbDesc => 'Index libraries from network shares';
+
+  @override
+  String get podcastsTitle => 'Podcasts';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => 'Search';
+
+  @override
+  String get podcastsEmpty => 'No podcasts';
+
+  @override
+  String get podcastsSearchHint => 'Search for a podcast…';
+
+  @override
+  String get podcastsNoEpisodes => 'No episodes';
+
+  @override
+  String get navPodcasts => 'Podcasts';
+
+  @override
   String get streamingConnectedSuccess => 'Connected!';
 
   @override

@@ -30,7 +30,6 @@ extension TrackExtensions on Track {
   }
 
   /// Badge audio ex: "FLAC / 96 kHz / 24-bit" ou "DSD128 / 2.8 MHz"
-  /// [HI-RES-TODO] : logique prête, affichage conditionné à l'implémentation Hi-Res outputs
   String? get audioBadge {
     if (format == AudioFormat.dsd.rawValue) {
       if (sampleRate != null) {

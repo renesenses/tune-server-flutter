@@ -30,6 +30,29 @@ class AlbumRepository {
   Future<int> delete(int id) =>
       (_db.delete(_db.albums)..where((a) => a.id.equals(id))).go();
 
+  Future<Album?> findByTitleAndArtist(String title, int artistId) =>
+      (_db.select(_db.albums)
+            ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
+          .getSingleOrNull();
+
+  Future<void> updateTrackCount(int albumId) async {
+    final count = await (_db.selectOnly(_db.tracks)
+          ..addColumns([_db.tracks.id.count()])
+          ..where(_db.tracks.albumId.equals(albumId)))
+        .map((row) => row.read(_db.tracks.id.count()) ?? 0)
+        .getSingle();
+    await (_db.update(_db.albums)..where((a) => a.id.equals(albumId)))
+        .write(AlbumsCompanion(trackCount: Value(count)));
+  }
+
+  Future<void> updateCover(int albumId, String coverPath) async {
+    await (_db.update(_db.albums)..where((a) => a.id.equals(albumId)))
+        .write(AlbumsCompanion(coverPath: Value(coverPath)));
+    await (_db.update(_db.tracks)
+          ..where((t) => t.albumId.equals(albumId) & t.coverPath.isNull()))
+        .write(TracksCompanion(coverPath: Value(coverPath)));
+  }
+
   // ---------------------------------------------------------------------------
   // Requêtes métier
   // ---------------------------------------------------------------------------

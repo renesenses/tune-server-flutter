@@ -167,18 +167,13 @@ class _StreamingAlbumDetailViewState
 
   Future<void> _playAll(AppState app, {bool shuffle = false}) async {
     if (_tracks == null || _tracks!.isEmpty) return;
-    final list =
-        shuffle ? (List.of(_tracks!)..shuffle()) : _tracks!;
-    for (final t in list) {
-      await app.playStreaming(t);
-      break; // On joue la première (le streaming joue 1 track à la fois)
-    }
-    // TODO: quand playStreaming supporte une liste, passer toutes les pistes
+    final list = shuffle ? (List.of(_tracks!)..shuffle()) : List.of(_tracks!);
+    await app.playStreamingList(list);
   }
 
   Future<void> _playFrom(AppState app, int index) async {
     if (_tracks == null || index >= _tracks!.length) return;
-    await app.playStreaming(_tracks![index]);
+    await app.playStreamingList(_tracks!, startIndex: index);
   }
 }
 

@@ -58,7 +58,7 @@ class UPnPIndexer {
     final controlUrl = device.capabilities.contentDirectoryControlUrl;
     if (controlUrl == null) return;
 
-    EventBus.instance.emit(const LibraryScanStartedEvent());
+    EventBus.instance.emit(LibraryScanStartedEvent(deviceId: device.id));
 
     // Purge les doublons existants (même filePath) avant de réindexer
     await _purgeDuplicateTracks();

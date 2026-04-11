@@ -210,7 +210,7 @@ class QobuzService implements StreamingService {
       final timestamp =
           (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
       // Signature : MD5("trackgetFileUrlformat_id27intentstreamtrack_id{id}{ts}{secret}")
-      // [HI-RES-TODO] : format_id=27 = FLAC 24-bit, 6 = FLAC 16-bit, 5 = MP3 320
+      // format_id : 27 = FLAC 24-bit Hi-Res, 6 = FLAC 16-bit, 5 = MP3 320
       const formatId = '27';
       final sigStr =
           'trackgetFileUrlformat_id${formatId}intentstreamtrack_id$trackId$timestamp$_appSecret';

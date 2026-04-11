@@ -716,6 +716,89 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appleMusicAuthorize => 'Autoriser l\'accès';
 
   @override
+  String get smbNavTitle => 'Source SMB';
+
+  @override
+  String get smbTitle => 'Connexion SMB';
+
+  @override
+  String get smbHostHint => 'Entrez l\'adresse du serveur SMB';
+
+  @override
+  String get smbHostLabel => 'Adresse IP (ex: 192.168.1.23)';
+
+  @override
+  String get smbUser => 'Utilisateur';
+
+  @override
+  String get smbPassword => 'Mot de passe';
+
+  @override
+  String get smbConnect => 'Connexion';
+
+  @override
+  String get smbSelectShare => 'Sélectionnez un partage';
+
+  @override
+  String get smbBack => 'Retour';
+
+  @override
+  String get smbManualHint =>
+      'Impossible de lister les partages automatiquement.\nEntrez le nom du partage manuellement :';
+
+  @override
+  String get smbShareName => 'Nom du partage (ex: Share, Music)';
+
+  @override
+  String get smbScan => 'Scanner';
+
+  @override
+  String get smbScanning => 'Scan en cours…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count fichiers audio trouvés';
+  }
+
+  @override
+  String get smbDoneTitle => 'Indexation terminée';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$count pistes importées depuis $share';
+  }
+
+  @override
+  String get smbAddAnother => 'Ajouter un autre partage';
+
+  @override
+  String get settingsSmb => 'Sources SMB / Samba';
+
+  @override
+  String get settingsSmbDesc => 'Indexer des bibliothèques sur partages réseau';
+
+  @override
+  String get podcastsTitle => 'Podcasts';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => 'Rechercher';
+
+  @override
+  String get podcastsEmpty => 'Aucun podcast';
+
+  @override
+  String get podcastsSearchHint => 'Rechercher un podcast…';
+
+  @override
+  String get podcastsNoEpisodes => 'Aucun épisode';
+
+  @override
+  String get navPodcasts => 'Podcasts';
+
+  @override
   String get streamingConnectedSuccess => 'Connecté !';
 
   @override

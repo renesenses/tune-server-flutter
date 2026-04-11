@@ -146,7 +146,7 @@ class TuneApiClient {
   /// Quick connectivity test
   Future<bool> testConnection() async {
     try {
-      await getSystemInfo();
+      await _get('/system/health');
       return true;
     } catch (_) {
       return false;

@@ -8,6 +8,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'library_setup_view.dart';
 import 'metadata_view.dart';
+import 'smb_setup_view.dart';
 import 'sources_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -42,7 +43,7 @@ class _SettingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsState>();
-    final app = context.read<AppState>();
+    final app = context.watch<AppState>();
 
     final l = AppLocalizations.of(context);
     return ListView(
@@ -54,22 +55,40 @@ class _SettingsList extends StatelessWidget {
           color: TuneColors.surface,
           child: Column(
             children: [
-              _SettingsTile(
-                title: 'Mode',
-                subtitle: settings.isRemoteMode
-                    ? 'Connecté à ${settings.remoteHost}:${settings.remotePort}'
-                    : 'Serveur embarqué',
-                trailing: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'server', label: Text('Serveur')),
-                    ButtonSegment(value: 'remote', label: Text('Remote')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Mode', style: TuneFonts.body),
+                    const SizedBox(height: 4),
+                    Text(
+                      settings.isRemoteMode
+                          ? app.isRemoteConnected
+                              ? 'Connecté à ${settings.remoteHost}:${settings.remotePort}'
+                              : 'Non connecté'
+                          : 'Serveur embarqué',
+                      style: TuneFonts.footnote.copyWith(
+                        color: settings.isRemoteMode && app.isRemoteConnected
+                            ? TuneColors.accent
+                            : TuneColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SegmentedButton<String>(
+                      expandedInsets: EdgeInsets.zero,
+                      segments: const [
+                        ButtonSegment(value: 'server', icon: Icon(Icons.dns_rounded, size: 16), label: Text('Serveur')),
+                        ButtonSegment(value: 'remote', icon: Icon(Icons.wifi_tethering_rounded, size: 16), label: Text('Remote')),
+                      ],
+                      selected: {settings.appMode},
+                      onSelectionChanged: (v) => settings.setAppMode(v.first),
+                      style: ButtonStyle(
+                        textStyle: WidgetStatePropertyAll(TuneFonts.caption),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                   ],
-                  selected: {settings.appMode},
-                  onSelectionChanged: (v) => settings.setAppMode(v.first),
-                  style: ButtonStyle(
-                    textStyle: WidgetStatePropertyAll(TuneFonts.caption),
-                    visualDensity: VisualDensity.compact,
-                  ),
                 ),
               ),
               if (settings.isRemoteMode) ...[
@@ -80,7 +99,7 @@ class _SettingsList extends StatelessWidget {
                     settings.remoteHost.isEmpty ? 'Non configuré' : settings.remoteHost,
                     style: const TextStyle(color: TuneColors.textSecondary),
                   ),
-                  onTap: () => _editRemoteHost(context, settings),
+                  onTap: app.isRemoteConnected ? null : () => _editRemoteHost(context, settings),
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
@@ -89,7 +108,32 @@ class _SettingsList extends StatelessWidget {
                     settings.remotePort.toString(),
                     style: const TextStyle(color: TuneColors.textSecondary),
                   ),
-                  onTap: () => _editRemotePort(context, settings),
+                  onTap: app.isRemoteConnected ? null : () => _editRemotePort(context, settings),
+                ),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: app.isRemoteConnected
+                      ? FilledButton.icon(
+                          onPressed: () => app.disconnectRemote(),
+                          icon: const Icon(Icons.link_off_rounded, size: 16),
+                          label: const Text('Déconnecter'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: TuneColors.error,
+                            minimumSize: const Size.fromHeight(40),
+                          ),
+                        )
+                      : FilledButton.icon(
+                          onPressed: settings.remoteHost.isEmpty
+                              ? null
+                              : () => app.connectRemote(),
+                          icon: const Icon(Icons.link_rounded, size: 16),
+                          label: const Text('Connecter'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: TuneColors.accent,
+                            minimumSize: const Size.fromHeight(40),
+                          ),
+                        ),
                 ),
               ],
             ],
@@ -198,6 +242,17 @@ class _SettingsList extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MetadataView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: l.settingsSmb,
+                subtitle: l.settingsSmbDesc,
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SMBSetupView()),
                 ),
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),

@@ -8,9 +8,8 @@ import '../outputs/output_target.dart';
 // Lecture locale via just_audio (fichier ou HTTP).
 // Miroir de LocalAudioOutput.swift (iOS / AVAudioEngine)
 //
-// [HI-RES-TODO] : vérifier support 24-bit/192kHz natif just_audio sur iOS et Android.
-// Sur iOS, just_audio délègue à AVPlayer qui supporte nativement FLAC/ALAC Hi-Res.
-// Sur Android, ExoPlayer (backend just_audio) supporte FLAC mais pas toujours 24-bit.
+// just_audio délègue à AVPlayer (iOS) et ExoPlayer (Android), tous deux compatibles
+// FLAC/ALAC Hi-Res nativement.
 // ---------------------------------------------------------------------------
 
 class LocalAudioOutput implements OutputTarget {

@@ -232,7 +232,41 @@
   "browseNavError": "ナビゲーションエラー"
 ,
   "streamingCodeEntered": "コードを入力しました",
-  "appleMusicAuthorize": "アクセスを許可"
+  "appleMusicAuthorize": "アクセスを許可",
+
+  "smbNavTitle": "SMBソース",
+  "smbTitle": "SMB接続",
+  "smbHostHint": "SMBサーバーのアドレスを入力",
+  "smbHostLabel": "IPアドレス（例：192.168.1.23）",
+  "smbUser": "ユーザー名",
+  "smbPassword": "パスワード",
+  "smbConnect": "接続",
+  "smbSelectShare": "共有を選択",
+  "smbBack": "戻る",
+  "smbManualHint": "共有を自動で一覧できません。\n手動で共有名を入力してください：",
+  "smbShareName": "共有名（例：Share, Music）",
+  "smbScan": "スキャン",
+  "smbScanning": "スキャン中…",
+  "smbScanCount": "{count}個のオーディオファイルが見つかりました",
+  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "smbDoneTitle": "インデックス完了",
+  "smbDoneBody": "{share}から{count}曲をインポートしました",
+  "@smbDoneBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "share": { "type": "String" }
+    }
+  },
+  "smbAddAnother": "別の共有を追加",
+  "settingsSmb": "SMB / Sambaソース",
+  "settingsSmbDesc": "ネットワーク共有からライブラリをインデックス",
+  "podcastsTitle": "ポッドキャスト",
+  "podcastsTabRadioFrance": "Radio France",
+  "podcastsTabSearch": "検索",
+  "podcastsEmpty": "ポッドキャストなし",
+  "podcastsSearchHint": "ポッドキャストを検索…",
+  "podcastsNoEpisodes": "エピソードなし",
+  "navPodcasts": "ポッドキャスト"
 ,
   "streamingConnectedSuccess": "接続しました！",
   "browseItemCount": "{count} 件",

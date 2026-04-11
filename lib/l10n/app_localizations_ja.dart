@@ -711,6 +711,88 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appleMusicAuthorize => 'アクセスを許可';
 
   @override
+  String get smbNavTitle => 'SMBソース';
+
+  @override
+  String get smbTitle => 'SMB接続';
+
+  @override
+  String get smbHostHint => 'SMBサーバーのアドレスを入力';
+
+  @override
+  String get smbHostLabel => 'IPアドレス（例：192.168.1.23）';
+
+  @override
+  String get smbUser => 'ユーザー名';
+
+  @override
+  String get smbPassword => 'パスワード';
+
+  @override
+  String get smbConnect => '接続';
+
+  @override
+  String get smbSelectShare => '共有を選択';
+
+  @override
+  String get smbBack => '戻る';
+
+  @override
+  String get smbManualHint => '共有を自動で一覧できません。\n手動で共有名を入力してください：';
+
+  @override
+  String get smbShareName => '共有名（例：Share, Music）';
+
+  @override
+  String get smbScan => 'スキャン';
+
+  @override
+  String get smbScanning => 'スキャン中…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count個のオーディオファイルが見つかりました';
+  }
+
+  @override
+  String get smbDoneTitle => 'インデックス完了';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$shareから$count曲をインポートしました';
+  }
+
+  @override
+  String get smbAddAnother => '別の共有を追加';
+
+  @override
+  String get settingsSmb => 'SMB / Sambaソース';
+
+  @override
+  String get settingsSmbDesc => 'ネットワーク共有からライブラリをインデックス';
+
+  @override
+  String get podcastsTitle => 'ポッドキャスト';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => '検索';
+
+  @override
+  String get podcastsEmpty => 'ポッドキャストなし';
+
+  @override
+  String get podcastsSearchHint => 'ポッドキャストを検索…';
+
+  @override
+  String get podcastsNoEpisodes => 'エピソードなし';
+
+  @override
+  String get navPodcasts => 'ポッドキャスト';
+
+  @override
   String get streamingConnectedSuccess => '接続しました！';
 
   @override

@@ -232,7 +232,41 @@
   "browseNavError": "导航错误"
 ,
   "streamingCodeEntered": "我已输入代码",
-  "appleMusicAuthorize": "允许访问"
+  "appleMusicAuthorize": "允许访问",
+
+  "smbNavTitle": "SMB来源",
+  "smbTitle": "SMB连接",
+  "smbHostHint": "输入SMB服务器地址",
+  "smbHostLabel": "IP地址（例：192.168.1.23）",
+  "smbUser": "用户名",
+  "smbPassword": "密码",
+  "smbConnect": "连接",
+  "smbSelectShare": "选择共享",
+  "smbBack": "返回",
+  "smbManualHint": "无法自动列出共享。\n请手动输入共享名称：",
+  "smbShareName": "共享名称（例：Share, Music）",
+  "smbScan": "扫描",
+  "smbScanning": "扫描中…",
+  "smbScanCount": "找到{count}个音频文件",
+  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "smbDoneTitle": "索引完成",
+  "smbDoneBody": "从{share}导入了{count}首曲目",
+  "@smbDoneBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "share": { "type": "String" }
+    }
+  },
+  "smbAddAnother": "添加其他共享",
+  "settingsSmb": "SMB / Samba来源",
+  "settingsSmbDesc": "从网络共享索引音乐库",
+  "podcastsTitle": "播客",
+  "podcastsTabRadioFrance": "法国广播电台",
+  "podcastsTabSearch": "搜索",
+  "podcastsEmpty": "无播客",
+  "podcastsSearchHint": "搜索播客…",
+  "podcastsNoEpisodes": "无剧集",
+  "navPodcasts": "播客"
 ,
   "streamingConnectedSuccess": "已连接！",
   "browseItemCount": "{count} 项目",

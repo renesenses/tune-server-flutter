@@ -232,7 +232,41 @@
   "browseNavError": "Errore di navigazione"
 ,
   "streamingCodeEntered": "Ho inserito il codice",
-  "appleMusicAuthorize": "Consenti accesso"
+  "appleMusicAuthorize": "Consenti accesso",
+
+  "smbNavTitle": "Sorgente SMB",
+  "smbTitle": "Connessione SMB",
+  "smbHostHint": "Inserire l'indirizzo del server SMB",
+  "smbHostLabel": "Indirizzo IP (es: 192.168.1.23)",
+  "smbUser": "Utente",
+  "smbPassword": "Password",
+  "smbConnect": "Connetti",
+  "smbSelectShare": "Seleziona condivisione",
+  "smbBack": "Indietro",
+  "smbManualHint": "Impossibile elencare le condivisioni automaticamente.\nInserire il nome manualmente:",
+  "smbShareName": "Nome condivisione (es: Share, Music)",
+  "smbScan": "Scansiona",
+  "smbScanning": "Scansione in corso…",
+  "smbScanCount": "{count} file audio trovati",
+  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "smbDoneTitle": "Indicizzazione completata",
+  "smbDoneBody": "{count} tracce importate da {share}",
+  "@smbDoneBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "share": { "type": "String" }
+    }
+  },
+  "smbAddAnother": "Aggiungi un'altra condivisione",
+  "settingsSmb": "Sorgenti SMB / Samba",
+  "settingsSmbDesc": "Indicizza librerie da condivisioni di rete",
+  "podcastsTitle": "Podcast",
+  "podcastsTabRadioFrance": "Radio France",
+  "podcastsTabSearch": "Cerca",
+  "podcastsEmpty": "Nessun podcast",
+  "podcastsSearchHint": "Cerca un podcast…",
+  "podcastsNoEpisodes": "Nessun episodio",
+  "navPodcasts": "Podcast"
 ,
   "streamingConnectedSuccess": "Connesso!",
   "browseItemCount": "{count} elementi",

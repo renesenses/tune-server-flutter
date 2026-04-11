@@ -14,8 +14,9 @@ import 'package:path/path.dart' as p;
 //   - Le traitement / mapping des données brutes → TrackMetadata se fait en
 //     Isolate.run() pour ne pas bloquer l'event loop Flutter.
 //
-// [HI-RES-TODO] : AVFoundation retourne sampleRate et bitDepth natifs pour
-// FLAC/ALAC — MediaMetadataRetriever Android ne les expose pas (limité à bitrate).
+// iOS : AVFoundation retourne sampleRate et bitDepth natifs pour FLAC/ALAC.
+// Android : MediaMetadataRetriever ne les expose pas — on utilise MediaExtractor
+// dans MainActivity pour obtenir sampleRate, channels et bitDepth.
 // ---------------------------------------------------------------------------
 
 const _channel = MethodChannel('com.mozaiklabs.tuneserver/library');

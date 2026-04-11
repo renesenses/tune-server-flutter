@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/domain_models.dart';
+import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
@@ -45,8 +47,8 @@ class HistoryView extends StatelessWidget {
               separatorBuilder: (_, _) =>
                   const Divider(height: 1, indent: 72, color: TuneColors.divider),
               itemBuilder: (_, i) => _HistoryTile(
-                track: history[i],
-                onTap: () => app.playTracks([history[i]]),
+                entry: history[i],
+                onTap: () => app.playTracks([history[i].track as Track]),
               ),
             ),
     );
@@ -82,41 +84,107 @@ class HistoryView extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _HistoryTile extends StatelessWidget {
-  final dynamic track;
+  final HistoryEntry entry;
   final VoidCallback onTap;
-  const _HistoryTile({required this.track, required this.onTap});
+  const _HistoryTile({required this.entry, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final track = entry.track as Track;
+    final badge = _audioBadge(track);
+
     return ListTile(
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         child: ArtworkView(filePath: track.coverPath, size: 44),
       ),
       title: Text(track.title,
           style: TuneFonts.body,
           maxLines: 1,
           overflow: TextOverflow.ellipsis),
-      subtitle: _subtitle,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (track.artistName != null)
+            Text(track.artistName!,
+                style: TuneFonts.footnote,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+          Row(
+            children: [
+              Text(entry.zoneName,
+                  style: TuneFonts.caption
+                      .copyWith(color: TuneColors.textTertiary)),
+              const Text(' · ',
+                  style: TextStyle(
+                      fontSize: 10, color: TuneColors.textTertiary)),
+              Text(_formatDate(entry.playedAt),
+                  style: TuneFonts.caption
+                      .copyWith(color: TuneColors.textTertiary)),
+            ],
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (badge != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: TuneColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(badge,
+                  style: const TextStyle(
+                      fontSize: 9,
+                      fontFamily: 'monospace',
+                      color: TuneColors.textSecondary)),
+            ),
+          const SizedBox(width: 8),
+          const Icon(Icons.play_circle_outline_rounded,
+              size: 24, color: TuneColors.accent),
+        ],
+      ),
     );
   }
 
-  Widget? get _subtitle {
-    final parts = <String>[
-      if (track.artistName != null) track.artistName as String,
-      if (track.albumTitle != null) track.albumTitle as String,
-    ];
-    if (parts.isEmpty) return null;
-    return Text(parts.join(' · '),
-        style: TuneFonts.footnote,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis);
+  static String? _audioBadge(Track track) {
+    final fmt = track.format?.toLowerCase() ?? '';
+    if (fmt == 'dsd' || fmt == 'dsf' || fmt == 'dff') return 'DSD';
+    if (fmt == 'flac' || fmt == 'alac') {
+      final sr = track.sampleRate ?? 0;
+      final bd = track.bitDepth ?? 0;
+      if (sr > 48000 || bd > 16) return 'Hi-Res';
+      if (fmt == 'flac') return 'FLAC';
+      if (fmt == 'alac') return 'ALAC';
+    }
+    return null;
+  }
+
+  static String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final now = DateTime.now();
+      final diff = now.difference(dt);
+      if (diff.inMinutes < 1) return 'À l\'instant';
+      if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+      if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
+      if (diff.inDays == 1) return 'Hier';
+      if (diff.inDays < 7) return 'Il y a ${diff.inDays} j';
+      return '${dt.day.toString().padLeft(2, '0')}/'
+          '${dt.month.toString().padLeft(2, '0')}/'
+          '${dt.year}';
+    } catch (_) {
+      return iso;
+    }
   }
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder
+// _EmptyHistory
 // ---------------------------------------------------------------------------
 
 class _EmptyHistory extends StatelessWidget {
@@ -128,9 +196,11 @@ class _EmptyHistory extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.history_rounded, size: 56, color: TuneColors.textTertiary),
+          const Icon(Icons.history_rounded,
+              size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 12),
-          Text(AppLocalizations.of(context).historyEmpty, style: TuneFonts.subheadline),
+          Text(AppLocalizations.of(context).historyEmpty,
+              style: TuneFonts.subheadline),
         ],
       ),
     );

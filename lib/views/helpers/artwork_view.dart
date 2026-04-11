@@ -38,12 +38,12 @@ class ArtworkView extends StatelessWidget {
       borderRadius: BorderRadius.circular(cornerRadius),
       child: SizedBox.square(
         dimension: size,
-        child: _buildImage(),
+        child: _buildImage(context),
       ),
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     if (bytes != null && bytes!.isNotEmpty) {
       return Image.memory(bytes!, fit: fit, errorBuilder: _fallback);
     }

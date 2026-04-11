@@ -1472,6 +1472,162 @@ abstract class AppLocalizations {
   /// **'Allow access'**
   String get appleMusicAuthorize;
 
+  /// No description provided for @smbNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMB Source'**
+  String get smbNavTitle;
+
+  /// No description provided for @smbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMB Connection'**
+  String get smbTitle;
+
+  /// No description provided for @smbHostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the address of the SMB server'**
+  String get smbHostHint;
+
+  /// No description provided for @smbHostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IP Address (e.g. 192.168.1.23)'**
+  String get smbHostLabel;
+
+  /// No description provided for @smbUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get smbUser;
+
+  /// No description provided for @smbPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get smbPassword;
+
+  /// No description provided for @smbConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get smbConnect;
+
+  /// No description provided for @smbSelectShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a share'**
+  String get smbSelectShare;
+
+  /// No description provided for @smbBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get smbBack;
+
+  /// No description provided for @smbManualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to list shares automatically.\nEnter the share name manually:'**
+  String get smbManualHint;
+
+  /// No description provided for @smbShareName.
+  ///
+  /// In en, this message translates to:
+  /// **'Share name (e.g. Share, Music)'**
+  String get smbShareName;
+
+  /// No description provided for @smbScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get smbScan;
+
+  /// No description provided for @smbScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get smbScanning;
+
+  /// No description provided for @smbScanCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} audio files found'**
+  String smbScanCount(int count);
+
+  /// No description provided for @smbDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexing complete'**
+  String get smbDoneTitle;
+
+  /// No description provided for @smbDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks imported from {share}'**
+  String smbDoneBody(int count, String share);
+
+  /// No description provided for @smbAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another share'**
+  String get smbAddAnother;
+
+  /// No description provided for @settingsSmb.
+  ///
+  /// In en, this message translates to:
+  /// **'SMB / Samba Sources'**
+  String get settingsSmb;
+
+  /// No description provided for @settingsSmbDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Index libraries from network shares'**
+  String get settingsSmbDesc;
+
+  /// No description provided for @podcastsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get podcastsTitle;
+
+  /// No description provided for @podcastsTabRadioFrance.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio France'**
+  String get podcastsTabRadioFrance;
+
+  /// No description provided for @podcastsTabSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get podcastsTabSearch;
+
+  /// No description provided for @podcastsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No podcasts'**
+  String get podcastsEmpty;
+
+  /// No description provided for @podcastsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a podcast…'**
+  String get podcastsSearchHint;
+
+  /// No description provided for @podcastsNoEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes'**
+  String get podcastsNoEpisodes;
+
+  /// No description provided for @navPodcasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get navPodcasts;
+
   /// No description provided for @streamingConnectedSuccess.
   ///
   /// In en, this message translates to:

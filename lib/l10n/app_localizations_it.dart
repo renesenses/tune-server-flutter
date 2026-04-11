@@ -715,6 +715,89 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appleMusicAuthorize => 'Consenti accesso';
 
   @override
+  String get smbNavTitle => 'Sorgente SMB';
+
+  @override
+  String get smbTitle => 'Connessione SMB';
+
+  @override
+  String get smbHostHint => 'Inserire l\'indirizzo del server SMB';
+
+  @override
+  String get smbHostLabel => 'Indirizzo IP (es: 192.168.1.23)';
+
+  @override
+  String get smbUser => 'Utente';
+
+  @override
+  String get smbPassword => 'Password';
+
+  @override
+  String get smbConnect => 'Connetti';
+
+  @override
+  String get smbSelectShare => 'Seleziona condivisione';
+
+  @override
+  String get smbBack => 'Indietro';
+
+  @override
+  String get smbManualHint =>
+      'Impossibile elencare le condivisioni automaticamente.\nInserire il nome manualmente:';
+
+  @override
+  String get smbShareName => 'Nome condivisione (es: Share, Music)';
+
+  @override
+  String get smbScan => 'Scansiona';
+
+  @override
+  String get smbScanning => 'Scansione in corso…';
+
+  @override
+  String smbScanCount(int count) {
+    return '$count file audio trovati';
+  }
+
+  @override
+  String get smbDoneTitle => 'Indicizzazione completata';
+
+  @override
+  String smbDoneBody(int count, String share) {
+    return '$count tracce importate da $share';
+  }
+
+  @override
+  String get smbAddAnother => 'Aggiungi un\'altra condivisione';
+
+  @override
+  String get settingsSmb => 'Sorgenti SMB / Samba';
+
+  @override
+  String get settingsSmbDesc => 'Indicizza librerie da condivisioni di rete';
+
+  @override
+  String get podcastsTitle => 'Podcast';
+
+  @override
+  String get podcastsTabRadioFrance => 'Radio France';
+
+  @override
+  String get podcastsTabSearch => 'Cerca';
+
+  @override
+  String get podcastsEmpty => 'Nessun podcast';
+
+  @override
+  String get podcastsSearchHint => 'Cerca un podcast…';
+
+  @override
+  String get podcastsNoEpisodes => 'Nessun episodio';
+
+  @override
+  String get navPodcasts => 'Podcast';
+
+  @override
   String get streamingConnectedSuccess => 'Connesso!';
 
   @override

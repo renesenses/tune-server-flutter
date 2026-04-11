@@ -310,7 +310,7 @@ class DLNAOutput implements OutputTarget {
     final artXml = albumArtUrl != null
         ? '<upnp:albumArtURI>${_xmlEscape(albumArtUrl)}</upnp:albumArtURI>'
         : '';
-    // [HI-RES-TODO] : ajuster protocolInfo MIME pour FLAC 24-bit/192kHz
+    final mime = _mimeFromUrl(url);
     return '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
         'xmlns:dc="http://purl.org/dc/elements/1.1/" '
         'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
@@ -319,7 +319,7 @@ class DLNAOutput implements OutputTarget {
         '$artistXml'
         '$artXml'
         '<upnp:class>object.item.audioItem.musicTrack</upnp:class>'
-        '<res protocolInfo="http-get:*:audio/mpeg:*">${_xmlEscape(url)}</res>'
+        '<res protocolInfo="http-get:*:$mime:*">${_xmlEscape(url)}</res>'
         '</item>'
         '</DIDL-Lite>';
   }
@@ -409,6 +409,19 @@ class DLNAOutput implements OutputTarget {
       }
     } catch (_) {}
     return null;
+  }
+
+  String _mimeFromUrl(String url) {
+    final path = url.split('?').first.toLowerCase();
+    if (path.endsWith('.flac')) return 'audio/flac';
+    if (path.endsWith('.mp3')) return 'audio/mpeg';
+    if (path.endsWith('.m4a') || path.endsWith('.aac')) return 'audio/mp4';
+    if (path.endsWith('.ogg')) return 'audio/ogg';
+    if (path.endsWith('.opus')) return 'audio/ogg; codecs=opus';
+    if (path.endsWith('.wav')) return 'audio/wav';
+    if (path.endsWith('.aiff') || path.endsWith('.aif')) return 'audio/aiff';
+    if (path.endsWith('.dsf') || path.endsWith('.dff')) return 'audio/x-dsf';
+    return 'audio/mpeg';
   }
 
   String _xmlEscape(String s) => s

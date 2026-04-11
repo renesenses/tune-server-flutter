@@ -45,6 +45,7 @@ class AppState extends ChangeNotifier {
   StreamSubscription? _wsSubscription;
 
   bool get isRemoteMode => settingsState.isRemoteMode;
+  bool get isRemoteConnected => _apiClient != null;
   TuneApiClient? get apiClient => _apiClient;
 
   final List<StreamSubscription> _subs = [];
@@ -256,7 +257,7 @@ class AppState extends ChangeNotifier {
 
     // Library scan
     _subs.add(EventBus.instance
-        .subscribe<LibraryScanStartedEvent>((_) => libraryState.setScanStarted()));
+        .subscribe<LibraryScanStartedEvent>((e) => libraryState.setScanStarted(deviceId: e.deviceId)));
     _subs.add(EventBus.instance
         .subscribe<LibraryScanProgressEvent>(_onScanProgress));
     _subs.add(EventBus.instance
@@ -300,7 +301,9 @@ class AppState extends ChangeNotifier {
     if (zone != null) {
       final track = e.track as Track?;
       zoneState.updateZone(zone.copyWith(currentTrack: track));
-      if (track != null) libraryState.prependHistory(track);
+      if (track != null) {
+        libraryState.prependHistory(track, zoneName: zone.name);
+      }
     }
   }
 
@@ -623,7 +626,6 @@ class AppState extends ChangeNotifier {
     final instance = engine.zoneManager.zone(id ?? -1);
     if (instance == null) return;
 
-    // Crée une Track éphémère (source = service)
     final track = Track(
       id: 0,
       title: item.title,
@@ -635,6 +637,45 @@ class AppState extends ChangeNotifier {
     );
 
     instance.queue.load([track], startIndex: 0);
+    await instance.player.play();
+  }
+
+  /// Charge une liste de pistes streaming dans la queue avec résolution d'URL en parallèle.
+  Future<void> playStreamingList(
+    List<StreamingSearchResult> items, {
+    int startIndex = 0,
+    int? zoneId,
+  }) async {
+    if (items.isEmpty) return;
+
+    final id = zoneId ?? zoneState.currentZoneId;
+    final instance = engine.zoneManager.zone(id ?? -1);
+    if (instance == null) return;
+
+    // Résolution des URLs en parallèle
+    final urls = await Future.wait(
+      items.map((item) =>
+          engine.streamingManager.resolveStreamUrl(item.serviceId, item.id)),
+    );
+
+    final tracks = <Track>[];
+    for (var i = 0; i < items.length; i++) {
+      final url = urls[i];
+      if (url == null) continue;
+      final item = items[i];
+      tracks.add(Track(
+        id: 0,
+        title: item.title,
+        albumTitle: item.album,
+        artistName: item.artist,
+        filePath: url,
+        source: item.serviceId,
+        sourceId: item.id,
+      ));
+    }
+
+    if (tracks.isEmpty) return;
+    instance.queue.load(tracks, startIndex: startIndex.clamp(0, tracks.length - 1));
     await instance.player.play();
   }
 
@@ -769,7 +810,7 @@ class AppState extends ChangeNotifier {
 
   void clearSearch() => libraryState.clearSearch();
 
-  void clearHistory() => libraryState.setHistory([]);
+  void clearHistory() => libraryState.setHistory(const []);
 
   /// Joue un item DIDL-Lite (UPnP/DLNA) directement dans la zone courante.
   Future<void> playDlnaItem(DIDLItem item, {int? zoneId}) async {

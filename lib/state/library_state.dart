@@ -190,15 +190,25 @@ class LibraryState extends ChangeNotifier {
   // Historique de lecture
   // ---------------------------------------------------------------------------
 
-  List<Track> _history = [];
-  List<Track> get history => List.unmodifiable(_history);
+  List<HistoryEntry> _history = [];
+  List<HistoryEntry> get history => List.unmodifiable(_history);
 
-  void prependHistory(Track track) {
-    _history = [track, ..._history.where((t) => t.id != track.id).take(99)];
+  void prependHistory(Track track, {required String zoneName}) {
+    final entry = HistoryEntry(
+      track: track,
+      zoneName: zoneName,
+      playedAt: DateTime.now().toIso8601String(),
+    );
+    _history = [
+      entry,
+      ..._history
+          .where((e) => (e.track as Track).id != track.id)
+          .take(99),
+    ];
     notifyListeners();
   }
 
-  void setHistory(List<Track> history) {
+  void setHistory(List<HistoryEntry> history) {
     _history = history;
     notifyListeners();
   }
@@ -263,19 +273,23 @@ class LibraryState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   bool _scanning = false;
+  String? _scanningDeviceId;
   int _scanProgress = 0;
   int _scanTotal = 0;
   int _scanTracksAdded = 0;
   int _scanTracksUpdated = 0;
 
   bool get isScanning => _scanning;
+  /// ID du device UPnP actuellement en cours d'indexation, null pour un scan local/SMB.
+  String? get scanningDeviceId => _scanningDeviceId;
   int get scanProgress => _scanProgress;
   int get scanTotal => _scanTotal;
   int get scanTracksAdded => _scanTracksAdded;
   int get scanTracksUpdated => _scanTracksUpdated;
 
-  void setScanStarted() {
+  void setScanStarted({String? deviceId}) {
     _scanning = true;
+    _scanningDeviceId = deviceId;
     _scanProgress = 0;
     _scanTotal = 0;
     _scanTracksAdded = 0;
@@ -291,6 +305,7 @@ class LibraryState extends ChangeNotifier {
 
   void setScanCompleted(int added, int updated) {
     _scanning = false;
+    _scanningDeviceId = null;
     _scanTracksAdded = added;
     _scanTracksUpdated = updated;
     notifyListeners();

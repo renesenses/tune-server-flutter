@@ -40,7 +40,7 @@ class HomeView extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const HistoryView()),
             ),
           ),
-          _RecentsList(tracks: lib.history),
+          _RecentsList(tracks: lib.history.map((e) => e.track).toList()),
           const SizedBox(height: 16),
         ],
 
@@ -185,7 +185,7 @@ class _RecentAlbumsList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ArtworkView(coverPath: album.coverPath, size: 120),
+                  ArtworkView(filePath: album.coverPath, size: 120),
                   const SizedBox(height: 4),
                   Text(album.title,
                       maxLines: 1,

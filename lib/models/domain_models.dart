@@ -81,6 +81,23 @@ class ZoneWithState {
         queueLength: queueLength ?? this.queueLength,
       );
 
+  factory ZoneWithState.fromJson(Map<String, dynamic> json) {
+    final stateStr = json['state'] as String? ?? 'stopped';
+    final outputTypeStr = json['output_type'] as String?;
+    return ZoneWithState(
+      id: json['id'] as int,
+      name: json['name'] as String? ?? '',
+      outputType: outputTypeStr != null ? OutputType.fromRawValue(outputTypeStr) : null,
+      outputDeviceId: json['output_device_id'] as String?,
+      volume: (json['volume'] as num?)?.toDouble() ?? 0.5,
+      groupId: json['group_id'] as String?,
+      syncDelayMs: json['sync_delay_ms'] as int? ?? 0,
+      state: PlaybackState.fromRawValue(stateStr) ?? PlaybackState.stopped,
+      positionMs: json['position_ms'] as int? ?? 0,
+      queueLength: json['queue_length'] as int? ?? 0,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) || (other is ZoneWithState && other.id == id);

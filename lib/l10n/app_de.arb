@@ -232,7 +232,41 @@
   "browseNavError": "Navigationsfehler"
 ,
   "streamingCodeEntered": "Code eingegeben",
-  "appleMusicAuthorize": "Zugriff erlauben"
+  "appleMusicAuthorize": "Zugriff erlauben",
+
+  "smbNavTitle": "SMB-Quelle",
+  "smbTitle": "SMB-Verbindung",
+  "smbHostHint": "IP-Adresse des SMB-Servers eingeben",
+  "smbHostLabel": "IP-Adresse (z.B. 192.168.1.23)",
+  "smbUser": "Benutzername",
+  "smbPassword": "Passwort",
+  "smbConnect": "Verbinden",
+  "smbSelectShare": "Freigabe auswählen",
+  "smbBack": "Zurück",
+  "smbManualHint": "Freigaben konnten nicht automatisch aufgelistet werden.\nFreigabenamen manuell eingeben:",
+  "smbShareName": "Freigabename (z.B. Share, Music)",
+  "smbScan": "Scannen",
+  "smbScanning": "Scan läuft…",
+  "smbScanCount": "{count} Audiodateien gefunden",
+  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "smbDoneTitle": "Indizierung abgeschlossen",
+  "smbDoneBody": "{count} Tracks importiert von {share}",
+  "@smbDoneBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "share": { "type": "String" }
+    }
+  },
+  "smbAddAnother": "Weitere Freigabe hinzufügen",
+  "settingsSmb": "SMB / Samba-Quellen",
+  "settingsSmbDesc": "Bibliotheken von Netzwerkfreigaben indizieren",
+  "podcastsTitle": "Podcasts",
+  "podcastsTabRadioFrance": "Radio France",
+  "podcastsTabSearch": "Suchen",
+  "podcastsEmpty": "Keine Podcasts",
+  "podcastsSearchHint": "Podcast suchen…",
+  "podcastsNoEpisodes": "Keine Episoden",
+  "navPodcasts": "Podcasts"
 ,
   "streamingConnectedSuccess": "Verbunden!",
   "browseItemCount": "{count} Elemente",
