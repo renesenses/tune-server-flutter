@@ -243,6 +243,17 @@ class _PodcastsViewState extends State<PodcastsView>
 
   Future<void> _loadRadioFrance() async {
     setState(() => _loadingShows = true);
+    final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final data = await app.apiClient!.getRadioFrancePodcasts();
+        final shows = data.map((j) => PodcastShow.fromJson(j as Map<String, dynamic>)).toList();
+        if (mounted) setState(() { _radioFranceShows = shows; _loadingShows = false; });
+      } catch (_) {
+        if (mounted) setState(() => _loadingShows = false);
+      }
+      return;
+    }
     final shows = await _service.getRadioFrancePodcasts();
     if (mounted) setState(() {
       _radioFranceShows = shows;
@@ -254,6 +265,17 @@ class _PodcastsViewState extends State<PodcastsView>
     final q = _searchCtrl.text.trim();
     if (q.isEmpty) return;
     setState(() => _searching = true);
+    final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final data = await app.apiClient!.searchPodcasts(q);
+        final results = data.map((j) => PodcastShow.fromJson(j as Map<String, dynamic>)).toList();
+        if (mounted) setState(() { _searchResults = results; _searching = false; });
+      } catch (_) {
+        if (mounted) setState(() => _searching = false);
+      }
+      return;
+    }
     final results = await _service.searchPodcasts(q);
     if (mounted) setState(() {
       _searchResults = results;
@@ -267,6 +289,17 @@ class _PodcastsViewState extends State<PodcastsView>
       _episodes = [];
       _loadingEpisodes = true;
     });
+    final app = context.read<AppState>();
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final data = await app.apiClient!.getPodcastEpisodes(show.feedUrl, showUrl: show.showUrl);
+        final eps = data.map((j) => PodcastEpisodeItem.fromJson(j as Map<String, dynamic>)).toList();
+        if (mounted) setState(() { _episodes = eps; _loadingEpisodes = false; });
+      } catch (_) {
+        if (mounted) setState(() => _loadingEpisodes = false);
+      }
+      return;
+    }
     final eps = await _service.getPodcastEpisodes(
       feedUrl: show.feedUrl,
       showUrl: show.showUrl ?? '',
@@ -283,12 +316,24 @@ class _PodcastsViewState extends State<PodcastsView>
 
     final app = context.read<AppState>();
     final zoneId = context.read<ZoneState>().currentZoneId;
+
+    final cover = episode.coverUrl.isNotEmpty ? episode.coverUrl : show.coverUrl;
+
+    if (app.isRemoteMode && app.apiClient != null) {
+      if (zoneId == null) return;
+      await app.apiClient!.playPodcast(zoneId, {
+        'file_path': url,
+        'title': episode.title,
+        'artist_name': show.name,
+        'cover_path': cover,
+        'duration_ms': episode.durationMs,
+      });
+      await app.refreshZonesRemote();
+      return;
+    }
+
     final instance = app.engine.zoneManager.zone(zoneId ?? -1);
     if (instance == null) return;
-
-    final cover = episode.coverUrl.isNotEmpty
-        ? episode.coverUrl
-        : show.coverUrl;
 
     final track = Track(
       id: 0,

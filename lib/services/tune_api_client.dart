@@ -149,6 +149,33 @@ class TuneApiClient {
       _get('/playlists').then((d) => d as List);
 
   // ---------------------------------------------------------------------------
+  // Podcasts
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getRadioFrancePodcasts() =>
+      _get('/podcasts/radiofrance').then((d) => d as List);
+
+  Future<List<dynamic>> searchPodcasts(String query, {int limit = 20}) =>
+      _get('/podcasts/search?q=${Uri.encodeComponent(query)}&limit=$limit').then((d) => d as List);
+
+  Future<List<dynamic>> getPodcastEpisodes(String feedUrl, {String? showUrl, int limit = 30}) {
+    var path = '/podcasts/episodes?limit=$limit';
+    if (feedUrl.isNotEmpty) path += '&feed_url=${Uri.encodeComponent(feedUrl)}';
+    if (showUrl != null && showUrl.isNotEmpty) path += '&show_url=${Uri.encodeComponent(showUrl)}';
+    return _get(path).then((d) => d as List);
+  }
+
+  Future<dynamic> playPodcast(int zoneId, Map<String, dynamic> body) =>
+      _post('/zones/$zoneId/play', body: body);
+
+  // ---------------------------------------------------------------------------
+  // Radio Favorites
+  // ---------------------------------------------------------------------------
+
+  Future<void> saveRadioFavorite(Map<String, dynamic> body) =>
+      _post('/radio-favorites', body: body);
+
+  // ---------------------------------------------------------------------------
   // System
   // ---------------------------------------------------------------------------
 

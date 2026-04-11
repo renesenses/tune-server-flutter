@@ -200,12 +200,34 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshZonesRemote() async {
+  Future<void> refreshZonesRemote() async {
     if (_apiClient == null) return;
     try {
       final zonesJson = await _apiClient!.getZones();
       final zones = zonesJson.map((z) => ZoneWithState.fromJson(z as Map<String, dynamic>)).toList();
       zoneState.setZones(zones);
+
+      // Load queue for current zone
+      final zoneId = zoneState.currentZoneId;
+      if (zoneId != null) {
+        try {
+          final queueJson = await _apiClient!.getQueue(zoneId);
+          if (queueJson is Map<String, dynamic>) {
+            final tracks = (queueJson['tracks'] as List? ?? [])
+                .map((t) => trackFromJson(t as Map<String, dynamic>))
+                .toList();
+            final position = queueJson['position'] as int? ?? 0;
+            final shuffle = queueJson['shuffle'] as bool? ?? false;
+            final repeatStr = queueJson['repeat'] as String? ?? 'off';
+            zoneState.setQueueSnapshot(QueueSnapshot(
+              tracks: tracks,
+              position: position,
+              shuffleEnabled: shuffle,
+              repeatMode: RepeatMode.fromRawValue(repeatStr) ?? RepeatMode.off,
+            ));
+          }
+        } catch (_) {}
+      }
     } catch (e) {
       debugPrint('[Remote] refreshZones error: $e');
     }
@@ -783,6 +805,19 @@ class AppState extends ChangeNotifier {
     String? artist,
     required Radio radio,
   }) async {
+    if (isRemoteMode && _apiClient != null) {
+      try {
+        await _apiClient!.saveRadioFavorite({
+          'title': title,
+          'artist': artist ?? '',
+          'station_name': radio.name,
+          'stream_url': radio.streamUrl,
+        });
+      } catch (e) {
+        debugPrint('[Remote] saveRadioFavorite error: $e');
+      }
+      return;
+    }
     await engine.db.radioRepo.insertFavorite(
       RadioFavoritesCompanion.insert(
         title: title,
