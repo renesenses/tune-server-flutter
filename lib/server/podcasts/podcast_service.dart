@@ -27,6 +27,17 @@ class PodcastShow {
     this.showUrl,
     this.episodeCount = 0,
   });
+
+  factory PodcastShow.fromJson(Map<String, dynamic> j) => PodcastShow(
+    id: j['source_id'] as String? ?? j['id'] as String? ?? '',
+    name: j['name'] as String? ?? '',
+    artist: j['artist'] as String? ?? '',
+    coverUrl: j['cover_url'] as String? ?? '',
+    description: j['description'] as String? ?? '',
+    feedUrl: j['feed_url'] as String? ?? '',
+    showUrl: j['show_url'] as String?,
+    episodeCount: j['episode_count'] as int? ?? 0,
+  );
 }
 
 class PodcastEpisodeItem {
@@ -47,6 +58,16 @@ class PodcastEpisodeItem {
     required this.published,
     required this.durationMs,
   });
+
+  factory PodcastEpisodeItem.fromJson(Map<String, dynamic> j) => PodcastEpisodeItem(
+    id: j['id'] as String? ?? '${j['title']}_${j['audio_url']}',
+    title: j['title'] as String? ?? '',
+    description: j['description'] as String? ?? '',
+    audioUrl: j['audio_url'] as String? ?? '',
+    coverUrl: j['cover_url'] as String? ?? '',
+    published: j['published'] as String? ?? '',
+    durationMs: j['duration_ms'] as int? ?? 0,
+  );
 }
 
 // ---------------------------------------------------------------------------

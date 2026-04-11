@@ -16,11 +16,8 @@ Album albumFromJson(Map<String, dynamic> j) => Album(
       discCount: j['disc_count'] as int?,
       trackCount: j['track_count'] as int?,
       coverPath: j['cover_path'] as String?,
-      source: j['source'] as String?,
+      source: j['source'] as String? ?? 'local',
       sourceId: j['source_id'] as String?,
-      format: j['format'] as String?,
-      sampleRate: j['sample_rate'] as int?,
-      bitDepth: j['bit_depth'] as int?,
     );
 
 Artist artistFromJson(Map<String, dynamic> j) => Artist(
@@ -49,7 +46,7 @@ Track trackFromJson(Map<String, dynamic> j) => Track(
       bitDepth: j['bit_depth'] as int?,
       channels: j['channels'] as int? ?? 2,
       coverPath: j['cover_path'] as String?,
-      source: j['source'] as String?,
+      source: j['source'] as String? ?? 'local',
       sourceId: j['source_id'] as String?,
     );
 

@@ -110,7 +110,6 @@ class TuneApiClient {
   Future<List<dynamic>> getRecentAlbums({int limit = 30}) =>
       _get('/library/albums?limit=$limit&sort=recent').then((d) => d as List);
 
-  Future<dynamic> getQueue(int zoneId) => _get('/zones/$zoneId/queue');
 
   String artworkUrl(String path) {
     if (path.startsWith('http')) return path;

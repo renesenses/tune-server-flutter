@@ -158,7 +158,7 @@ class AppState extends ChangeNotifier {
 
       // Load initial data
       await Future.wait([
-        _refreshZonesRemote(),
+        refreshZonesRemote(),
         _refreshRadiosRemote(),
         _refreshLibraryRemote(),
         _refreshStreamingServicesRemote(),
@@ -167,7 +167,7 @@ class AppState extends ChangeNotifier {
       // Start polling for position updates (every 3s)
       _remotePollingTimer?.cancel();
       _remotePollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-        _refreshZonesRemote();
+        refreshZonesRemote();
       });
 
       notifyListeners();
@@ -197,7 +197,7 @@ class AppState extends ChangeNotifier {
 
     if (type.startsWith('playback.') || type.startsWith('zone.')) {
       // Refresh zones from API
-      _refreshZonesRemote();
+      refreshZonesRemote();
     }
   }
 
@@ -440,7 +440,7 @@ class AppState extends ChangeNotifier {
       } else {
         await _apiClient!.resume(id);
       }
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
 
@@ -463,7 +463,7 @@ class AppState extends ChangeNotifier {
     if (id == null) return;
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.pause(id);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     await engine.zoneManager.zone(id)?.player.pause();
@@ -474,7 +474,7 @@ class AppState extends ChangeNotifier {
     if (id == null) return;
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.resume(id);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     await engine.zoneManager.zone(id)?.player.resume();
@@ -495,7 +495,7 @@ class AppState extends ChangeNotifier {
     if (id == null) return;
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.next(id);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     await engine.zoneManager.zone(id)?.player.next();
@@ -506,7 +506,7 @@ class AppState extends ChangeNotifier {
     if (id == null) return;
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.previous(id);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     await engine.zoneManager.zone(id)?.player.previous();
@@ -536,7 +536,7 @@ class AppState extends ChangeNotifier {
     final id = zoneId ?? zoneState.currentZoneId;
     if (isRemoteMode && _apiClient != null) {
       if (id != null) await _apiClient!.setShuffle(id, enabled);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     final instance = engine.zoneManager.zone(id ?? -1);
@@ -553,7 +553,7 @@ class AppState extends ChangeNotifier {
       final current = zoneState.repeatMode;
       final next = current == RepeatMode.off ? 'all' : current == RepeatMode.all ? 'one' : 'off';
       if (id != null) await _apiClient!.setRepeat(id, next);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
     final instance = engine.zoneManager.zone(id ?? -1);
@@ -643,7 +643,7 @@ class AppState extends ChangeNotifier {
 
     if (isRemoteMode) {
       zoneState.setCurrentZoneId(newZoneId);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
 
@@ -753,7 +753,7 @@ class AppState extends ChangeNotifier {
 
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.playRadio(radio.id, id);
-      await _refreshZonesRemote();
+      await refreshZonesRemote();
       return;
     }
 
