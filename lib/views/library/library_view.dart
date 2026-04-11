@@ -36,7 +36,7 @@ class _LibraryViewState extends State<LibraryView>
     super.initState();
     _showAppleMusic = Platform.isIOS;
     _tabController = TabController(
-      length: _showAppleMusic ? 6 : 5,
+      length: _showAppleMusic ? 5 : 4,
       vsync: this,
     );
   }
@@ -78,7 +78,6 @@ class _LibraryViewState extends State<LibraryView>
             Tab(text: l.tabAlbums),
             Tab(text: l.tabArtists),
             Tab(text: l.tabTracks),
-            Tab(text: l.tabGenres),
             Tab(text: l.tabPlaylists),
             if (_showAppleMusic) Tab(text: l.tabAppleMusic),
           ],
@@ -90,7 +89,6 @@ class _LibraryViewState extends State<LibraryView>
           const AlbumsGridView(),
           const ArtistsListView(),
           const TracksListView(),
-          const GenresView(),
           const PlaylistsView(),
           if (_showAppleMusic) const AppleMusicView(),
         ],

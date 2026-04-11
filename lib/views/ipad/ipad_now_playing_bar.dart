@@ -6,6 +6,7 @@ import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
+import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../nowplaying/now_playing_view.dart';
@@ -150,8 +151,9 @@ class _ControlRow extends StatelessWidget {
           onPressed: () => app.setShuffle(enabled: !shuffle),
         ),
         // Précédent
-        IconButton(
-          icon: const Icon(Icons.skip_previous_rounded, size: 26),
+        SkipButton(
+          isForward: false,
+          size: 22,
           color: TuneColors.textPrimary,
           onPressed: () => app.previous(),
         ),
@@ -179,8 +181,9 @@ class _ControlRow extends StatelessWidget {
                 ),
         ),
         // Suivant
-        IconButton(
-          icon: const Icon(Icons.skip_next_rounded, size: 26),
+        SkipButton(
+          isForward: true,
+          size: 22,
           color: TuneColors.textPrimary,
           onPressed: () => app.next(),
         ),

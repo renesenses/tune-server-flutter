@@ -10,6 +10,7 @@ import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
+import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'queue_view.dart';
@@ -306,9 +307,9 @@ class _TransportControls extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         // Précédent
-        IconButton(
-          icon: const Icon(Icons.skip_previous_rounded),
-          iconSize: 42,
+        SkipButton(
+          isForward: false,
+          size: 36,
           color: TuneColors.textPrimary,
           onPressed: () => app.previous(),
         ),
@@ -339,9 +340,9 @@ class _TransportControls extends StatelessWidget {
         ),
 
         // Suivant
-        IconButton(
-          icon: const Icon(Icons.skip_next_rounded),
-          iconSize: 42,
+        SkipButton(
+          isForward: true,
+          size: 36,
           color: TuneColors.textPrimary,
           onPressed: () => app.next(),
         ),

@@ -6,6 +6,7 @@ import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
+import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../nowplaying/now_playing_view.dart';
@@ -127,12 +128,13 @@ class _MiniPlayerContent extends StatelessWidget {
               ),
 
             // Bouton suivant
-            IconButton(
-              icon: const Icon(Icons.skip_next_rounded),
-              iconSize: 28,
+            SkipButton(
+              isForward: true,
+              size: 20,
               color: TuneColors.textPrimary,
               onPressed: () => app.next(),
             ),
+            const SizedBox(width: 8),
           ],
         ),
       ),
