@@ -59,10 +59,27 @@ class _StreamingServiceDetailViewState
   Future<void> _search(String query) async {
     setState(() => _loading = true);
     try {
-      final service =
-          context.read<AppState>().engine.streamingManager.service(
-                widget.status.serviceId,
-              );
+      final app = context.read<AppState>();
+      if (app.isRemoteMode && app.apiClient != null) {
+        final data = await app.apiClient!.searchStreaming(widget.status.serviceId, query);
+        final results = <StreamingSearchResult>[];
+        if (data is Map<String, dynamic>) {
+          for (final t in (data['tracks'] as List? ?? [])) {
+            final m = t as Map<String, dynamic>;
+            results.add(StreamingSearchResult(
+              id: m['source_id'] as String? ?? '',
+              title: m['title'] as String? ?? '',
+              artist: m['artist_name'] as String?,
+              album: m['album_title'] as String?,
+              serviceId: widget.status.serviceId,
+              coverUrl: m['cover_path'] as String?,
+            ));
+          }
+        }
+        if (mounted) setState(() { _results = results; _lastQuery = query; _loading = false; });
+        return;
+      }
+      final service = app.engine.streamingManager.service(widget.status.serviceId);
       final results = await service?.search(query, limit: 30) ?? [];
       if (mounted) {
         setState(() {
