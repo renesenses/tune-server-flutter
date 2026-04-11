@@ -43,6 +43,7 @@ class AppState extends ChangeNotifier {
   TuneApiClient? _apiClient;
   TuneWebSocket? _webSocket;
   StreamSubscription? _wsSubscription;
+  Timer? _remotePollingTimer;
 
   bool get isRemoteMode => settingsState.isRemoteMode;
   bool get isRemoteConnected => _apiClient != null;
@@ -162,6 +163,12 @@ class AppState extends ChangeNotifier {
         _refreshLibraryRemote(),
       ]);
 
+      // Start polling for position updates (every 3s)
+      _remotePollingTimer?.cancel();
+      _remotePollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+        _refreshZonesRemote();
+      });
+
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Erreur connexion: $e';
@@ -171,6 +178,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> disconnectRemote() async {
+    _remotePollingTimer?.cancel();
+    _remotePollingTimer = null;
     _wsSubscription?.cancel();
     _wsSubscription = null;
     _webSocket?.dispose();
@@ -582,6 +591,12 @@ class AppState extends ChangeNotifier {
   Future<void> selectZone(int newZoneId) async {
     final oldId = zoneState.currentZoneId;
     if (oldId == newZoneId) return;
+
+    if (isRemoteMode) {
+      zoneState.setCurrentZoneId(newZoneId);
+      await _refreshZonesRemote();
+      return;
+    }
 
     final oldInstance = engine.zoneManager.zone(oldId ?? -1);
     final newInstance = engine.zoneManager.zone(newZoneId);
