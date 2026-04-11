@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../state/app_state.dart';
 import 'tune_colors.dart';
 
 // ---------------------------------------------------------------------------
@@ -46,8 +48,18 @@ class ArtworkView extends StatelessWidget {
       return Image.memory(bytes!, fit: fit, errorBuilder: _fallback);
     }
     // URL explicite ou filePath qui est en fait une URL HTTP (UPnP covers)
+    // In remote mode, resolve relative paths to API URLs
+    String? resolvedPath = filePath;
+    if (filePath != null && !filePath!.startsWith('http') && !filePath!.startsWith('/')) {
+      try {
+        final app = context.read<AppState>();
+        if (app.isRemoteMode && app.apiClient != null) {
+          resolvedPath = app.apiClient!.artworkUrl(filePath!);
+        }
+      } catch (_) {}
+    }
     final httpUrl = url ??
-        (filePath != null && filePath!.startsWith('http') ? filePath : null);
+        (resolvedPath != null && resolvedPath.startsWith('http') ? resolvedPath : null);
     if (httpUrl != null && httpUrl.startsWith('http')) {
       return Image.network(
         httpUrl,

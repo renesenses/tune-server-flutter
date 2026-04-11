@@ -35,7 +35,12 @@ class _RootViewState extends State<RootView> {
 
   Future<void> _startServer() async {
     setState(() => _starting = true);
-    await context.read<AppState>().startServer();
+    final app = context.read<AppState>();
+    if (app.settingsState.isRemoteMode) {
+      await app.connectRemote();
+    } else {
+      await app.startServer();
+    }
     if (mounted) setState(() => _starting = false);
   }
 

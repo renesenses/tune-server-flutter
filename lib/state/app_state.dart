@@ -155,7 +155,11 @@ class AppState extends ChangeNotifier {
       _errorMessage = null;
 
       // Load initial data
-      await _refreshZonesRemote();
+      await Future.wait([
+        _refreshZonesRemote(),
+        _refreshRadiosRemote(),
+        _refreshLibraryRemote(),
+      ]);
 
       notifyListeners();
     } catch (e) {
@@ -194,6 +198,32 @@ class AppState extends ChangeNotifier {
       zoneState.setZones(zones);
     } catch (e) {
       debugPrint('[Remote] refreshZones error: $e');
+    }
+  }
+
+  Future<void> _refreshRadiosRemote() async {
+    if (_apiClient == null) return;
+    try {
+      final radiosJson = await _apiClient!.getRadios();
+      final radios = radiosJson.map((r) => Radio.fromJson(r as Map<String, dynamic>)).toList();
+      libraryState.setRadios(radios);
+    } catch (e) {
+      debugPrint('[Remote] refreshRadios error: $e');
+    }
+  }
+
+  Future<void> _refreshLibraryRemote() async {
+    if (_apiClient == null) return;
+    try {
+      final albumsJson = await _apiClient!.getAlbums();
+      final albums = albumsJson.map((a) => Album.fromJson(a as Map<String, dynamic>)).toList();
+      libraryState.setAlbums(albums);
+
+      final artistsJson = await _apiClient!.getArtists();
+      final artists = artistsJson.map((a) => Artist.fromJson(a as Map<String, dynamic>)).toList();
+      libraryState.setArtists(artists);
+    } catch (e) {
+      debugPrint('[Remote] refreshLibrary error: $e');
     }
   }
 
@@ -333,11 +363,30 @@ class AppState extends ChangeNotifier {
   Future<void> play({Track? track, int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
     if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      if (track != null) {
+        final body = <String, dynamic>{};
+        if (track.id != 0 && track.source == Source.local.rawValue) {
+          body['track_id'] = track.id;
+        } else if (track.sourceId != null) {
+          body['source'] = track.source;
+          body['source_id'] = track.sourceId;
+        } else if (track.filePath != null) {
+          body['file_path'] = track.filePath;
+        }
+        await _apiClient!.play(id, body);
+      } else {
+        await _apiClient!.resume(id);
+      }
+      await _refreshZonesRemote();
+      return;
+    }
+
     final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
 
     if (track != null) {
-      // Résolution de l'URL si nécessaire (streaming)
       final url = await _resolveUrl(track);
       if (url == null) return;
       final resolved = url != track.filePath
@@ -594,12 +643,19 @@ class AppState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   Future<void> playRadio(Radio radio, {int? zoneId}) async {
-    final httpUrl = radio.streamUrl.replaceFirst('https://', 'http://');
     final id = zoneId ?? zoneState.currentZoneId;
-    final instance = engine.zoneManager.zone(id ?? -1);
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.playRadio(radio.id, id);
+      await _refreshZonesRemote();
+      return;
+    }
+
+    final httpUrl = radio.streamUrl.replaceFirst('https://', 'http://');
+    final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
 
-    // Track éphémère représentant la radio
     final track = Track(
       id: 0,
       title: radio.name,
@@ -611,7 +667,6 @@ class AppState extends ChangeNotifier {
     instance.queue.load([track], startIndex: 0);
     await instance.player.play();
 
-    // Démarre le polling de métadonnées
     RadioMetadataService.instance.startPolling(
       stationName: radio.name,
       streamUrl: httpUrl,
@@ -762,6 +817,13 @@ class AppState extends ChangeNotifier {
     if (tracks.isEmpty) return;
     final id = zoneId ?? zoneState.currentZoneId;
     if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      final track = tracks[startIndex];
+      await play(track: track, zoneId: id);
+      return;
+    }
+
     final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
 
