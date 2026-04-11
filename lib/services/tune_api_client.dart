@@ -135,6 +135,9 @@ class TuneApiClient {
   Future<List<dynamic>> getStreamingPlaylists(String service) =>
       _get('/streaming/$service/playlists').then((d) => d as List);
 
+  Future<List<dynamic>> getStreamingPlaylistTracks(String service, String playlistId) =>
+      _get('/streaming/$service/playlists/$playlistId/tracks').then((d) => d as List);
+
   Future<dynamic> searchStreaming(String service, String query, {int limit = 20}) =>
       _get('/streaming/$service/search?q=${Uri.encodeComponent(query)}&limit=$limit');
 

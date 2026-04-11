@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
+import '../../models/domain_models.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
@@ -168,6 +169,17 @@ class _PlaylistsViewState extends State<PlaylistsView> {
           title: Text(pl['name'] as String? ?? '', style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text('${pl['track_count'] ?? 0} pistes', style: TuneFonts.footnote),
           trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+          onTap: () {
+            final app = context.read<AppState>();
+            if (app.apiClient != null) {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => _StreamingPlaylistDetailView(
+                  service: _selectedSource,
+                  playlist: pl,
+                ),
+              ));
+            }
+          },
         );
       },
     );
@@ -403,5 +415,82 @@ class _PlaylistTrackTile extends StatelessWidget {
     ];
     if (parts.isEmpty) return null;
     return Text(parts.join(' · '), style: TuneFonts.footnote, maxLines: 1, overflow: TextOverflow.ellipsis);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Streaming Playlist Detail (remote mode)
+// ---------------------------------------------------------------------------
+
+class _StreamingPlaylistDetailView extends StatefulWidget {
+  final String service;
+  final Map<String, dynamic> playlist;
+  const _StreamingPlaylistDetailView({required this.service, required this.playlist});
+
+  @override
+  State<_StreamingPlaylistDetailView> createState() => _StreamingPlaylistDetailViewState();
+}
+
+class _StreamingPlaylistDetailViewState extends State<_StreamingPlaylistDetailView> {
+  List<Track>? _tracks;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTracks();
+  }
+
+  Future<void> _loadTracks() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final sourceId = widget.playlist['source_id'] as String? ?? '';
+      final data = await app.apiClient!.getStreamingPlaylistTracks(widget.service, sourceId);
+      final tracks = data.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
+      if (mounted) setState(() => _tracks = tracks);
+    } catch (e) {
+      debugPrint('Load streaming playlist tracks error: $e');
+      if (mounted) setState(() => _tracks = []);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final name = widget.playlist['name'] as String? ?? '';
+    final count = widget.playlist['track_count'] as int? ?? 0;
+
+    return Scaffold(
+      backgroundColor: TuneColors.background,
+      appBar: AppBar(
+        backgroundColor: TuneColors.surface,
+        title: Text(name, style: TuneFonts.title3, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+      body: _tracks == null
+          ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
+          : _tracks!.isEmpty
+              ? Center(child: Text('$count pistes', style: TuneFonts.body))
+              : ListView.separated(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount: _tracks!.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, color: TuneColors.divider),
+                  itemBuilder: (_, i) {
+                    final t = _tracks![i];
+                    return ListTile(
+                      onTap: () {
+                        if (t.sourceId != null) {
+                          app.play(track: t);
+                        }
+                      },
+                      leading: Text('${i + 1}', style: TuneFonts.footnote),
+                      title: Text(t.title, style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: t.artistName != null
+                          ? Text(t.artistName!, style: TuneFonts.footnote, maxLines: 1, overflow: TextOverflow.ellipsis)
+                          : null,
+                      trailing: FormatBadge(format: t.format),
+                    );
+                  },
+                ),
+    );
   }
 }
