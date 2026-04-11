@@ -232,6 +232,13 @@ class AppState extends ChangeNotifier {
       final artistsJson = await _apiClient!.getArtists();
       final artists = artistsJson.map((a) => artistFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setArtists(artists);
+
+      // Recent albums for Home view
+      try {
+        final recentJson = await _apiClient!.getRecentAlbums(limit: 30);
+        final recent = recentJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
+        libraryState.setRecentAlbums(recent);
+      } catch (_) {}
     } catch (e) {
       debugPrint('[Remote] refreshLibrary error: $e');
     }
@@ -814,6 +821,23 @@ class AppState extends ChangeNotifier {
   Future<List<SearchResult>> search(String query) async {
     libraryState.setSearching(true);
     try {
+      if (isRemoteMode && _apiClient != null) {
+        final data = await _apiClient!.searchLibrary(query);
+        final results = <SearchResult>[];
+        if (data is Map<String, dynamic>) {
+          for (final t in (data['tracks'] as List? ?? [])) {
+            results.add(TrackSearchResult(trackFromJson(t as Map<String, dynamic>)));
+          }
+          for (final a in (data['albums'] as List? ?? [])) {
+            results.add(AlbumSearchResult(albumFromJson(a as Map<String, dynamic>)));
+          }
+          for (final a in (data['artists'] as List? ?? [])) {
+            results.add(ArtistSearchResult(artistFromJson(a as Map<String, dynamic>)));
+          }
+        }
+        libraryState.setSearchResults(query, results);
+        return results;
+      }
       final results = await engine.search(query);
       libraryState.setSearchResults(query, results);
       return results;

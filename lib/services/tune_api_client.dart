@@ -101,6 +101,14 @@ class TuneApiClient {
   Future<List<dynamic>> getArtistTracks(int artistId) =>
       _get('/library/artists/$artistId/tracks').then((d) => d as List);
 
+  Future<dynamic> searchLibrary(String query, {int limit = 30}) =>
+      _get('/library/search?q=${Uri.encodeComponent(query)}&limit=$limit');
+
+  Future<List<dynamic>> getRecentAlbums({int limit = 30}) =>
+      _get('/library/albums?limit=$limit&sort=recent').then((d) => d as List);
+
+  Future<dynamic> getQueue(int zoneId) => _get('/zones/$zoneId/queue');
+
   String artworkUrl(String path) {
     if (path.startsWith('http')) return path;
     final filename = path.split('/').last;
