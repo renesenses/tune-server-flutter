@@ -17,6 +17,8 @@ import '../server/event_bus.dart';
 import '../server/server_engine.dart';
 import '../server/streaming/radio_metadata_service.dart';
 import '../server/streaming/streaming_service.dart';
+import '../services/tune_api_client.dart';
+import '../services/tune_websocket.dart';
 import 'library_state.dart';
 import 'settings_state.dart';
 import 'zone_state.dart';
@@ -36,6 +38,14 @@ class AppState extends ChangeNotifier {
 
   bool _serverStarted = false;
   String? _errorMessage;
+
+  // Remote mode
+  TuneApiClient? _apiClient;
+  TuneWebSocket? _webSocket;
+  StreamSubscription? _wsSubscription;
+
+  bool get isRemoteMode => settingsState.isRemoteMode;
+  TuneApiClient? get apiClient => _apiClient;
 
   final List<StreamSubscription> _subs = [];
 
@@ -111,6 +121,80 @@ class AppState extends ChangeNotifier {
     await engine.stop();
     _serverStarted = false;
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Remote mode — connect to a remote Tune server
+  // ---------------------------------------------------------------------------
+
+  Future<void> connectRemote() async {
+    final host = settingsState.remoteHost;
+    if (host.isEmpty) {
+      _errorMessage = 'Adresse serveur non configurée';
+      notifyListeners();
+      return;
+    }
+    try {
+      _apiClient = TuneApiClient(settingsState.remoteBaseUrl);
+
+      // Test connection
+      final ok = await _apiClient!.testConnection();
+      if (!ok) {
+        _errorMessage = 'Impossible de se connecter à $host';
+        _apiClient = null;
+        notifyListeners();
+        return;
+      }
+
+      // Connect WebSocket
+      _webSocket = TuneWebSocket(settingsState.remoteWsUrl);
+      await _webSocket!.connect();
+      _wsSubscription = _webSocket!.eventStream.listen(_handleRemoteEvent);
+
+      _serverStarted = true;
+      _errorMessage = null;
+
+      // Load initial data
+      await _refreshZonesRemote();
+
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Erreur connexion: $e';
+      _apiClient = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> disconnectRemote() async {
+    _wsSubscription?.cancel();
+    _wsSubscription = null;
+    _webSocket?.dispose();
+    _webSocket = null;
+    _apiClient = null;
+    _serverStarted = false;
+    zoneState.reset();
+    notifyListeners();
+  }
+
+  void _handleRemoteEvent(Map<String, dynamic> event) {
+    final type = event['type'] as String? ?? '';
+    final data = event['data'] as Map<String, dynamic>? ?? {};
+
+    if (type.startsWith('playback.') || type.startsWith('zone.')) {
+      // Refresh zones from API
+      _refreshZonesRemote();
+    }
+  }
+
+  Future<void> _refreshZonesRemote() async {
+    if (_apiClient == null) return;
+    try {
+      final zonesJson = await _apiClient!.getZones();
+      final zones = zonesJson.map((z) => ZoneWithState.fromJson(z as Map<String, dynamic>)).toList();
+      zoneState.setZones(zones);
+    } catch (e) {
+      debugPrint('[Remote] refreshZones error: $e');
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -266,42 +350,85 @@ class AppState extends ChangeNotifier {
 
   Future<void> pause({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.pause();
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.pause(id);
+      await _refreshZonesRemote();
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.pause();
   }
 
   Future<void> resume({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.resume();
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.resume(id);
+      await _refreshZonesRemote();
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.resume();
   }
 
   Future<void> stop({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.stop();
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.pause(id); // no stop endpoint, pause is fine
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.stop();
   }
 
   Future<void> next({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.next();
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.next(id);
+      await _refreshZonesRemote();
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.next();
   }
 
   Future<void> previous({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.previous();
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.previous(id);
+      await _refreshZonesRemote();
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.previous();
   }
 
   Future<void> seek(Duration position, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    await engine.zoneManager.zone(id ?? -1)?.player.seek(position);
+    if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.seek(id, position.inMilliseconds);
+      return;
+    }
+    await engine.zoneManager.zone(id)?.player.seek(position);
   }
 
   Future<void> setVolume(double volume, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
     if (id == null) return;
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.setVolume(id, volume);
+      return;
+    }
     await engine.zoneManager.setVolume(id, volume);
   }
 
   Future<void> setShuffle({required bool enabled, int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
+    if (isRemoteMode && _apiClient != null) {
+      if (id != null) await _apiClient!.setShuffle(id, enabled);
+      await _refreshZonesRemote();
+      return;
+    }
     final instance = engine.zoneManager.zone(id ?? -1);
     instance?.queue.setShuffle(enabled: enabled);
     if (instance != null) {
@@ -311,6 +438,14 @@ class AppState extends ChangeNotifier {
 
   Future<void> cycleRepeat({int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
+    if (isRemoteMode && _apiClient != null) {
+      // Cycle through off → all → one
+      final current = zoneState.repeatMode;
+      final next = current == RepeatMode.off ? 'all' : current == RepeatMode.all ? 'one' : 'off';
+      if (id != null) await _apiClient!.setRepeat(id, next);
+      await _refreshZonesRemote();
+      return;
+    }
     final instance = engine.zoneManager.zone(id ?? -1);
     instance?.queue.cycleRepeat();
     if (instance != null) {
