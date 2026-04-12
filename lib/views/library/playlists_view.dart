@@ -168,7 +168,35 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                 ),
           title: Text(pl['name'] as String? ?? '', style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text('${pl['track_count'] ?? 0} pistes', style: TuneFonts.footnote),
-          trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+          trailing: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded, color: TuneColors.textTertiary, size: 20),
+            color: TuneColors.surfaceVariant,
+            onSelected: (action) async {
+              final app = context.read<AppState>();
+              if (action == 'transfer' && app.apiClient != null) {
+                final sourceId = pl['source_id'] as String? ?? '';
+                final name = pl['name'] as String? ?? '';
+                try {
+                  await app.apiClient!.transferPlaylist(
+                    sourceService: _selectedSource, sourcePlaylistId: sourceId,
+                    targetService: 'local', targetName: name,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Transféré: $name'), duration: const Duration(seconds: 2)),
+                    );
+                  }
+                } catch (_) {}
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'transfer', child: ListTile(
+                leading: Icon(Icons.download_rounded, size: 20),
+                title: Text('Transférer en local', style: TextStyle(fontSize: 14)),
+                dense: true, contentPadding: EdgeInsets.zero,
+              )),
+            ],
+          ),
           onTap: () {
             final app = context.read<AppState>();
             if (app.apiClient != null) {
