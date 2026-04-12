@@ -139,9 +139,64 @@ class _PlaylistsViewState extends State<PlaylistsView> {
           child: const Icon(Icons.delete_rounded, color: Colors.white),
         ),
         onDismissed: (_) => app.deletePlaylist(playlists[i].id),
-        child: _PlaylistTile(playlist: playlists[i]),
+        child: _PlaylistTile(
+          playlist: playlists[i],
+          onAction: (action) => _handleLocalPlaylistAction(action, playlists[i], app),
+        ),
       ),
     );
+  }
+
+  Future<void> _handleLocalPlaylistAction(String action, Playlist playlist, AppState app) async {
+    try {
+      switch (action) {
+        case 'duplicate':
+          if (app.apiClient != null) {
+            await app.apiClient!.transferPlaylist(
+              sourceService: 'local',
+              sourcePlaylistId: playlist.id.toString(),
+              targetService: 'local',
+              targetName: '${playlist.name} (copie)',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Dupliqué: ${playlist.name}'), duration: const Duration(seconds: 2)),
+              );
+            }
+          }
+        case 'export_json':
+          if (app.apiClient != null) {
+            await app.apiClient!.exportPlaylist('local', playlist.id.toString(), 'json');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Export JSON réussi'), duration: Duration(seconds: 2)),
+              );
+            }
+          }
+        case 'export_csv':
+          if (app.apiClient != null) {
+            await app.apiClient!.exportPlaylist('local', playlist.id.toString(), 'csv');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Export CSV réussi'), duration: Duration(seconds: 2)),
+              );
+            }
+          }
+        case 'delete':
+          await app.deletePlaylist(playlist.id);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Supprimé: ${playlist.name}'), duration: const Duration(seconds: 2)),
+            );
+          }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), duration: const Duration(seconds: 3)),
+        );
+      }
+    }
   }
 
   Widget _buildStreamingList(List<Map<String, dynamic>> playlists) {
@@ -173,26 +228,58 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             color: TuneColors.surfaceVariant,
             onSelected: (action) async {
               final app = context.read<AppState>();
-              if (action == 'transfer' && app.apiClient != null) {
-                final sourceId = pl['source_id'] as String? ?? '';
-                final name = pl['name'] as String? ?? '';
-                try {
-                  await app.apiClient!.transferPlaylist(
-                    sourceService: _selectedSource, sourcePlaylistId: sourceId,
-                    targetService: 'local', targetName: name,
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Transféré: $name'), duration: const Duration(seconds: 2)),
+              if (app.apiClient == null) return;
+              final sourceId = pl['source_id'] as String? ?? '';
+              final name = pl['name'] as String? ?? '';
+              try {
+                switch (action) {
+                  case 'transfer':
+                    await app.apiClient!.transferPlaylist(
+                      sourceService: _selectedSource, sourcePlaylistId: sourceId,
+                      targetService: 'local', targetName: name,
                     );
-                  }
-                } catch (_) {}
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Transféré: $name'), duration: const Duration(seconds: 2)),
+                      );
+                    }
+                  case 'export_json':
+                    await app.apiClient!.exportPlaylist(_selectedSource, sourceId, 'json');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Export JSON réussi'), duration: Duration(seconds: 2)),
+                      );
+                    }
+                  case 'export_csv':
+                    await app.apiClient!.exportPlaylist(_selectedSource, sourceId, 'csv');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Export CSV réussi'), duration: Duration(seconds: 2)),
+                      );
+                    }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur: $e'), duration: const Duration(seconds: 3)),
+                  );
+                }
               }
             },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'transfer', child: ListTile(
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'transfer', child: ListTile(
                 leading: Icon(Icons.download_rounded, size: 20),
                 title: Text('Transférer en local', style: TextStyle(fontSize: 14)),
+                dense: true, contentPadding: EdgeInsets.zero,
+              )),
+              PopupMenuItem(value: 'export_json', child: ListTile(
+                leading: Icon(Icons.data_object_rounded, size: 20),
+                title: Text('Exporter JSON', style: TextStyle(fontSize: 14)),
+                dense: true, contentPadding: EdgeInsets.zero,
+              )),
+              PopupMenuItem(value: 'export_csv', child: ListTile(
+                leading: Icon(Icons.table_chart_rounded, size: 20),
+                title: Text('Exporter CSV', style: TextStyle(fontSize: 14)),
                 dense: true, contentPadding: EdgeInsets.zero,
               )),
             ],
@@ -312,7 +399,8 @@ class _SourceButton extends StatelessWidget {
 
 class _PlaylistTile extends StatelessWidget {
   final Playlist playlist;
-  const _PlaylistTile({required this.playlist});
+  final ValueChanged<String>? onAction;
+  const _PlaylistTile({required this.playlist, this.onAction});
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +416,33 @@ class _PlaylistTile extends StatelessWidget {
       ),
       title: Text(playlist.name, style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text('${playlist.trackCount} piste${playlist.trackCount != 1 ? "s" : ""}', style: TuneFonts.footnote),
-      trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+      trailing: PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert_rounded, color: TuneColors.textTertiary, size: 20),
+        color: TuneColors.surfaceVariant,
+        onSelected: (action) => onAction?.call(action),
+        itemBuilder: (_) => const [
+          PopupMenuItem(value: 'duplicate', child: ListTile(
+            leading: Icon(Icons.copy_rounded, size: 20),
+            title: Text('Dupliquer', style: TextStyle(fontSize: 14)),
+            dense: true, contentPadding: EdgeInsets.zero,
+          )),
+          PopupMenuItem(value: 'export_json', child: ListTile(
+            leading: Icon(Icons.data_object_rounded, size: 20),
+            title: Text('Exporter JSON', style: TextStyle(fontSize: 14)),
+            dense: true, contentPadding: EdgeInsets.zero,
+          )),
+          PopupMenuItem(value: 'export_csv', child: ListTile(
+            leading: Icon(Icons.table_chart_rounded, size: 20),
+            title: Text('Exporter CSV', style: TextStyle(fontSize: 14)),
+            dense: true, contentPadding: EdgeInsets.zero,
+          )),
+          PopupMenuItem(value: 'delete', child: ListTile(
+            leading: Icon(Icons.delete_rounded, size: 20, color: TuneColors.error),
+            title: Text('Supprimer', style: TextStyle(fontSize: 14, color: TuneColors.error)),
+            dense: true, contentPadding: EdgeInsets.zero,
+          )),
+        ],
+      ),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaylistDetailView(playlist: playlist))),
     );
   }
