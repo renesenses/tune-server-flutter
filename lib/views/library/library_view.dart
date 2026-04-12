@@ -10,7 +10,7 @@ import 'albums_grid_view.dart';
 import 'apple_music_view.dart';
 import 'artists_list_view.dart';
 import 'genres_view.dart';
-import 'playlists_view.dart';
+import '../playlists/playlist_manager_view.dart';
 import 'tracks_list_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ class _LibraryViewState extends State<LibraryView>
           const AlbumsGridView(),
           const ArtistsListView(),
           const TracksListView(),
-          const PlaylistsView(),
+          const PlaylistManagerView(),
           if (_showAppleMusic) const AppleMusicView(),
         ],
       ),
