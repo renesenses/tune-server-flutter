@@ -9,6 +9,7 @@ import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'zone_manager_view.dart';
 
 // ---------------------------------------------------------------------------
 // ZonesView — onglet dédié à la gestion des zones audio.
@@ -33,6 +34,17 @@ class ZonesView extends StatelessWidget {
         backgroundColor: TuneColors.surface,
         title: Text(l.zonesTitle, style: TuneFonts.title3),
         actions: [
+          if (context.read<AppState>().apiClient != null)
+            IconButton(
+              icon: const Icon(Icons.dashboard_customize_rounded,
+                  color: TuneColors.accent),
+              tooltip: 'Zone Manager',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const ZoneManagerView()),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.add_rounded, color: TuneColors.accent),
             tooltip: l.zonesNew,

@@ -31,6 +31,18 @@ class TuneApiClient {
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
 
+  Future<dynamic> _patch(String path, {Map<String, dynamic>? body}) async {
+    final resp = await http.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: body != null ? jsonEncode(body) : null,
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('PATCH $path failed: ${resp.statusCode}');
+    }
+    return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
+  }
+
   Future<void> _delete(String path) async {
     final resp = await http.delete(Uri.parse('$baseUrl$path'));
     if (resp.statusCode != 200 && resp.statusCode != 204) {
@@ -259,4 +271,177 @@ class TuneApiClient {
       return false;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Metadata Manager
+  // ---------------------------------------------------------------------------
+
+  // Completeness stats
+
+  Future<Map<String, dynamic>> getCompletenessStats() =>
+      _get('/library/stats/completeness').then((d) => d as Map<String, dynamic>);
+
+  // Fix missing years
+
+  Future<Map<String, dynamic>> fixYearsTidal() =>
+      _post('/metadata/fix-years-tidal').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> fixYearsMusicBrainz() =>
+      _post('/metadata/fix-years-musicbrainz').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> fixYearsDiscogs() =>
+      _post('/metadata/fix-years-discogs').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> fixYearsTags() =>
+      _post('/metadata/fix-years-tags').then((d) => d as Map<String, dynamic>);
+
+  // Fix missing genres
+
+  Future<Map<String, dynamic>> fixGenres() =>
+      _post('/metadata/fix-genres').then((d) => d as Map<String, dynamic>);
+
+  // Auto-fix
+
+  Future<Map<String, dynamic>> startAutoFix() =>
+      _post('/metadata/auto-fix').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> getAutoFixStatus() =>
+      _get('/metadata/auto-fix/status').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> autoFixAlbums() =>
+      _post('/metadata/auto-fix-albums').then((d) => d as Map<String, dynamic>);
+
+  // Duplicates
+
+  Future<Map<String, dynamic>> scanDuplicates({int limit = 5000}) =>
+      _post('/metadata/duplicates/scan', body: {'limit': limit}).then((d) => d as Map<String, dynamic>);
+
+  Future<List<dynamic>> listDuplicates() =>
+      _get('/metadata/duplicates').then((d) => d as List);
+
+  // Suggestions
+
+  Future<List<dynamic>> getMetadataSuggestions({String status = 'pending', int limit = 100}) =>
+      _get('/metadata/suggestions?status=$status&limit=$limit').then((d) => d as List);
+
+  Future<Map<String, dynamic>> acceptSuggestion(int id) =>
+      _post('/metadata/suggestions/$id/accept').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> rejectSuggestion(int id) =>
+      _post('/metadata/suggestions/$id/reject').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> acceptAllSuggestions({double minConfidence = 0.9}) =>
+      _post('/metadata/suggestions/accept-all?min_confidence=$minConfidence').then((d) => d as Map<String, dynamic>);
+
+  // Enrichment
+
+  Future<Map<String, dynamic>> enrichTrack(int trackId) =>
+      _post('/metadata/enrich/$trackId').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> enrichAlbum(int albumId) =>
+      _post('/metadata/enrich-album/$albumId').then((d) => d as Map<String, dynamic>);
+
+  // Track/Album metadata update
+
+  Future<Map<String, dynamic>> updateTrackMetadata(int trackId, Map<String, dynamic> updates) =>
+      _patch('/metadata/tracks/$trackId', body: updates).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> updateAlbumMetadata(int albumId, Map<String, dynamic> updates) =>
+      _patch('/metadata/albums/$albumId', body: updates).then((d) => d as Map<String, dynamic>);
+
+  // Merge duplicates
+
+  Future<Map<String, dynamic>> mergeAlbumDuplicates() =>
+      _post('/library/albums/merge-duplicates').then((d) => d as Map<String, dynamic>);
+
+  // ---------------------------------------------------------------------------
+  // ── Zone Manager ──
+  // ---------------------------------------------------------------------------
+
+  // Overview
+
+  Future<Map<String, dynamic>> getZoneOverview() =>
+      _get('/zone-manager/overview').then((d) => d as Map<String, dynamic>);
+
+  // Hot-swap
+
+  Future<Map<String, dynamic>> hotSwapDevice(int zoneId, String outputType, {String? outputDeviceId}) =>
+      _post('/zone-manager/zones/$zoneId/hot-swap', body: {
+        'output_type': outputType,
+        if (outputDeviceId != null) 'output_device_id': outputDeviceId,
+      }).then((d) => d as Map<String, dynamic>);
+
+  // Mute
+
+  Future<Map<String, dynamic>> muteZone(int zoneId, bool muted) =>
+      _post('/zone-manager/zones/$zoneId/mute', body: {'muted': muted})
+          .then((d) => d as Map<String, dynamic>);
+
+  // Groups
+
+  Future<List<dynamic>> getZoneManagerGroups() =>
+      _get('/zone-manager/groups').then((d) => d as List);
+
+  Future<Map<String, dynamic>> createZoneGroup(int leaderZoneId, List<int> zoneIds, {String? name, double masterVolume = 0.5}) =>
+      _post('/zone-manager/groups', body: {
+        'leader_zone_id': leaderZoneId,
+        'zone_ids': zoneIds,
+        if (name != null) 'name': name,
+        'master_volume': masterVolume,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> renameZoneGroup(String groupId, String name) =>
+      _patch('/zone-manager/groups/$groupId', body: {'name': name})
+          .then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> deleteZoneGroup(String groupId) async {
+    await _delete('/zone-manager/groups/$groupId');
+    return {'deleted': groupId};
+  }
+
+  Future<Map<String, dynamic>> setGroupVolume(String groupId, {double? masterVolume, Map<int, double>? offsets}) =>
+      _post('/zone-manager/groups/$groupId/volume', body: {
+        if (masterVolume != null) 'master_volume': masterVolume,
+        if (offsets != null) 'offsets': offsets.map((k, v) => MapEntry(k.toString(), v)),
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> calibrateGroup(String groupId) =>
+      _post('/zone-manager/groups/$groupId/calibrate')
+          .then((d) => d as Map<String, dynamic>);
+
+  // Profiles
+
+  Future<List<dynamic>> getZoneProfiles() =>
+      _get('/zone-manager/profiles').then((d) => d as List);
+
+  Future<Map<String, dynamic>> createZoneProfile(String name, {String? description, String? icon}) =>
+      _post('/zone-manager/profiles', body: {
+        'name': name,
+        if (description != null) 'description': description,
+        if (icon != null) 'icon': icon,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> activateZoneProfile(int profileId) =>
+      _post('/zone-manager/profiles/$profileId/activate')
+          .then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> deleteZoneProfile(int profileId) async {
+    await _delete('/zone-manager/profiles/$profileId');
+    return {'deleted': profileId};
+  }
+
+  // Latency & Health
+
+  Future<Map<String, dynamic>> measureLatency(int zoneId) =>
+      _post('/zone-manager/zones/$zoneId/measure-latency')
+          .then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> getZoneHealth(int zoneId) =>
+      _get('/zone-manager/zones/$zoneId/health').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> getGroupHealth(String groupId) =>
+      _get('/zone-manager/groups/$groupId/health').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> getSyncStats() =>
+      _get('/zone-manager/sync/stats').then((d) => d as Map<String, dynamic>);
 }
