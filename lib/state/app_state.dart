@@ -588,6 +588,22 @@ class AppState extends ChangeNotifier {
     await _refreshZones();
   }
 
+  /// Creates a zone directly from a discovered device.
+  /// The zone inherits the device's name and output type.
+  Future<int> createZoneFromDevice(DiscoveredDevice device) async {
+    final outputType = device.type == 'renderer'
+        ? OutputType.dlna
+        : OutputType.local;
+    final instance = await engine.zoneManager.createZone(
+      device.name,
+      outputType: outputType,
+      device: device,
+    );
+    await _refreshZones();
+    zoneState.setCurrentZoneId(instance.id);
+    return instance.id;
+  }
+
   Future<void> deleteZone(int zoneId) async {
     await engine.zoneManager.deleteZone(zoneId);
     await _refreshZones();

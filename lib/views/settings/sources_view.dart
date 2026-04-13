@@ -238,16 +238,39 @@ class _RendererTile extends StatelessWidget {
           '${device.host}:${device.port}',
           style: TuneFonts.caption,
         ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: badgeBg,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            badgeLabel,
-            style: TuneFonts.caption.copyWith(color: badgeColor),
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badgeLabel,
+                style: TuneFonts.caption.copyWith(color: badgeColor),
+              ),
+            ),
+            if (!isAssigned && device.available)
+              IconButton(
+                icon: const Icon(Icons.add_circle_rounded,
+                    color: TuneColors.accent, size: 22),
+                tooltip: l.zonesNew,
+                onPressed: () async {
+                  await context.read<AppState>().createZoneFromDevice(device);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l.zonesActivated(device.name)),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: TuneColors.accent,
+                      ),
+                    );
+                  }
+                },
+              ),
+          ],
         ),
       ),
     );

@@ -725,43 +725,36 @@ class _DeviceTile extends StatelessWidget {
       title: Text(device.name),
       subtitle: Text('${device.host}:${device.port}',
           style: TuneFonts.caption),
-      trailing: zones.isEmpty
-          ? null
-          : zones.length == 1
-              ? TextButton(
-                  onPressed: () {
-                    context.read<AppState>().setZoneOutput(
-                          zones.first.id,
-                          OutputType.dlna,
-                          deviceId: device.id,
-                        );
-                    context.read<AppState>().selectZone(zones.first.id);
-                  },
-                  child: Text(l.btnUse,
-                      style: const TextStyle(color: TuneColors.accent)),
-                )
-              : PopupMenuButton<int>(
-                  color: TuneColors.surfaceVariant,
-                  tooltip: l.zonesAssignDevice,
-                  onSelected: (zoneId) {
-                    context.read<AppState>().setZoneOutput(
-                          zoneId,
-                          OutputType.dlna,
-                          deviceId: device.id,
-                        );
-                  },
-                  itemBuilder: (_) => zones
-                      .map((z) => PopupMenuItem<int>(
-                            value: z.id,
-                            child: Text(z.name),
-                          ))
-                      .toList(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(l.zonesAssignDevice,
-                        style: const TextStyle(color: TuneColors.accent)),
-                  ),
-                ),
+      trailing: IconButton(
+        icon: const Icon(Icons.add_circle_rounded, color: TuneColors.accent),
+        tooltip: l.zonesNew,
+        onPressed: () async {
+          final appState = context.read<AppState>();
+          await appState.createZoneFromDevice(device);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l.zonesActivated(device.name)),
+                duration: const Duration(seconds: 2),
+                backgroundColor: TuneColors.accent,
+              ),
+            );
+          }
+        },
+      ),
+      onTap: () async {
+        final appState = context.read<AppState>();
+        await appState.createZoneFromDevice(device);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l.zonesActivated(device.name)),
+              duration: const Duration(seconds: 2),
+              backgroundColor: TuneColors.accent,
+            ),
+          );
+        }
+      },
     );
   }
 }
