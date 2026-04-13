@@ -134,6 +134,7 @@ class NowPlayingView extends StatelessWidget {
                   color: shuffle
                       ? TuneColors.accent
                       : TuneColors.textTertiary),
+              tooltip: 'Shuffle',
               onPressed: () =>
                   app.setShuffle(enabled: !shuffle),
             ),
@@ -147,12 +148,14 @@ class NowPlayingView extends StatelessWidget {
                     ? TuneColors.accent
                     : TuneColors.textTertiary,
               ),
+              tooltip: 'Repeat',
               onPressed: () => app.cycleRepeat(),
             ),
             // Queue
             IconButton(
               icon: const Icon(Icons.queue_music_rounded,
                   color: TuneColors.textSecondary),
+              tooltip: 'Queue',
               onPressed: () => showModalBottomSheet(
                 context: ctx,
                 backgroundColor: TuneColors.surface,
@@ -167,6 +170,7 @@ class NowPlayingView extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.speaker_group_rounded,
                   color: TuneColors.textSecondary),
+              tooltip: 'Zones',
               onPressed: () => showModalBottomSheet(
                 context: ctx,
                 backgroundColor: TuneColors.surface,
@@ -339,6 +343,7 @@ class _TrackInfo extends StatelessWidget {
             icon: const Icon(Icons.favorite_border_rounded),
             color: TuneColors.textSecondary,
             iconSize: 28,
+            tooltip: 'Favorite',
             onPressed: () {
               if (track != null) {
                 final radios = app.libraryState.radios;
@@ -366,6 +371,7 @@ class _TrackInfo extends StatelessWidget {
             icon: const Icon(Icons.favorite_border_rounded),
             color: TuneColors.textSecondary,
             iconSize: 28,
+            tooltip: 'Favorite',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -423,6 +429,7 @@ class _TransportControls extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 38,
                   color: TuneColors.background,
+                  tooltip: isPlaying ? 'Pause' : 'Play',
                   onPressed: isPlaying
                       ? () => app.pause()
                       : () => app.resume(),

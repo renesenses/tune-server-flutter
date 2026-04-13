@@ -18,14 +18,18 @@ class SkipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: size * 1.4,
-        height: size,
-        child: CustomPaint(
-          painter: _SkipPainter(isForward: isForward, color: color),
+    return Semantics(
+      button: true,
+      label: isForward ? 'Next track' : 'Previous track',
+      child: GestureDetector(
+        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: size * 1.4,
+          height: size,
+          child: CustomPaint(
+            painter: _SkipPainter(isForward: isForward, color: color),
+          ),
         ),
       ),
     );

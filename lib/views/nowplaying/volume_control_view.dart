@@ -77,10 +77,13 @@ class _VolumeControlViewState extends State<VolumeControlView> {
     return Row(
       children: [
         // Mute toggle
-        GestureDetector(
-          onTap: _toggleMute,
-          child: Icon(_volumeIcon(displayVolume),
+        IconButton(
+          icon: Icon(_volumeIcon(displayVolume),
               size: 22, color: TuneColors.textSecondary),
+          tooltip: 'Mute',
+          onPressed: _toggleMute,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
         const SizedBox(width: 6),
         Expanded(

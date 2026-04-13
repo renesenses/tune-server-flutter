@@ -62,7 +62,9 @@ class _MiniPlayerContent extends StatelessWidget {
     final isPlaying = state == PlaybackState.playing;
     final isBuffering = state == PlaybackState.buffering;
 
-    return GestureDetector(
+    return Semantics(
+      label: 'Now playing',
+      child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => showNowPlaying(context),
       child: SafeArea(
@@ -111,6 +113,7 @@ class _MiniPlayerContent extends StatelessWidget {
               color: TuneColors.textTertiary,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: 'Favorite',
               onPressed: () {
                 if (track != null && track.source == Source.radio.rawValue) {
                   final radios = app.libraryState.radios;
@@ -157,6 +160,7 @@ class _MiniPlayerContent extends StatelessWidget {
                     : Icons.play_arrow_rounded),
                 iconSize: 32,
                 color: TuneColors.textPrimary,
+                tooltip: isPlaying ? 'Pause' : 'Play',
                 onPressed: isPlaying ? () => app.pause() : () => app.resume(),
               ),
 
@@ -172,6 +176,7 @@ class _MiniPlayerContent extends StatelessWidget {
         ),
       ),
       ),
+    ),
     );
   }
 }
