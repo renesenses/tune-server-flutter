@@ -79,6 +79,7 @@ class HttpAudioStreamer {
         'Content-Type': mimeType,
         'Content-Length': '$fileSize',
         'Accept-Ranges': 'bytes',
+        'transferMode.dlna.org': 'Streaming',
       },
     );
   }
@@ -145,6 +146,7 @@ class HttpAudioStreamer {
         'Content-Range': 'bytes $start-$end/$fileSize',
         'Content-Length': '$length',
         'Accept-Ranges': 'bytes',
+        'transferMode.dlna.org': 'Streaming',
       },
     );
   }

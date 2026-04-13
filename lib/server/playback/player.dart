@@ -88,8 +88,9 @@ class Player {
         }
       });
     } else {
-      // DLNA / AirPlay : polling toutes les secondes
-      _positionTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      // DLNA / AirPlay : polling toutes les 5 secondes
+      // Les renderers DLNA (DMP-A8) sont sensibles aux requêtes SOAP fréquentes
+      _positionTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
         if (!isPlaying) return;
         final pos = await output.currentPosition();
         if (pos != null) {
