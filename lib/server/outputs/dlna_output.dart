@@ -76,8 +76,8 @@ class DLNAOutput implements OutputTarget {
       if (dlnaVol != null) {
         _volume = (dlnaVol / 100).clamp(0.0, 1.0);
       }
-    } catch (_) {
-      debugPrint('[DLNA] Error: $_');
+    } catch (e) {
+      debugPrint('[DLNA] Error: $e');
     }
   }
 
@@ -229,8 +229,8 @@ class DLNAOutput implements OutputTarget {
           .trim();
 
       return _parseDuration(relTime);
-    } catch (_) {
-      debugPrint('[DLNA] Error: $_');
+    } catch (e) {
+      debugPrint('[DLNA] Error: $e');
       return null;
     }
   }
@@ -255,8 +255,8 @@ class DLNAOutput implements OutputTarget {
           .trim();
 
       return _parseDuration(dur);
-    } catch (_) {
-      debugPrint('[DLNA] Error: $_');
+    } catch (e) {
+      debugPrint('[DLNA] Error: $e');
       return null;
     }
   }
@@ -369,8 +369,8 @@ class DLNAOutput implements OutputTarget {
         return response.body;
       }
       return null;
-    } catch (_) {
-      debugPrint('[DLNA] Error: $_');
+    } catch (e) {
+      debugPrint('[DLNA] Error: $e');
       return null;
     }
   }
@@ -414,8 +414,8 @@ class DLNAOutput implements OutputTarget {
             ((parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000).round();
         return Duration(milliseconds: ms);
       }
-    } catch (_) {
-      debugPrint('[DLNA] Error: $_');
+    } catch (e) {
+      debugPrint('[DLNA] Error: $e');
     }
     return null;
   }

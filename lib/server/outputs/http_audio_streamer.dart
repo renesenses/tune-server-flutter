@@ -50,16 +50,11 @@ class HttpAudioStreamer {
       _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, preferredPort);
     } on SocketException {
       // Port in use — let the OS assign an available port
-      debugPrint('[HttpAudioStreamer] Port $preferredPort in use, using OS-assigned port');
+      print('[HttpAudioStreamer] Port $preferredPort in use, using OS-assigned port');
       _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, 0);
     }
     _server!.autoCompress = false;
-    debugPrint('[HttpAudioStreamer] Listening on port ${_server!.port}');
-  }
-
-  Future<void> stop() async {
-    await _server?.close(force: true);
-    _server = null;
+    print('[HttpAudioStreamer] Listening on port ${_server!.port}');
   }
 
   Future<void> stop() async {
