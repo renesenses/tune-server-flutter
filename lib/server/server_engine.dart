@@ -108,7 +108,7 @@ class ServerEngine {
       qobuzAppId: qobuzAppId,
       qobuzAppSecret: qobuzAppSecret,
     );
-    final httpStreamer = HttpAudioStreamer(port: config.httpStreamerPort);
+    final httpStreamer = HttpAudioStreamer(preferredPort: config.httpStreamerPort);
     final libraryScanner = LibraryScanner(db);
 
     await ArtworkManager.instance.initialize();

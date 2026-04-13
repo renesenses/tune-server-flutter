@@ -19,13 +19,16 @@ import '../utils/mime_utils.dart';
 // ---------------------------------------------------------------------------
 
 class HttpAudioStreamer {
-  final int port;
+  final int preferredPort;
 
-  HttpAudioStreamer({this.port = 8081});
+  HttpAudioStreamer({this.preferredPort = 8081});
 
   HttpServer? _server;
 
   bool get isRunning => _server != null;
+
+  /// Actual port the server is listening on (may differ from preferredPort).
+  int get port => _server?.port ?? preferredPort;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -43,8 +46,20 @@ class HttpAudioStreamer {
         .addMiddleware(_corsMiddleware())
         .addHandler(router.call);
 
-    _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, port);
-    _server!.autoCompress = false; // pas de gzip sur l'audio
+    try {
+      _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, preferredPort);
+    } on SocketException {
+      // Port in use — let the OS assign an available port
+      debugPrint('[HttpAudioStreamer] Port $preferredPort in use, using OS-assigned port');
+      _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, 0);
+    }
+    _server!.autoCompress = false;
+    debugPrint('[HttpAudioStreamer] Listening on port ${_server!.port}');
+  }
+
+  Future<void> stop() async {
+    await _server?.close(force: true);
+    _server = null;
   }
 
   Future<void> stop() async {
