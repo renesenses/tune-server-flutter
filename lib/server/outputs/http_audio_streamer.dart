@@ -4,6 +4,8 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
+import '../utils/mime_utils.dart';
+
 // ---------------------------------------------------------------------------
 // T2.4 — HttpAudioStreamer
 // Serveur HTTP shelf embarqué qui sert les fichiers audio locaux.
@@ -59,6 +61,11 @@ class HttpAudioStreamer {
 
   Future<Response> _serveTrack(Request request, String filePath) async {
     final decoded = Uri.decodeComponent(filePath);
+
+    if (decoded.contains('..') || !decoded.startsWith('/')) {
+      return Response.forbidden('Invalid path');
+    }
+
     final file = File(decoded);
 
     if (!await file.exists()) {
@@ -66,7 +73,7 @@ class HttpAudioStreamer {
     }
 
     final fileSize = await file.length();
-    final mimeType = _mimeTypeForPath(decoded);
+    final mimeType = mimeTypeForAudioPath(decoded);
     final rangeHeader = request.headers['range'];
 
     if (rangeHeader != null) {
@@ -165,17 +172,6 @@ class HttpAudioStreamer {
   String coverUrl(String localIp, String coverPath) {
     final encoded = Uri.encodeComponent(coverPath);
     return 'http://$localIp:$port/cover/$encoded';
-  }
-
-  String _mimeTypeForPath(String path) {
-    final lower = path.toLowerCase();
-    if (lower.endsWith('.flac')) return 'audio/flac';
-    if (lower.endsWith('.mp3')) return 'audio/mpeg';
-    if (lower.endsWith('.m4a') || lower.endsWith('.aac')) return 'audio/mp4';
-    if (lower.endsWith('.ogg')) return 'audio/ogg';
-    if (lower.endsWith('.wav')) return 'audio/wav';
-    if (lower.endsWith('.dsf') || lower.endsWith('.dff')) return 'audio/x-dsf';
-    return 'application/octet-stream';
   }
 
   Middleware _corsMiddleware() {

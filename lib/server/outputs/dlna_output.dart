@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 
+import '../utils/mime_utils.dart';
 import 'output_target.dart';
 
 // ---------------------------------------------------------------------------
@@ -74,7 +76,9 @@ class DLNAOutput implements OutputTarget {
       if (dlnaVol != null) {
         _volume = (dlnaVol / 100).clamp(0.0, 1.0);
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('[DLNA] Error: $_');
+    }
   }
 
   @override
@@ -226,6 +230,7 @@ class DLNAOutput implements OutputTarget {
 
       return _parseDuration(relTime);
     } catch (_) {
+      debugPrint('[DLNA] Error: $_');
       return null;
     }
   }
@@ -251,6 +256,7 @@ class DLNAOutput implements OutputTarget {
 
       return _parseDuration(dur);
     } catch (_) {
+      debugPrint('[DLNA] Error: $_');
       return null;
     }
   }
@@ -310,7 +316,7 @@ class DLNAOutput implements OutputTarget {
     final artXml = albumArtUrl != null
         ? '<upnp:albumArtURI>${_xmlEscape(albumArtUrl)}</upnp:albumArtURI>'
         : '';
-    final mime = _mimeFromUrl(url);
+    final mime = mimeTypeForAudioPath(url);
     return '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
         'xmlns:dc="http://purl.org/dc/elements/1.1/" '
         'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
@@ -364,6 +370,7 @@ class DLNAOutput implements OutputTarget {
       }
       return null;
     } catch (_) {
+      debugPrint('[DLNA] Error: $_');
       return null;
     }
   }
@@ -407,21 +414,10 @@ class DLNAOutput implements OutputTarget {
             ((parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000).round();
         return Duration(milliseconds: ms);
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('[DLNA] Error: $_');
+    }
     return null;
-  }
-
-  String _mimeFromUrl(String url) {
-    final path = url.split('?').first.toLowerCase();
-    if (path.endsWith('.flac')) return 'audio/flac';
-    if (path.endsWith('.mp3')) return 'audio/mpeg';
-    if (path.endsWith('.m4a') || path.endsWith('.aac')) return 'audio/mp4';
-    if (path.endsWith('.ogg')) return 'audio/ogg';
-    if (path.endsWith('.opus')) return 'audio/ogg; codecs=opus';
-    if (path.endsWith('.wav')) return 'audio/wav';
-    if (path.endsWith('.aiff') || path.endsWith('.aif')) return 'audio/aiff';
-    if (path.endsWith('.dsf') || path.endsWith('.dff')) return 'audio/x-dsf';
-    return 'audio/mpeg';
   }
 
   String _xmlEscape(String s) => s

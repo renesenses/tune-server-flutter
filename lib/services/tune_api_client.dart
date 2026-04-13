@@ -12,7 +12,8 @@ class TuneApiClient {
   // ---------------------------------------------------------------------------
 
   Future<dynamic> _get(String path) async {
-    final resp = await http.get(Uri.parse('$baseUrl$path'));
+    final resp = await http.get(Uri.parse('$baseUrl$path'))
+        .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
       throw Exception('GET $path failed: ${resp.statusCode}');
     }
@@ -24,7 +25,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: {'Content-Type': 'application/json'},
       body: body != null ? jsonEncode(body) : null,
-    );
+    ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw Exception('POST $path failed: ${resp.statusCode}');
     }
@@ -36,7 +37,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: {'Content-Type': 'application/json'},
       body: body != null ? jsonEncode(body) : null,
-    );
+    ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
       throw Exception('PATCH $path failed: ${resp.statusCode}');
     }
@@ -44,7 +45,8 @@ class TuneApiClient {
   }
 
   Future<void> _delete(String path) async {
-    final resp = await http.delete(Uri.parse('$baseUrl$path'));
+    final resp = await http.delete(Uri.parse('$baseUrl$path'))
+        .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200 && resp.statusCode != 204) {
       throw Exception('DELETE $path failed: ${resp.statusCode}');
     }

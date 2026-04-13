@@ -39,6 +39,12 @@ class _BootstrapAppState extends State<_BootstrapApp> {
     _initServer();
   }
 
+  @override
+  void dispose() {
+    _appState?.dispose();
+    super.dispose();
+  }
+
   Future<void> _initServer() async {
     try {
       final appState = await AppState.create();
