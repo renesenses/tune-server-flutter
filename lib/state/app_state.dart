@@ -600,8 +600,8 @@ class AppState extends ChangeNotifier {
       device: device,
     );
     await _refreshZones();
-    zoneState.setCurrentZoneId(instance.id);
-    return instance.id;
+    zoneState.setCurrentZoneId(instance.zone.id);
+    return instance.zone.id;
   }
 
   Future<void> deleteZone(int zoneId) async {

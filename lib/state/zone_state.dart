@@ -75,8 +75,6 @@ class ZoneState extends ChangeNotifier {
   void setCurrentZoneId(int id) {
     if (_currentZoneId == id) return;
     _currentZoneId = id;
-    // Reset timeline when changing zone
-    seekPositionMs = 0;
     notifyListeners();
   }
 
