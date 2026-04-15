@@ -356,6 +356,44 @@ class TuneApiClient {
   Future<Map<String, dynamic>> mergeAlbumDuplicates() =>
       _post('/library/albums/merge-duplicates').then((d) => d as Map<String, dynamic>);
 
+  // Merge specific albums by IDs
+
+  Future<Map<String, dynamic>> mergeAlbums(List<int> albumIds) =>
+      _post('/metadata/albums/merge', body: {'album_ids': albumIds})
+          .then((d) => d as Map<String, dynamic>);
+
+  // Write tags to disk for a single album
+
+  Future<Map<String, dynamic>> writeAlbumTags(int albumId) =>
+      _post('/metadata/albums/$albumId/write-tags')
+          .then((d) => d as Map<String, dynamic>);
+
+  // Doubtful albums
+
+  Future<List<dynamic>> getDoubtfulAlbums() =>
+      _get('/metadata/doubtful').then((d) => d as List);
+
+  // Upload album artwork (multipart)
+
+  Future<Map<String, dynamic>> uploadAlbumArtwork(int albumId, String filePath) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/library/albums/$albumId/artwork'),
+    );
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    final streamed = await request.send().timeout(const Duration(seconds: 60));
+    final resp = await http.Response.fromStream(streamed);
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      throw Exception('Upload artwork failed: ${resp.statusCode}');
+    }
+    return resp.body.isNotEmpty ? jsonDecode(resp.body) as Map<String, dynamic> : {};
+  }
+
+  // Get all albums (large limit for metadata views)
+
+  Future<List<dynamic>> getAllAlbums() =>
+      _get('/library/albums?limit=10000').then((d) => d as List);
+
   // ---------------------------------------------------------------------------
   // ── Zone Manager ──
   // ---------------------------------------------------------------------------

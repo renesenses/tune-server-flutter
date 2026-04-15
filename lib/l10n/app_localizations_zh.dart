@@ -897,4 +897,110 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get zonesGroupDissolved => '分组已解散';
+
+  @override
+  String get metadataSectionEnrich => '丰富';
+
+  @override
+  String get metadataSectionDuplicates => '重复';
+
+  @override
+  String get metadataSectionCorrect => '修正';
+
+  @override
+  String get metadataFilterAll => '全部';
+
+  @override
+  String get metadataFilterMissingCover => '缺少封面';
+
+  @override
+  String get metadataFilterMissingGenre => '缺少流派';
+
+  @override
+  String get metadataFilterMissingYear => '缺少年份';
+
+  @override
+  String get metadataFilterMissingArtist => '缺少艺术家';
+
+  @override
+  String get metadataFilterDoubtful => '可疑';
+
+  @override
+  String get metadataSearchHint => '搜索专辑…';
+
+  @override
+  String get metadataArtistFilter => '艺术家';
+
+  @override
+  String get metadataGenreFilter => '流派';
+
+  @override
+  String get metadataAllArtists => '所有艺术家';
+
+  @override
+  String get metadataAllGenres => '所有流派';
+
+  @override
+  String get metadataNoAlbums => '没有匹配的专辑';
+
+  @override
+  String get metadataEditAlbum => '编辑专辑';
+
+  @override
+  String get metadataSaveChanges => '保存';
+
+  @override
+  String get metadataWriteTags => '写入标签';
+
+  @override
+  String metadataWriteTagsSuccess(int count) {
+    return '标签已写入：$count个文件';
+  }
+
+  @override
+  String get metadataMergeGroup => '合并';
+
+  @override
+  String metadataMergeConfirm(int count) {
+    return '合并这$count个专辑？曲目最多的专辑将被保留。';
+  }
+
+  @override
+  String metadataMergeSuccess(int moved, int total) {
+    return '已合并：移动了$moved首曲目，共$total首';
+  }
+
+  @override
+  String get metadataUploadCover => '上传封面';
+
+  @override
+  String get metadataCoverUploaded => '封面已上传';
+
+  @override
+  String get metadataAlbumSaved => '专辑已保存';
+
+  @override
+  String metadataDupAlbums(int count) {
+    return '$count个重复专辑';
+  }
+
+  @override
+  String get metadataDoubtfulReasons => '问题';
+
+  @override
+  String get metadataArtistField => '艺术家';
+
+  @override
+  String get metadataAlbumField => '专辑';
+
+  @override
+  String get metadataGenreField => '流派';
+
+  @override
+  String get metadataYearField => '年份';
+
+  @override
+  String metadataTracksCount(int count) {
+    return '$count首曲目';
+  }
 }

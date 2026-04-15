@@ -1837,6 +1837,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group dissolved'**
   String get zonesGroupDissolved;
+
+  /// No description provided for @metadataSectionEnrich.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrich'**
+  String get metadataSectionEnrich;
+
+  /// No description provided for @metadataSectionDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicates'**
+  String get metadataSectionDuplicates;
+
+  /// No description provided for @metadataSectionCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get metadataSectionCorrect;
+
+  /// No description provided for @metadataFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get metadataFilterAll;
+
+  /// No description provided for @metadataFilterMissingCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing covers'**
+  String get metadataFilterMissingCover;
+
+  /// No description provided for @metadataFilterMissingGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing genre'**
+  String get metadataFilterMissingGenre;
+
+  /// No description provided for @metadataFilterMissingYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing year'**
+  String get metadataFilterMissingYear;
+
+  /// No description provided for @metadataFilterMissingArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing artist'**
+  String get metadataFilterMissingArtist;
+
+  /// No description provided for @metadataFilterDoubtful.
+  ///
+  /// In en, this message translates to:
+  /// **'Doubtful'**
+  String get metadataFilterDoubtful;
+
+  /// No description provided for @metadataSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search albums…'**
+  String get metadataSearchHint;
+
+  /// No description provided for @metadataArtistFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get metadataArtistFilter;
+
+  /// No description provided for @metadataGenreFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get metadataGenreFilter;
+
+  /// No description provided for @metadataAllArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'All artists'**
+  String get metadataAllArtists;
+
+  /// No description provided for @metadataAllGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'All genres'**
+  String get metadataAllGenres;
+
+  /// No description provided for @metadataNoAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'No albums match'**
+  String get metadataNoAlbums;
+
+  /// No description provided for @metadataEditAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit album'**
+  String get metadataEditAlbum;
+
+  /// No description provided for @metadataSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get metadataSaveChanges;
+
+  /// No description provided for @metadataWriteTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Tags'**
+  String get metadataWriteTags;
+
+  /// No description provided for @metadataWriteTagsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags written: {count} files'**
+  String metadataWriteTagsSuccess(int count);
+
+  /// No description provided for @metadataMergeGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get metadataMergeGroup;
+
+  /// No description provided for @metadataMergeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge these {count} albums into one? The album with the most tracks will be kept.'**
+  String metadataMergeConfirm(int count);
+
+  /// No description provided for @metadataMergeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged: {moved} tracks moved, {total} total'**
+  String metadataMergeSuccess(int moved, int total);
+
+  /// No description provided for @metadataUploadCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload cover'**
+  String get metadataUploadCover;
+
+  /// No description provided for @metadataCoverUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover uploaded'**
+  String get metadataCoverUploaded;
+
+  /// No description provided for @metadataAlbumSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Album saved'**
+  String get metadataAlbumSaved;
+
+  /// No description provided for @metadataDupAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} duplicate albums'**
+  String metadataDupAlbums(int count);
+
+  /// No description provided for @metadataDoubtfulReasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues'**
+  String get metadataDoubtfulReasons;
+
+  /// No description provided for @metadataArtistField.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get metadataArtistField;
+
+  /// No description provided for @metadataAlbumField.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get metadataAlbumField;
+
+  /// No description provided for @metadataGenreField.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get metadataGenreField;
+
+  /// No description provided for @metadataYearField.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get metadataYearField;
+
+  /// No description provided for @metadataTracksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks'**
+  String metadataTracksCount(int count);
 }
 
 class _AppLocalizationsDelegate

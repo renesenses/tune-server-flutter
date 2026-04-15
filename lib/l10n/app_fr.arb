@@ -334,5 +334,57 @@
   "zonesGroupNoZones": "Aucun groupe actif",
   "zonesGroupNeedTwo": "Sélectionnez au moins 2 zones",
   "zonesGroupCreated": "Groupe créé",
-  "zonesGroupDissolved": "Groupe dissous"
+  "zonesGroupDissolved": "Groupe dissous",
+
+  "metadataSectionEnrich": "Enrichir",
+  "metadataSectionDuplicates": "Doublons",
+  "metadataSectionCorrect": "Corriger",
+  "metadataFilterAll": "Tous",
+  "metadataFilterMissingCover": "Covers manquantes",
+  "metadataFilterMissingGenre": "Genre manquant",
+  "metadataFilterMissingYear": "Année manquante",
+  "metadataFilterMissingArtist": "Artiste manquant",
+  "metadataFilterDoubtful": "Douteux",
+  "metadataSearchHint": "Rechercher des albums\u2026",
+  "metadataArtistFilter": "Artiste",
+  "metadataGenreFilter": "Genre",
+  "metadataAllArtists": "Tous les artistes",
+  "metadataAllGenres": "Tous les genres",
+  "metadataNoAlbums": "Aucun album correspondant",
+  "metadataEditAlbum": "Modifier l'album",
+  "metadataSaveChanges": "Enregistrer",
+  "metadataWriteTags": "Graver tags",
+  "metadataWriteTagsSuccess": "Tags gravés : {count} fichiers",
+  "@metadataWriteTagsSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataMergeGroup": "Fusionner",
+  "metadataMergeConfirm": "Fusionner ces {count} albums en un seul ? L'album avec le plus de pistes sera conservé.",
+  "@metadataMergeConfirm": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataMergeSuccess": "Fusionné : {moved} pistes déplacées, {total} au total",
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "metadataUploadCover": "Uploader la cover",
+  "metadataCoverUploaded": "Cover uploadée",
+  "metadataAlbumSaved": "Album enregistré",
+  "metadataFolderPath": "Chemin du dossier",
+  "metadataDupAlbums": "{count} albums en double",
+  "@metadataDupAlbums": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataDoubtfulReasons": "Problèmes",
+  "metadataArtistField": "Artiste",
+  "metadataAlbumField": "Album",
+  "metadataGenreField": "Genre",
+  "metadataYearField": "Année",
+  "metadataTracksCount": "{count} pistes",
+  "@metadataTracksCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

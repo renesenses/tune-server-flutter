@@ -358,5 +358,57 @@
   "zonesGroupNoZones": "No active groups",
   "zonesGroupNeedTwo": "Select at least 2 zones",
   "zonesGroupCreated": "Group created",
-  "zonesGroupDissolved": "Group dissolved"
+  "zonesGroupDissolved": "Group dissolved",
+
+  "metadataSectionEnrich": "Enrich",
+  "metadataSectionDuplicates": "Duplicates",
+  "metadataSectionCorrect": "Correct",
+  "metadataFilterAll": "All",
+  "metadataFilterMissingCover": "Missing covers",
+  "metadataFilterMissingGenre": "Missing genre",
+  "metadataFilterMissingYear": "Missing year",
+  "metadataFilterMissingArtist": "Missing artist",
+  "metadataFilterDoubtful": "Doubtful",
+  "metadataSearchHint": "Search albums\u2026",
+  "metadataArtistFilter": "Artist",
+  "metadataGenreFilter": "Genre",
+  "metadataAllArtists": "All artists",
+  "metadataAllGenres": "All genres",
+  "metadataNoAlbums": "No albums match",
+  "metadataEditAlbum": "Edit album",
+  "metadataSaveChanges": "Save",
+  "metadataWriteTags": "Write Tags",
+  "metadataWriteTagsSuccess": "Tags written: {count} files",
+  "@metadataWriteTagsSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataMergeGroup": "Merge",
+  "metadataMergeConfirm": "Merge these {count} albums into one? The album with the most tracks will be kept.",
+  "@metadataMergeConfirm": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataMergeSuccess": "Merged: {moved} tracks moved, {total} total",
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "metadataUploadCover": "Upload cover",
+  "metadataCoverUploaded": "Cover uploaded",
+  "metadataAlbumSaved": "Album saved",
+  "metadataFolderPath": "Folder path",
+  "metadataDupAlbums": "{count} duplicate albums",
+  "@metadataDupAlbums": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "metadataDoubtfulReasons": "Issues",
+  "metadataArtistField": "Artist",
+  "metadataAlbumField": "Album",
+  "metadataGenreField": "Genre",
+  "metadataYearField": "Year",
+  "metadataTracksCount": "{count} tracks",
+  "@metadataTracksCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

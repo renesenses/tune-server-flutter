@@ -900,4 +900,110 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get zonesGroupDissolved => '그룹 해제됨';
+
+  @override
+  String get metadataSectionEnrich => '보강';
+
+  @override
+  String get metadataSectionDuplicates => '중복';
+
+  @override
+  String get metadataSectionCorrect => '수정';
+
+  @override
+  String get metadataFilterAll => '전체';
+
+  @override
+  String get metadataFilterMissingCover => '커버 없음';
+
+  @override
+  String get metadataFilterMissingGenre => '장르 없음';
+
+  @override
+  String get metadataFilterMissingYear => '연도 없음';
+
+  @override
+  String get metadataFilterMissingArtist => '아티스트 없음';
+
+  @override
+  String get metadataFilterDoubtful => '의심스러운';
+
+  @override
+  String get metadataSearchHint => '앨범 검색…';
+
+  @override
+  String get metadataArtistFilter => '아티스트';
+
+  @override
+  String get metadataGenreFilter => '장르';
+
+  @override
+  String get metadataAllArtists => '모든 아티스트';
+
+  @override
+  String get metadataAllGenres => '모든 장르';
+
+  @override
+  String get metadataNoAlbums => '일치하는 앨범 없음';
+
+  @override
+  String get metadataEditAlbum => '앨범 편집';
+
+  @override
+  String get metadataSaveChanges => '저장';
+
+  @override
+  String get metadataWriteTags => '태그 쓰기';
+
+  @override
+  String metadataWriteTagsSuccess(int count) {
+    return '태그 작성 완료: $count개 파일';
+  }
+
+  @override
+  String get metadataMergeGroup => '병합';
+
+  @override
+  String metadataMergeConfirm(int count) {
+    return '이 $count개 앨범을 병합하시겠습니까? 트랙이 가장 많은 앨범이 유지됩니다.';
+  }
+
+  @override
+  String metadataMergeSuccess(int moved, int total) {
+    return '병합 완료: $moved개 트랙 이동, 총 $total개';
+  }
+
+  @override
+  String get metadataUploadCover => '커버 업로드';
+
+  @override
+  String get metadataCoverUploaded => '커버 업로드 완료';
+
+  @override
+  String get metadataAlbumSaved => '앨범 저장됨';
+
+  @override
+  String metadataDupAlbums(int count) {
+    return '$count개 중복 앨범';
+  }
+
+  @override
+  String get metadataDoubtfulReasons => '문제';
+
+  @override
+  String get metadataArtistField => '아티스트';
+
+  @override
+  String get metadataAlbumField => '앨범';
+
+  @override
+  String get metadataGenreField => '장르';
+
+  @override
+  String get metadataYearField => '연도';
+
+  @override
+  String metadataTracksCount(int count) {
+    return '$count개 트랙';
+  }
 }

@@ -905,4 +905,110 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get zonesGroupDissolved => 'Gruppe aufgelöst';
+
+  @override
+  String get metadataSectionEnrich => 'Anreichern';
+
+  @override
+  String get metadataSectionDuplicates => 'Duplikate';
+
+  @override
+  String get metadataSectionCorrect => 'Korrigieren';
+
+  @override
+  String get metadataFilterAll => 'Alle';
+
+  @override
+  String get metadataFilterMissingCover => 'Fehlende Cover';
+
+  @override
+  String get metadataFilterMissingGenre => 'Fehlendes Genre';
+
+  @override
+  String get metadataFilterMissingYear => 'Fehlendes Jahr';
+
+  @override
+  String get metadataFilterMissingArtist => 'Fehlender Künstler';
+
+  @override
+  String get metadataFilterDoubtful => 'Zweifelhaft';
+
+  @override
+  String get metadataSearchHint => 'Alben suchen…';
+
+  @override
+  String get metadataArtistFilter => 'Künstler';
+
+  @override
+  String get metadataGenreFilter => 'Genre';
+
+  @override
+  String get metadataAllArtists => 'Alle Künstler';
+
+  @override
+  String get metadataAllGenres => 'Alle Genres';
+
+  @override
+  String get metadataNoAlbums => 'Keine passenden Alben';
+
+  @override
+  String get metadataEditAlbum => 'Album bearbeiten';
+
+  @override
+  String get metadataSaveChanges => 'Speichern';
+
+  @override
+  String get metadataWriteTags => 'Tags schreiben';
+
+  @override
+  String metadataWriteTagsSuccess(int count) {
+    return 'Tags geschrieben: $count Dateien';
+  }
+
+  @override
+  String get metadataMergeGroup => 'Zusammenführen';
+
+  @override
+  String metadataMergeConfirm(int count) {
+    return 'Diese $count Alben zusammenführen? Das Album mit den meisten Tracks wird beibehalten.';
+  }
+
+  @override
+  String metadataMergeSuccess(int moved, int total) {
+    return 'Zusammengeführt: $moved Tracks verschoben, $total gesamt';
+  }
+
+  @override
+  String get metadataUploadCover => 'Cover hochladen';
+
+  @override
+  String get metadataCoverUploaded => 'Cover hochgeladen';
+
+  @override
+  String get metadataAlbumSaved => 'Album gespeichert';
+
+  @override
+  String metadataDupAlbums(int count) {
+    return '$count doppelte Alben';
+  }
+
+  @override
+  String get metadataDoubtfulReasons => 'Probleme';
+
+  @override
+  String get metadataArtistField => 'Künstler';
+
+  @override
+  String get metadataAlbumField => 'Album';
+
+  @override
+  String get metadataGenreField => 'Genre';
+
+  @override
+  String get metadataYearField => 'Jahr';
+
+  @override
+  String metadataTracksCount(int count) {
+    return '$count Tracks';
+  }
 }
