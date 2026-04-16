@@ -609,11 +609,12 @@ class _OutputPickerSheet extends StatelessWidget {
           ),
           const Divider(height: 1, indent: 56),
 
-          // Bluetooth
+          // Bluetooth — relies on system audio settings (iOS/Android can't
+          // enumerate or pick a specific BT audio device programmatically).
           _OutputOption(
             icon: Icons.bluetooth_rounded,
             label: l.zonesOutputBluetooth,
-            subtitle: 'Casque ou enceinte Bluetooth',
+            subtitle: 'Utilise la sortie système (Centre de contrôle)',
             isSelected: currentType == OutputType.bluetooth,
             onTap: () {
               context
