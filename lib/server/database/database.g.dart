@@ -1298,6 +1298,21 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _favoriteMeta = const VerificationMeta(
+    'favorite',
+  );
+  @override
+  late final GeneratedColumn<bool> favorite = GeneratedColumn<bool>(
+    'favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1317,6 +1332,7 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     coverPath,
     source,
     sourceId,
+    favorite,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1434,6 +1450,12 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
       );
     }
+    if (data.containsKey('favorite')) {
+      context.handle(
+        _favoriteMeta,
+        favorite.isAcceptableOrUnknown(data['favorite']!, _favoriteMeta),
+      );
+    }
     return context;
   }
 
@@ -1511,6 +1533,10 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         DriftSqlType.string,
         data['${effectivePrefix}source_id'],
       ),
+      favorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}favorite'],
+      )!,
     );
   }
 
@@ -1538,6 +1564,9 @@ class Track extends DataClass implements Insertable<Track> {
   final String? coverPath;
   final String source;
   final String? sourceId;
+
+  /// Marque la piste comme favori (migration v5)
+  final bool favorite;
   const Track({
     required this.id,
     required this.title,
@@ -1556,6 +1585,7 @@ class Track extends DataClass implements Insertable<Track> {
     this.coverPath,
     required this.source,
     this.sourceId,
+    required this.favorite,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1605,6 +1635,7 @@ class Track extends DataClass implements Insertable<Track> {
     if (!nullToAbsent || sourceId != null) {
       map['source_id'] = Variable<String>(sourceId);
     }
+    map['favorite'] = Variable<bool>(favorite);
     return map;
   }
 
@@ -1655,6 +1686,7 @@ class Track extends DataClass implements Insertable<Track> {
       sourceId: sourceId == null && nullToAbsent
           ? const Value.absent()
           : Value(sourceId),
+      favorite: Value(favorite),
     );
   }
 
@@ -1681,6 +1713,7 @@ class Track extends DataClass implements Insertable<Track> {
       coverPath: serializer.fromJson<String?>(json['coverPath']),
       source: serializer.fromJson<String>(json['source']),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
+      favorite: serializer.fromJson<bool>(json['favorite']),
     );
   }
   @override
@@ -1704,6 +1737,7 @@ class Track extends DataClass implements Insertable<Track> {
       'coverPath': serializer.toJson<String?>(coverPath),
       'source': serializer.toJson<String>(source),
       'sourceId': serializer.toJson<String?>(sourceId),
+      'favorite': serializer.toJson<bool>(favorite),
     };
   }
 
@@ -1725,6 +1759,7 @@ class Track extends DataClass implements Insertable<Track> {
     Value<String?> coverPath = const Value.absent(),
     String? source,
     Value<String?> sourceId = const Value.absent(),
+    bool? favorite,
   }) => Track(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1743,6 +1778,7 @@ class Track extends DataClass implements Insertable<Track> {
     coverPath: coverPath.present ? coverPath.value : this.coverPath,
     source: source ?? this.source,
     sourceId: sourceId.present ? sourceId.value : this.sourceId,
+    favorite: favorite ?? this.favorite,
   );
   Track copyWithCompanion(TracksCompanion data) {
     return Track(
@@ -1775,6 +1811,7 @@ class Track extends DataClass implements Insertable<Track> {
       coverPath: data.coverPath.present ? data.coverPath.value : this.coverPath,
       source: data.source.present ? data.source.value : this.source,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      favorite: data.favorite.present ? data.favorite.value : this.favorite,
     );
   }
 
@@ -1797,7 +1834,8 @@ class Track extends DataClass implements Insertable<Track> {
           ..write('channels: $channels, ')
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
-          ..write('sourceId: $sourceId')
+          ..write('sourceId: $sourceId, ')
+          ..write('favorite: $favorite')
           ..write(')'))
         .toString();
   }
@@ -1821,6 +1859,7 @@ class Track extends DataClass implements Insertable<Track> {
     coverPath,
     source,
     sourceId,
+    favorite,
   );
   @override
   bool operator ==(Object other) =>
@@ -1842,7 +1881,8 @@ class Track extends DataClass implements Insertable<Track> {
           other.channels == this.channels &&
           other.coverPath == this.coverPath &&
           other.source == this.source &&
-          other.sourceId == this.sourceId);
+          other.sourceId == this.sourceId &&
+          other.favorite == this.favorite);
 }
 
 class TracksCompanion extends UpdateCompanion<Track> {
@@ -1863,6 +1903,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
   final Value<String?> coverPath;
   final Value<String> source;
   final Value<String?> sourceId;
+  final Value<bool> favorite;
   const TracksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1881,6 +1922,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.coverPath = const Value.absent(),
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
+    this.favorite = const Value.absent(),
   });
   TracksCompanion.insert({
     this.id = const Value.absent(),
@@ -1900,6 +1942,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.coverPath = const Value.absent(),
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
+    this.favorite = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Track> custom({
     Expression<int>? id,
@@ -1919,6 +1962,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Expression<String>? coverPath,
     Expression<String>? source,
     Expression<String>? sourceId,
+    Expression<bool>? favorite,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1938,6 +1982,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       if (coverPath != null) 'cover_path': coverPath,
       if (source != null) 'source': source,
       if (sourceId != null) 'source_id': sourceId,
+      if (favorite != null) 'favorite': favorite,
     });
   }
 
@@ -1959,6 +2004,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Value<String?>? coverPath,
     Value<String>? source,
     Value<String?>? sourceId,
+    Value<bool>? favorite,
   }) {
     return TracksCompanion(
       id: id ?? this.id,
@@ -1978,6 +2024,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       coverPath: coverPath ?? this.coverPath,
       source: source ?? this.source,
       sourceId: sourceId ?? this.sourceId,
+      favorite: favorite ?? this.favorite,
     );
   }
 
@@ -2035,6 +2082,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
     if (sourceId.present) {
       map['source_id'] = Variable<String>(sourceId.value);
     }
+    if (favorite.present) {
+      map['favorite'] = Variable<bool>(favorite.value);
+    }
     return map;
   }
 
@@ -2057,7 +2107,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
           ..write('channels: $channels, ')
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
-          ..write('sourceId: $sourceId')
+          ..write('sourceId: $sourceId, ')
+          ..write('favorite: $favorite')
           ..write(')'))
         .toString();
   }
@@ -6851,6 +6902,7 @@ typedef $$TracksTableCreateCompanionBuilder =
       Value<String?> coverPath,
       Value<String> source,
       Value<String?> sourceId,
+      Value<bool> favorite,
     });
 typedef $$TracksTableUpdateCompanionBuilder =
     TracksCompanion Function({
@@ -6871,6 +6923,7 @@ typedef $$TracksTableUpdateCompanionBuilder =
       Value<String?> coverPath,
       Value<String> source,
       Value<String?> sourceId,
+      Value<bool> favorite,
     });
 
 final class $$TracksTableReferences
@@ -7012,6 +7065,11 @@ class $$TracksTableFilterComposer
 
   ColumnFilters<String> get sourceId => $composableBuilder(
     column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get favorite => $composableBuilder(
+    column: $table.favorite,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7171,6 +7229,11 @@ class $$TracksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get favorite => $composableBuilder(
+    column: $table.favorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AlbumsTableOrderingComposer get albumId {
     final $$AlbumsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7283,6 +7346,9 @@ class $$TracksTableAnnotationComposer
 
   GeneratedColumn<String> get sourceId =>
       $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get favorite =>
+      $composableBuilder(column: $table.favorite, builder: (column) => column);
 
   $$AlbumsTableAnnotationComposer get albumId {
     final $$AlbumsTableAnnotationComposer composer = $composerBuilder(
@@ -7405,6 +7471,7 @@ class $$TracksTableTableManager
                 Value<String?> coverPath = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
+                Value<bool> favorite = const Value.absent(),
               }) => TracksCompanion(
                 id: id,
                 title: title,
@@ -7423,6 +7490,7 @@ class $$TracksTableTableManager
                 coverPath: coverPath,
                 source: source,
                 sourceId: sourceId,
+                favorite: favorite,
               ),
           createCompanionCallback:
               ({
@@ -7443,6 +7511,7 @@ class $$TracksTableTableManager
                 Value<String?> coverPath = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
+                Value<bool> favorite = const Value.absent(),
               }) => TracksCompanion.insert(
                 id: id,
                 title: title,
@@ -7461,6 +7530,7 @@ class $$TracksTableTableManager
                 coverPath: coverPath,
                 source: source,
                 sourceId: sourceId,
+                favorite: favorite,
               ),
           withReferenceMapper: (p0) => p0
               .map(

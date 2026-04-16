@@ -612,14 +612,26 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
   bool _mergeDedup = true;
   bool _merging = false;
 
+  LibraryState? _libraryState;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _libraryState = context.read<LibraryState>();
+      _libraryState!.addListener(_onLibraryChanged);
+      _load();
+    });
+  }
+
+  void _onLibraryChanged() {
+    // Reload when local playlists are created/deleted/modified.
+    if (mounted) _load();
   }
 
   @override
   void dispose() {
+    _libraryState?.removeListener(_onLibraryChanged);
     _searchCtrl.dispose();
     _mergeNameCtrl.dispose();
     super.dispose();
@@ -627,47 +639,63 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
 
   Future<void> _load() async {
     final app = context.read<AppState>();
-    if (app.apiClient == null) return;
     setState(() => _loading = true);
     final items = <_PlaylistItem>[];
 
-    // Local
-    try {
-      final local = await app.apiClient!.getPlaylists();
-      for (final p in local) {
-        final m = p as Map<String, dynamic>;
-        items.add(_PlaylistItem(
-          service: 'local',
-          id: '${m['id']}',
-          name: m['name'] as String? ?? '—',
-          trackCount: m['track_count'] as int? ?? 0,
-          coverPath: m['cover_path'] as String?,
-          raw: m,
-        ));
-      }
-    } catch (_) {}
-
-    // Streaming — fetch authenticated services concurrently
-    final services = context.read<LibraryState>().streamingServices
-        .where((s) => s.authenticated)
-        .map((s) => s.serviceId)
-        .toList();
-    await Future.wait(services.map((svc) async {
+    // Local — use API in remote mode, LibraryState (drift) in embedded mode
+    if (app.apiClient != null) {
       try {
-        final pls = await app.apiClient!.getStreamingPlaylists(svc);
-        for (final p in pls) {
+        final local = await app.apiClient!.getPlaylists();
+        for (final p in local) {
           final m = p as Map<String, dynamic>;
           items.add(_PlaylistItem(
-            service: svc,
-            id: '${m['source_id'] ?? m['id'] ?? ''}',
+            service: 'local',
+            id: '${m['id']}',
             name: m['name'] as String? ?? '—',
             trackCount: m['track_count'] as int? ?? 0,
-            coverPath: m['cover_path'] as String? ?? m['artwork_url'] as String?,
+            coverPath: m['cover_path'] as String?,
             raw: m,
           ));
         }
       } catch (_) {}
-    }));
+    } else {
+      // Embedded server mode: read directly from local DB via LibraryState
+      final localPlaylists = context.read<LibraryState>().playlists;
+      for (final p in localPlaylists) {
+        items.add(_PlaylistItem(
+          service: 'local',
+          id: '${p.id}',
+          name: p.name,
+          trackCount: p.trackCount,
+          coverPath: null,
+          raw: {'id': p.id, 'name': p.name, 'track_count': p.trackCount},
+        ));
+      }
+    }
+
+    // Streaming — only available when apiClient is connected
+    if (app.apiClient != null) {
+      final services = context.read<LibraryState>().streamingServices
+          .where((s) => s.authenticated)
+          .map((s) => s.serviceId)
+          .toList();
+      await Future.wait(services.map((svc) async {
+        try {
+          final pls = await app.apiClient!.getStreamingPlaylists(svc);
+          for (final p in pls) {
+            final m = p as Map<String, dynamic>;
+            items.add(_PlaylistItem(
+              service: svc,
+              id: '${m['source_id'] ?? m['id'] ?? ''}',
+              name: m['name'] as String? ?? '—',
+              trackCount: m['track_count'] as int? ?? 0,
+              coverPath: m['cover_path'] as String? ?? m['artwork_url'] as String?,
+              raw: m,
+            ));
+          }
+        } catch (_) {}
+      }));
+    }
 
     if (!mounted) return;
     setState(() {

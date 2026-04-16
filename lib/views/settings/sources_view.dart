@@ -145,16 +145,26 @@ class _ServerTile extends StatelessWidget {
           icon: Icons.storage_rounded,
           available: device.available,
         ),
-        title: Text(device.name, style: TuneFonts.body),
+        title: Text(
+          device.name,
+          style: TuneFonts.body,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           '${device.host}:${device.port}',
           style: TuneFonts.caption,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: lib.isScanning && lib.scanningDeviceId == device.id
             ? _ScanProgress(progress: lib.scanProgress)
             : _IndexButton(
                 onTap: lib.isScanning ? null : () => context.read<AppState>().indexUPnPServer(device),
-                label: l.sourcesIndexBtn,
+                label: lib.isDeviceIndexed(device.id)
+                    ? l.sourcesRescanBtn
+                    : l.sourcesIndexBtn,
+                indexed: lib.isDeviceIndexed(device.id),
               ),
       ),
     );
@@ -233,23 +243,35 @@ class _RendererTile extends StatelessWidget {
           icon: Icons.cast_rounded,
           available: device.available || isAssigned,
         ),
-        title: Text(device.name, style: TuneFonts.body),
+        title: Text(
+          device.name,
+          style: TuneFonts.body,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           '${device.host}:${device.port}',
           style: TuneFonts.caption,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                badgeLabel,
-                style: TuneFonts.caption.copyWith(color: badgeColor),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badgeLabel,
+                  style: TuneFonts.caption.copyWith(color: badgeColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
             if (!isAssigned && device.available)
@@ -524,24 +546,39 @@ class _ForgetBackground extends StatelessWidget {
 class _IndexButton extends StatelessWidget {
   final VoidCallback? onTap;
   final String label;
-  const _IndexButton({required this.onTap, required this.label});
+  final bool indexed;
+  const _IndexButton({
+    required this.onTap,
+    required this.label,
+    this.indexed = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
+    final foreground =
+        indexed ? TuneColors.textSecondary : TuneColors.accent;
+    final borderColor = onTap == null
+        ? TuneColors.textTertiary.withValues(alpha: 0.3)
+        : (indexed
+            ? TuneColors.textSecondary.withValues(alpha: 0.4)
+            : TuneColors.accent.withValues(alpha: 0.4));
+    return TextButton.icon(
       onPressed: onTap,
+      icon: Icon(
+        indexed
+            ? Icons.refresh_rounded
+            : Icons.download_for_offline_outlined,
+        size: 14,
+        color: foreground,
+      ),
+      label: Text(label, style: TuneFonts.caption),
       style: TextButton.styleFrom(
-        foregroundColor: TuneColors.accent,
+        foregroundColor: foreground,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        side: BorderSide(
-          color: onTap != null
-              ? TuneColors.accent.withValues(alpha: 0.4)
-              : TuneColors.textTertiary.withValues(alpha: 0.3),
-        ),
+        side: BorderSide(color: borderColor),
       ),
-      child: Text(label, style: TuneFonts.caption),
     );
   }
 }

@@ -48,6 +48,7 @@ Track trackFromJson(Map<String, dynamic> j) => Track(
       coverPath: j['cover_path'] as String?,
       source: j['source'] as String? ?? 'local',
       sourceId: j['source_id'] as String?,
+      favorite: j['favorite'] as bool? ?? false,
     );
 
 Radio radioFromJson(Map<String, dynamic> j) => Radio(

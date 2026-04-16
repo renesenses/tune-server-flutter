@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/enums.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
+import '../../state/library_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/skip_button.dart';
@@ -367,17 +368,31 @@ class _TrackInfo extends StatelessWidget {
             },
           )
         else if (track?.id != null && track!.id != 0)
-          IconButton(
-            icon: const Icon(Icons.favorite_border_rounded),
-            color: TuneColors.textSecondary,
-            iconSize: 28,
-            tooltip: 'Favorite',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Ajouté aux favoris'),
-                  duration: Duration(seconds: 2),
-                ),
+          Consumer<LibraryState>(
+            builder: (ctx, lib, _) {
+              final isFav = track!.favorite || lib.isTrackFavorite(track!.id);
+              return IconButton(
+                icon: Icon(isFav
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded),
+                color: isFav ? TuneColors.accent : TuneColors.textSecondary,
+                iconSize: 28,
+                tooltip: 'Favorite',
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final l = AppLocalizations.of(context);
+                  final added = await app.toggleTrackFavorite(track!.id);
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(added
+                          ? l.favoriteAdded
+                          : l.favoriteRemoved),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor:
+                          added ? TuneColors.accent : TuneColors.surfaceHigh,
+                    ),
+                  );
+                },
               );
             },
           ),

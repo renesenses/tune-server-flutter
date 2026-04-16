@@ -66,6 +66,9 @@ class Tracks extends Table {
   TextColumn get coverPath => text().nullable()();
   TextColumn get source => text().withDefault(const Constant('local'))();
   TextColumn get sourceId => text().nullable()();
+  /// Marque la piste comme favori (migration v5)
+  BoolColumn get favorite =>
+      boolean().withDefault(const Constant(false))();
 }
 
 // ---------------------------------------------------------------------------

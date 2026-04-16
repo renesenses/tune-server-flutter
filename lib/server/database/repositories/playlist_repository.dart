@@ -57,7 +57,18 @@ class PlaylistRepository {
   }
 
   /// Ajoute une piste en fin de playlist.
-  Future<void> addTrack(int playlistId, int trackId) async {
+  /// Retourne `true` si la piste a été ajoutée, `false` si elle était déjà présente.
+  Future<bool> addTrack(int playlistId, int trackId) async {
+    final already = await (_db.select(_db.playlistTracks)
+          ..where(
+            (pt) =>
+                pt.playlistId.equals(playlistId) &
+                pt.trackId.equals(trackId),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (already != null) return false;
+
     final maxPos = await _db
         .customSelect(
           'SELECT COALESCE(MAX(position), -1) AS m FROM playlist_tracks WHERE playlist_id = ?',
@@ -74,6 +85,7 @@ class PlaylistRepository {
           ),
         );
     await _updateTrackCount(playlistId);
+    return true;
   }
 
   /// Supprime une piste d'une playlist.

@@ -110,12 +110,32 @@ class _BootstrapAppState extends State<_BootstrapApp> {
 class TuneServerApp extends StatelessWidget {
   const TuneServerApp({super.key});
 
+  ThemeMode _themeModeFrom(String value) {
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  Locale? _localeFrom(String? code) {
+    if (code == null || code.isEmpty || code == 'system') return null;
+    return Locale(code);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsState>();
     return MaterialApp(
       title: 'Tune Server',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: _themeModeFrom(settings.theme),
+      locale: _localeFrom(settings.language),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

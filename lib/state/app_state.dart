@@ -39,6 +39,16 @@ class AppState extends ChangeNotifier {
   bool _serverStarted = false;
   String? _errorMessage;
 
+  /// Dernière erreur de lecture (ex: aucune zone sélectionnée).
+  /// Les vues peuvent l'observer pour afficher un SnackBar.
+  String? _lastPlaybackError;
+  String? get lastPlaybackError => _lastPlaybackError;
+  void clearPlaybackError() {
+    if (_lastPlaybackError == null) return;
+    _lastPlaybackError = null;
+    notifyListeners();
+  }
+
   // Remote mode
   TuneApiClient? _apiClient;
   TuneWebSocket? _webSocket;
@@ -105,6 +115,7 @@ class AppState extends ChangeNotifier {
         _refreshLibrarySummary(),
         _refreshRadios(),
         _refreshPlaylists(),
+        _refreshFavoriteTracks(),
         _refreshStreamingStatus(),
       ]);
 
@@ -714,6 +725,7 @@ class AppState extends ChangeNotifier {
       filePath: url,
       source: item.serviceId,
       sourceId: item.id,
+      favorite: false,
     );
 
     instance.queue.load([track], startIndex: 0);
@@ -751,6 +763,7 @@ class AppState extends ChangeNotifier {
         filePath: url,
         source: item.serviceId,
         sourceId: item.id,
+        favorite: false,
       ));
     }
 
@@ -783,6 +796,7 @@ class AppState extends ChangeNotifier {
       filePath: httpUrl,
       source: Source.radio.rawValue,
       sourceId: radio.id.toString(),
+      favorite: false,
     );
 
     instance.queue.load([track], startIndex: 0);
@@ -957,6 +971,7 @@ class AppState extends ChangeNotifier {
       albumTitle: item.album,
       durationMs: item.durationMs,
       coverPath: item.albumArtUrl,
+      favorite: false,
     );
 
     instance.queue.load([track], startIndex: 0);
@@ -983,9 +998,25 @@ class AppState extends ChangeNotifier {
     int startIndex = 0,
     int? zoneId,
   }) async {
-    if (tracks.isEmpty) return;
-    final id = zoneId ?? zoneState.currentZoneId;
-    if (id == null) return;
+    if (tracks.isEmpty) {
+      debugPrint('[playTracks] bail-out: empty tracks list');
+      return;
+    }
+
+    // Fallback si aucune zone sélectionnée : prend la première dispo.
+    var id = zoneId ?? zoneState.currentZoneId;
+    if (id == null && zoneState.zones.isNotEmpty) {
+      id = zoneState.zones.first.id;
+      zoneState.setCurrentZoneId(id);
+      debugPrint(
+          '[playTracks] auto-selected zone $id (no current zone set)');
+    }
+    if (id == null) {
+      _lastPlaybackError = 'no_zone';
+      debugPrint('[playTracks] ERROR: no zone available');
+      notifyListeners();
+      return;
+    }
 
     if (isRemoteMode && _apiClient != null) {
       final track = tracks[startIndex];
@@ -994,11 +1025,22 @@ class AppState extends ChangeNotifier {
     }
 
     final instance = engine.zoneManager.zone(id);
-    if (instance == null) return;
+    if (instance == null) {
+      _lastPlaybackError = 'zone_not_found';
+      debugPrint('[playTracks] ERROR: zone $id not found in zoneManager');
+      notifyListeners();
+      return;
+    }
 
-    final resolved = tracks.map(_resolveTrackSync).toList();
-    instance.queue.load(resolved, startIndex: startIndex);
-    await instance.player.play();
+    try {
+      final resolved = tracks.map(_resolveTrackSync).toList();
+      instance.queue.load(resolved, startIndex: startIndex);
+      await instance.player.play();
+    } catch (e, st) {
+      _lastPlaybackError = 'playback_failed';
+      debugPrint('[playTracks] EXCEPTION: $e\n$st');
+      notifyListeners();
+    }
   }
 
   /// Résout l'URL d'un track local de manière synchrone (sans await).
@@ -1023,6 +1065,27 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Favoris pistes
+  // ---------------------------------------------------------------------------
+
+  /// Toggle le flag favori d'une piste. Retourne le nouvel état.
+  /// Rafraîchit les pistes et les favoris dans LibraryState.
+  Future<bool> toggleTrackFavorite(int trackId) async {
+    final isFav = await engine.db.trackRepo.toggleFavorite(trackId);
+    await _refreshFavoriteTracks();
+    // Si la liste complète des pistes est chargée, la rafraîchir aussi.
+    if (libraryState.tracks.isNotEmpty) await refreshTracks();
+    return isFav;
+  }
+
+  Future<void> _refreshFavoriteTracks() async {
+    final favs = await engine.db.trackRepo.favorites();
+    libraryState.setFavoriteTracks(favs);
+  }
+
+  Future<void> refreshFavoriteTracks() => _refreshFavoriteTracks();
+
+  // ---------------------------------------------------------------------------
   // Playlists
   // ---------------------------------------------------------------------------
 
@@ -1038,9 +1101,11 @@ class AppState extends ChangeNotifier {
     await _refreshPlaylists();
   }
 
-  Future<void> addTrackToPlaylist(int trackId, int playlistId) async {
-    await engine.db.playlistRepo.addTrack(playlistId, trackId);
-    await _refreshPlaylists();
+  /// Retourne `true` si la piste a été ajoutée, `false` si déjà présente.
+  Future<bool> addTrackToPlaylist(int trackId, int playlistId) async {
+    final added = await engine.db.playlistRepo.addTrack(playlistId, trackId);
+    if (added) await _refreshPlaylists();
+    return added;
   }
 
   Future<void> removeTrackFromPlaylist(int trackId, int playlistId) async {
