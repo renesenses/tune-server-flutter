@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// REST client for connecting to a remote Tune server.
@@ -221,6 +222,43 @@ class TuneApiClient {
         if (syncDirection != null) 'sync_direction': syncDirection,
         if (syncIntervalMinutes != null) 'sync_interval_minutes': syncIntervalMinutes,
       });
+
+  String databaseExportUrl() => '$baseUrl/system/database/export';
+
+  Future<Map<String, dynamic>> exportDatabase({required String savePath}) async {
+    final client = http.Client();
+    try {
+      final request = http.Request('GET', Uri.parse(databaseExportUrl()));
+      final streamed = await client.send(request);
+      if (streamed.statusCode != 200) {
+        final body = await streamed.stream.bytesToString();
+        throw Exception('Export failed (${streamed.statusCode}): $body');
+      }
+      final file = File(savePath);
+      final sink = file.openWrite();
+      int total = 0;
+      await for (final chunk in streamed.stream) {
+        sink.add(chunk);
+        total += chunk.length;
+      }
+      await sink.close();
+      return {'path': savePath, 'size': total};
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<Map<String, dynamic>> importDatabase(String filePath) async {
+    final uri = Uri.parse('$baseUrl/system/database/import');
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    final streamed = await request.send();
+    final body = await streamed.stream.bytesToString();
+    if (streamed.statusCode != 200) {
+      throw Exception('Import failed (${streamed.statusCode}): $body');
+    }
+    return jsonDecode(body) as Map<String, dynamic>;
+  }
 
   Future<dynamic> exportPlaylist(String service, String playlistId, String format) =>
       _post('/playlist-manager/export', body: {'service': service, 'playlist_id': playlistId, 'format': format});
