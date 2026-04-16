@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../models/enums.dart';
 import '../../server/discovery/discovery_manager.dart';
+import '../../services/bluetooth_service.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -609,18 +612,25 @@ class _OutputPickerSheet extends StatelessWidget {
           ),
           const Divider(height: 1, indent: 56),
 
-          // Bluetooth — relies on system audio settings (iOS/Android can't
-          // enumerate or pick a specific BT audio device programmatically).
+          // Bluetooth — on Android we list connected BT outputs via
+          // AudioManager.getDevices. On iOS/macOS the system picks the
+          // active device (Centre de contrôle).
           _OutputOption(
             icon: Icons.bluetooth_rounded,
             label: l.zonesOutputBluetooth,
-            subtitle: 'Utilise la sortie système (Centre de contrôle)',
+            subtitle: Platform.isAndroid
+                ? 'Sorties Bluetooth connectées'
+                : 'Utilise la sortie système (Centre de contrôle)',
             isSelected: currentType == OutputType.bluetooth,
-            onTap: () {
-              context
-                  .read<AppState>()
-                  .setZoneOutput(zone.id, OutputType.bluetooth);
-              Navigator.pop(context);
+            onTap: () async {
+              if (Platform.isAndroid) {
+                await _showBluetoothDevicesSheet(context, zone);
+              } else {
+                context
+                    .read<AppState>()
+                    .setZoneOutput(zone.id, OutputType.bluetooth);
+                Navigator.pop(context);
+              }
             },
           ),
 
@@ -664,6 +674,62 @@ class _OutputPickerSheet extends StatelessWidget {
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+
+  Future<void> _showBluetoothDevicesSheet(BuildContext context, ZoneWithState zone) async {
+    final svc = BluetoothService();
+    final devices = await svc.listDevices();
+    if (!context.mounted) return;
+    Navigator.pop(context); // close the output picker
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: TuneColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Sorties Bluetooth', style: TuneFonts.title3),
+                const SizedBox(height: 12),
+                if (devices.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Aucun périphérique Bluetooth connecté. Jumelle un appareil dans les paramètres système.',
+                      style: TuneFonts.footnote,
+                    ),
+                  )
+                else
+                  ...devices.map((d) => ListTile(
+                        leading: const Icon(Icons.bluetooth_rounded, color: TuneColors.accent),
+                        title: Text(d.name, style: TuneFonts.body),
+                        subtitle: Text(d.type.toUpperCase(), style: TuneFonts.footnote),
+                        onTap: () {
+                          context.read<AppState>().setZoneOutput(
+                                zone.id,
+                                OutputType.bluetooth,
+                                deviceId: d.id,
+                              );
+                          Navigator.pop(ctx);
+                        },
+                      )),
+                const SizedBox(height: 8),
+                Text(
+                  'Le routage actif dépend des paramètres système Android.',
+                  style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

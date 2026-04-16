@@ -1,5 +1,8 @@
 package com.mozaiklabs.tune
 
+import android.content.Context
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -10,6 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     private val CHANNEL = "com.mozaiklabs.tuneserver/library"
+    private val BT_CHANNEL = "com.mozaiklabs.tuneserver/bluetooth"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -40,6 +44,42 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BT_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "listDevices" -> result.success(listBluetoothDevices())
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    // -------------------------------------------------------------------------
+    // listBluetoothDevices — Bluetooth A2DP + SCO currently connected outputs.
+    // Returns empty list if platform doesn't support or on error.
+    // -------------------------------------------------------------------------
+    private fun listBluetoothDevices(): List<Map<String, Any?>> {
+        return try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val devices = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+            devices.filter {
+                it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+            }.map { d ->
+                val typeName = when (d.type) {
+                    AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "a2dp"
+                    AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "sco"
+                    else -> "other"
+                }
+                mapOf(
+                    "id" to d.id.toString(),
+                    "name" to (d.productName?.toString() ?: "Bluetooth"),
+                    "type" to typeName,
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     // -------------------------------------------------------------------------
