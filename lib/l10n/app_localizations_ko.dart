@@ -96,6 +96,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rootStartError => '시작 오류';
 
   @override
+  String get playbackErrorNoZone => '선택된 존 없음 — 존을 생성하거나 선택하세요';
+
+  @override
+  String get playbackErrorZoneNotFound => '존을 찾을 수 없음';
+
+  @override
+  String get playbackErrorFailed => '재생 실패';
+
+  @override
   String get navLibrary => '라이브러리';
 
   @override
@@ -130,6 +139,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tabPlaylists => '플레이리스트';
+
+  @override
+  String get tabFavorites => '즐겨찾기';
+
+  @override
+  String get favoriteAdded => '즐겨찾기에 추가됨';
+
+  @override
+  String get favoriteRemoved => '즐겨찾기에서 제거됨';
+
+  @override
+  String get libraryEmptyFavorites => '즐겨찾기 없음';
 
   @override
   String get tabAppleMusic => 'Apple Music';
@@ -184,6 +205,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistNewPlaylist => '새 플레이리스트';
+
+  @override
+  String playlistTrackAdded(String name) {
+    return '「$name」에 추가됨';
+  }
+
+  @override
+  String playlistTrackAlreadyIn(String name) {
+    return '이미 「$name」에 있음';
+  }
 
   @override
   String get playlistDeleteTitle => '플레이리스트를 삭제하시겠습니까?';
@@ -654,6 +685,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get setupFolderAdded => '폴더가 추가되었습니다 — 스캔 중…';
 
   @override
+  String get setupFolderEmpty => '폴더 경로를 입력하세요';
+
+  @override
   String get setupUPnPTitle => 'UPnP/DLNA 서버';
 
   @override
@@ -832,6 +866,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sourcesIndexBtn => '라이브러리 인덱싱';
+
+  @override
+  String get sourcesRescanBtn => '다시 스캔';
 
   @override
   String get sourcesForget => '삭제';

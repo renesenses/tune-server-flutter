@@ -96,6 +96,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rootStartError => '启动错误';
 
   @override
+  String get playbackErrorNoZone => '未选择区域 — 请创建或选择区域';
+
+  @override
+  String get playbackErrorZoneNotFound => '未找到区域';
+
+  @override
+  String get playbackErrorFailed => '播放失败';
+
+  @override
   String get navLibrary => '媒体库';
 
   @override
@@ -130,6 +139,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tabPlaylists => '播放列表';
+
+  @override
+  String get tabFavorites => '收藏';
+
+  @override
+  String get favoriteAdded => '已添加到收藏';
+
+  @override
+  String get favoriteRemoved => '已从收藏移除';
+
+  @override
+  String get libraryEmptyFavorites => '无收藏';
 
   @override
   String get tabAppleMusic => 'Apple Music';
@@ -184,6 +205,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playlistNewPlaylist => '新播放列表';
+
+  @override
+  String playlistTrackAdded(String name) {
+    return '已添加到\"$name\"';
+  }
+
+  @override
+  String playlistTrackAlreadyIn(String name) {
+    return '已在\"$name\"中';
+  }
 
   @override
   String get playlistDeleteTitle => '删除播放列表？';
@@ -651,6 +682,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get setupFolderAdded => '文件夹已添加 — 扫描中…';
 
   @override
+  String get setupFolderEmpty => '请输入文件夹路径';
+
+  @override
   String get setupUPnPTitle => 'UPnP/DLNA服务器';
 
   @override
@@ -829,6 +863,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sourcesIndexBtn => '索引媒体库';
+
+  @override
+  String get sourcesRescanBtn => '重新扫描';
 
   @override
   String get sourcesForget => '忘记';

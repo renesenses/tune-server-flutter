@@ -96,6 +96,37 @@ class TrackRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Favoris
+  // ---------------------------------------------------------------------------
+
+  /// Toggle le flag favori de la piste et retourne le nouvel état.
+  Future<bool> toggleFavorite(int trackId) async {
+    final track = await byId(trackId);
+    if (track == null) return false;
+    final newValue = !track.favorite;
+    await (_db.update(_db.tracks)..where((t) => t.id.equals(trackId)))
+        .write(TracksCompanion(favorite: Value(newValue)));
+    return newValue;
+  }
+
+  Future<bool> isFavorite(int trackId) async {
+    final track = await byId(trackId);
+    return track?.favorite ?? false;
+  }
+
+  Future<List<Track>> favorites({int limit = 5000}) =>
+      (_db.select(_db.tracks)
+            ..where((t) => t.favorite.equals(true))
+            ..orderBy([
+              (t) => OrderingTerm(expression: t.artistName, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.albumTitle, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.discNumber, mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.trackNumber, mode: OrderingMode.asc),
+            ])
+            ..limit(limit))
+          .get();
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 

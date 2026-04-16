@@ -96,6 +96,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rootStartError => 'Startup error';
 
   @override
+  String get playbackErrorNoZone =>
+      'No zone selected — create or select a zone';
+
+  @override
+  String get playbackErrorZoneNotFound => 'Zone not found';
+
+  @override
+  String get playbackErrorFailed => 'Playback failed';
+
+  @override
   String get navLibrary => 'Library';
 
   @override
@@ -130,6 +140,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabPlaylists => 'Playlists';
+
+  @override
+  String get tabFavorites => 'Favorites';
+
+  @override
+  String get favoriteAdded => 'Added to favorites';
+
+  @override
+  String get favoriteRemoved => 'Removed from favorites';
+
+  @override
+  String get libraryEmptyFavorites => 'No favorites';
 
   @override
   String get tabAppleMusic => 'Apple Music';
@@ -184,6 +206,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistNewPlaylist => 'New playlist';
+
+  @override
+  String playlistTrackAdded(String name) {
+    return 'Added to \"$name\"';
+  }
+
+  @override
+  String playlistTrackAlreadyIn(String name) {
+    return 'Already in \"$name\"';
+  }
 
   @override
   String get playlistDeleteTitle => 'Delete playlist?';
@@ -656,6 +688,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupFolderAdded => 'Folder added — scanning…';
 
   @override
+  String get setupFolderEmpty => 'Please enter a folder path';
+
+  @override
   String get setupUPnPTitle => 'UPnP/DLNA Servers';
 
   @override
@@ -836,6 +871,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sourcesIndexBtn => 'Index library';
+
+  @override
+  String get sourcesRescanBtn => 'Rescan';
 
   @override
   String get sourcesForget => 'Forget';

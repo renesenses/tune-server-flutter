@@ -284,6 +284,24 @@ abstract class AppLocalizations {
   /// **'Startup error'**
   String get rootStartError;
 
+  /// No description provided for @playbackErrorNoZone.
+  ///
+  /// In en, this message translates to:
+  /// **'No zone selected — create or select a zone'**
+  String get playbackErrorNoZone;
+
+  /// No description provided for @playbackErrorZoneNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone not found'**
+  String get playbackErrorZoneNotFound;
+
+  /// No description provided for @playbackErrorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed'**
+  String get playbackErrorFailed;
+
   /// No description provided for @navLibrary.
   ///
   /// In en, this message translates to:
@@ -355,6 +373,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playlists'**
   String get tabPlaylists;
+
+  /// No description provided for @tabFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get tabFavorites;
+
+  /// No description provided for @favoriteAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to favorites'**
+  String get favoriteAdded;
+
+  /// No description provided for @favoriteRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favorites'**
+  String get favoriteRemoved;
+
+  /// No description provided for @libraryEmptyFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites'**
+  String get libraryEmptyFavorites;
 
   /// No description provided for @tabAppleMusic.
   ///
@@ -463,6 +505,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New playlist'**
   String get playlistNewPlaylist;
+
+  /// No description provided for @playlistTrackAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to \"{name}\"'**
+  String playlistTrackAdded(String name);
+
+  /// No description provided for @playlistTrackAlreadyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in \"{name}\"'**
+  String playlistTrackAlreadyIn(String name);
 
   /// No description provided for @playlistDeleteTitle.
   ///
@@ -1364,6 +1418,12 @@ abstract class AppLocalizations {
   /// **'Folder added — scanning…'**
   String get setupFolderAdded;
 
+  /// No description provided for @setupFolderEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a folder path'**
+  String get setupFolderEmpty;
+
   /// No description provided for @setupUPnPTitle.
   ///
   /// In en, this message translates to:
@@ -1705,6 +1765,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Index library'**
   String get sourcesIndexBtn;
+
+  /// No description provided for @sourcesRescanBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get sourcesRescanBtn;
 
   /// No description provided for @sourcesForget.
   ///

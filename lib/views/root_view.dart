@@ -58,15 +58,76 @@ class _RootViewState extends State<RootView> {
     if (!setupCompleted) return const LibrarySetupView();
 
     // Routing iPhone vs iPad selon la largeur disponible
-    return LayoutBuilder(
-      builder: (_, constraints) {
-        if (constraints.maxWidth >= 768) {
-          return const iPadContentView();
-        }
-        return const iPhoneContentView();
-      },
+    return _PlaybackErrorListener(
+      child: LayoutBuilder(
+        builder: (_, constraints) {
+          if (constraints.maxWidth >= 768) {
+            return const iPadContentView();
+          }
+          return const iPhoneContentView();
+        },
+      ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// _PlaybackErrorListener — surface lastPlaybackError via SnackBar
+// ---------------------------------------------------------------------------
+
+class _PlaybackErrorListener extends StatefulWidget {
+  final Widget child;
+  const _PlaybackErrorListener({required this.child});
+
+  @override
+  State<_PlaybackErrorListener> createState() =>
+      _PlaybackErrorListenerState();
+}
+
+class _PlaybackErrorListenerState extends State<_PlaybackErrorListener> {
+  AppState? _app;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.read<AppState>();
+    if (!identical(app, _app)) {
+      _app?.removeListener(_onAppChanged);
+      _app = app;
+      app.addListener(_onAppChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _app?.removeListener(_onAppChanged);
+    super.dispose();
+  }
+
+  void _onAppChanged() {
+    final err = _app?.lastPlaybackError;
+    if (err == null || !mounted) return;
+    final l = AppLocalizations.of(context);
+    final msg = switch (err) {
+      'no_zone' => l.playbackErrorNoZone,
+      'zone_not_found' => l.playbackErrorZoneNotFound,
+      'playback_failed' => l.playbackErrorFailed,
+      _ => err,
+    };
+    _app!.clearPlaybackError();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        duration: const Duration(seconds: 3),
+        backgroundColor: TuneColors.error,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // ---------------------------------------------------------------------------

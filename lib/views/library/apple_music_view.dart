@@ -228,6 +228,7 @@ class _TrackList extends StatelessWidget {
       discNumber: meta.discNumber,
       durationMs: meta.durationMs,
       format: meta.format,
+      favorite: false,
     );
     await app.playTracks([track]);
   }

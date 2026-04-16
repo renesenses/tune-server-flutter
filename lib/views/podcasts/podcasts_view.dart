@@ -344,6 +344,7 @@ class _PodcastsViewState extends State<PodcastsView>
       coverPath: cover,
       source: 'podcast',
       durationMs: episode.durationMs > 0 ? episode.durationMs : null,
+      favorite: false,
     );
 
     instance.queue.load([track], startIndex: 0);

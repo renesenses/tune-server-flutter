@@ -45,7 +45,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +64,9 @@ class TuneDatabase extends _$TuneDatabase {
           if (from < 4) {
             await m.createTable(streamingAuth);
             await m.createTable(streamingConfig);
+          }
+          if (from < 5) {
+            await m.addColumn(tracks, tracks.favorite);
           }
         },
         beforeOpen: (details) async {

@@ -32,6 +32,9 @@
   "actionIrreversible": "Cette action est irréversible.",
 
   "rootStartError": "Erreur de démarrage",
+  "playbackErrorNoZone": "Aucune zone sélectionnée — créez ou sélectionnez une zone",
+  "playbackErrorZoneNotFound": "Zone introuvable",
+  "playbackErrorFailed": "Échec de lecture",
 
   "navLibrary": "Bibliothèque",
   "navSearch": "Recherche",
@@ -46,6 +49,10 @@
   "tabTracks": "Pistes",
   "tabGenres": "Genres",
   "tabPlaylists": "Playlists",
+  "tabFavorites": "Favoris",
+  "favoriteAdded": "Ajouté aux favoris",
+  "favoriteRemoved": "Retiré des favoris",
+  "libraryEmptyFavorites": "Aucun favori",
   "tabAppleMusic": "Apple Music",
   "libraryEmptyAlbums": "Aucun album dans la bibliothèque",
   "libraryEmptyArtists": "Aucun artiste dans la bibliothèque",
@@ -66,6 +73,14 @@
   "playlistEmpty": "Aucune piste",
   "playlistAddTo": "Ajouter à une playlist",
   "playlistNewPlaylist": "Nouvelle playlist",
+  "playlistTrackAdded": "Ajouté à « {name} »",
+  "@playlistTrackAdded": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "playlistTrackAlreadyIn": "Déjà présent dans « {name} »",
+  "@playlistTrackAlreadyIn": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "playlistDeleteTitle": "Supprimer la playlist ?",
   "playlistDeleteBody": "Cette playlist sera définitivement supprimée.",
 
@@ -230,6 +245,7 @@
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "Ajouter ce dossier",
   "setupFolderAdded": "Dossier ajouté \u2014 scan en cours\u2026",
+  "setupFolderEmpty": "Veuillez indiquer un chemin de dossier",
   "setupUPnPTitle": "Serveurs UPnP/DLNA",
   "setupUPnPBody": "Tune Server découvre automatiquement les serveurs UPnP/DLNA sur votre réseau local. Naviguez dans leurs bibliothèques via Recherche \u2192 Parcourir.",
   "setupFeatureSsdp": "Découverte SSDP automatique",
@@ -305,6 +321,7 @@
   "sourcesAvailable": "Disponible",
   "sourcesUnavailable": "Hors ligne",
   "sourcesIndexBtn": "Indexer la bibliothèque",
+  "sourcesRescanBtn": "Rescanner",
   "sourcesForget": "Oublier",
   "sourcesAddManually": "Ajouter manuellement",
   "sourcesAddTitle": "Sonde manuelle",

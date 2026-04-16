@@ -96,6 +96,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get rootStartError => '起動エラー';
 
   @override
+  String get playbackErrorNoZone => 'ゾーンが選択されていません — ゾーンを作成または選択してください';
+
+  @override
+  String get playbackErrorZoneNotFound => 'ゾーンが見つかりません';
+
+  @override
+  String get playbackErrorFailed => '再生に失敗しました';
+
+  @override
   String get navLibrary => 'ライブラリ';
 
   @override
@@ -130,6 +139,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tabPlaylists => 'プレイリスト';
+
+  @override
+  String get tabFavorites => 'お気に入り';
+
+  @override
+  String get favoriteAdded => 'お気に入りに追加しました';
+
+  @override
+  String get favoriteRemoved => 'お気に入りから削除しました';
+
+  @override
+  String get libraryEmptyFavorites => 'お気に入りなし';
 
   @override
   String get tabAppleMusic => 'Apple Music';
@@ -184,6 +205,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playlistNewPlaylist => '新規プレイリスト';
+
+  @override
+  String playlistTrackAdded(String name) {
+    return '「$name」に追加しました';
+  }
+
+  @override
+  String playlistTrackAlreadyIn(String name) {
+    return 'すでに「$name」にあります';
+  }
 
   @override
   String get playlistDeleteTitle => 'プレイリストを削除？';
@@ -654,6 +685,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get setupFolderAdded => 'フォルダを追加しました — スキャン中…';
 
   @override
+  String get setupFolderEmpty => 'フォルダパスを入力してください';
+
+  @override
   String get setupUPnPTitle => 'UPnP/DLNAサーバー';
 
   @override
@@ -832,6 +866,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sourcesIndexBtn => 'ライブラリをインデックス';
+
+  @override
+  String get sourcesRescanBtn => '再スキャン';
 
   @override
   String get sourcesForget => '削除';

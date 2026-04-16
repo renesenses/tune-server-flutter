@@ -32,6 +32,9 @@
   "actionIrreversible": "This action is irreversible.",
 
   "rootStartError": "Startup error",
+  "playbackErrorNoZone": "No zone selected — create or select a zone",
+  "playbackErrorZoneNotFound": "Zone not found",
+  "playbackErrorFailed": "Playback failed",
 
   "navLibrary": "Library",
   "navSearch": "Search",
@@ -46,6 +49,10 @@
   "tabTracks": "Tracks",
   "tabGenres": "Genres",
   "tabPlaylists": "Playlists",
+  "tabFavorites": "Favorites",
+  "favoriteAdded": "Added to favorites",
+  "favoriteRemoved": "Removed from favorites",
+  "libraryEmptyFavorites": "No favorites",
   "tabAppleMusic": "Apple Music",
   "libraryEmptyAlbums": "No albums in library",
   "libraryEmptyArtists": "No artists in library",
@@ -66,6 +73,14 @@
   "playlistEmpty": "No tracks",
   "playlistAddTo": "Add to playlist",
   "playlistNewPlaylist": "New playlist",
+  "playlistTrackAdded": "Added to \"{name}\"",
+  "@playlistTrackAdded": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "playlistTrackAlreadyIn": "Already in \"{name}\"",
+  "@playlistTrackAlreadyIn": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "playlistDeleteTitle": "Delete playlist?",
   "playlistDeleteBody": "This playlist will be permanently deleted.",
 
@@ -254,6 +269,7 @@
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "Add this folder",
   "setupFolderAdded": "Folder added \u2014 scanning\u2026",
+  "setupFolderEmpty": "Please enter a folder path",
   "setupUPnPTitle": "UPnP/DLNA Servers",
   "setupUPnPBody": "Tune Server automatically discovers UPnP/DLNA servers on your local network. Browse their libraries via Search \u2192 Browse.",
   "setupFeatureSsdp": "Automatic SSDP discovery",
@@ -329,6 +345,7 @@
   "sourcesAvailable": "Available",
   "sourcesUnavailable": "Offline",
   "sourcesIndexBtn": "Index library",
+  "sourcesRescanBtn": "Rescan",
   "sourcesForget": "Forget",
   "sourcesAddManually": "Add manually",
   "sourcesAddTitle": "Manual probe",

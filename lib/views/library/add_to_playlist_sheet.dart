@@ -95,9 +95,26 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
                             ? null
                             : () async {
                                 setState(() => _adding = true);
-                                await app.addTrackToPlaylist(
+                                final messenger =
+                                    ScaffoldMessenger.of(context);
+                                final added = await app.addTrackToPlaylist(
                                     widget.track.id, playlists[i].id);
-                                if (mounted) Navigator.of(context).pop();
+                                if (!mounted) return;
+                                Navigator.of(context).pop();
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(added
+                                        ? l.playlistTrackAdded(
+                                            playlists[i].name)
+                                        : l.playlistTrackAlreadyIn(
+                                            playlists[i].name)),
+                                    duration:
+                                        const Duration(seconds: 2),
+                                    backgroundColor: added
+                                        ? TuneColors.accent
+                                        : TuneColors.warning,
+                                  ),
+                                );
                               },
                       ),
                     ),

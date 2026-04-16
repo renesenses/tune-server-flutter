@@ -163,6 +163,24 @@ class LibraryState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Favoris pistes
+  // ---------------------------------------------------------------------------
+
+  List<Track> _favoriteTracks = [];
+  List<Track> get favoriteTracks => List.unmodifiable(_favoriteTracks);
+
+  void setFavoriteTracks(List<Track> tracks) {
+    _favoriteTracks = tracks;
+    notifyListeners();
+  }
+
+  /// Vrai si l'ID de piste est dans la liste des favoris chargée.
+  /// Pour une vérification live sur une piste spécifique, préférer le champ
+  /// `favorite` du modèle Track lui-même si chargé.
+  bool isTrackFavorite(int trackId) =>
+      _favoriteTracks.any((t) => t.id == trackId);
+
+  // ---------------------------------------------------------------------------
   // Playlists
   // ---------------------------------------------------------------------------
 
@@ -278,6 +296,7 @@ class LibraryState extends ChangeNotifier {
   int _scanTotal = 0;
   int _scanTracksAdded = 0;
   int _scanTracksUpdated = 0;
+  final Set<String> _indexedDeviceIds = {};
 
   bool get isScanning => _scanning;
   /// ID du device UPnP actuellement en cours d'indexation, null pour un scan local/SMB.
@@ -286,6 +305,10 @@ class LibraryState extends ChangeNotifier {
   int get scanTotal => _scanTotal;
   int get scanTracksAdded => _scanTracksAdded;
   int get scanTracksUpdated => _scanTracksUpdated;
+
+  /// Vrai si ce device UPnP a déjà été indexé au moins une fois dans la session.
+  bool isDeviceIndexed(String deviceId) =>
+      _indexedDeviceIds.contains(deviceId);
 
   void setScanStarted({String? deviceId}) {
     _scanning = true;
@@ -305,6 +328,9 @@ class LibraryState extends ChangeNotifier {
 
   void setScanCompleted(int added, int updated) {
     _scanning = false;
+    if (_scanningDeviceId != null) {
+      _indexedDeviceIds.add(_scanningDeviceId!);
+    }
     _scanningDeviceId = null;
     _scanTracksAdded = added;
     _scanTracksUpdated = updated;

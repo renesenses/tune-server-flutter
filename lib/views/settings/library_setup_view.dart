@@ -165,6 +165,7 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
   final _ctrl = TextEditingController();
   bool _adding = false;
   bool _added = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -175,14 +176,21 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
   Future<void> _pickFolder() async {
     final path = await FilePicker.platform.getDirectoryPath();
     if (path != null && mounted) {
-      setState(() => _ctrl.text = path);
+      setState(() {
+        _ctrl.text = path;
+        _error = null;
+      });
     }
   }
 
   Future<void> _add() async {
     final path = _ctrl.text.trim();
-    if (path.isEmpty) return;
-    setState(() => _adding = true);
+    if (path.isEmpty) {
+      setState(() => _error =
+          AppLocalizations.of(context).setupFolderEmpty);
+      return;
+    }
+    setState(() { _adding = true; _error = null; });
     await context.read<AppState>().addMusicFolder(path);
     if (mounted) setState(() { _adding = false; _added = true; });
   }
@@ -210,12 +218,19 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
             controller: _ctrl,
             style: TuneFonts.body,
             enabled: !_added,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
             decoration: InputDecoration(
               filled: true,
               fillColor: TuneColors.surface,
               hintText: AppLocalizations.of(context).setupFolderHint,
+              hintStyle: TuneFonts.footnote.copyWith(
+                color: TuneColors.textSecondary.withValues(alpha: 0.45),
+              ),
               labelText: AppLocalizations.of(context).setupFolderPath,
               border: const OutlineInputBorder(),
+              errorText: _error,
               suffixIcon: _adding
                   ? const SizedBox(
                       width: 20,
