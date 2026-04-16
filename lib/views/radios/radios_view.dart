@@ -104,7 +104,7 @@ class _RadiosViewState extends State<RadiosView>
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: TuneColors.accent,
-        onPressed: _showAddDialog,
+        onPressed: () => showRadioEditor(context),
         child: const Icon(Icons.add),
       ),
       body: TabBarView(
@@ -118,69 +118,6 @@ class _RadiosViewState extends State<RadiosView>
   }
 
   // ---- Dialogs ----
-
-  Future<void> _showAddDialog() async {
-    final nameCtrl = TextEditingController();
-    final urlCtrl = TextEditingController();
-    final genreCtrl = TextEditingController();
-
-    final l = AppLocalizations.of(context);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: TuneColors.surface,
-        title: Text(l.radiosAdd, style: TuneFonts.title3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              style: TuneFonts.body,
-              decoration: InputDecoration(labelText: l.radiosName),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: urlCtrl,
-              style: TuneFonts.body,
-              decoration: InputDecoration(labelText: l.radiosStreamUrl),
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: genreCtrl,
-              style: TuneFonts.body,
-              decoration: InputDecoration(labelText: l.radiosGenre),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l.btnCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l.btnAdd,
-                style: const TextStyle(color: TuneColors.accent)),
-          ),
-        ],
-      ),
-    );
-
-    if (result == true && mounted) {
-      final name = nameCtrl.text.trim();
-      final url = urlCtrl.text.trim();
-      if (name.isNotEmpty && url.isNotEmpty) {
-        await context.read<AppState>().addRadio(
-              name: name,
-              streamUrl: url,
-              genre: genreCtrl.text.trim().isEmpty
-                  ? null
-                  : genreCtrl.text.trim(),
-            );
-      }
-    }
-  }
 
   Future<void> _showImportTextDialog() async {
     final ctrl = TextEditingController();
@@ -295,6 +232,80 @@ class _RadiosViewState extends State<RadiosView>
 enum _MenuAction { importText, importUrl }
 
 // ---------------------------------------------------------------------------
+// showRadioEditor — dialog partagé pour ajout et édition d'une radio
+// ---------------------------------------------------------------------------
+
+Future<void> showRadioEditor(BuildContext context, {Radio? existing}) async {
+  final isEdit = existing != null;
+  final nameCtrl = TextEditingController(text: existing?.name ?? '');
+  final urlCtrl = TextEditingController(text: existing?.streamUrl ?? '');
+  final genreCtrl = TextEditingController(text: existing?.genre ?? '');
+  final l = AppLocalizations.of(context);
+
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text(isEdit ? l.btnEdit : l.radiosAdd, style: TuneFonts.title3),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameCtrl,
+            style: TuneFonts.body,
+            decoration: InputDecoration(labelText: l.radiosName),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: urlCtrl,
+            style: TuneFonts.body,
+            decoration: InputDecoration(labelText: l.radiosStreamUrl),
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: genreCtrl,
+            style: TuneFonts.body,
+            decoration: InputDecoration(labelText: l.radiosGenre),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(l.btnCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(isEdit ? l.btnSave : l.btnAdd,
+              style: const TextStyle(color: TuneColors.accent)),
+        ),
+      ],
+    ),
+  );
+
+  if (result != true || !context.mounted) return;
+
+  final name = nameCtrl.text.trim();
+  final url = urlCtrl.text.trim();
+  if (name.isEmpty || url.isEmpty) return;
+  final genre = genreCtrl.text.trim().isEmpty ? null : genreCtrl.text.trim();
+
+  final app = context.read<AppState>();
+  if (isEdit) {
+    await app.updateRadio(
+      id: existing.id,
+      name: name,
+      streamUrl: url,
+      logoUrl: existing.logoUrl,
+      genre: genre,
+    );
+  } else {
+    await app.addRadio(name: name, streamUrl: url, genre: genre);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // _RadioList
 // ---------------------------------------------------------------------------
 
@@ -395,8 +406,12 @@ class _RadioTileState extends State<_RadioTile> {
         child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
       onDismissed: (_) => app.deleteRadio(widget.radio.id),
-      child: ListTile(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onSecondaryTap: () => showRadioEditor(context, existing: widget.radio),
+        child: ListTile(
         onTap: () => app.playRadio(widget.radio),
+        onLongPress: () => showRadioEditor(context, existing: widget.radio),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: ArtworkView(url: widget.radio.logoUrl, size: 44),
@@ -439,6 +454,7 @@ class _RadioTileState extends State<_RadioTile> {
                 onPressed: () => _saveFavorite(app),
               ),
           ],
+        ),
         ),
       ),
     );

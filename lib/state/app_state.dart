@@ -818,6 +818,24 @@ class AppState extends ChangeNotifier {
     await _refreshRadios();
   }
 
+  Future<void> updateRadio({
+    required int id,
+    required String name,
+    required String streamUrl,
+    String? logoUrl,
+    String? genre,
+  }) async {
+    await (engine.db.update(engine.db.radios)
+          ..where((r) => r.id.equals(id)))
+        .write(RadiosCompanion(
+      name: Value(name),
+      streamUrl: Value(streamUrl),
+      logoUrl: Value(logoUrl),
+      genre: Value(genre),
+    ));
+    await _refreshRadios();
+  }
+
   Future<void> toggleRadioFavorite(Radio radio) async {
     await engine.db.radioRepo.setFavorite(radio.id, favorite: !radio.favorite);
     await _refreshRadios();
