@@ -21,11 +21,14 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
 
   List<Map<String, dynamic>> _history = [];
   List<Map<String, dynamic>> _links = [];
+  List<Map<String, dynamic>> _snapshots = [];
   bool _loading = false;
 
   // Backup
   bool _backingUp = false;
   Map<String, dynamic>? _backupResult;
+  int? _restoringSnapshotId;
+  String _restoreMessage = '';
 
   // Batch
   String _batchSource = '';
@@ -58,9 +61,180 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       } else if (_tabCtrl.index == 2) {
         final data = await app.apiClient!.getPlaylistLinks();
         _links = data.cast<Map<String, dynamic>>();
+      } else if (_tabCtrl.index == 3) {
+        final data = await app.apiClient!.listPlaylistSnapshots();
+        _snapshots = data.cast<Map<String, dynamic>>();
       }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _restoreSnapshot(Map<String, dynamic> snap) async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    final nameController = TextEditingController(text: snap['playlist_name'] as String? ?? '');
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Restaurer le snapshot', style: TuneFonts.title3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Nom de la playlist locale :', style: TuneFonts.footnote),
+            const SizedBox(height: 8),
+            TextField(
+              controller: nameController,
+              style: TuneFonts.body,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                filled: true,
+                fillColor: TuneColors.surfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            child: const Text('Restaurer'),
+          ),
+        ],
+      ),
+    );
+    if (result == null) return;
+
+    setState(() {
+      _restoringSnapshotId = snap['id'] as int;
+      _restoreMessage = '';
+    });
+
+    Future<dynamic> doRestore(bool overwrite) {
+      return app.apiClient!.restorePlaylistSnapshot(
+        snap['id'] as int,
+        targetName: result.isEmpty ? null : result,
+        overwriteExisting: overwrite,
+      );
+    }
+
+    try {
+      final r = await doRestore(false);
+      setState(() {
+        _restoreMessage = '"${r['name']}" restaurée : ${r['tracks_matched']} trouvées, ${r['tracks_not_found']} introuvables.';
+      });
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('already exists') || msg.contains('409')) {
+        if (!mounted) return;
+        final overwrite = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: TuneColors.surface,
+            title: const Text('Playlist existante', style: TuneFonts.title3),
+            content: Text('Une playlist "${result.isEmpty ? snap['playlist_name'] : result}" existe déjà. La remplacer ?', style: TuneFonts.body),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
+                child: const Text('Remplacer'),
+              ),
+            ],
+          ),
+        );
+        if (overwrite == true) {
+          try {
+            final r = await doRestore(true);
+            setState(() {
+              _restoreMessage = '"${r['name']}" remplacée : ${r['tracks_matched']} trouvées, ${r['tracks_not_found']} introuvables.';
+            });
+          } catch (e2) {
+            setState(() => _restoreMessage = 'Erreur : $e2');
+          }
+        }
+      } else {
+        setState(() => _restoreMessage = 'Erreur : $e');
+      }
+    }
+
+    setState(() => _restoringSnapshotId = null);
+  }
+
+  Future<void> _deleteSnapshot(Map<String, dynamic> snap) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Supprimer', style: TuneFonts.title3),
+        content: Text('Supprimer le snapshot de "${snap['playlist_name']}" ?', style: TuneFonts.body),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final app = context.read<AppState>();
+    await app.apiClient?.deletePlaylistSnapshot(snap['id'] as int);
+    if (!mounted) return;
+    setState(() {
+      _snapshots.removeWhere((s) => s['id'] == snap['id']);
+    });
+  }
+
+  Future<void> _editSyncInterval(Map<String, dynamic> link) async {
+    final current = link['sync_interval_minutes'] as int? ?? 0;
+    final controller = TextEditingController(text: current.toString());
+    final result = await showDialog<int?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Intervalle auto-sync', style: TuneFonts.title3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Minutes (0 = manuel seulement) :', style: TuneFonts.footnote),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: TuneFonts.body,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                filled: true,
+                fillColor: TuneColors.surfaceVariant,
+                hintText: 'ex : 60',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () {
+              final v = int.tryParse(controller.text) ?? 0;
+              Navigator.pop(ctx, v < 0 ? 0 : v);
+            },
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || !mounted) return;
+    final app = context.read<AppState>();
+    try {
+      await app.apiClient?.updatePlaylistLink(link['id'] as int, syncIntervalMinutes: result);
+      await _loadTab();
+    } catch (_) {}
   }
 
   @override
@@ -190,15 +364,29 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           child: ListTile(
             leading: const Icon(Icons.sync_rounded, color: TuneColors.accent),
             title: Text('Playlist #${link['local_playlist_id']}', style: TuneFonts.body),
-            subtitle: Text('${link['service']} · ${link['sync_direction']}', style: TuneFonts.footnote),
-            trailing: FilledButton(
-              onPressed: () async {
-                final app = context.read<AppState>();
-                await app.apiClient?.triggerPlaylistSync(link['id'] as int);
-                _loadTab();
-              },
-              style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size(60, 32)),
-              child: const Text('Sync', style: TextStyle(fontSize: 12)),
+            subtitle: Text(
+              '${link['service']} · ${link['sync_direction']}'
+              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · auto ${link['sync_interval_minutes']}min' : ''}',
+              style: TuneFonts.footnote,
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.schedule, size: 18, color: TuneColors.textSecondary),
+                  tooltip: 'Intervalle auto-sync',
+                  onPressed: () => _editSyncInterval(link),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final app = context.read<AppState>();
+                    await app.apiClient?.triggerPlaylistSync(link['id'] as int);
+                    _loadTab();
+                  },
+                  style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size(60, 32)),
+                  child: const Text('Sync', style: TextStyle(fontSize: 12)),
+                ),
+              ],
             ),
           ),
         );
@@ -231,6 +419,11 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 try {
                   final r = await app.apiClient?.backupPlaylists();
                   setState(() => _backupResult = r as Map<String, dynamic>?);
+                  // Reload snapshots list
+                  final snaps = await app.apiClient?.listPlaylistSnapshots();
+                  if (snaps != null) {
+                    setState(() => _snapshots = snaps.cast<Map<String, dynamic>>());
+                  }
                 } catch (_) {}
                 setState(() => _backingUp = false);
               },
@@ -254,6 +447,59 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               ),
             ),
           ],
+
+          const SizedBox(height: 20),
+          const Text('SNAPSHOTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          const SizedBox(height: 8),
+          if (_restoreMessage.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(8)),
+              child: Text(_restoreMessage, style: TuneFonts.footnote),
+            ),
+          ],
+          if (_snapshots.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('Aucun snapshot. Lance un backup pour en créer.', style: TuneFonts.footnote),
+            )
+          else
+            ..._snapshots.map((snap) => Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(6)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(snap['playlist_name'] as String? ?? '—',
+                            style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          '${snap['source_service']} · ${snap['track_count']} pistes'
+                          '${snap['created_at'] != null ? ' · ${(snap['created_at'] as String).split('T').first}' : ''}',
+                          style: TuneFonts.footnote,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: _restoringSnapshotId == snap['id']
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
+                        : const Icon(Icons.restore, color: TuneColors.accent, size: 20),
+                    tooltip: 'Restaurer',
+                    onPressed: _restoringSnapshotId == snap['id'] ? null : () => _restoreSnapshot(snap),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: TuneColors.textSecondary, size: 20),
+                    tooltip: 'Supprimer',
+                    onPressed: () => _deleteSnapshot(snap),
+                  ),
+                ],
+              ),
+            )),
 
           const SizedBox(height: 24),
           const Divider(color: TuneColors.divider),

@@ -202,6 +202,26 @@ class TuneApiClient {
   Future<dynamic> backupPlaylists({List<String>? services}) =>
       _post('/playlist-manager/backup', body: {'services': services, 'include_tracks': true});
 
+  Future<List<dynamic>> listPlaylistSnapshots({String? service}) {
+    final q = service != null ? '?service=${Uri.encodeQueryComponent(service)}' : '';
+    return _get('/playlist-manager/backups$q').then((d) => d as List);
+  }
+
+  Future<dynamic> restorePlaylistSnapshot(int id, {String? targetName, bool overwriteExisting = false}) =>
+      _post('/playlist-manager/backups/$id/restore', body: {
+        if (targetName != null) 'target_name': targetName,
+        'overwrite_existing': overwriteExisting,
+      });
+
+  Future<void> deletePlaylistSnapshot(int id) =>
+      _delete('/playlist-manager/backups/$id');
+
+  Future<dynamic> updatePlaylistLink(int id, {String? syncDirection, int? syncIntervalMinutes}) =>
+      _patch('/playlist-manager/links/$id', body: {
+        if (syncDirection != null) 'sync_direction': syncDirection,
+        if (syncIntervalMinutes != null) 'sync_interval_minutes': syncIntervalMinutes,
+      });
+
   Future<dynamic> exportPlaylist(String service, String playlistId, String format) =>
       _post('/playlist-manager/export', body: {'service': service, 'playlist_id': playlistId, 'format': format});
 
