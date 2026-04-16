@@ -165,6 +165,50 @@ class TuneApiClient {
   Future<List<dynamic>> getPlaylists() =>
       _get('/playlists').then((d) => d as List);
 
+  Future<List<dynamic>> getPlaylistTracks(int playlistId) =>
+      _get('/playlists/$playlistId/tracks').then((d) => d as List);
+
+  Future<Map<String, dynamic>> createPlaylist(String name, {String? description}) =>
+      _post('/playlists', body: {
+        'name': name,
+        if (description != null) 'description': description,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<void> deletePlaylist(int playlistId) =>
+      _delete('/playlists/$playlistId');
+
+  Future<Map<String, dynamic>> diffPlaylists({
+    required String sourceService,
+    required String sourcePlaylistId,
+    required String targetService,
+    required String targetPlaylistId,
+  }) => _post('/playlists/diff', body: {
+        'source_service': sourceService,
+        'source_playlist_id': sourcePlaylistId,
+        'target_service': targetService,
+        'target_playlist_id': targetPlaylistId,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> recoverPlaylist(int playlistId) =>
+      _post('/playlists/$playlistId/recover').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> applyPlaylistRecovery(
+    int playlistId,
+    List<Map<String, dynamic>> replacements,
+  ) => _post('/playlists/$playlistId/recover/apply', body: {
+        'replacements': replacements,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> importStreamingPlaylist({
+    required String service,
+    required String sourcePlaylistId,
+    String? name,
+  }) => _post('/playlists/import', body: {
+        'service': service,
+        'source_playlist_id': sourcePlaylistId,
+        if (name != null) 'name': name,
+      }).then((d) => d as Map<String, dynamic>);
+
   // ---------------------------------------------------------------------------
   // Playlist Manager
   // ---------------------------------------------------------------------------
