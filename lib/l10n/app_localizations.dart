@@ -2095,6 +2095,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} tracks'**
   String metadataTracksCount(int count);
+
+  /// No description provided for @stereoPairsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo Pairs'**
+  String get stereoPairsTitle;
+
+  /// No description provided for @stereoPairCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create stereo pair'**
+  String get stereoPairCreate;
+
+  /// No description provided for @stereoPairName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair name'**
+  String get stereoPairName;
+
+  /// No description provided for @stereoPairNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Living Room Stereo'**
+  String get stereoPairNameHint;
+
+  /// No description provided for @stereoPairLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left (L)'**
+  String get stereoPairLeft;
+
+  /// No description provided for @stereoPairRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right (R)'**
+  String get stereoPairRight;
+
+  /// No description provided for @stereoPairSelectDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a device'**
+  String get stereoPairSelectDevice;
+
+  /// No description provided for @stereoPairNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No stereo pairs'**
+  String get stereoPairNone;
+
+  /// No description provided for @stereoPairCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo pair created'**
+  String get stereoPairCreated;
+
+  /// No description provided for @stereoPairDissolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo pair dissolved'**
+  String get stereoPairDissolved;
+
+  /// No description provided for @stereoPairDissolve.
+  ///
+  /// In en, this message translates to:
+  /// **'Dissolve'**
+  String get stereoPairDissolve;
+
+  /// No description provided for @stereoPairBadgeL.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get stereoPairBadgeL;
+
+  /// No description provided for @stereoPairBadgeR.
+  ///
+  /// In en, this message translates to:
+  /// **'R'**
+  String get stereoPairBadgeR;
+
+  /// No description provided for @streamingEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get streamingEnable;
+
+  /// No description provided for @streamingDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get streamingDisable;
+
+  /// No description provided for @streamingEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Service enabled'**
+  String get streamingEnabled;
+
+  /// No description provided for @streamingDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Service disabled'**
+  String get streamingDisabled;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Tune!'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your embedded multi-room music server. Let\'s set up your installation in a few steps.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingWelcomeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingWelcomeStart;
+
+  /// No description provided for @onboardingConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration'**
+  String get onboardingConfigTitle;
+
+  /// No description provided for @onboardingConfigBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Specify a folder containing your audio files, or connect to a remote Tune server.'**
+  String get onboardingConfigBody;
+
+  /// No description provided for @onboardingConfigModeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded server'**
+  String get onboardingConfigModeLocal;
+
+  /// No description provided for @onboardingConfigModeRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote server'**
+  String get onboardingConfigModeRemote;
+
+  /// No description provided for @onboardingZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a zone'**
+  String get onboardingZoneTitle;
+
+  /// No description provided for @onboardingZoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The devices below were discovered on your network. Tap one to create your first audio zone.'**
+  String get onboardingZoneBody;
+
+  /// No description provided for @onboardingZoneEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices discovered yet. You can add more later.'**
+  String get onboardingZoneEmpty;
+
+  /// No description provided for @onboardingZoneCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone created: {name}'**
+  String onboardingZoneCreated(String name);
+
+  /// No description provided for @onboardingDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All done!'**
+  String get onboardingDoneTitle;
+
+  /// No description provided for @onboardingDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your setup is ready. Enjoy your music!'**
+  String get onboardingDoneBody;
+
+  /// No description provided for @onboardingDoneButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to dashboard'**
+  String get onboardingDoneButton;
 }
 
 class _AppLocalizationsDelegate

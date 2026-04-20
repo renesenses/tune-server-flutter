@@ -427,5 +427,42 @@
   "metadataTracksCount": "{count} tracks",
   "@metadataTracksCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "stereoPairsTitle": "Stereo Pairs",
+  "stereoPairCreate": "Create stereo pair",
+  "stereoPairName": "Pair name",
+  "stereoPairNameHint": "e.g. Living Room Stereo",
+  "stereoPairLeft": "Left (L)",
+  "stereoPairRight": "Right (R)",
+  "stereoPairSelectDevice": "Select a device",
+  "stereoPairNone": "No stereo pairs",
+  "stereoPairCreated": "Stereo pair created",
+  "stereoPairDissolved": "Stereo pair dissolved",
+  "stereoPairDissolve": "Dissolve",
+  "stereoPairBadgeL": "L",
+  "stereoPairBadgeR": "R",
+
+  "streamingEnable": "Enable",
+  "streamingDisable": "Disable",
+  "streamingEnabled": "Service enabled",
+  "streamingDisabled": "Service disabled",
+
+  "onboardingWelcomeTitle": "Welcome to Tune!",
+  "onboardingWelcomeBody": "Your embedded multi-room music server. Let's set up your installation in a few steps.",
+  "onboardingWelcomeStart": "Get started",
+  "onboardingConfigTitle": "Configuration",
+  "onboardingConfigBody": "Specify a folder containing your audio files, or connect to a remote Tune server.",
+  "onboardingConfigModeLocal": "Embedded server",
+  "onboardingConfigModeRemote": "Remote server",
+  "onboardingZoneTitle": "Create a zone",
+  "onboardingZoneBody": "The devices below were discovered on your network. Tap one to create your first audio zone.",
+  "onboardingZoneEmpty": "No devices discovered yet. You can add more later.",
+  "onboardingZoneCreated": "Zone created: {name}",
+  "@onboardingZoneCreated": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "onboardingDoneTitle": "All done!",
+  "onboardingDoneBody": "Your setup is ready. Enjoy your music!",
+  "onboardingDoneButton": "Go to dashboard"
 }

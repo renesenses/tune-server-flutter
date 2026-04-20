@@ -403,5 +403,42 @@
   "metadataTracksCount": "{count} pistes",
   "@metadataTracksCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "stereoPairsTitle": "Paires stéréo",
+  "stereoPairCreate": "Créer une paire stéréo",
+  "stereoPairName": "Nom de la paire",
+  "stereoPairNameHint": "Ex : Salon Stéréo",
+  "stereoPairLeft": "Gauche (L)",
+  "stereoPairRight": "Droite (R)",
+  "stereoPairSelectDevice": "Sélectionner un appareil",
+  "stereoPairNone": "Aucune paire stéréo",
+  "stereoPairCreated": "Paire stéréo créée",
+  "stereoPairDissolved": "Paire stéréo dissoute",
+  "stereoPairDissolve": "Dissoudre",
+  "stereoPairBadgeL": "L",
+  "stereoPairBadgeR": "R",
+
+  "streamingEnable": "Activer",
+  "streamingDisable": "Désactiver",
+  "streamingEnabled": "Service activé",
+  "streamingDisabled": "Service désactivé",
+
+  "onboardingWelcomeTitle": "Bienvenue sur Tune !",
+  "onboardingWelcomeBody": "Votre serveur musical multi-room embarqué. Configurons ensemble votre installation en quelques étapes.",
+  "onboardingWelcomeStart": "Commencer",
+  "onboardingConfigTitle": "Configuration",
+  "onboardingConfigBody": "Indiquez le chemin d'un dossier contenant vos fichiers audio, ou connectez-vous à un serveur Tune distant.",
+  "onboardingConfigModeLocal": "Serveur embarqué",
+  "onboardingConfigModeRemote": "Serveur distant",
+  "onboardingZoneTitle": "Créer une zone",
+  "onboardingZoneBody": "Les appareils ci-dessous ont été découverts sur votre réseau. Touchez-en un pour créer votre première zone audio.",
+  "onboardingZoneEmpty": "Aucun appareil découvert pour l'instant. Vous pourrez en ajouter plus tard.",
+  "onboardingZoneCreated": "Zone créée : {name}",
+  "@onboardingZoneCreated": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "onboardingDoneTitle": "Terminé !",
+  "onboardingDoneBody": "Votre installation est prête. Profitez de votre musique !",
+  "onboardingDoneButton": "Accéder au tableau de bord"
 }

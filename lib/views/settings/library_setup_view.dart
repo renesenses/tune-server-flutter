@@ -3,16 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../server/discovery/discovery_manager.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
+import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 
 // ---------------------------------------------------------------------------
-// T16.3 — LibrarySetupView
-// Onboarding premier lancement : 3 pages (bienvenue, dossier local, UPnP).
-// Marque setupCompleted = true à la fin.
-// Miroir de LibrarySetupView.swift (iOS)
+// LibrarySetupView — Onboarding wizard (4 pages)
+//
+// Step 1: Welcome — "Bienvenue sur Tune !" + description + "Commencer"
+// Step 2: Configuration — Music directory path input (local) or server
+//         connection (remote), depending on mode
+// Step 3: Zone — Show discovered devices, tap to create zone
+// Step 4: Terminé — Summary + "Accéder au tableau de bord"
+//
+// Shows on first launch (setupCompleted flag). Gated in RootView.
 // ---------------------------------------------------------------------------
 
 class LibrarySetupView extends StatefulWidget {
@@ -33,7 +40,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
   }
 
   void _goNext() {
-    if (_page < 2) {
+    if (_page < 3) {
       _pageCtrl.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -66,7 +73,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
               padding: const EdgeInsets.only(top: 20, bottom: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
+                children: List.generate(4, (i) {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -89,8 +96,9 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
                 onPageChanged: (i) => setState(() => _page = i),
                 children: [
                   _WelcomePage(onNext: _goNext),
-                  _LocalFolderPage(onNext: _goNext),
-                  _UPnPPage(onDone: _complete),
+                  _ConfigPage(onNext: _goNext),
+                  _ZonePage(onNext: _goNext),
+                  _DonePage(onDone: _complete),
                 ],
               ),
             ),
@@ -111,6 +119,7 @@ class _WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
@@ -120,13 +129,13 @@ class _WelcomePage extends StatelessWidget {
               size: 84, color: TuneColors.accent),
           const SizedBox(height: 32),
           Text(
-            AppLocalizations.of(context).setupWelcomeTitle,
+            l.onboardingWelcomeTitle,
             style: TuneFonts.largeTitle,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context).setupWelcomeBody,
+            l.onboardingWelcomeBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
@@ -139,7 +148,7 @@ class _WelcomePage extends StatelessWidget {
                 backgroundColor: TuneColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text(AppLocalizations.of(context).setupStart,
+              child: Text(l.onboardingWelcomeStart,
                   style: const TextStyle(fontSize: 16)),
             ),
           ),
@@ -150,18 +159,18 @@ class _WelcomePage extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Page 2 — Dossier local
+// Page 2 — Configuration (dossier local ou serveur distant)
 // ---------------------------------------------------------------------------
 
-class _LocalFolderPage extends StatefulWidget {
+class _ConfigPage extends StatefulWidget {
   final VoidCallback onNext;
-  const _LocalFolderPage({required this.onNext});
+  const _ConfigPage({required this.onNext});
 
   @override
-  State<_LocalFolderPage> createState() => _LocalFolderPageState();
+  State<_ConfigPage> createState() => _ConfigPageState();
 }
 
-class _LocalFolderPageState extends State<_LocalFolderPage> {
+class _ConfigPageState extends State<_ConfigPage> {
   final _ctrl = TextEditingController();
   bool _adding = false;
   bool _added = false;
@@ -197,6 +206,7 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
@@ -205,11 +215,10 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
           const Icon(Icons.folder_open_rounded,
               size: 64, color: TuneColors.accent),
           const SizedBox(height: 24),
-          Text(AppLocalizations.of(context).setupLocalTitle,
-              style: TuneFonts.title1),
+          Text(l.onboardingConfigTitle, style: TuneFonts.title1),
           const SizedBox(height: 12),
           Text(
-            AppLocalizations.of(context).setupLocalBody,
+            l.onboardingConfigBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
@@ -224,11 +233,11 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
             decoration: InputDecoration(
               filled: true,
               fillColor: TuneColors.surface,
-              hintText: AppLocalizations.of(context).setupFolderHint,
+              hintText: l.setupFolderHint,
               hintStyle: TuneFonts.footnote.copyWith(
                 color: TuneColors.textSecondary.withValues(alpha: 0.45),
               ),
-              labelText: AppLocalizations.of(context).setupFolderPath,
+              labelText: l.setupFolderPath,
               border: const OutlineInputBorder(),
               errorText: _error,
               suffixIcon: _adding
@@ -254,7 +263,7 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.folder_open_rounded, size: 18),
-                label: Text(AppLocalizations.of(context).btnAddFolder),
+                label: Text(l.btnAddFolder),
                 onPressed: _adding ? null : _pickFolder,
               ),
             ),
@@ -266,14 +275,14 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
                 style: FilledButton.styleFrom(
                     backgroundColor: TuneColors.accent),
                 onPressed: _adding ? null : _add,
-                child: Text(AppLocalizations.of(context).setupAddFolder),
+                child: Text(l.setupAddFolder),
               ),
             ),
           if (_added)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                AppLocalizations.of(context).setupFolderAdded,
+                l.setupFolderAdded,
                 style: TuneFonts.footnote
                     .copyWith(color: TuneColors.success),
               ),
@@ -288,9 +297,7 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                _added
-                    ? AppLocalizations.of(context).btnNext
-                    : AppLocalizations.of(context).btnSkip,
+                _added ? l.btnNext : l.btnSkip,
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -302,32 +309,183 @@ class _LocalFolderPageState extends State<_LocalFolderPage> {
 }
 
 // ---------------------------------------------------------------------------
-// Page 3 — UPnP / DLNA
+// Page 3 — Zone (discovered devices)
 // ---------------------------------------------------------------------------
 
-class _UPnPPage extends StatelessWidget {
-  final VoidCallback onDone;
-  const _UPnPPage({required this.onDone});
+class _ZonePage extends StatefulWidget {
+  final VoidCallback onNext;
+  const _ZonePage({required this.onNext});
+
+  @override
+  State<_ZonePage> createState() => _ZonePageState();
+}
+
+class _ZonePageState extends State<_ZonePage> {
+  bool _zoneCreated = false;
+  String? _createdZoneName;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final zoneState = context.watch<ZoneState>();
+    final renderers = zoneState.renderers;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.speaker_group_rounded,
+              size: 64, color: TuneColors.accent),
+          const SizedBox(height: 24),
+          Text(l.onboardingZoneTitle, style: TuneFonts.title1),
+          const SizedBox(height: 12),
+          Text(
+            l.onboardingZoneBody,
+            style: TuneFonts.body,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+
+          // Device list or empty state
+          if (renderers.isEmpty && !_zoneCreated)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: TuneColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                l.onboardingZoneEmpty,
+                style: TuneFonts.footnote.copyWith(
+                    color: TuneColors.textTertiary),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else if (!_zoneCreated)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: TuneColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: renderers.length,
+                separatorBuilder: (_, __) => const Divider(
+                    height: 1, indent: 56, color: TuneColors.divider),
+                itemBuilder: (ctx, i) {
+                  final device = renderers[i];
+                  return ListTile(
+                    leading: const Icon(Icons.cast_rounded,
+                        color: TuneColors.textSecondary),
+                    title: Text(device.name,
+                        style: const TextStyle(
+                            color: TuneColors.textPrimary)),
+                    subtitle: Text('${device.host}:${device.port}',
+                        style: TuneFonts.caption),
+                    trailing: const Icon(Icons.add_circle_rounded,
+                        color: TuneColors.accent),
+                    onTap: () => _createZone(device),
+                  );
+                },
+              ),
+            ),
+
+          // Success state
+          if (_zoneCreated) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: TuneColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: TuneColors.accent.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded,
+                      color: TuneColors.accent),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l.onboardingZoneCreated(_createdZoneName ?? ''),
+                      style: TuneFonts.body
+                          .copyWith(color: TuneColors.accent),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: widget.onNext,
+              style: FilledButton.styleFrom(
+                backgroundColor: TuneColors.accent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                _zoneCreated ? l.btnNext : l.btnSkip,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createZone(DiscoveredDevice device) async {
+    final appState = context.read<AppState>();
+    await appState.createZoneFromDevice(device);
+    if (mounted) {
+      setState(() {
+        _zoneCreated = true;
+        _createdZoneName = device.name;
+      });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page 4 — Terminé
+// ---------------------------------------------------------------------------
+
+class _DonePage extends StatelessWidget {
+  final VoidCallback onDone;
+  const _DonePage({required this.onDone});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.router_rounded,
-              size: 64, color: TuneColors.accent),
-          const SizedBox(height: 24),
-          Text(AppLocalizations.of(context).setupUPnPTitle,
-              style: TuneFonts.title1),
-          const SizedBox(height: 12),
+          const Icon(Icons.check_circle_outline_rounded,
+              size: 84, color: TuneColors.success),
+          const SizedBox(height: 32),
           Text(
-            AppLocalizations.of(context).setupUPnPBody,
+            l.onboardingDoneTitle,
+            style: TuneFonts.largeTitle,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l.onboardingDoneBody,
             style: TuneFonts.body,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
+
+          // Summary
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -336,23 +494,24 @@ class _UPnPPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _FeatureRow(
+                _SummaryRow(
                   icon: Icons.wifi_find_rounded,
-                  text: AppLocalizations.of(context).setupFeatureSsdp,
+                  text: l.setupFeatureSsdp,
                 ),
                 const SizedBox(height: 12),
-                _FeatureRow(
+                _SummaryRow(
                   icon: Icons.folder_open_rounded,
-                  text: AppLocalizations.of(context).setupFeatureContentDir,
+                  text: l.setupFeatureContentDir,
                 ),
                 const SizedBox(height: 12),
-                _FeatureRow(
+                _SummaryRow(
                   icon: Icons.play_circle_outline_rounded,
-                  text: AppLocalizations.of(context).setupFeaturePlayback,
+                  text: l.setupFeaturePlayback,
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 40),
           SizedBox(
             width: double.infinity,
@@ -362,7 +521,7 @@ class _UPnPPage extends StatelessWidget {
                 backgroundColor: TuneColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text(AppLocalizations.of(context).setupFinish,
+              child: Text(l.onboardingDoneButton,
                   style: const TextStyle(fontSize: 16)),
             ),
           ),
@@ -372,10 +531,10 @@ class _UPnPPage extends StatelessWidget {
   }
 }
 
-class _FeatureRow extends StatelessWidget {
+class _SummaryRow extends StatelessWidget {
   final IconData icon;
   final String text;
-  const _FeatureRow({required this.icon, required this.text});
+  const _SummaryRow({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {

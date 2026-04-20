@@ -1043,4 +1043,100 @@ class AppLocalizationsKo extends AppLocalizations {
   String metadataTracksCount(int count) {
     return '$count개 트랙';
   }
+
+  @override
+  String get stereoPairsTitle => '스테레오 페어';
+
+  @override
+  String get stereoPairCreate => '스테레오 페어 생성';
+
+  @override
+  String get stereoPairName => '페어 이름';
+
+  @override
+  String get stereoPairNameHint => '예: 거실 스테레오';
+
+  @override
+  String get stereoPairLeft => '왼쪽 (L)';
+
+  @override
+  String get stereoPairRight => '오른쪽 (R)';
+
+  @override
+  String get stereoPairSelectDevice => '장치 선택';
+
+  @override
+  String get stereoPairNone => '스테레오 페어 없음';
+
+  @override
+  String get stereoPairCreated => '스테레오 페어 생성됨';
+
+  @override
+  String get stereoPairDissolved => '스테레오 페어 해제됨';
+
+  @override
+  String get stereoPairDissolve => '해제';
+
+  @override
+  String get stereoPairBadgeL => 'L';
+
+  @override
+  String get stereoPairBadgeR => 'R';
+
+  @override
+  String get streamingEnable => '활성화';
+
+  @override
+  String get streamingDisable => '비활성화';
+
+  @override
+  String get streamingEnabled => '서비스 활성화됨';
+
+  @override
+  String get streamingDisabled => '서비스 비활성화됨';
+
+  @override
+  String get onboardingWelcomeTitle => 'Tune에 오신 것을 환영합니다!';
+
+  @override
+  String get onboardingWelcomeBody => '내장 멀티룸 뮤직 서버입니다. 몇 가지 단계로 설치를 설정하겠습니다.';
+
+  @override
+  String get onboardingWelcomeStart => '시작하기';
+
+  @override
+  String get onboardingConfigTitle => '설정';
+
+  @override
+  String get onboardingConfigBody => '오디오 파일이 있는 폴더를 지정하거나 원격 Tune 서버에 연결하세요.';
+
+  @override
+  String get onboardingConfigModeLocal => '내장 서버';
+
+  @override
+  String get onboardingConfigModeRemote => '원격 서버';
+
+  @override
+  String get onboardingZoneTitle => '존 만들기';
+
+  @override
+  String get onboardingZoneBody =>
+      '아래 장치가 네트워크에서 발견되었습니다. 하나를 탭하여 첫 번째 오디오 존을 만드세요.';
+
+  @override
+  String get onboardingZoneEmpty => '아직 장치가 발견되지 않았습니다. 나중에 추가할 수 있습니다.';
+
+  @override
+  String onboardingZoneCreated(String name) {
+    return '존 생성됨: $name';
+  }
+
+  @override
+  String get onboardingDoneTitle => '완료!';
+
+  @override
+  String get onboardingDoneBody => '설정이 완료되었습니다. 음악을 즐기세요!';
+
+  @override
+  String get onboardingDoneButton => '대시보드로 이동';
 }

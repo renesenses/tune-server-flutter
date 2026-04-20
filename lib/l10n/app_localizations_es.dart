@@ -1049,4 +1049,104 @@ class AppLocalizationsEs extends AppLocalizations {
   String metadataTracksCount(int count) {
     return '$count pistas';
   }
+
+  @override
+  String get stereoPairsTitle => 'Pares estéreo';
+
+  @override
+  String get stereoPairCreate => 'Crear par estéreo';
+
+  @override
+  String get stereoPairName => 'Nombre del par';
+
+  @override
+  String get stereoPairNameHint => 'Ej: Salón Estéreo';
+
+  @override
+  String get stereoPairLeft => 'Izquierda (L)';
+
+  @override
+  String get stereoPairRight => 'Derecha (R)';
+
+  @override
+  String get stereoPairSelectDevice => 'Seleccionar dispositivo';
+
+  @override
+  String get stereoPairNone => 'Sin pares estéreo';
+
+  @override
+  String get stereoPairCreated => 'Par estéreo creado';
+
+  @override
+  String get stereoPairDissolved => 'Par estéreo disuelto';
+
+  @override
+  String get stereoPairDissolve => 'Disolver';
+
+  @override
+  String get stereoPairBadgeL => 'L';
+
+  @override
+  String get stereoPairBadgeR => 'R';
+
+  @override
+  String get streamingEnable => 'Activar';
+
+  @override
+  String get streamingDisable => 'Desactivar';
+
+  @override
+  String get streamingEnabled => 'Servicio activado';
+
+  @override
+  String get streamingDisabled => 'Servicio desactivado';
+
+  @override
+  String get onboardingWelcomeTitle => '¡Bienvenido a Tune!';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Tu servidor de música multiroom integrado. Configuremos tu instalación en unos pocos pasos.';
+
+  @override
+  String get onboardingWelcomeStart => 'Comenzar';
+
+  @override
+  String get onboardingConfigTitle => 'Configuración';
+
+  @override
+  String get onboardingConfigBody =>
+      'Especifica una carpeta con tus archivos de audio o conéctate a un servidor Tune remoto.';
+
+  @override
+  String get onboardingConfigModeLocal => 'Servidor integrado';
+
+  @override
+  String get onboardingConfigModeRemote => 'Servidor remoto';
+
+  @override
+  String get onboardingZoneTitle => 'Crear una zona';
+
+  @override
+  String get onboardingZoneBody =>
+      'Los dispositivos a continuación fueron descubiertos en tu red. Toca uno para crear tu primera zona de audio.';
+
+  @override
+  String get onboardingZoneEmpty =>
+      'Aún no se han descubierto dispositivos. Puedes agregar más después.';
+
+  @override
+  String onboardingZoneCreated(String name) {
+    return 'Zona creada: $name';
+  }
+
+  @override
+  String get onboardingDoneTitle => '¡Listo!';
+
+  @override
+  String get onboardingDoneBody =>
+      'Tu configuración está lista. ¡Disfruta tu música!';
+
+  @override
+  String get onboardingDoneButton => 'Ir al panel';
 }

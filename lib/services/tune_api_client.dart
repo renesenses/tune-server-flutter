@@ -586,4 +586,33 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> getSyncStats() =>
       _get('/zone-manager/sync/stats').then((d) => d as Map<String, dynamic>);
+
+  // ---------------------------------------------------------------------------
+  // ── Stereo Pairs ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> createStereoPair(
+          String name, String leftDeviceId, String rightDeviceId) =>
+      _post('/zones/stereo-pair', body: {
+        'name': name,
+        'left_device_id': leftDeviceId,
+        'right_device_id': rightDeviceId,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<void> dissolveStereoPair(String pairId) =>
+      _delete('/zones/stereo-pair/$pairId');
+
+  Future<List<Map<String, dynamic>>> listStereoPairs() =>
+      _get('/zones/stereo-pairs/list').then((d) =>
+          (d as List).map((e) => e as Map<String, dynamic>).toList());
+
+  // ---------------------------------------------------------------------------
+  // ── Streaming Enable/Disable ──
+  // ---------------------------------------------------------------------------
+
+  Future<void> enableStreamingService(String name) =>
+      _post('/streaming/$name/enable').then((_) {});
+
+  Future<void> disableStreamingService(String name) =>
+      _post('/streaming/$name/disable').then((_) {});
 }

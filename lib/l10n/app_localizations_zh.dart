@@ -1040,4 +1040,99 @@ class AppLocalizationsZh extends AppLocalizations {
   String metadataTracksCount(int count) {
     return '$count首曲目';
   }
+
+  @override
+  String get stereoPairsTitle => '立体声配对';
+
+  @override
+  String get stereoPairCreate => '创建立体声配对';
+
+  @override
+  String get stereoPairName => '配对名称';
+
+  @override
+  String get stereoPairNameHint => '例如：客厅立体声';
+
+  @override
+  String get stereoPairLeft => '左声道 (L)';
+
+  @override
+  String get stereoPairRight => '右声道 (R)';
+
+  @override
+  String get stereoPairSelectDevice => '选择设备';
+
+  @override
+  String get stereoPairNone => '无立体声配对';
+
+  @override
+  String get stereoPairCreated => '立体声配对已创建';
+
+  @override
+  String get stereoPairDissolved => '立体声配对已解除';
+
+  @override
+  String get stereoPairDissolve => '解除';
+
+  @override
+  String get stereoPairBadgeL => 'L';
+
+  @override
+  String get stereoPairBadgeR => 'R';
+
+  @override
+  String get streamingEnable => '启用';
+
+  @override
+  String get streamingDisable => '禁用';
+
+  @override
+  String get streamingEnabled => '服务已启用';
+
+  @override
+  String get streamingDisabled => '服务已禁用';
+
+  @override
+  String get onboardingWelcomeTitle => '欢迎使用 Tune！';
+
+  @override
+  String get onboardingWelcomeBody => '您的内置多房间音乐服务器。让我们通过几个步骤来设置您的安装。';
+
+  @override
+  String get onboardingWelcomeStart => '开始';
+
+  @override
+  String get onboardingConfigTitle => '配置';
+
+  @override
+  String get onboardingConfigBody => '指定包含音频文件的文件夹，或连接到远程 Tune 服务器。';
+
+  @override
+  String get onboardingConfigModeLocal => '内置服务器';
+
+  @override
+  String get onboardingConfigModeRemote => '远程服务器';
+
+  @override
+  String get onboardingZoneTitle => '创建区域';
+
+  @override
+  String get onboardingZoneBody => '以下设备已在您的网络中发现。点击一个来创建您的第一个音频区域。';
+
+  @override
+  String get onboardingZoneEmpty => '尚未发现设备。您可以稍后添加。';
+
+  @override
+  String onboardingZoneCreated(String name) {
+    return '区域已创建：$name';
+  }
+
+  @override
+  String get onboardingDoneTitle => '完成！';
+
+  @override
+  String get onboardingDoneBody => '您的设置已就绪。享受您的音乐吧！';
+
+  @override
+  String get onboardingDoneButton => '进入仪表板';
 }

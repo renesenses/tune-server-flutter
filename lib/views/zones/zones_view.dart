@@ -15,6 +15,37 @@ import '../helpers/tune_fonts.dart';
 import 'zone_manager_view.dart';
 
 // ---------------------------------------------------------------------------
+// StereoPair — lightweight model for a stereo pair (remote API)
+// ---------------------------------------------------------------------------
+
+class StereoPair {
+  final String id;
+  final String name;
+  final String leftDeviceId;
+  final String rightDeviceId;
+  final String? leftDeviceName;
+  final String? rightDeviceName;
+
+  const StereoPair({
+    required this.id,
+    required this.name,
+    required this.leftDeviceId,
+    required this.rightDeviceId,
+    this.leftDeviceName,
+    this.rightDeviceName,
+  });
+
+  factory StereoPair.fromJson(Map<String, dynamic> json) => StereoPair(
+        id: json['id']?.toString() ?? '',
+        name: json['name'] as String? ?? '',
+        leftDeviceId: json['left_device_id'] as String? ?? '',
+        rightDeviceId: json['right_device_id'] as String? ?? '',
+        leftDeviceName: json['left_device_name'] as String?,
+        rightDeviceName: json['right_device_name'] as String?,
+      );
+}
+
+// ---------------------------------------------------------------------------
 // ZonesView — onglet dédié à la gestion des zones audio.
 //
 // Fonctionnalités :
@@ -102,8 +133,49 @@ class ZonesView extends StatelessWidget {
 // Body
 // ---------------------------------------------------------------------------
 
-class _ZonesBody extends StatelessWidget {
+class _ZonesBody extends StatefulWidget {
   const _ZonesBody();
+
+  @override
+  State<_ZonesBody> createState() => _ZonesBodyState();
+}
+
+class _ZonesBodyState extends State<_ZonesBody> {
+  List<StereoPair> _stereoPairs = [];
+  bool _stereoPairsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStereoPairs();
+  }
+
+  Future<void> _loadStereoPairs() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      final data = await api.listStereoPairs();
+      if (mounted) {
+        setState(() {
+          _stereoPairs = data.map((j) => StereoPair.fromJson(j)).toList();
+          _stereoPairsLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _stereoPairsLoaded = true);
+    }
+  }
+
+  /// Returns the stereo pair role for a zone's output device, or null.
+  String? _stereoBadge(ZoneWithState zone) {
+    final deviceId = zone.outputDeviceId;
+    if (deviceId == null) return null;
+    for (final pair in _stereoPairs) {
+      if (pair.leftDeviceId == deviceId) return 'L';
+      if (pair.rightDeviceId == deviceId) return 'R';
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +185,7 @@ class _ZonesBody extends StatelessWidget {
     final currentId = zoneState.currentZoneId;
     final renderers = zoneState.unboundRenderers;
     final groups = zoneState.groups;
+    final isRemote = context.read<AppState>().apiClient != null;
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
@@ -154,12 +227,65 @@ class _ZonesBody extends StatelessWidget {
                     if (idx > 0)
                       const Divider(
                           height: 1, indent: 56, color: TuneColors.divider),
-                    _ZoneTile(zone: zone, isActive: isActive),
+                    _ZoneTile(
+                      zone: zone,
+                      isActive: isActive,
+                      stereoBadge: _stereoBadge(zone),
+                    ),
                   ],
                 );
               }).toList(),
             ),
           ),
+
+        // ---- Paires stéréo ----
+        if (isRemote) ...[
+          _SectionHeader(l.stereoPairsTitle),
+          if (_stereoPairsLoaded && _stereoPairs.isEmpty)
+            Container(
+              color: TuneColors.surface,
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  l.stereoPairNone,
+                  style: const TextStyle(color: TuneColors.textTertiary),
+                ),
+              ),
+            )
+          else if (_stereoPairs.isNotEmpty)
+            Container(
+              color: TuneColors.surface,
+              child: Column(
+                children: _stereoPairs.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final pair = entry.value;
+                  return Column(
+                    children: [
+                      if (idx > 0)
+                        const Divider(
+                            height: 1, indent: 56, color: TuneColors.divider),
+                      _StereoPairTile(
+                        pair: pair,
+                        onDissolved: _loadStereoPairs,
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: TuneColors.accent,
+                minimumSize: const Size.fromHeight(44),
+              ),
+              icon: const Icon(Icons.surround_sound_rounded, size: 20),
+              label: Text(l.stereoPairCreate),
+              onPressed: () => _showCreateStereoPairDialog(context),
+            ),
+          ),
+        ],
 
         // ---- Multi-Room ----
         _SectionHeader(l.zonesMultiRoom),
@@ -235,6 +361,13 @@ class _ZonesBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => const _CreateGroupDialog(),
+    );
+  }
+
+  void _showCreateStereoPairDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _CreateStereoPairDialog(onCreated: _loadStereoPairs),
     );
   }
 }
@@ -317,8 +450,13 @@ class _ActiveZoneBanner extends StatelessWidget {
 class _ZoneTile extends StatelessWidget {
   final ZoneWithState zone;
   final bool isActive;
+  final String? stereoBadge;
 
-  const _ZoneTile({required this.zone, required this.isActive});
+  const _ZoneTile({
+    required this.zone,
+    required this.isActive,
+    this.stereoBadge,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -395,6 +533,35 @@ class _ZoneTile extends StatelessWidget {
     final group = context.read<ZoneState>().groupForZone(zone.id);
     final baseColor = isActive ? TuneColors.accent : TuneColors.textSecondary;
     final icon = Icon(_outputIcon(zone.outputType), color: baseColor);
+
+    // Stereo badge takes priority over group badge
+    if (stereoBadge != null) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          icon,
+          Positioned(
+            right: -6,
+            bottom: -4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: TuneColors.accent,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                stereoBadge!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     if (group == null) return icon;
 
@@ -1193,6 +1360,281 @@ class _SyncDelaySheetState extends State<_SyncDelaySheet> {
         ],
       ),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tuile paire stéréo
+// ---------------------------------------------------------------------------
+
+class _StereoPairTile extends StatelessWidget {
+  final StereoPair pair;
+  final VoidCallback onDissolved;
+
+  const _StereoPairTile({required this.pair, required this.onDissolved});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final leftName = pair.leftDeviceName ?? pair.leftDeviceId;
+    final rightName = pair.rightDeviceName ?? pair.rightDeviceId;
+
+    return Dismissible(
+      key: ValueKey('stereo_${pair.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete_rounded, color: Colors.white),
+      ),
+      onDismissed: (_) async {
+        final api = context.read<AppState>().apiClient;
+        if (api != null) {
+          await api.dissolveStereoPair(pair.id);
+          onDissolved();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l.stereoPairDissolved),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      },
+      child: ListTile(
+        leading: const Icon(Icons.surround_sound_rounded,
+            color: TuneColors.accent),
+        title: Text(
+          pair.name,
+          style: const TextStyle(
+            color: TuneColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: TuneColors.accent,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(l.stereoPairBadgeL,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(leftName,
+                  style: TuneFonts.caption,
+                  overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: TuneColors.accent,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(l.stereoPairBadgeR,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(rightName,
+                  style: TuneFonts.caption,
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.link_off_rounded,
+              color: TuneColors.error, size: 20),
+          tooltip: l.stereoPairDissolve,
+          onPressed: () async {
+            final api = context.read<AppState>().apiClient;
+            if (api != null) {
+              await api.dissolveStereoPair(pair.id);
+              onDissolved();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.stereoPairDissolved),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dialog de création de paire stéréo
+// ---------------------------------------------------------------------------
+
+class _CreateStereoPairDialog extends StatefulWidget {
+  final VoidCallback onCreated;
+  const _CreateStereoPairDialog({required this.onCreated});
+
+  @override
+  State<_CreateStereoPairDialog> createState() =>
+      _CreateStereoPairDialogState();
+}
+
+class _CreateStereoPairDialogState extends State<_CreateStereoPairDialog> {
+  final _nameCtrl = TextEditingController();
+  String? _leftDeviceId;
+  String? _rightDeviceId;
+  bool _creating = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final renderers = context.read<ZoneState>().renderers;
+
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text(l.stereoPairCreate, style: TuneFonts.title3),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              style: const TextStyle(color: TuneColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: l.stereoPairNameHint,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
+                labelText: l.stereoPairName,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Left device picker
+            Text(l.stereoPairLeft, style: TuneFonts.subheadline),
+            const SizedBox(height: 4),
+            DropdownButtonFormField<String>(
+              value: _leftDeviceId,
+              dropdownColor: TuneColors.surfaceVariant,
+              style: TuneFonts.body,
+              decoration: InputDecoration(
+                hintText: l.stereoPairSelectDevice,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
+              ),
+              items: renderers
+                  .where((d) => d.id != _rightDeviceId)
+                  .map((d) => DropdownMenuItem(
+                        value: d.id,
+                        child: Text(d.name,
+                            overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _leftDeviceId = v),
+            ),
+            const SizedBox(height: 12),
+            // Right device picker
+            Text(l.stereoPairRight, style: TuneFonts.subheadline),
+            const SizedBox(height: 4),
+            DropdownButtonFormField<String>(
+              value: _rightDeviceId,
+              dropdownColor: TuneColors.surfaceVariant,
+              style: TuneFonts.body,
+              decoration: InputDecoration(
+                hintText: l.stereoPairSelectDevice,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
+              ),
+              items: renderers
+                  .where((d) => d.id != _leftDeviceId)
+                  .map((d) => DropdownMenuItem(
+                        value: d.id,
+                        child: Text(d.name,
+                            overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _rightDeviceId = v),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _creating ? null : () => Navigator.pop(context),
+          child: Text(l.btnCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+          onPressed: _canCreate && !_creating ? _onCreate : null,
+          child: _creating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : Text(l.btnCreate),
+        ),
+      ],
+    );
+  }
+
+  bool get _canCreate =>
+      _nameCtrl.text.trim().isNotEmpty &&
+      _leftDeviceId != null &&
+      _rightDeviceId != null;
+
+  Future<void> _onCreate() async {
+    final l = AppLocalizations.of(context);
+    setState(() => _creating = true);
+    try {
+      final api = context.read<AppState>().apiClient;
+      if (api != null) {
+        await api.createStereoPair(
+          _nameCtrl.text.trim(),
+          _leftDeviceId!,
+          _rightDeviceId!,
+        );
+        widget.onCreated();
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l.stereoPairCreated),
+              duration: const Duration(seconds: 2),
+              backgroundColor: TuneColors.accent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _creating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$e'),
+            backgroundColor: TuneColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 
