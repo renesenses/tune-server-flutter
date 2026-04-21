@@ -2281,6 +2281,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to dashboard'**
   String get onboardingDoneButton;
+
+  /// No description provided for @artistBio.
+  ///
+  /// In en, this message translates to:
+  /// **'Biography'**
+  String get artistBio;
+
+  /// No description provided for @artistAnecdotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Anecdotes'**
+  String get artistAnecdotes;
+
+  /// No description provided for @artistSimilarArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar artists'**
+  String get artistSimilarArtists;
+
+  /// No description provided for @artistMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get artistMembers;
+
+  /// No description provided for @artistDiscography.
+  ///
+  /// In en, this message translates to:
+  /// **'Discography'**
+  String get artistDiscography;
+
+  /// No description provided for @artistEnriching.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrichment in progress…'**
+  String get artistEnriching;
 }
 
 class _AppLocalizationsDelegate

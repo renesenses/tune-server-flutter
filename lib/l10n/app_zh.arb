@@ -402,5 +402,12 @@
   "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
   "onboardingDoneTitle": "完成！",
   "onboardingDoneBody": "您的设置已就绪。享受您的音乐吧！",
-  "onboardingDoneButton": "进入仪表板"
+  "onboardingDoneButton": "进入仪表板",
+
+  "artistBio": "传记",
+  "artistAnecdotes": "轶事",
+  "artistSimilarArtists": "相似艺术家",
+  "artistMembers": "成员",
+  "artistDiscography": "唱片目录",
+  "artistEnriching": "正在丰富信息\u2026"
 }

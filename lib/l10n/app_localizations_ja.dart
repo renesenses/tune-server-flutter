@@ -1140,4 +1140,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => 'ダッシュボードへ';
+
+  @override
+  String get artistBio => 'バイオグラフィー';
+
+  @override
+  String get artistAnecdotes => 'エピソード';
+
+  @override
+  String get artistSimilarArtists => '類似アーティスト';
+
+  @override
+  String get artistMembers => 'メンバー';
+
+  @override
+  String get artistDiscography => 'ディスコグラフィー';
+
+  @override
+  String get artistEnriching => 'エンリッチ中…';
 }

@@ -1150,4 +1150,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => 'Accéder au tableau de bord';
+
+  @override
+  String get artistBio => 'Biographie';
+
+  @override
+  String get artistAnecdotes => 'Anecdotes';
+
+  @override
+  String get artistSimilarArtists => 'Artistes similaires';
+
+  @override
+  String get artistMembers => 'Membres';
+
+  @override
+  String get artistDiscography => 'Discographie';
+
+  @override
+  String get artistEnriching => 'Enrichissement en cours…';
 }

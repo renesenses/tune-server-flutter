@@ -402,5 +402,12 @@
   "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
   "onboardingDoneTitle": "完了！",
   "onboardingDoneBody": "セットアップが完了しました。音楽をお楽しみください！",
-  "onboardingDoneButton": "ダッシュボードへ"
+  "onboardingDoneButton": "ダッシュボードへ",
+
+  "artistBio": "バイオグラフィー",
+  "artistAnecdotes": "エピソード",
+  "artistSimilarArtists": "類似アーティスト",
+  "artistMembers": "メンバー",
+  "artistDiscography": "ディスコグラフィー",
+  "artistEnriching": "エンリッチ中\u2026"
 }

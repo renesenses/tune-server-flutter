@@ -1135,4 +1135,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => '进入仪表板';
+
+  @override
+  String get artistBio => '传记';
+
+  @override
+  String get artistAnecdotes => '轶事';
+
+  @override
+  String get artistSimilarArtists => '相似艺术家';
+
+  @override
+  String get artistMembers => '成员';
+
+  @override
+  String get artistDiscography => '唱片目录';
+
+  @override
+  String get artistEnriching => '正在丰富信息…';
 }

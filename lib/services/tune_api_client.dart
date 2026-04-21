@@ -113,6 +113,11 @@ class TuneApiClient {
   Future<List<dynamic>> getArtistAlbums(int artistId) =>
       _get('/library/artists/$artistId/albums').then((d) => d as List);
 
+  Future<Map<String, dynamic>> getArtistMetadata(int artistId) async {
+    final response = await _get('/api/v1/artists/$artistId/metadata');
+    return response;
+  }
+
   Future<List<dynamic>> getArtistTracks(int artistId) =>
       _get('/library/artists/$artistId/tracks').then((d) => d as List);
 

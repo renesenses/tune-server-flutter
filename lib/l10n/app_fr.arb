@@ -440,5 +440,12 @@
   },
   "onboardingDoneTitle": "Terminé !",
   "onboardingDoneBody": "Votre installation est prête. Profitez de votre musique !",
-  "onboardingDoneButton": "Accéder au tableau de bord"
+  "onboardingDoneButton": "Accéder au tableau de bord",
+
+  "artistBio": "Biographie",
+  "artistAnecdotes": "Anecdotes",
+  "artistSimilarArtists": "Artistes similaires",
+  "artistMembers": "Membres",
+  "artistDiscography": "Discographie",
+  "artistEnriching": "Enrichissement en cours\u2026"
 }

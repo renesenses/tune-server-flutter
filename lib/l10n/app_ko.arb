@@ -402,5 +402,12 @@
   "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
   "onboardingDoneTitle": "완료!",
   "onboardingDoneBody": "설정이 완료되었습니다. 음악을 즐기세요!",
-  "onboardingDoneButton": "대시보드로 이동"
+  "onboardingDoneButton": "대시보드로 이동",
+
+  "artistBio": "바이오그래피",
+  "artistAnecdotes": "일화",
+  "artistSimilarArtists": "비슷한 아티스트",
+  "artistMembers": "멤버",
+  "artistDiscography": "디스코그래피",
+  "artistEnriching": "보강 진행 중\u2026"
 }

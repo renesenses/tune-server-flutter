@@ -1149,4 +1149,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => 'Zum Dashboard';
+
+  @override
+  String get artistBio => 'Biografie';
+
+  @override
+  String get artistAnecdotes => 'Anekdoten';
+
+  @override
+  String get artistSimilarArtists => 'Ähnliche Künstler';
+
+  @override
+  String get artistMembers => 'Mitglieder';
+
+  @override
+  String get artistDiscography => 'Diskografie';
+
+  @override
+  String get artistEnriching => 'Anreicherung läuft…';
 }

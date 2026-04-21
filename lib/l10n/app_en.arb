@@ -464,5 +464,12 @@
   },
   "onboardingDoneTitle": "All done!",
   "onboardingDoneBody": "Your setup is ready. Enjoy your music!",
-  "onboardingDoneButton": "Go to dashboard"
+  "onboardingDoneButton": "Go to dashboard",
+
+  "artistBio": "Biography",
+  "artistAnecdotes": "Anecdotes",
+  "artistSimilarArtists": "Similar artists",
+  "artistMembers": "Members",
+  "artistDiscography": "Discography",
+  "artistEnriching": "Enrichment in progress\u2026"
 }

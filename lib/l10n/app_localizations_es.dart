@@ -1149,4 +1149,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => 'Ir al panel';
+
+  @override
+  String get artistBio => 'Biografía';
+
+  @override
+  String get artistAnecdotes => 'Anécdotas';
+
+  @override
+  String get artistSimilarArtists => 'Artistas similares';
+
+  @override
+  String get artistMembers => 'Miembros';
+
+  @override
+  String get artistDiscography => 'Discografía';
+
+  @override
+  String get artistEnriching => 'Enriquecimiento en curso…';
 }

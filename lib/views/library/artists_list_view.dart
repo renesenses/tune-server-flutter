@@ -74,7 +74,7 @@ class _ArtistTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// ArtistDetailView
+// ArtistDetailView — enriched with metadata from /api/v1/artists/:id/metadata
 // ---------------------------------------------------------------------------
 
 class ArtistDetailView extends StatefulWidget {
@@ -88,6 +88,8 @@ class ArtistDetailView extends StatefulWidget {
 class _ArtistDetailViewState extends State<ArtistDetailView> {
   List<Album>? _albums;
   List<Track>? _tracks;
+  Map<String, dynamic>? _metadata;
+  bool _metadataLoading = true;
 
   @override
   void initState() {
@@ -97,6 +99,8 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
 
   Future<void> _loadData() async {
     final app = context.read<AppState>();
+
+    // Load albums + tracks
     if (app.isRemoteMode && app.apiClient != null) {
       try {
         final albumsJson = await app.apiClient!.getArtistAlbums(widget.artist.id);
@@ -108,22 +112,39 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
       } catch (e) {
         debugPrint('[Remote] loadArtistData error: $e');
       }
-      return;
+    } else {
+      final results = await Future.wait([
+        app.engine.db.albumRepo.forArtist(widget.artist.id),
+        app.engine.db.trackRepo.forArtist(widget.artist.id),
+      ]);
+      if (mounted) {
+        setState(() {
+          _albums = results[0] as List<Album>;
+          _tracks = results[1] as List<Track>;
+        });
+      }
     }
-    final results = await Future.wait([
-      app.engine.db.albumRepo.forArtist(widget.artist.id),
-      app.engine.db.trackRepo.forArtist(widget.artist.id),
-    ]);
-    if (mounted) {
-      setState(() {
-        _albums = results[0] as List<Album>;
-        _tracks = results[1] as List<Track>;
-      });
+
+    // Load metadata (remote mode only — needs API)
+    if (app.isRemoteMode && app.apiClient != null) {
+      try {
+        final meta = await app.apiClient!.getArtistMetadata(widget.artist.id);
+        if (mounted) setState(() {
+          _metadata = meta;
+          _metadataLoading = false;
+        });
+      } catch (e) {
+        debugPrint('[Remote] loadArtistMetadata error: $e');
+        if (mounted) setState(() => _metadataLoading = false);
+      }
+    } else {
+      if (mounted) setState(() => _metadataLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final artist = widget.artist;
 
     return Scaffold(
@@ -139,7 +160,119 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
-                // --- Albums ---
+                // --- Artist header with image + name + origin ---
+                SliverToBoxAdapter(child: _ArtistHeader(
+                  artist: artist,
+                  metadata: _metadata,
+                )),
+
+                // --- Enrichment status ---
+                if (_metadataLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                else if (_metadata != null &&
+                    _metadata!['enrichment_status'] == 'pending')
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(l.artistEnriching,
+                              style: TuneFonts.footnote),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // --- Bio ---
+                if (_metadata != null &&
+                    _metadata!['bio_fr'] != null &&
+                    (_metadata!['bio_fr'] as String).isNotEmpty) ...[
+                  _sectionHeader(l.artistBio),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        _metadata!['bio_fr'] as String,
+                        style: TuneFonts.body.copyWith(
+                            color: TuneColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
+
+                // --- Anecdotes ---
+                if (_metadata != null &&
+                    _metadata!['anecdotes'] != null &&
+                    (_metadata!['anecdotes'] as List).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ExpandableSection(
+                      title: l.artistAnecdotes,
+                      children: (_metadata!['anecdotes'] as List)
+                          .map((a) => a.toString())
+                          .toList(),
+                    ),
+                  ),
+
+                // --- Artistes similaires ---
+                if (_metadata != null &&
+                    _metadata!['similar_artists'] != null &&
+                    (_metadata!['similar_artists'] as List).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _SimilarArtistsSection(
+                      title: l.artistSimilarArtists,
+                      artists: (_metadata!['similar_artists'] as List)
+                          .cast<Map<String, dynamic>>(),
+                      libraryArtists:
+                          context.read<LibraryState>().artists,
+                    ),
+                  ),
+
+                // --- Membres ---
+                if (_metadata != null &&
+                    _metadata!['members'] != null &&
+                    (_metadata!['members'] as List).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ExpandableSection(
+                      title: l.artistMembers,
+                      children: (_metadata!['members'] as List)
+                          .map((m) => m.toString())
+                          .toList(),
+                    ),
+                  ),
+
+                // --- Discographie ---
+                if (_metadata != null &&
+                    _metadata!['discography'] != null &&
+                    (_metadata!['discography'] as List).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ExpandableSection(
+                      title: l.artistDiscography,
+                      children: (_metadata!['discography'] as List)
+                          .map((d) {
+                        if (d is Map<String, dynamic>) {
+                          final title = d['title'] ?? '';
+                          final year = d['year']?.toString() ?? '';
+                          return year.isNotEmpty
+                              ? '$title ($year)'
+                              : title.toString();
+                        }
+                        return d.toString();
+                      }).toList(),
+                    ),
+                  ),
+
+                // --- Albums from library ---
                 if (_albums!.isNotEmpty) ...[
                   _sectionHeader('Albums'),
                   SliverToBoxAdapter(
@@ -188,6 +321,210 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
           child: Text(title, style: TuneFonts.title3),
         ),
       );
+}
+
+// ---------------------------------------------------------------------------
+// _ArtistHeader — large image + name + origin + period
+// ---------------------------------------------------------------------------
+
+class _ArtistHeader extends StatelessWidget {
+  final Artist artist;
+  final Map<String, dynamic>? metadata;
+  const _ArtistHeader({required this.artist, this.metadata});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = metadata?['image_url'] as String?;
+    final origin = metadata?['origin'] as String?;
+    final period = metadata?['period'] as String?;
+    final initials = artist.name
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .take(2)
+        .map((w) => w[0].toUpperCase())
+        .join();
+
+    return Container(
+      color: TuneColors.surface,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Artist image
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipOval(
+              child: Image.network(
+                imageUrl,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _initialsAvatar(initials),
+              ),
+            )
+          else if (artist.imagePath != null)
+            ClipOval(
+              child: ArtworkView(
+                  filePath: artist.imagePath,
+                  size: 120,
+                  cornerRadius: 60),
+            )
+          else
+            _initialsAvatar(initials),
+          const SizedBox(height: 12),
+          // Name
+          Text(artist.name,
+              style: TuneFonts.title1,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis),
+          // Origin + Period
+          if (origin != null || period != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              [if (origin != null) origin, if (period != null) period]
+                  .join(' \u2022 '),
+              style: TuneFonts.subheadline,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _initialsAvatar(String initials) => CircleAvatar(
+        radius: 60,
+        backgroundColor: TuneColors.surfaceVariant,
+        child: Text(
+          initials.isEmpty ? '?' : initials,
+          style: TuneFonts.title1
+              .copyWith(color: TuneColors.textTertiary),
+        ),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// _ExpandableSection — collapsible list of strings
+// ---------------------------------------------------------------------------
+
+class _ExpandableSection extends StatefulWidget {
+  final String title;
+  final List<String> children;
+  const _ExpandableSection({required this.title, required this.children});
+
+  @override
+  State<_ExpandableSection> createState() => _ExpandableSectionState();
+}
+
+class _ExpandableSectionState extends State<_ExpandableSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                    child: Text(widget.title, style: TuneFonts.title3)),
+                Icon(
+                  _expanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  color: TuneColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_expanded)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: widget.children
+                  .map((text) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(text,
+                            style: TuneFonts.body.copyWith(
+                                color: TuneColors.textSecondary)),
+                      ))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _SimilarArtistsSection — tappable chips for similar artists
+// ---------------------------------------------------------------------------
+
+class _SimilarArtistsSection extends StatelessWidget {
+  final String title;
+  final List<Map<String, dynamic>> artists;
+  final List<Artist> libraryArtists;
+  const _SimilarArtistsSection({
+    required this.title,
+    required this.artists,
+    required this.libraryArtists,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+          child: Text(title, style: TuneFonts.title3),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: artists.map((similar) {
+              final name = similar['name'] as String? ?? '';
+              // Check if this artist exists in the library
+              final libraryMatch = libraryArtists
+                  .where((a) =>
+                      a.name.toLowerCase() == name.toLowerCase())
+                  .toList();
+              final inLibrary = libraryMatch.isNotEmpty;
+
+              return ActionChip(
+                label: Text(name),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  color: inLibrary
+                      ? TuneColors.accent
+                      : TuneColors.textSecondary,
+                ),
+                backgroundColor: inLibrary
+                    ? TuneColors.accent.withValues(alpha: 0.15)
+                    : TuneColors.surfaceVariant,
+                side: BorderSide.none,
+                onPressed: inLibrary
+                    ? () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ArtistDetailView(
+                                artist: libraryMatch.first),
+                          ),
+                        )
+                    : null,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

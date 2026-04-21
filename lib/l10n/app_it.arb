@@ -402,5 +402,12 @@
   "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
   "onboardingDoneTitle": "Fatto!",
   "onboardingDoneBody": "La tua configurazione è pronta. Goditi la tua musica!",
-  "onboardingDoneButton": "Vai alla dashboard"
+  "onboardingDoneButton": "Vai alla dashboard",
+
+  "artistBio": "Biografia",
+  "artistAnecdotes": "Aneddoti",
+  "artistSimilarArtists": "Artisti simili",
+  "artistMembers": "Membri",
+  "artistDiscography": "Discografia",
+  "artistEnriching": "Arricchimento in corso\u2026"
 }

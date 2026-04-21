@@ -1139,4 +1139,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get onboardingDoneButton => '대시보드로 이동';
+
+  @override
+  String get artistBio => '바이오그래피';
+
+  @override
+  String get artistAnecdotes => '일화';
+
+  @override
+  String get artistSimilarArtists => '비슷한 아티스트';
+
+  @override
+  String get artistMembers => '멤버';
+
+  @override
+  String get artistDiscography => '디스코그래피';
+
+  @override
+  String get artistEnriching => '보강 진행 중…';
 }
