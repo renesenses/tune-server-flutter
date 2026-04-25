@@ -8,6 +8,7 @@ import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'waveform_painter.dart';
 
 // ---------------------------------------------------------------------------
 // DJView — DJ mode with two decks, crossfade, auto-crossfade
@@ -28,6 +29,12 @@ class _DJViewState extends State<DJView> {
   Map<String, dynamic>? _deckB;
   Timer? _pollTimer;
   bool _loading = true;
+  List<double> _waveformA = [];
+  List<double> _waveformB = [];
+  double? _bpmA;
+  double? _bpmB;
+  int? _lastTrackIdA;
+  int? _lastTrackIdB;
 
   @override
   void initState() {
@@ -67,6 +74,29 @@ class _DJViewState extends State<DJView> {
     }
   }
 
+  Future<void> _loadWaveform(int trackId, String deck) async {
+    try {
+      final api = context.read<AppState>().apiClient;
+      if (api == null) return;
+      final data = await api.getWaveform(trackId);
+      if (!mounted) return;
+      setState(() {
+        final wf = (data['waveform'] as List?)
+                ?.map((e) => (e as num).toDouble())
+                .toList() ??
+            [];
+        final bpm = (data['bpm'] as num?)?.toDouble();
+        if (deck == 'a') {
+          _waveformA = wf;
+          _bpmA = bpm;
+        } else {
+          _waveformB = wf;
+          _bpmB = bpm;
+        }
+      });
+    } catch (_) {}
+  }
+
   void _startPolling() {
     _pollTimer?.cancel();
     if (!_enabled) return;
@@ -80,12 +110,24 @@ class _DJViewState extends State<DJView> {
     try {
       final status = await api.getDJStatus(zoneId);
       if (!mounted) return;
+      final newDeckA = status['deck_a'] as Map<String, dynamic>?;
+      final newDeckB = status['deck_b'] as Map<String, dynamic>?;
+      final newTrackIdA = newDeckA?['track_id'] as int?;
+      final newTrackIdB = newDeckB?['track_id'] as int?;
       setState(() {
         _enabled = status['enabled'] as bool? ?? false;
         _autoCrossfade = status['auto_crossfade'] as bool? ?? false;
-        _deckA = status['deck_a'] as Map<String, dynamic>?;
-        _deckB = status['deck_b'] as Map<String, dynamic>?;
+        _deckA = newDeckA;
+        _deckB = newDeckB;
       });
+      if (newTrackIdA != null && newTrackIdA != _lastTrackIdA) {
+        _lastTrackIdA = newTrackIdA;
+        _loadWaveform(newTrackIdA, 'a');
+      }
+      if (newTrackIdB != null && newTrackIdB != _lastTrackIdB) {
+        _lastTrackIdB = newTrackIdB;
+        _loadWaveform(newTrackIdB, 'b');
+      }
       if (!_enabled) _pollTimer?.cancel();
     } catch (_) {}
   }
@@ -317,6 +359,8 @@ class _DJViewState extends State<DJView> {
                               onLoad: () => _loadTrackOnDeck('a'),
                               onPlay: () => _playDeck('a'),
                               onPause: () => _pauseDeck('a'),
+                              waveform: _waveformA,
+                              bpm: _bpmA,
                             )),
                             const SizedBox(width: 16),
                             Expanded(child: _DeckCard(
@@ -325,6 +369,8 @@ class _DJViewState extends State<DJView> {
                               onLoad: () => _loadTrackOnDeck('b'),
                               onPlay: () => _playDeck('b'),
                               onPause: () => _pauseDeck('b'),
+                              waveform: _waveformB,
+                              bpm: _bpmB,
                             )),
                           ],
                         )
@@ -335,6 +381,8 @@ class _DJViewState extends State<DJView> {
                           onLoad: () => _loadTrackOnDeck('a'),
                           onPlay: () => _playDeck('a'),
                           onPause: () => _pauseDeck('a'),
+                          waveform: _waveformA,
+                          bpm: _bpmA,
                         ),
                         const SizedBox(height: 16),
                         _DeckCard(
@@ -343,6 +391,8 @@ class _DJViewState extends State<DJView> {
                           onLoad: () => _loadTrackOnDeck('b'),
                           onPlay: () => _playDeck('b'),
                           onPause: () => _pauseDeck('b'),
+                          waveform: _waveformB,
+                          bpm: _bpmB,
                         ),
                       ],
 
@@ -397,6 +447,35 @@ class _DJViewState extends State<DJView> {
                                   ),
                                 ],
                               ),
+                              if (_bpmA != null && _bpmB != null) ...[
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final zoneId = context.read<ZoneState>().currentZoneId;
+                                      if (zoneId == null) return;
+                                      try {
+                                        await context.read<AppState>().apiClient?.syncTempo(zoneId);
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Sync ${_bpmA!.round()} \u2192 ${_bpmB!.round()} BPM')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Sync failed')),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    icon: const Icon(Icons.sync, size: 16),
+                                    label: Text('Sync ${_bpmA!.round()} \u2192 ${_bpmB!.round()} BPM',
+                                        style: const TextStyle(fontSize: 12)),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -418,6 +497,8 @@ class _DeckCard extends StatelessWidget {
   final VoidCallback onLoad;
   final VoidCallback onPlay;
   final VoidCallback onPause;
+  final List<double> waveform;
+  final double? bpm;
 
   const _DeckCard({
     required this.label,
@@ -425,6 +506,8 @@ class _DeckCard extends StatelessWidget {
     required this.onLoad,
     required this.onPlay,
     required this.onPause,
+    this.waveform = const [],
+    this.bpm,
   });
 
   @override
@@ -532,6 +615,37 @@ class _DeckCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // Waveform
+            if (waveform.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 40,
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: WaveformPainter(
+                    data: waveform,
+                    progress: durationMs > 0 ? positionMs / durationMs : 0,
+                    playedColor: TuneColors.accent,
+                  ),
+                ),
+              ),
+            ],
+
+            // BPM badge
+            if (bpm != null)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: TuneColors.accent.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('${bpm!.round()} BPM',
+                    style: TuneFonts.caption.copyWith(
+                        color: TuneColors.accent,
+                        fontWeight: FontWeight.bold)),
+              ),
           ],
         ),
       ),

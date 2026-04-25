@@ -652,6 +652,15 @@ class TuneApiClient {
   Future<Map<String, dynamic>> toggleAutoCrossfade(int zoneId, bool enabled, {int beforeEnd = 10}) async =>
       await _post('/dj/auto-crossfade/$zoneId', body: {'enabled': enabled, 'before_end': beforeEnd}) as Map<String, dynamic>;
 
+  Future<Map<String, dynamic>> getWaveform(int trackId) async =>
+      await _get('/dj/waveform/$trackId') as Map<String, dynamic>;
+
+  Future<void> analyzeTrack(int trackId) async =>
+      await _post('/dj/analyze/$trackId');
+
+  Future<Map<String, dynamic>> syncTempo(int zoneId) async =>
+      await _post('/dj/sync-tempo/$zoneId') as Map<String, dynamic>;
+
   // ---------------------------------------------------------------------------
   // ── Party Mode ──
   // ---------------------------------------------------------------------------
