@@ -623,4 +623,113 @@ class TuneApiClient {
 
   Future<void> disableStreamingService(String name) =>
       _post('/streaming/$name/disable').then((_) {});
+
+  // ---------------------------------------------------------------------------
+  // ── DJ Mode ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getDJStatus(int zoneId) async =>
+      await _get('/dj/status/$zoneId') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> enableDJ(int zoneId) async =>
+      await _post('/dj/enable/$zoneId') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> disableDJ(int zoneId) async =>
+      await _post('/dj/disable/$zoneId') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> loadDeck(int zoneId, String deck, int trackId) async =>
+      await _post('/dj/load/$zoneId/$deck', body: {'track_id': trackId}) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> playDeck(int zoneId, String deck) async =>
+      await _post('/dj/play/$zoneId/$deck') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> pauseDeck(int zoneId, String deck) async =>
+      await _post('/dj/pause/$zoneId/$deck') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> startCrossfade(int zoneId, {double duration = 5.0, String curve = 'linear'}) async =>
+      await _post('/dj/crossfade/$zoneId', body: {'duration_seconds': duration, 'curve': curve}) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> toggleAutoCrossfade(int zoneId, bool enabled, {int beforeEnd = 10}) async =>
+      await _post('/dj/auto-crossfade/$zoneId', body: {'enabled': enabled, 'before_end': beforeEnd}) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Party Mode ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getPartyStatus() async =>
+      await _get('/party/status') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> partyAddTrack(String query, {int? zoneId}) async =>
+      await _post('/party/add', body: {'query': query, if (zoneId != null) 'zone_id': zoneId}) as Map<String, dynamic>;
+
+  Future<List<dynamic>> getPartyQueue({int? zoneId}) async =>
+      await _get('/party/queue${zoneId != null ? "?zone_id=$zoneId" : ""}') as List<dynamic>;
+
+  Future<Map<String, dynamic>> partyVote(int position, {int? zoneId}) async =>
+      await _post('/party/vote', body: {'position': position, if (zoneId != null) 'zone_id': zoneId}) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Smart Playlists ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getSmartPlaylists() async =>
+      await _get('/library/smart-playlists') as List<dynamic>;
+
+  Future<List<dynamic>> getSmartPlaylistTracks(int id) async =>
+      await _get('/library/smart-playlists/$id/tracks') as List<dynamic>;
+
+  Future<void> deleteSmartPlaylist(int id) async =>
+      await _delete('/library/smart-playlists/$id');
+
+  // ---------------------------------------------------------------------------
+  // ── EQ ──
+  // ---------------------------------------------------------------------------
+
+  Future<void> setEqualizer(int zoneId, String preset) async =>
+      await _post('/zones/$zoneId/eq', body: {'preset': preset});
+
+  // ---------------------------------------------------------------------------
+  // ── Share ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> shareNowPlaying(int zoneId) async =>
+      await _get('/zones/$zoneId/share') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Transfer Playback ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> transferPlayback(int fromZoneId, int toZoneId) async =>
+      await _post('/zones/$fromZoneId/transfer/$toZoneId') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Album Bio ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getAlbumBio(int albumId) async =>
+      await _get('/library/albums/$albumId/bio') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Lyrics ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getTrackLyrics(int trackId) async =>
+      await _get('/library/tracks/$trackId/lyrics') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Top Tracks / Artists ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getTopTracks({int limit = 20}) async =>
+      await _get('/library/history/top-tracks?limit=$limit') as List<dynamic>;
+
+  Future<List<dynamic>> getTopArtists({int limit = 20}) async =>
+      await _get('/library/history/top-artists?limit=$limit') as List<dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Radio Favorites to Playlist ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> createPlaylistFromRadioFavorites(String service, String playlistName, {int limit = 200}) async =>
+      await _post('/radio-favorites/create-playlist', body: {'service': service, 'playlist_name': playlistName, 'limit': limit}) as Map<String, dynamic>;
 }

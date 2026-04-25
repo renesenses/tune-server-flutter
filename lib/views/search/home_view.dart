@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -19,8 +20,35 @@ import 'history_view.dart';
 // Miroir de HomeView.swift (iOS)
 // ---------------------------------------------------------------------------
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  List<dynamic>? _topTracks;
+  List<dynamic>? _topArtists;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTopContent();
+  }
+
+  Future<void> _loadTopContent() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final tracks = await app.apiClient!.getTopTracks(limit: 20);
+      if (mounted) setState(() => _topTracks = tracks);
+    } catch (_) {}
+    try {
+      final artists = await app.apiClient!.getTopArtists(limit: 20);
+      if (mounted) setState(() => _topArtists = artists);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +76,20 @@ class HomeView extends StatelessWidget {
         if (lib.recentAlbums.isNotEmpty) ...[
           _SectionTitle(title: 'Récemment ajouté'),
           _RecentAlbumsList(albums: lib.recentAlbums),
+          const SizedBox(height: 16),
+        ],
+
+        // ---- Top Tracks ----
+        if (_topTracks != null && _topTracks!.isNotEmpty) ...[
+          _SectionTitle(title: 'Top Tracks'),
+          _TopTracksList(tracks: _topTracks!),
+          const SizedBox(height: 16),
+        ],
+
+        // ---- Top Artists ----
+        if (_topArtists != null && _topArtists!.isNotEmpty) ...[
+          _SectionTitle(title: 'Top Artists'),
+          _TopArtistsList(artists: _topArtists!),
           const SizedBox(height: 16),
         ],
 
@@ -197,6 +239,109 @@ class _RecentAlbumsList extends StatelessWidget {
                       style: const TextStyle(fontSize: 11, color: TuneColors.textSecondary)),
                 ],
               ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Top Tracks — défilement horizontal
+// ---------------------------------------------------------------------------
+
+class _TopTracksList extends StatelessWidget {
+  final List<dynamic> tracks;
+  const _TopTracksList({required this.tracks});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final items = tracks.take(20).toList();
+
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (_, i) {
+          final item = items[i] as Map<String, dynamic>;
+          final title = item['title'] as String? ?? '';
+          final coverPath = item['cover_path'] as String?;
+          return GestureDetector(
+            onTap: () {
+              final track = trackFromJson(item);
+              app.playTracks([track]);
+            },
+            child: Container(
+              width: 90,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: ArtworkView(filePath: coverPath, size: 80),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: TuneFonts.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Top Artists — défilement horizontal
+// ---------------------------------------------------------------------------
+
+class _TopArtistsList extends StatelessWidget {
+  final List<dynamic> artists;
+  const _TopArtistsList({required this.artists});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = artists.take(20).toList();
+
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (_, i) {
+          final item = items[i] as Map<String, dynamic>;
+          final name = item['name'] as String? ?? '';
+          final imagePath = item['image_path'] as String?;
+
+          return Container(
+            width: 90,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              children: [
+                ClipOval(
+                  child: ArtworkView(filePath: imagePath, size: 72),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  name,
+                  style: TuneFonts.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           );
         },

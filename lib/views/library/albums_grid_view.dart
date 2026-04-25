@@ -329,6 +329,18 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
     _loadTracks();
   }
 
+  void _showAlbumBio(BuildContext context, Album album) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => _AlbumBioSheet(albumId: album.id, albumTitle: album.title),
+    );
+  }
+
   Future<void> _loadTracks() async {
     final app = context.read<AppState>();
     if (app.isRemoteMode && app.apiClient != null) {
@@ -360,6 +372,11 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notes_rounded),
+            tooltip: 'Album notes',
+            onPressed: () => _showAlbumBio(context, album),
+          ),
           IconButton(
             icon: const Icon(Icons.edit_rounded),
             onPressed: () => showModalBottomSheet(
@@ -622,6 +639,96 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
             child: Text('Aucun crédit', style: TextStyle(fontSize: 11, color: TuneColors.textTertiary)),
           ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Album Bio Sheet
+// ---------------------------------------------------------------------------
+
+class _AlbumBioSheet extends StatefulWidget {
+  final int albumId;
+  final String albumTitle;
+  const _AlbumBioSheet({required this.albumId, required this.albumTitle});
+
+  @override
+  State<_AlbumBioSheet> createState() => _AlbumBioSheetState();
+}
+
+class _AlbumBioSheetState extends State<_AlbumBioSheet> {
+  String? _bio;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBio();
+  }
+
+  Future<void> _loadBio() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) {
+      if (mounted) setState(() { _loading = false; _error = 'Not connected'; });
+      return;
+    }
+    try {
+      final data = await api.getAlbumBio(widget.albumId);
+      if (!mounted) return;
+      setState(() {
+        _bio = data['bio'] as String? ?? data['review'] as String? ?? data['summary'] as String?;
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _error = 'No album notes available'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(widget.albumTitle,
+                style: TuneFonts.title3,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(child: Text(_error!, style: TuneFonts.subheadline))
+                    : _bio == null || _bio!.isEmpty
+                        ? Center(child: Text('No notes available',
+                            style: TuneFonts.subheadline))
+                        : SingleChildScrollView(
+                            controller: scrollController,
+                            padding: const EdgeInsets.all(16),
+                            child: Text(_bio!,
+                                style: TuneFonts.body.copyWith(height: 1.5)),
+                          ),
+          ),
+        ],
+      ),
     );
   }
 }

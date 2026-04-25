@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' hide RepeatMode;
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -84,6 +85,10 @@ class NowPlayingView extends StatelessWidget {
 
                         // Ligne secondaire : shuffle, repeat, queue, zones
                         _SecondaryControls(context),
+                        const SizedBox(height: 16),
+
+                        // Extra actions: Lyrics, EQ, Share, Transfer
+                        _ExtraActions(track: track),
                         const SizedBox(height: 24),
 
                         // Volume
@@ -396,6 +401,378 @@ class _TrackInfo extends StatelessWidget {
               );
             },
           ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Extra actions — Lyrics, EQ, Share, Transfer
+// ---------------------------------------------------------------------------
+
+class _ExtraActions extends StatelessWidget {
+  final Track? track;
+  const _ExtraActions({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        // Lyrics
+        IconButton(
+          icon: const Icon(Icons.lyrics_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Lyrics',
+          onPressed: track?.id != null && track!.id != 0
+              ? () => _showLyrics(context, track!.id)
+              : null,
+        ),
+        // EQ
+        IconButton(
+          icon: const Icon(Icons.equalizer_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Equalizer',
+          onPressed: () => _showEQSheet(context),
+        ),
+        // Share
+        IconButton(
+          icon: const Icon(Icons.share_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Share',
+          onPressed: () => _shareNowPlaying(context),
+        ),
+        // Transfer
+        IconButton(
+          icon: const Icon(Icons.cast_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Transfer',
+          onPressed: () => _showTransferDialog(context),
+        ),
+      ],
+    );
+  }
+
+  void _showLyrics(BuildContext context, int trackId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => _LyricsSheet(trackId: trackId),
+    );
+  }
+
+  void _showEQSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const _EQSheet(),
+    );
+  }
+
+  void _shareNowPlaying(BuildContext context) async {
+    final app = context.read<AppState>();
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (app.apiClient == null || zoneId == null) {
+      // Fallback: copy track info
+      if (track != null) {
+        final text = '${track!.title} - ${track!.artistName ?? ""}';
+        Clipboard.setData(ClipboardData(text: text));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard')),
+        );
+      }
+      return;
+    }
+    try {
+      final data = await app.apiClient!.shareNowPlaying(zoneId);
+      final shareText = data['text'] as String? ?? '${track?.title ?? ""} - ${track?.artistName ?? ""}';
+      Clipboard.setData(ClipboardData(text: shareText));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // Fallback
+        if (track != null) {
+          final text = '${track!.title} - ${track!.artistName ?? ""}';
+          Clipboard.setData(ClipboardData(text: text));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Copied to clipboard')),
+          );
+        }
+      }
+    }
+  }
+
+  void _showTransferDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => const _TransferDialog(),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lyrics bottom sheet
+// ---------------------------------------------------------------------------
+
+class _LyricsSheet extends StatefulWidget {
+  final int trackId;
+  const _LyricsSheet({required this.trackId});
+
+  @override
+  State<_LyricsSheet> createState() => _LyricsSheetState();
+}
+
+class _LyricsSheetState extends State<_LyricsSheet> {
+  String? _lyrics;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLyrics();
+  }
+
+  Future<void> _loadLyrics() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) {
+      if (mounted) setState(() { _loading = false; _error = 'Not connected'; });
+      return;
+    }
+    try {
+      final data = await api.getTrackLyrics(widget.trackId);
+      if (!mounted) return;
+      setState(() {
+        _lyrics = data['lyrics'] as String?;
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _error = 'No lyrics found'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollController) => Column(
+        children: [
+          // Handle
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Lyrics', style: TuneFonts.title3),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(child: Text(_error!, style: TuneFonts.subheadline))
+                    : _lyrics == null || _lyrics!.isEmpty
+                        ? Center(child: Text('No lyrics available', style: TuneFonts.subheadline))
+                        : SingleChildScrollView(
+                            controller: scrollController,
+                            padding: const EdgeInsets.all(16),
+                            child: Text(_lyrics!,
+                                style: TuneFonts.body.copyWith(height: 1.6)),
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// EQ bottom sheet
+// ---------------------------------------------------------------------------
+
+class _EQSheet extends StatefulWidget {
+  const _EQSheet();
+
+  @override
+  State<_EQSheet> createState() => _EQSheetState();
+}
+
+class _EQSheetState extends State<_EQSheet> {
+  String? _selectedPreset;
+
+  static const _presets = [
+    'flat',
+    'bass_boost',
+    'treble_boost',
+    'vocal',
+    'rock',
+    'jazz',
+    'classical',
+    'electronic',
+    'hip_hop',
+    'acoustic',
+  ];
+
+  static const _presetLabels = {
+    'flat': 'Flat',
+    'bass_boost': 'Bass Boost',
+    'treble_boost': 'Treble Boost',
+    'vocal': 'Vocal',
+    'rock': 'Rock',
+    'jazz': 'Jazz',
+    'classical': 'Classical',
+    'electronic': 'Electronic',
+    'hip_hop': 'Hip Hop',
+    'acoustic': 'Acoustic',
+  };
+
+  Future<void> _applyPreset(String preset) async {
+    final app = context.read<AppState>();
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (app.apiClient == null || zoneId == null) return;
+    try {
+      await app.apiClient!.setEqualizer(zoneId, preset);
+      if (mounted) {
+        setState(() => _selectedPreset = preset);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('EQ: ${_presetLabels[preset] ?? preset}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('EQ error: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Equalizer', style: TuneFonts.title3),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _presets.map((preset) {
+              final selected = _selectedPreset == preset;
+              return ChoiceChip(
+                label: Text(_presetLabels[preset] ?? preset),
+                selected: selected,
+                selectedColor: TuneColors.accent.withValues(alpha: 0.25),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: TextStyle(
+                  color: selected ? TuneColors.accent : TuneColors.textPrimary,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                side: selected
+                    ? BorderSide(color: TuneColors.accent.withValues(alpha: 0.5))
+                    : BorderSide.none,
+                onSelected: (_) => _applyPreset(preset),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Transfer dialog — pick target zone
+// ---------------------------------------------------------------------------
+
+class _TransferDialog extends StatelessWidget {
+  const _TransferDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final zoneState = context.read<ZoneState>();
+    final currentZoneId = zoneState.currentZoneId;
+    final zones = zoneState.zones.where((z) => z.id != currentZoneId).toList();
+
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text('Transfer playback', style: TuneFonts.title3),
+      content: zones.isEmpty
+          ? Text('No other zones available', style: TuneFonts.subheadline)
+          : SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: zones.length,
+                itemBuilder: (_, i) {
+                  final zone = zones[i];
+                  return ListTile(
+                    leading: const Icon(Icons.speaker_rounded,
+                        color: TuneColors.accent),
+                    title: Text(zone.name, style: TuneFonts.body),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final app = context.read<AppState>();
+                      if (app.apiClient != null && currentZoneId != null) {
+                        try {
+                          await app.apiClient!.transferPlayback(
+                              currentZoneId, zone.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Transferred to ${zone.name}')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Transfer error: $e')),
+                            );
+                          }
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
       ],
     );
   }

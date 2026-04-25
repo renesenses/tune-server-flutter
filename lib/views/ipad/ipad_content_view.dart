@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
+import '../party/party_view.dart';
 import '../podcasts/podcasts_view.dart';
 import '../playlists/playlist_manager_view.dart';
 import '../radios/radio_favorites_view.dart';
 import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
+import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
 import '../zones/zones_view.dart';
 import 'ipad_now_playing_bar.dart';
@@ -38,6 +41,9 @@ class _iPadContentViewState extends State<iPadContentView> {
       (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
       (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
       (icon: Icons.favorite_outline_rounded, activeIcon: Icons.favorite_rounded,        label: 'Favoris Radio'),
+      (icon: Icons.album_outlined,           activeIcon: Icons.album_rounded,           label: 'DJ'),
+      (icon: Icons.celebration_outlined,     activeIcon: Icons.celebration_rounded,     label: 'Party'),
+      (icon: Icons.auto_awesome_outlined,    activeIcon: Icons.auto_awesome_rounded,    label: 'Smart Playlists'),
       (icon: Icons.podcasts_outlined,        activeIcon: Icons.podcasts_rounded,        label: l.navPodcasts),
       (icon: Icons.settings_outlined,        activeIcon: Icons.settings_rounded,        label: l.navSettings),
     ];
@@ -70,6 +76,9 @@ class _iPadContentViewState extends State<iPadContentView> {
     const ZonesView(),
     const RadiosView(),
     const RadioFavoritesView(),
+    const DJView(),
+    const PartyView(),
+    const SmartPlaylistsView(),
     const PodcastsView(),
     const SettingsView(),
   ];
