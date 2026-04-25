@@ -121,6 +121,9 @@ class TuneApiClient {
   Future<List<dynamic>> getArtistTracks(int artistId) =>
       _get('/library/artists/$artistId/tracks').then((d) => d as List);
 
+  Future<List<dynamic>> getTrackCredits(int trackId) =>
+      _get('/library/tracks/$trackId/credits').then((d) => d as List);
+
   Future<List<dynamic>> getAlbumTracks(int albumId) =>
       _get('/library/albums/$albumId/tracks').then((d) => d as List);
 

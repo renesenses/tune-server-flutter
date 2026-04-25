@@ -502,7 +502,7 @@ class _AlbumHeader extends StatelessWidget {
   }
 }
 
-class _AlbumTrackTile extends StatelessWidget {
+class _AlbumTrackTile extends StatefulWidget {
   final Track track;
   final VoidCallback onTap;
   final VoidCallback onAddToPlaylist;
@@ -514,40 +514,114 @@ class _AlbumTrackTile extends StatelessWidget {
   });
 
   @override
+  State<_AlbumTrackTile> createState() => _AlbumTrackTileState();
+}
+
+class _AlbumTrackTileState extends State<_AlbumTrackTile> {
+  bool _showCredits = false;
+  List<Map<String, dynamic>>? _credits;
+
+  void _toggleCredits() async {
+    setState(() => _showCredits = !_showCredits);
+    if (_showCredits && _credits == null && widget.track.id != null) {
+      final app = Provider.of<AppState>(context, listen: false);
+      if (app.apiClient != null) {
+        try {
+          final result = await app.apiClient!.getTrackCredits(widget.track.id!);
+          if (mounted) setState(() => _credits = result.cast<Map<String, dynamic>>());
+        } catch (_) {
+          if (mounted) setState(() => _credits = []);
+        }
+      }
+    }
+  }
+
+  String _localizeRole(String role) {
+    switch (role) {
+      case 'performer': return 'Musicien';
+      case 'composer': return 'Compositeur';
+      case 'conductor': return "Chef d'orch.";
+      case 'lyricist': return 'Parolier';
+      case 'producer': return 'Producteur';
+      default: return role[0].toUpperCase() + role.substring(1);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      leading: SizedBox(
-        width: 32,
-        child: Center(
-          child: Text(
-            track.trackNumber?.toString() ?? '–',
-            style: TuneFonts.footnote,
-            textAlign: TextAlign.center,
+    return Column(
+      children: [
+        ListTile(
+          onTap: widget.onTap,
+          leading: SizedBox(
+            width: 32,
+            child: Center(
+              child: Text(
+                widget.track.trackNumber?.toString() ?? '–',
+                style: TuneFonts.footnote,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          title: Text(widget.track.title,
+              style: TuneFonts.body,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          subtitle: widget.track.artistName != null
+              ? Text(widget.track.artistName!,
+                  style: TuneFonts.footnote,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis)
+              : null,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FormatBadge(format: widget.track.format),
+              IconButton(
+                icon: Icon(Icons.people_outline_rounded,
+                    size: 16,
+                    color: _showCredits ? TuneColors.accent : TuneColors.textTertiary),
+                onPressed: _toggleCredits,
+                tooltip: 'Crédits',
+              ),
+              IconButton(
+                icon: const Icon(Icons.more_vert_rounded,
+                    size: 18, color: TuneColors.textTertiary),
+                onPressed: widget.onAddToPlaylist,
+              ),
+            ],
           ),
         ),
-      ),
-      title: Text(track.title,
-          style: TuneFonts.body,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis),
-      subtitle: track.artistName != null
-          ? Text(track.artistName!,
-              style: TuneFonts.footnote,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis)
-          : null,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FormatBadge(format: track.format),
-          IconButton(
-            icon: const Icon(Icons.more_vert_rounded,
-                size: 18, color: TuneColors.textTertiary),
-            onPressed: onAddToPlaylist,
+        if (_showCredits && _credits != null && _credits!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16, bottom: 8),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: _credits!.map((c) {
+                final name = c['artist_name'] ?? '';
+                final instrument = c['instrument'];
+                final role = c['role'] ?? 'performer';
+                return Chip(
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  label: Text(
+                    instrument != null ? '$name ($instrument)' : name,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  backgroundColor: TuneColors.accent.withOpacity(0.08),
+                  side: BorderSide.none,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                );
+              }).toList(),
+            ),
           ),
-        ],
-      ),
+        if (_showCredits && _credits != null && _credits!.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(left: 64, bottom: 8),
+            child: Text('Aucun crédit', style: TextStyle(fontSize: 11, color: TuneColors.textTertiary)),
+          ),
+      ],
     );
   }
 }
