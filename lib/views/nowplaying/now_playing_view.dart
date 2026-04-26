@@ -427,6 +427,18 @@ class _ExtraActions extends StatelessWidget {
               ? () => _showLyrics(context, track!.id)
               : null,
         ),
+        // Sleep Timer
+        IconButton(
+          icon: const Icon(Icons.bedtime_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Sleep Timer',
+          onPressed: () => _showSleepTimerSheet(context),
+        ),
+        // DSP Crossfeed
+        IconButton(
+          icon: const Icon(Icons.headphones_rounded, color: TuneColors.textSecondary),
+          tooltip: 'DSP Crossfeed',
+          onPressed: () => _showDSPSheet(context),
+        ),
         // EQ
         IconButton(
           icon: const Icon(Icons.equalizer_rounded, color: TuneColors.textSecondary),
@@ -458,6 +470,28 @@ class _ExtraActions extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => _LyricsSheet(trackId: trackId),
+    );
+  }
+
+  void _showSleepTimerSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const _SleepTimerSheet(),
+    );
+  }
+
+  void _showDSPSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const _DSPSheet(),
     );
   }
 
@@ -702,6 +736,200 @@ class _EQSheetState extends State<_EQSheet> {
                     ? BorderSide(color: TuneColors.accent.withValues(alpha: 0.5))
                     : BorderSide.none,
                 onSelected: (_) => _applyPreset(preset),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sleep Timer bottom sheet
+// ---------------------------------------------------------------------------
+
+class _SleepTimerSheet extends StatelessWidget {
+  const _SleepTimerSheet();
+
+  static const _options = [
+    (label: '15 min', minutes: 15),
+    (label: '30 min', minutes: 30),
+    (label: '45 min', minutes: 45),
+    (label: '1h', minutes: 60),
+    (label: '1h30', minutes: 90),
+    (label: '2h', minutes: 120),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Sleep Timer', style: TuneFonts.title3),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ..._options.map((opt) => ActionChip(
+                label: Text(opt.label),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: const TextStyle(color: TuneColors.textPrimary),
+                side: BorderSide.none,
+                onPressed: () async {
+                  final app = context.read<AppState>();
+                  final zoneId = context.read<ZoneState>().currentZoneId;
+                  Navigator.pop(context);
+                  if (app.apiClient != null && zoneId != null) {
+                    try {
+                      await app.apiClient!.setSleepTimer(zoneId, opt.minutes);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sleep timer: ${opt.label}')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sleep timer error: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+              )),
+              // Cancel timer
+              ActionChip(
+                avatar: const Icon(Icons.timer_off_rounded, size: 16, color: TuneColors.error),
+                label: const Text('Off'),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: const TextStyle(color: TuneColors.textSecondary),
+                side: BorderSide.none,
+                onPressed: () async {
+                  final app = context.read<AppState>();
+                  final zoneId = context.read<ZoneState>().currentZoneId;
+                  Navigator.pop(context);
+                  if (app.apiClient != null && zoneId != null) {
+                    try {
+                      await app.apiClient!.setSleepTimer(zoneId, 0);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sleep timer cancelled')),
+                        );
+                      }
+                    } catch (_) {}
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DSP Crossfeed bottom sheet
+// ---------------------------------------------------------------------------
+
+class _DSPSheet extends StatefulWidget {
+  const _DSPSheet();
+
+  @override
+  State<_DSPSheet> createState() => _DSPSheetState();
+}
+
+class _DSPSheetState extends State<_DSPSheet> {
+  String? _selectedCrossfeed;
+
+  static const _crossfeedOptions = [
+    (label: 'Off', value: null),
+    (label: 'Light', value: 'light'),
+    (label: 'Medium', value: 'medium'),
+    (label: 'Strong', value: 'strong'),
+  ];
+
+  Future<void> _applyCrossfeed(String? value) async {
+    final app = context.read<AppState>();
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (app.apiClient == null || zoneId == null) return;
+    try {
+      await app.apiClient!.setDSP(zoneId, value);
+      if (mounted) {
+        setState(() => _selectedCrossfeed = value);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Crossfeed: ${value ?? "off"}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('DSP error: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('DSP Crossfeed', style: TuneFonts.title3),
+          const SizedBox(height: 4),
+          Text(
+            'Blends stereo channels for a more natural headphone experience',
+            style: TuneFonts.caption,
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _crossfeedOptions.map((opt) {
+              final selected = _selectedCrossfeed == opt.value;
+              return ChoiceChip(
+                label: Text(opt.label),
+                selected: selected,
+                selectedColor: TuneColors.accent.withValues(alpha: 0.25),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: TextStyle(
+                  color: selected ? TuneColors.accent : TuneColors.textPrimary,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                side: selected
+                    ? BorderSide(color: TuneColors.accent.withValues(alpha: 0.5))
+                    : BorderSide.none,
+                onSelected: (_) => _applyCrossfeed(opt.value),
               );
             }).toList(),
           ),

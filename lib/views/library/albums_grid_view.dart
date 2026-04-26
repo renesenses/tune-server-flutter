@@ -322,11 +322,38 @@ class AlbumDetailView extends StatefulWidget {
 
 class _AlbumDetailViewState extends State<AlbumDetailView> {
   List<Track>? _tracks;
+  int _rating = 0;
 
   @override
   void initState() {
     super.initState();
     _loadTracks();
+    _loadRating();
+  }
+
+  Future<void> _loadRating() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final data = await app.apiClient!.getAlbumRating(widget.album.id);
+      if (mounted) setState(() => _rating = (data['rating'] as num?)?.toInt() ?? 0);
+    } catch (_) {}
+  }
+
+  Future<void> _setRating(int value) async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    final newRating = value == _rating ? 0 : value; // tap same star to clear
+    setState(() => _rating = newRating);
+    try {
+      await app.apiClient!.rateAlbum(widget.album.id, newRating);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rating error: $e')),
+        );
+      }
+    }
   }
 
   void _showAlbumBio(BuildContext context, Album album) {
@@ -392,6 +419,35 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
         slivers: [
           // Header artwork + méta
           SliverToBoxAdapter(child: _AlbumHeader(album: album)),
+
+          // Star rating
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  for (int i = 1; i <= 5; i++)
+                    GestureDetector(
+                      onTap: () => _setRating(i),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Icon(
+                          i <= _rating ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: i <= _rating ? TuneColors.accent : TuneColors.textTertiary,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  if (_rating > 0)
+                    Text(
+                      '$_rating/5',
+                      style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
+                    ),
+                ],
+              ),
+            ),
+          ),
 
           // Boutons lecture
           SliverToBoxAdapter(

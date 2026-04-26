@@ -741,4 +741,52 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> createPlaylistFromRadioFavorites(String service, String playlistName, {int limit = 200}) async =>
       await _post('/radio-favorites/create-playlist', body: {'service': service, 'playlist_name': playlistName, 'limit': limit}) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── v0.7.12 — Sleep Timer, Crossfade, Normalization, DSP, Queue Save,
+  //               Recommendations, Dashboard, Album Rating ──
+  // ---------------------------------------------------------------------------
+
+  // Sleep Timer
+
+  Future<void> setSleepTimer(int zoneId, int minutes) async =>
+      await _post('/zones/$zoneId/sleep', body: {'minutes': minutes});
+
+  // Crossfade
+
+  Future<void> setCrossfade(int zoneId, bool enabled, {double duration = 3.0}) async =>
+      await _post('/zones/$zoneId/crossfade', body: {'enabled': enabled, 'duration': duration});
+
+  // Normalization
+
+  Future<void> setNormalization(int zoneId, bool enabled) async =>
+      await _post('/zones/$zoneId/normalization', body: {'enabled': enabled});
+
+  // DSP
+
+  Future<void> setDSP(int zoneId, String? crossfeed) async =>
+      await _post('/zones/$zoneId/dsp', body: {'crossfeed': crossfeed});
+
+  // Save queue as playlist
+
+  Future<Map<String, dynamic>> saveQueueAsPlaylist(int zoneId, String name) async =>
+      await _post('/zones/$zoneId/queue/save-as-playlist', body: {'name': name}) as Map<String, dynamic>;
+
+  // Recommendations
+
+  Future<Map<String, dynamic>> getRecommendations({int limit = 20}) async =>
+      await _get('/library/recommendations?limit=$limit') as Map<String, dynamic>;
+
+  // Dashboard
+
+  Future<Map<String, dynamic>> getHistoryDashboard() async =>
+      await _get('/library/history/dashboard') as Map<String, dynamic>;
+
+  // Album Rating
+
+  Future<void> rateAlbum(int albumId, int rating, {String? note}) async =>
+      await _post('/library/albums/$albumId/rate', body: {'rating': rating, if (note != null) 'note': note});
+
+  Future<Map<String, dynamic>> getAlbumRating(int albumId) async =>
+      await _get('/library/albums/$albumId/rating') as Map<String, dynamic>;
 }

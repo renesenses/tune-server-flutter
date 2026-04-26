@@ -30,11 +30,13 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   List<dynamic>? _topTracks;
   List<dynamic>? _topArtists;
+  List<dynamic>? _recommendations;
 
   @override
   void initState() {
     super.initState();
     _loadTopContent();
+    _loadRecommendations();
   }
 
   Future<void> _loadTopContent() async {
@@ -47,6 +49,16 @@ class _HomeViewState extends State<HomeView> {
     try {
       final artists = await app.apiClient!.getTopArtists(limit: 20);
       if (mounted) setState(() => _topArtists = artists);
+    } catch (_) {}
+  }
+
+  Future<void> _loadRecommendations() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final data = await app.apiClient!.getRecommendations(limit: 20);
+      final items = data['albums'] as List<dynamic>?;
+      if (mounted && items != null) setState(() => _recommendations = items);
     } catch (_) {}
   }
 
@@ -90,6 +102,13 @@ class _HomeViewState extends State<HomeView> {
         if (_topArtists != null && _topArtists!.isNotEmpty) ...[
           _SectionTitle(title: 'Top Artists'),
           _TopArtistsList(artists: _topArtists!),
+          const SizedBox(height: 16),
+        ],
+
+        // ---- Recommandations ----
+        if (_recommendations != null && _recommendations!.isNotEmpty) ...[
+          _SectionTitle(title: 'Recommandations'),
+          _RecommendationsList(albums: _recommendations!),
           const SizedBox(height: 16),
         ],
 
@@ -342,6 +361,87 @@ class _TopArtistsList extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Recommandations — horizontal scroll with cover + title + reason chip
+// ---------------------------------------------------------------------------
+
+class _RecommendationsList extends StatelessWidget {
+  final List<dynamic> albums;
+  const _RecommendationsList({required this.albums});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final items = albums.take(20).toList();
+
+    return SizedBox(
+      height: 190,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (_, i) {
+          final item = items[i] as Map<String, dynamic>;
+          final title = item['title'] as String? ?? '';
+          final artist = item['artist_name'] as String? ?? '';
+          final coverPath = item['cover_path'] as String?;
+          final reason = item['reason'] as String?;
+          final albumId = item['id'] as int?;
+
+          return GestureDetector(
+            onTap: () {
+              if (albumId != null && app.apiClient != null) {
+                // Play the album
+                app.apiClient!.getAlbumTracks(albumId).then((data) {
+                  final tracks = data.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
+                  if (tracks.isNotEmpty) app.playTracks(tracks);
+                }).catchError((_) {});
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: SizedBox(
+                width: 130,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ArtworkView(filePath: coverPath, size: 130, cornerRadius: 8),
+                    const SizedBox(height: 4),
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: TuneColors.textPrimary)),
+                    Text(artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, color: TuneColors.textSecondary)),
+                    if (reason != null) ...[
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: TuneColors.accent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          reason,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 10, color: TuneColors.accentLight),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           );
         },
