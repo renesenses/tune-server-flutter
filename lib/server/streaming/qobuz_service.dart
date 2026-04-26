@@ -360,6 +360,13 @@ class QobuzService implements StreamingService {
     final response =
         await _http.get(uri).timeout(const Duration(seconds: 15));
 
+    // 401/403: token revoked or app credentials rotated. Clear token and
+    // surface a clear auth-expired error rather than a generic network error.
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      _userAuthToken = null;
+      throw Exception(
+          'Qobuz auth expired (HTTP ${response.statusCode}): $endpoint');
+    }
     if (response.statusCode != 200) {
       throw Exception('Qobuz API error ${response.statusCode}: $endpoint');
     }
