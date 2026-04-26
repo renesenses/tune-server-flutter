@@ -31,10 +31,12 @@ class _HomeViewState extends State<HomeView> {
   List<dynamic>? _topTracks;
   List<dynamic>? _topArtists;
   List<dynamic>? _recommendations;
+  List<dynamic>? _nowListening;
 
   @override
   void initState() {
     super.initState();
+    _loadNowListening();
     _loadTopContent();
     _loadRecommendations();
   }
@@ -49,6 +51,15 @@ class _HomeViewState extends State<HomeView> {
     try {
       final artists = await app.apiClient!.getTopArtists(limit: 20);
       if (mounted) setState(() => _topArtists = artists);
+    } catch (_) {}
+  }
+
+  Future<void> _loadNowListening() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final data = await app.apiClient!.getNowListening();
+      if (mounted) setState(() => _nowListening = data);
     } catch (_) {}
   }
 
@@ -71,6 +82,13 @@ class _HomeViewState extends State<HomeView> {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
+        // ---- En cours d'ecoute ----
+        if (_nowListening != null && _nowListening!.isNotEmpty) ...[
+          _SectionTitle(title: "En cours d'ecoute"),
+          _NowListeningList(items: _nowListening!),
+          const SizedBox(height: 16),
+        ],
+
         // ---- Récents ----
         if (lib.history.isNotEmpty) ...[
           _SectionTitle(
@@ -212,6 +230,75 @@ class _RecentsList extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Now Listening — horizontal cards
+// ---------------------------------------------------------------------------
+
+class _NowListeningList extends StatelessWidget {
+  final List<dynamic> items;
+  const _NowListeningList({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (_, i) {
+          final item = items[i] as Map<String, dynamic>;
+          final zoneName = item['zone_name'] as String? ?? 'Zone';
+          final trackTitle = item['track_title'] as String? ?? item['title'] as String? ?? '';
+          final artistName = item['artist_name'] as String? ?? '';
+          final coverPath = item['cover_path'] as String?;
+
+          return Container(
+            width: 200,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: TuneColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: TuneColors.divider),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: ArtworkView(filePath: coverPath, size: 48),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(zoneName,
+                          style: TuneFonts.caption.copyWith(color: TuneColors.accent),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      Text(trackTitle,
+                          style: TuneFonts.footnote,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      if (artistName.isNotEmpty)
+                        Text(artistName,
+                            style: TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },

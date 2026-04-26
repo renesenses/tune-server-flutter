@@ -789,4 +789,54 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> getAlbumRating(int albumId) async =>
       await _get('/library/albums/$albumId/rating') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── v0.7.13 — Alarm Clock, Quick Favorites, Collections, Activity Feed,
+  //               Now Listening, Share Playlist, Smart Duplicates ──
+  // ---------------------------------------------------------------------------
+
+  // Alarm Clock
+
+  Future<void> setAlarm(int zoneId, String? time, {int? albumId, int? playlistId, int fadeSeconds = 30}) async =>
+      await _post('/zones/$zoneId/alarm', body: {'time': time, 'fade_seconds': fadeSeconds, if (albumId != null) 'album_id': albumId, if (playlistId != null) 'playlist_id': playlistId});
+
+  Future<Map<String, dynamic>> getAlarm(int zoneId) async => await _get('/zones/$zoneId/alarm') as Map<String, dynamic>;
+
+  Future<void> cancelAlarm(int zoneId) async => await _delete('/zones/$zoneId/alarm');
+
+  // Quick Favorites
+
+  Future<Map<String, dynamic>> quickFavTrack(int trackId) async => await _post('/library/tracks/$trackId/quick-fav') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> quickFavAlbum(int albumId) async => await _post('/library/albums/$albumId/quick-fav') as Map<String, dynamic>;
+
+  // Collections
+
+  Future<List<dynamic>> getCollections() async => await _get('/library/collections') as List<dynamic>;
+
+  Future<Map<String, dynamic>> createCollection(String name, {String color = '#6366f1'}) async =>
+      await _post('/library/collections', body: {'name': name, 'color': color}) as Map<String, dynamic>;
+
+  Future<List<dynamic>> getCollectionAlbums(int id) async => await _get('/library/collections/$id/albums') as List<dynamic>;
+
+  Future<void> addAlbumToCollection(int collectionId, int albumId) async =>
+      await _post('/library/collections/$collectionId/albums', body: {'album_id': albumId});
+
+  Future<void> deleteCollection(int id) async => await _delete('/library/collections/$id');
+
+  // Activity Feed
+
+  Future<List<dynamic>> getActivityFeed({int limit = 30}) async => await _get('/library/activity?limit=$limit') as List<dynamic>;
+
+  // Now Listening
+
+  Future<List<dynamic>> getNowListening() async => await _get('/zones/now-listening') as List<dynamic>;
+
+  // Share Playlist
+
+  Future<Map<String, dynamic>> sharePlaylist(int playlistId) async => await _get('/playlists/$playlistId/share') as Map<String, dynamic>;
+
+  // Smart Duplicates
+
+  Future<Map<String, dynamic>> getSmartDuplicates({int limit = 50}) async => await _get('/library/duplicates/smart?limit=$limit') as Map<String, dynamic>;
 }

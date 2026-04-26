@@ -427,6 +427,12 @@ class _ExtraActions extends StatelessWidget {
               ? () => _showLyrics(context, track!.id)
               : null,
         ),
+        // Alarm Clock
+        IconButton(
+          icon: const Icon(Icons.alarm_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Alarm',
+          onPressed: () => _showAlarmSheet(context),
+        ),
         // Sleep Timer
         IconButton(
           icon: const Icon(Icons.bedtime_rounded, color: TuneColors.textSecondary),
@@ -470,6 +476,17 @@ class _ExtraActions extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => _LyricsSheet(trackId: trackId),
+    );
+  }
+
+  void _showAlarmSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const _AlarmSheet(),
     );
   }
 
@@ -1002,6 +1019,104 @@ class _TransferDialog extends StatelessWidget {
           child: const Text('Cancel'),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Alarm Clock bottom sheet
+// ---------------------------------------------------------------------------
+
+class _AlarmSheet extends StatelessWidget {
+  const _AlarmSheet();
+
+  static const _times = [
+    (label: '07:00', time: '07:00'),
+    (label: '07:30', time: '07:30'),
+    (label: '08:00', time: '08:00'),
+    (label: '08:30', time: '08:30'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Alarm Clock', style: TuneFonts.title3),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ..._times.map((opt) => ActionChip(
+                label: Text(opt.label),
+                avatar: const Icon(Icons.alarm_rounded, size: 16, color: TuneColors.accent),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: const TextStyle(color: TuneColors.textPrimary),
+                side: BorderSide.none,
+                onPressed: () async {
+                  final app = context.read<AppState>();
+                  final zoneId = context.read<ZoneState>().currentZoneId;
+                  Navigator.pop(context);
+                  if (app.apiClient != null && zoneId != null) {
+                    try {
+                      await app.apiClient!.setAlarm(zoneId, opt.time);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Alarm set for ${opt.label}')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Alarm error: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+              )),
+              // Cancel alarm
+              ActionChip(
+                avatar: const Icon(Icons.alarm_off_rounded, size: 16, color: TuneColors.error),
+                label: const Text('Cancel'),
+                backgroundColor: TuneColors.surfaceVariant,
+                labelStyle: const TextStyle(color: TuneColors.textSecondary),
+                side: BorderSide.none,
+                onPressed: () async {
+                  final app = context.read<AppState>();
+                  final zoneId = context.read<ZoneState>().currentZoneId;
+                  Navigator.pop(context);
+                  if (app.apiClient != null && zoneId != null) {
+                    try {
+                      await app.apiClient!.cancelAlarm(zoneId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Alarm cancelled')),
+                        );
+                      }
+                    } catch (_) {}
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../collections/collections_view.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
@@ -40,6 +41,7 @@ class _iPadContentViewState extends State<iPadContentView> {
       (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
       (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
       (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
+      (icon: Icons.collections_bookmark_outlined, activeIcon: Icons.collections_bookmark_rounded, label: 'Collections'),
       (icon: Icons.favorite_outline_rounded, activeIcon: Icons.favorite_rounded,        label: 'Favoris Radio'),
       (icon: Icons.album_outlined,           activeIcon: Icons.album_rounded,           label: 'DJ'),
       (icon: Icons.celebration_outlined,     activeIcon: Icons.celebration_rounded,     label: 'Party'),
@@ -75,6 +77,7 @@ class _iPadContentViewState extends State<iPadContentView> {
     const StreamingView(),
     const ZonesView(),
     const RadiosView(),
+    const CollectionsView(),
     const RadioFavoritesView(),
     const DJView(),
     const PartyView(),

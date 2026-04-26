@@ -323,12 +323,64 @@ class AlbumDetailView extends StatefulWidget {
 class _AlbumDetailViewState extends State<AlbumDetailView> {
   List<Track>? _tracks;
   int _rating = 0;
+  bool _isFav = false;
+  List<dynamic>? _collections;
 
   @override
   void initState() {
     super.initState();
     _loadTracks();
     _loadRating();
+    _loadCollections();
+  }
+
+  Future<void> _loadCollections() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      final data = await app.apiClient!.getCollections();
+      if (mounted) setState(() => _collections = data);
+    } catch (_) {}
+  }
+
+  Future<void> _quickFavAlbum() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      await app.apiClient!.quickFavAlbum(widget.album.id);
+      if (mounted) {
+        setState(() => _isFav = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Added to favorites')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Favorite error: $e')),
+        );
+      }
+    }
+  }
+
+  void _showAddToCollection() {
+    if (_collections == null || _collections!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No collections yet')),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => _AddToCollectionSheet(
+        albumId: widget.album.id,
+        collections: _collections!,
+      ),
+    );
   }
 
   Future<void> _loadRating() async {
@@ -399,6 +451,21 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis),
         actions: [
+          // Quick Fav
+          IconButton(
+            icon: Icon(
+              _isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              color: _isFav ? TuneColors.accent : null,
+            ),
+            tooltip: 'Quick Favorite',
+            onPressed: _quickFavAlbum,
+          ),
+          // Add to Collection
+          IconButton(
+            icon: const Icon(Icons.collections_bookmark_rounded),
+            tooltip: 'Add to Collection',
+            onPressed: _showAddToCollection,
+          ),
           IconButton(
             icon: const Icon(Icons.notes_rounded),
             tooltip: 'Album notes',
@@ -819,6 +886,79 @@ class FormatBadge extends StatelessWidget {
           color:
               isHiRes ? TuneColors.accentLight : TuneColors.textTertiary,
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Add to Collection bottom sheet
+// ---------------------------------------------------------------------------
+
+class _AddToCollectionSheet extends StatelessWidget {
+  final int albumId;
+  final List<dynamic> collections;
+
+  const _AddToCollectionSheet({
+    required this.albumId,
+    required this.collections,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: TuneColors.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Add to Collection', style: TuneFonts.title3),
+          const SizedBox(height: 12),
+          ...collections.map((c) {
+            final col = c as Map<String, dynamic>;
+            final name = col['name'] as String? ?? '';
+            final colorHex = col['color'] as String? ?? '#6366f1';
+            final colId = col['id'] as int;
+            final color = Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
+            return ListTile(
+              leading: Container(
+                width: 12, height: 12,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              title: Text(name, style: TuneFonts.body),
+              onTap: () async {
+                Navigator.pop(context);
+                final app = context.read<AppState>();
+                if (app.apiClient == null) return;
+                try {
+                  await app.apiClient!.addAlbumToCollection(colId, albumId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Added to $name')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                }
+              },
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
