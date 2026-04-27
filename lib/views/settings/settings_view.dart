@@ -89,6 +89,45 @@ class _SettingsList extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
+                    // Standalone lacks the v0.6+/v0.7.x features (Party,
+                    // DJ, lyrics, EQ, album bios...) that only the Python
+                    // server provides. Be explicit so the user doesn't
+                    // expect parity with remote mode.
+                    if (!settings.isRemoteMode) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.info_outline_rounded,
+                                size: 16, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Mode standalone — fonctionnalités limitées',
+                                      style: TuneFonts.caption.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: TuneColors.textPrimary)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Party, DJ, paroles synchronisées, EQ, bios d\'album, recommandations… requièrent un serveur Tune distant.',
+                                    style: TuneFonts.caption.copyWith(
+                                        color: TuneColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
