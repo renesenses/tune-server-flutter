@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../state/settings_state.dart';
 import '../components/mini_player_view.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
@@ -84,10 +86,14 @@ class _MoreView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final isRemote = context.watch<SettingsState>().isRemoteMode;
     final items = [
       (icon: Icons.collections_bookmark_rounded, label: 'Collections',  page: const CollectionsView()),
-      (icon: Icons.album_rounded,          label: 'DJ Mode',           page: const DJView()),
-      (icon: Icons.celebration_rounded,    label: 'Party Mode',        page: const PartyView()),
+      // Party + DJ require routes only the remote Python server provides.
+      if (isRemote)
+        (icon: Icons.album_rounded,          label: 'DJ Mode',           page: const DJView()),
+      if (isRemote)
+        (icon: Icons.celebration_rounded,    label: 'Party Mode',        page: const PartyView()),
       (icon: Icons.auto_awesome_rounded,   label: 'Smart Playlists',   page: const SmartPlaylistsView()),
       (icon: Icons.podcasts_rounded,       label: l.navPodcasts,       page: const PodcastsView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
