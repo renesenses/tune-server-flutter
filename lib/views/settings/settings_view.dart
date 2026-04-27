@@ -7,6 +7,7 @@ import '../../state/settings_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'database_view.dart';
+import 'spotify_connect_view.dart';
 import 'library_setup_view.dart';
 import 'metadata_view.dart';
 import 'smb_setup_view.dart';
@@ -305,6 +306,18 @@ class _SettingsList extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (_) => const LibrarySetupView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: 'Spotify Connect',
+                subtitle: 'Tune comme récepteur (Premium requis côté client)',
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const SpotifyConnectView()),
                 ),
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),

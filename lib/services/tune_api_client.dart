@@ -839,4 +839,22 @@ class TuneApiClient {
   // Smart Duplicates
 
   Future<Map<String, dynamic>> getSmartDuplicates({int limit = 50}) async => await _get('/library/duplicates/smart?limit=$limit') as Map<String, dynamic>;
+
+  // Spotify Connect (receiver) — only meaningful when connected to a remote
+  // Tune Server. The embedded Flutter server does not implement it.
+
+  Future<Map<String, dynamic>> getSpotifyConnectStatus() async =>
+      await _get('/spotify-connect/status') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> enableSpotifyConnect({
+    required int zoneId,
+    String? deviceName,
+  }) async =>
+      await _post('/spotify-connect/enable', body: {
+        'zone_id': zoneId,
+        'device_name': deviceName,
+      }) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> disableSpotifyConnect() async =>
+      await _post('/spotify-connect/disable') as Map<String, dynamic>;
 }
