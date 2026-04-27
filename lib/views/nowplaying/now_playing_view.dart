@@ -580,10 +580,67 @@ class _LyricsSheet extends StatefulWidget {
   State<_LyricsSheet> createState() => _LyricsSheetState();
 }
 
+class _LyricsLine {
+  final int timeMs;
+  final String text;
+  const _LyricsLine(this.timeMs, this.text);
+}
+
+/// Parse LRC-formatted lyrics: lines like `[mm:ss.xx]text` or
+/// `[mm:ss.xxx]text`. A single line may carry several timestamps to
+/// repeat a phrase — each one becomes its own entry.
+List<_LyricsLine> _parseLRC(String lrc) {
+  final tag = RegExp(r'\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]');
+  final lines = <_LyricsLine>[];
+  for (final raw in lrc.split('\n')) {
+    final matches = tag.allMatches(raw).toList();
+    if (matches.isEmpty) continue;
+    final text = raw.substring(matches.last.end).trim();
+    if (text.isEmpty) continue;
+    for (final m in matches) {
+      final mm = int.parse(m.group(1)!);
+      final ss = int.parse(m.group(2)!);
+      final centi = m.group(3) ?? '0';
+      // Pad/truncate to milliseconds (3 digits).
+      final ms = int.parse(centi.padRight(3, '0').substring(0, 3));
+      lines.add(_LyricsLine(((mm * 60) + ss) * 1000 + ms, text));
+    }
+  }
+  lines.sort((a, b) => a.timeMs.compareTo(b.timeMs));
+  return lines;
+}
+
 class _LyricsSheetState extends State<_LyricsSheet> {
   String? _lyrics;
+  List<_LyricsLine>? _synced;
   bool _loading = true;
   String? _error;
+  final ScrollController _scrollController = ScrollController();
+  // Approximate per-line height for ListView scroll offset math. Tuned for
+  // TuneFonts.body @ height: 1.6 + vertical padding 8.
+  static const double _lineHeight = 44.0;
+  int _activeIndex = -1;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToActive(int index, double viewportHeight) {
+    if (!_scrollController.hasClients || index < 0) return;
+    // Center the active line in the viewport.
+    final target = (index * _lineHeight) - (viewportHeight / 2) + (_lineHeight / 2);
+    final clamped = target.clamp(
+      _scrollController.position.minScrollExtent,
+      _scrollController.position.maxScrollExtent,
+    );
+    _scrollController.animateTo(
+      clamped,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   void initState() {
@@ -600,13 +657,26 @@ class _LyricsSheetState extends State<_LyricsSheet> {
     try {
       final data = await api.getTrackLyrics(widget.trackId);
       if (!mounted) return;
+      final synced = data['synced'] as String?;
       setState(() {
         _lyrics = data['lyrics'] as String?;
+        _synced = (synced != null && synced.isNotEmpty) ? _parseLRC(synced) : null;
         _loading = false;
       });
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = 'No lyrics found'; });
     }
+  }
+
+  /// Index of the line whose timestamp is the latest <= positionMs.
+  int _findActiveIndex(int positionMs, List<_LyricsLine> lines) {
+    int lo = 0, hi = lines.length - 1, idx = -1;
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      if (lines[mid].timeMs <= positionMs) { idx = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
+    }
+    return idx;
   }
 
   @override
@@ -641,16 +711,61 @@ class _LyricsSheetState extends State<_LyricsSheet> {
                     ? Center(child: Text(_error!, style: TuneFonts.subheadline))
                     : _lyrics == null || _lyrics!.isEmpty
                         ? Center(child: Text('No lyrics available', style: TuneFonts.subheadline))
-                        : SingleChildScrollView(
-                            controller: scrollController,
-                            padding: const EdgeInsets.all(16),
-                            child: Text(_lyrics!,
-                                style: TuneFonts.body.copyWith(height: 1.6)),
-                          ),
+                        : _synced != null && _synced!.isNotEmpty
+                            ? _buildKaraokeView()
+                            : SingleChildScrollView(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(16),
+                                child: Text(_lyrics!,
+                                    style: TuneFonts.body.copyWith(height: 1.6)),
+                              ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildKaraokeView() {
+    return LayoutBuilder(builder: (ctx, constraints) {
+      // context.watch on ZoneState makes the widget rebuild whenever
+      // the playback position is updated (typically every 100-500ms).
+      final positionMs = ctx.watch<ZoneState>().positionMs;
+      final lines = _synced!;
+      final newActive = _findActiveIndex(positionMs, lines);
+      if (newActive != _activeIndex) {
+        _activeIndex = newActive;
+        // Schedule scroll after layout — animateTo can't run during build.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToActive(newActive, constraints.maxHeight);
+        });
+      }
+      return ListView.builder(
+        controller: _scrollController,
+        padding: EdgeInsets.symmetric(
+          horizontal: 16,
+          // Pad top + bottom so first/last lines can center.
+          vertical: constraints.maxHeight / 2,
+        ),
+        itemCount: lines.length,
+        itemBuilder: (_, i) {
+          final isActive = i == _activeIndex;
+          return Container(
+            constraints: BoxConstraints(minHeight: _lineHeight),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              lines[i].text,
+              textAlign: TextAlign.center,
+              style: TuneFonts.body.copyWith(
+                height: 1.4,
+                color: isActive ? TuneColors.textPrimary : TuneColors.textTertiary,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                fontSize: isActive ? 19 : 16,
+              ),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
