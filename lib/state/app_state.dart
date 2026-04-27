@@ -1019,8 +1019,29 @@ class AppState extends ChangeNotifier {
     }
 
     if (isRemoteMode && _apiClient != null) {
-      final track = tracks[startIndex];
-      await play(track: track, zoneId: id);
+      // Send the whole queue so server auto-advances. Sending only the
+      // single track at `startIndex` left the queue at length 1 — playback
+      // stopped at end-of-track. (Bug reported by Jacques on Android.)
+      final localIds = <int>[];
+      for (final t in tracks) {
+        if (t.id != 0 && t.source == Source.local.rawValue) {
+          localIds.add(t.id);
+        }
+      }
+      if (localIds.length == tracks.length) {
+        // Pure-local queue: server resolves IDs.
+        final body = <String, dynamic>{
+          'track_ids': localIds,
+          if (startIndex > 0) 'start_index': startIndex,
+        };
+        await _apiClient!.play(id, body);
+      } else {
+        // Mixed/streaming: fall back to single track (no queue semantics
+        // yet for streaming-mixed lists; can be added later via /queue/add).
+        final track = tracks[startIndex];
+        await play(track: track, zoneId: id);
+      }
+      await refreshZonesRemote();
       return;
     }
 
