@@ -207,103 +207,260 @@ class _ConfigPageState extends State<_ConfigPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final settings = context.watch<SettingsState>();
+    final isRemote = settings.isRemoteMode;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.folder_open_rounded,
-              size: 64, color: TuneColors.accent),
-          const SizedBox(height: 24),
-          Text(l.onboardingConfigTitle, style: TuneFonts.title1),
-          const SizedBox(height: 12),
-          Text(
-            l.onboardingConfigBody,
-            style: TuneFonts.body,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          TextField(
-            controller: _ctrl,
-            style: TuneFonts.body,
-            enabled: !_added,
-            onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
-            },
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: TuneColors.surface,
-              hintText: l.setupFolderHint,
-              hintStyle: TuneFonts.footnote.copyWith(
-                color: TuneColors.textSecondary.withValues(alpha: 0.45),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 24),
+            Icon(isRemote ? Icons.wifi_tethering_rounded : Icons.dns_rounded,
+                size: 64, color: TuneColors.accent),
+            const SizedBox(height: 16),
+            Text(l.onboardingConfigTitle, style: TuneFonts.title1),
+            const SizedBox(height: 12),
+            Text(
+              isRemote
+                  ? 'Connectez-vous a un serveur Tune sur votre reseau pour profiter de toutes les fonctionnalites.'
+                  : l.onboardingConfigBody,
+              style: TuneFonts.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            // Mode picker
+            SegmentedButton<String>(
+              expandedInsets: EdgeInsets.zero,
+              segments: const [
+                ButtonSegment(value: 'remote',
+                    icon: Icon(Icons.wifi_tethering_rounded, size: 16),
+                    label: Text('Serveur distant')),
+                ButtonSegment(value: 'server',
+                    icon: Icon(Icons.dns_rounded, size: 16),
+                    label: Text('Autonome')),
+              ],
+              selected: {settings.appMode},
+              onSelectionChanged: (v) => settings.setAppMode(v.first),
+              style: ButtonStyle(
+                textStyle: WidgetStatePropertyAll(TuneFonts.caption),
+                visualDensity: VisualDensity.compact,
               ),
-              labelText: l.setupFolderPath,
-              border: const OutlineInputBorder(),
-              errorText: _error,
-              suffixIcon: _adding
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: TuneColors.accent),
+            ),
+            const SizedBox(height: 12),
+            if (!isRemote)
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        size: 16, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Mode autonome — Party, DJ, paroles synchronisees, EQ, recommandations sont absents. Recommande : utiliser un serveur Tune distant.',
+                        style: TuneFonts.caption.copyWith(
+                            color: TuneColors.textSecondary),
                       ),
-                    )
-                  : _added
-                      ? const Icon(Icons.check_circle_rounded,
-                          color: TuneColors.success)
-                      : null,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (!_added)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.folder_open_rounded, size: 18),
-                label: Text(l.btnAddFolder),
-                onPressed: _adding ? null : _pickFolder,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          const SizedBox(height: 4),
-          if (!_added)
+            if (isRemote) const _RemoteSetupBlock(),
+            const SizedBox(height: 16),
+            // Server-mode folder picker — only shown in standalone mode.
+            if (!isRemote) ...[
+              TextField(
+                controller: _ctrl,
+                style: TuneFonts.body,
+                enabled: !_added,
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: TuneColors.surface,
+                  hintText: l.setupFolderHint,
+                  hintStyle: TuneFonts.footnote.copyWith(
+                    color: TuneColors.textSecondary.withValues(alpha: 0.45),
+                  ),
+                  labelText: l.setupFolderPath,
+                  border: const OutlineInputBorder(),
+                  errorText: _error,
+                  suffixIcon: _adding
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: TuneColors.accent),
+                          ),
+                        )
+                      : _added
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: TuneColors.success)
+                          : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (!_added)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.folder_open_rounded, size: 18),
+                    label: Text(l.btnAddFolder),
+                    onPressed: _adding ? null : _pickFolder,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              if (!_added)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                        backgroundColor: TuneColors.accent),
+                    onPressed: _adding ? null : _add,
+                    child: Text(l.setupAddFolder),
+                  ),
+                ),
+              if (_added)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    l.setupFolderAdded,
+                    style: TuneFonts.footnote
+                        .copyWith(color: TuneColors.success),
+                  ),
+                ),
+            ],
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
+                onPressed: widget.onNext,
                 style: FilledButton.styleFrom(
-                    backgroundColor: TuneColors.accent),
-                onPressed: _adding ? null : _add,
-                child: Text(l.setupAddFolder),
+                  backgroundColor: TuneColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(
+                  isRemote ? l.btnNext : (_added ? l.btnNext : l.btnSkip),
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ),
-          if (_added)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                l.setupFolderAdded,
-                style: TuneFonts.footnote
-                    .copyWith(color: TuneColors.success),
-              ),
-            ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: widget.onNext,
-              style: FilledButton.styleFrom(
-                backgroundColor: TuneColors.accent,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(
-                _added ? l.btnNext : l.btnSkip,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+// _RemoteSetupBlock — shown in onboarding remote mode: host/port + install link.
+class _RemoteSetupBlock extends StatefulWidget {
+  const _RemoteSetupBlock();
+
+  @override
+  State<_RemoteSetupBlock> createState() => _RemoteSetupBlockState();
+}
+
+class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
+  late final TextEditingController _hostCtrl;
+  late final TextEditingController _portCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = context.read<SettingsState>();
+    _hostCtrl = TextEditingController(text: s.remoteHost);
+    _portCtrl = TextEditingController(text: s.remotePort.toString());
+  }
+
+  @override
+  void dispose() {
+    _hostCtrl.dispose();
+    _portCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.read<SettingsState>();
+    return Column(
+      children: [
+        TextField(
+          controller: _hostCtrl,
+          style: TuneFonts.body,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          onChanged: (v) => settings.setRemoteHost(v.trim()),
+          decoration: const InputDecoration(
+            filled: true,
+            fillColor: TuneColors.surface,
+            labelText: 'Adresse du serveur',
+            hintText: '192.168.1.50',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.network_check_rounded),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _portCtrl,
+          style: TuneFonts.body,
+          keyboardType: TextInputType.number,
+          onChanged: (v) {
+            final p = int.tryParse(v.trim());
+            if (p != null) settings.setRemotePort(p);
+          },
+          decoration: const InputDecoration(
+            filled: true,
+            fillColor: TuneColors.surface,
+            labelText: 'Port',
+            hintText: '8888',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // "No server? Install one" — instructional, no url_launcher dep yet.
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: TuneColors.surface,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.download_rounded,
+                  size: 18, color: TuneColors.accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Pas encore de serveur ?',
+                        style: TuneFonts.caption.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: TuneColors.textPrimary)),
+                    const SizedBox(height: 2),
+                    SelectableText(
+                      'Telechargez Tune Server : mozaiklabs.fr/download (Mac, Linux, Windows, Raspberry Pi, Docker NAS).',
+                      style: TuneFonts.caption.copyWith(
+                          color: TuneColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

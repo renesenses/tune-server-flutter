@@ -107,7 +107,10 @@ class ServerConfiguration {
   // App mode (server / remote)
   // ---------------------------------------------------------------------------
 
-  String get appMode => _p.getString(_kAppMode) ?? 'server';
+  // v0.7.20 "A pragmatique": default remote so every user gets full
+  // feature parity through the Python server. Standalone stays available
+  // in Settings → Advanced with a clear "features limitées" badge.
+  String get appMode => _p.getString(_kAppMode) ?? 'remote';
   bool get isRemoteMode => appMode == 'remote';
 
   Future<void> setAppMode(String value) => _p.setString(_kAppMode, value);
