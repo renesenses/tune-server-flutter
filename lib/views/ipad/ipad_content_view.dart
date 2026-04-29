@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
 import '../collections/collections_view.dart';
+import '../collections/smart_collections_view.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
@@ -48,6 +49,7 @@ class _iPadContentViewState extends State<iPadContentView> {
       _NavEntry(Icons.speaker_group_outlined, Icons.speaker_group_rounded, l.navZones, const ZonesView()),
       _NavEntry(Icons.radio_outlined, Icons.radio_rounded, l.navRadios, const RadiosView()),
       _NavEntry(Icons.collections_bookmark_outlined, Icons.collections_bookmark_rounded, 'Collections', const CollectionsView()),
+      _NavEntry(Icons.auto_awesome_motion_outlined, Icons.auto_awesome_motion_rounded, 'Smart Collections', const SmartCollectionsView()),
       _NavEntry(Icons.favorite_outline_rounded, Icons.favorite_rounded, 'Favoris Radio', const RadioFavoritesView()),
       // Party + DJ require server-side routes only the Python (remote)
       // server provides — hidden when running standalone.

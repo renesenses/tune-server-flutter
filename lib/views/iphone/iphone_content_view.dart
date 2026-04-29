@@ -12,6 +12,7 @@ import '../party/party_view.dart';
 import '../podcasts/podcasts_view.dart';
 import '../radios/radios_view.dart';
 import '../collections/collections_view.dart';
+import '../collections/smart_collections_view.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
@@ -89,6 +90,7 @@ class _MoreView extends StatelessWidget {
     final isRemote = context.watch<SettingsState>().isRemoteMode;
     final items = [
       (icon: Icons.collections_bookmark_rounded, label: 'Collections',  page: const CollectionsView()),
+      (icon: Icons.auto_awesome_motion_rounded, label: 'Smart Collections', page: const SmartCollectionsView()),
       // Party + DJ require routes only the remote Python server provides.
       if (isRemote)
         (icon: Icons.album_rounded,          label: 'DJ Mode',           page: const DJView()),

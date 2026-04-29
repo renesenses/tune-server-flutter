@@ -824,6 +824,50 @@ class TuneApiClient {
 
   Future<void> deleteCollection(int id) async => await _delete('/library/collections/$id');
 
+  // ── v0.8.0 — Smart Collections (rule-based album collections) ───────────
+  // Membership computed server-side from JSON-encoded rules. The
+  // `rules` field on each row stays a String here (we let the editor
+  // decode it lazily) so we don't have to keep the Flutter model in
+  // lockstep with every server-side rule grammar addition.
+
+  Future<List<dynamic>> listSmartCollections() async =>
+      await _get('/library/smart-collections') as List<dynamic>;
+
+  Future<Map<String, dynamic>> getSmartCollection(int id) async =>
+      await _get('/library/smart-collections/$id') as Map<String, dynamic>;
+
+  Future<List<dynamic>> getSmartCollectionAlbums(int id) async =>
+      await _get('/library/smart-collections/$id/albums') as List<dynamic>;
+
+  Future<Map<String, dynamic>> createSmartCollection(Map<String, dynamic> payload) async =>
+      await _post('/library/smart-collections', body: payload) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateSmartCollection(int id, Map<String, dynamic> payload) async {
+    // Server uses PUT (not PATCH) for the Smart Collections update.
+    final resp = await http.put(
+      Uri.parse('$baseUrl/library/smart-collections/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    ).timeout(const Duration(seconds: 60));
+    if (resp.statusCode != 200) {
+      throw Exception('PUT smart-collections/$id failed: ${resp.statusCode}');
+    }
+    return jsonDecode(resp.body) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteSmartCollection(int id) async =>
+      await _delete('/library/smart-collections/$id');
+
+  Future<Map<String, dynamic>> previewSmartCollection({
+    required List<dynamic> rules,
+    String matchMode = 'all',
+    int maxAlbums = 1,
+  }) async => await _post('/library/smart-collections/preview', body: {
+        'rules': rules,
+        'match_mode': matchMode,
+        'max_albums': maxAlbums,
+      }) as Map<String, dynamic>;
+
   // Activity Feed
 
   Future<List<dynamic>> getActivityFeed({int limit = 30}) async => await _get('/library/activity?limit=$limit') as List<dynamic>;
