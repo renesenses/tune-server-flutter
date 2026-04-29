@@ -76,7 +76,7 @@ class _SettingsList extends StatelessWidget {
                       ),
                       Text(
                         'Version actuelle : v${updateInfo.currentVersion}',
-                        style: TuneFonts.caption.copyWith(color: TuneColors.secondary),
+                        style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                       ),
                     ],
                   ),
