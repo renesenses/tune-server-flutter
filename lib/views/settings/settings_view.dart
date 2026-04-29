@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
@@ -48,9 +49,52 @@ class _SettingsList extends StatelessWidget {
     final app = context.watch<AppState>();
 
     final l = AppLocalizations.of(context);
+    final updateInfo = app.updateInfo;
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
+        if (updateInfo != null && updateInfo.updateAvailable) ...[
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.system_update, color: Colors.blue),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mise à jour disponible : v${updateInfo.latestVersion}',
+                        style: TuneFonts.body.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        'Version actuelle : v${updateInfo.currentVersion}',
+                        style: TuneFonts.caption.copyWith(color: TuneColors.secondary),
+                      ),
+                    ],
+                  ),
+                ),
+                if (updateInfo.releaseUrl != null)
+                  TextButton(
+                    onPressed: () async {
+                      final url = Uri.parse(updateInfo.releaseUrl!);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text('Ouvrir'),
+                  ),
+              ],
+            ),
+          ),
+        ],
         // ---- Mode ----
         const _SectionHeader('Mode'),
         Container(

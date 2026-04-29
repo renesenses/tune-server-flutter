@@ -19,6 +19,7 @@ import '../server/streaming/radio_metadata_service.dart';
 import '../server/streaming/streaming_service.dart';
 import '../services/tune_api_client.dart';
 import '../services/tune_websocket.dart';
+import '../services/update_checker.dart';
 import 'library_state.dart';
 import 'settings_state.dart';
 import 'zone_state.dart';
@@ -54,6 +55,14 @@ class AppState extends ChangeNotifier {
   TuneWebSocket? _webSocket;
   StreamSubscription? _wsSubscription;
   Timer? _remotePollingTimer;
+
+  // Update check — populated on app launch and every 30 min by
+  // _refreshUpdateInfo. Drives a banner in SettingsView when a newer
+  // tune-server-flutter release is on GitHub. Same UX rhythm as the
+  // web client's MAJ badge / macOS menubar update notice.
+  UpdateInfo? _updateInfo;
+  UpdateInfo? get updateInfo => _updateInfo;
+  Timer? _updateCheckTimer;
 
   bool get isRemoteMode => settingsState.isRemoteMode;
   bool get isRemoteConnected => _apiClient != null;
@@ -123,6 +132,14 @@ class AppState extends ChangeNotifier {
       zoneState.setDevices(engine.allDevices());
       engine.discoveryManager.refresh();
 
+      // First update check + 30 min polling. We don't await — it's a
+      // network call that shouldn't block server boot.
+      _refreshUpdateInfo();
+      _updateCheckTimer = Timer.periodic(
+        const Duration(minutes: 30),
+        (_) => _refreshUpdateInfo(),
+      );
+
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
@@ -130,7 +147,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> _refreshUpdateInfo() async {
+    try {
+      _updateInfo = await UpdateChecker().check();
+      notifyListeners();
+    } catch (_) {
+      // UpdateChecker.check already swallows network errors;
+      // anything that bubbles here is a programming bug, not a
+      // user-facing failure.
+    }
+  }
+
   Future<void> stopServer() async {
+    _updateCheckTimer?.cancel();
+    _updateCheckTimer = null;
     await engine.stop();
     _serverStarted = false;
     notifyListeners();
