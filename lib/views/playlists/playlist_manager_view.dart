@@ -244,7 +244,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Gestionnaire', style: TuneFonts.title3),
+        title: const Text('Playlists Hub', style: TuneFonts.title3),
         bottom: TabBar(
           controller: _tabCtrl,
           isScrollable: true,
