@@ -12,6 +12,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'streaming_album_detail_view.dart';
 import 'streaming_helpers.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T13.2 — StreamingServiceDetailView

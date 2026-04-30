@@ -2,18 +2,29 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
+part 'tune_api_client.metadata.dart';
+part 'tune_api_client.library.dart';
+part 'tune_api_client.streaming.dart';
+
 /// REST client for connecting to a remote Tune server.
 /// Mirrors TuneAPIClient.swift (iOS).
 class TuneApiClient {
   final String baseUrl;
-  TuneApiClient(this.baseUrl);
+  final http.Client _client;
+
+  /// Production : utilise le client http par défaut.
+  TuneApiClient(this.baseUrl) : _client = http.Client();
+
+  /// Test-only : permet d'injecter un MockClient (package:http/testing.dart).
+  /// Utilisé par test/services/tune_api_client_test.dart.
+  TuneApiClient.withClient(this.baseUrl, http.Client client) : _client = client;
 
   // ---------------------------------------------------------------------------
   // Generic helpers
   // ---------------------------------------------------------------------------
 
   Future<dynamic> _get(String path) async {
-    final resp = await http.get(Uri.parse('$baseUrl$path'))
+    final resp = await _client.get(Uri.parse('$baseUrl$path'))
         .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
       throw Exception('GET $path failed: ${resp.statusCode}');
@@ -22,7 +33,7 @@ class TuneApiClient {
   }
 
   Future<dynamic> _post(String path, {Map<String, dynamic>? body}) async {
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse('$baseUrl$path'),
       headers: {'Content-Type': 'application/json'},
       body: body != null ? jsonEncode(body) : null,
@@ -34,7 +45,7 @@ class TuneApiClient {
   }
 
   Future<dynamic> _patch(String path, {Map<String, dynamic>? body}) async {
-    final resp = await http.patch(
+    final resp = await _client.patch(
       Uri.parse('$baseUrl$path'),
       headers: {'Content-Type': 'application/json'},
       body: body != null ? jsonEncode(body) : null,
@@ -46,7 +57,7 @@ class TuneApiClient {
   }
 
   Future<void> _delete(String path) async {
-    final resp = await http.delete(Uri.parse('$baseUrl$path'))
+    final resp = await _client.delete(Uri.parse('$baseUrl$path'))
         .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200 && resp.statusCode != 204) {
       throw Exception('DELETE $path failed: ${resp.statusCode}');
@@ -96,75 +107,6 @@ class TuneApiClient {
 
   Future<dynamic> addToQueue(int zoneId, Map<String, dynamic> body) =>
       _post('/zones/$zoneId/queue/add', body: body);
-
-  // ---------------------------------------------------------------------------
-  // Library
-  // ---------------------------------------------------------------------------
-
-  Future<List<dynamic>> getAlbums({int limit = 500, int offset = 0}) =>
-      _get('/library/albums?limit=$limit&offset=$offset').then((d) => d as List);
-
-  Future<List<dynamic>> getArtists({int limit = 500}) =>
-      _get('/library/artists?limit=$limit').then((d) => d as List);
-
-  Future<List<dynamic>> getTracks({int limit = 500, int offset = 0}) =>
-      _get('/library/tracks?limit=$limit&offset=$offset').then((d) => d as List);
-
-  Future<List<dynamic>> getArtistAlbums(int artistId) =>
-      _get('/library/artists/$artistId/albums').then((d) => d as List);
-
-  Future<Map<String, dynamic>> getArtistMetadata(int artistId) async {
-    final response = await _get('/api/v1/artists/$artistId/metadata');
-    return response;
-  }
-
-  Future<List<dynamic>> getArtistTracks(int artistId) =>
-      _get('/library/artists/$artistId/tracks').then((d) => d as List);
-
-  Future<List<dynamic>> getTrackCredits(int trackId) =>
-      _get('/library/tracks/$trackId/credits').then((d) => d as List);
-
-  Future<List<dynamic>> getAlbumTracks(int albumId) =>
-      _get('/library/albums/$albumId/tracks').then((d) => d as List);
-
-  Future<dynamic> searchLibrary(String query, {int limit = 30}) =>
-      _get('/library/search?q=${Uri.encodeComponent(query)}&limit=$limit');
-
-  Future<List<dynamic>> getRecentAlbums({int limit = 30}) =>
-      _get('/library/albums?limit=$limit&sort=recent').then((d) => d as List);
-
-
-  String artworkUrl(String path) {
-    if (path.startsWith('http')) return path;
-    final filename = path.split('/').last;
-    return '$baseUrl/library/artwork/$filename';
-  }
-
-  // ---------------------------------------------------------------------------
-  // Radios
-  // ---------------------------------------------------------------------------
-
-  Future<List<dynamic>> getRadios() =>
-      _get('/radios').then((d) => d as List);
-
-  Future<dynamic> playRadio(int radioId, int zoneId) =>
-      _post('/zones/$zoneId/play', body: {'radio_id': radioId});
-
-  // ---------------------------------------------------------------------------
-  // Streaming
-  // ---------------------------------------------------------------------------
-
-  Future<Map<String, dynamic>> getStreamingServices() =>
-      _get('/streaming/services').then((d) => d as Map<String, dynamic>);
-
-  Future<List<dynamic>> getStreamingPlaylists(String service) =>
-      _get('/streaming/$service/playlists').then((d) => d as List);
-
-  Future<List<dynamic>> getStreamingPlaylistTracks(String service, String playlistId) =>
-      _get('/streaming/$service/playlists/$playlistId/tracks').then((d) => d as List);
-
-  Future<dynamic> searchStreaming(String service, String query, {int limit = 20}) =>
-      _get('/streaming/$service/search?q=${Uri.encodeComponent(query)}&limit=$limit');
 
   // ---------------------------------------------------------------------------
   // Playlists
@@ -383,126 +325,6 @@ class TuneApiClient {
       return false;
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Metadata Manager
-  // ---------------------------------------------------------------------------
-
-  // Completeness stats
-
-  Future<Map<String, dynamic>> getCompletenessStats() =>
-      _get('/library/stats/completeness').then((d) => d as Map<String, dynamic>);
-
-  // Fix missing years
-
-  Future<Map<String, dynamic>> fixYearsTidal() =>
-      _post('/metadata/fix-years-tidal').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> fixYearsMusicBrainz() =>
-      _post('/metadata/fix-years-musicbrainz').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> fixYearsDiscogs() =>
-      _post('/metadata/fix-years-discogs').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> fixYearsTags() =>
-      _post('/metadata/fix-years-tags').then((d) => d as Map<String, dynamic>);
-
-  // Fix missing genres
-
-  Future<Map<String, dynamic>> fixGenres() =>
-      _post('/metadata/fix-genres').then((d) => d as Map<String, dynamic>);
-
-  // Auto-fix
-
-  Future<Map<String, dynamic>> startAutoFix() =>
-      _post('/metadata/auto-fix').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> getAutoFixStatus() =>
-      _get('/metadata/auto-fix/status').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> autoFixAlbums() =>
-      _post('/metadata/auto-fix-albums').then((d) => d as Map<String, dynamic>);
-
-  // Duplicates
-
-  Future<Map<String, dynamic>> scanDuplicates({int limit = 5000}) =>
-      _post('/metadata/duplicates/scan', body: {'limit': limit}).then((d) => d as Map<String, dynamic>);
-
-  Future<List<dynamic>> listDuplicates() =>
-      _get('/metadata/duplicates').then((d) => d as List);
-
-  // Suggestions
-
-  Future<List<dynamic>> getMetadataSuggestions({String status = 'pending', int limit = 100}) =>
-      _get('/metadata/suggestions?status=$status&limit=$limit').then((d) => d as List);
-
-  Future<Map<String, dynamic>> acceptSuggestion(int id) =>
-      _post('/metadata/suggestions/$id/accept').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> rejectSuggestion(int id) =>
-      _post('/metadata/suggestions/$id/reject').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> acceptAllSuggestions({double minConfidence = 0.9}) =>
-      _post('/metadata/suggestions/accept-all?min_confidence=$minConfidence').then((d) => d as Map<String, dynamic>);
-
-  // Enrichment
-
-  Future<Map<String, dynamic>> enrichTrack(int trackId) =>
-      _post('/metadata/enrich/$trackId').then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> enrichAlbum(int albumId) =>
-      _post('/metadata/enrich-album/$albumId').then((d) => d as Map<String, dynamic>);
-
-  // Track/Album metadata update
-
-  Future<Map<String, dynamic>> updateTrackMetadata(int trackId, Map<String, dynamic> updates) =>
-      _patch('/metadata/tracks/$trackId', body: updates).then((d) => d as Map<String, dynamic>);
-
-  Future<Map<String, dynamic>> updateAlbumMetadata(int albumId, Map<String, dynamic> updates) =>
-      _patch('/metadata/albums/$albumId', body: updates).then((d) => d as Map<String, dynamic>);
-
-  // Merge duplicates
-
-  Future<Map<String, dynamic>> mergeAlbumDuplicates() =>
-      _post('/library/albums/merge-duplicates').then((d) => d as Map<String, dynamic>);
-
-  // Merge specific albums by IDs
-
-  Future<Map<String, dynamic>> mergeAlbums(List<int> albumIds) =>
-      _post('/metadata/albums/merge', body: {'album_ids': albumIds})
-          .then((d) => d as Map<String, dynamic>);
-
-  // Write tags to disk for a single album
-
-  Future<Map<String, dynamic>> writeAlbumTags(int albumId) =>
-      _post('/metadata/albums/$albumId/write-tags')
-          .then((d) => d as Map<String, dynamic>);
-
-  // Doubtful albums
-
-  Future<List<dynamic>> getDoubtfulAlbums() =>
-      _get('/metadata/doubtful').then((d) => d as List);
-
-  // Upload album artwork (multipart)
-
-  Future<Map<String, dynamic>> uploadAlbumArtwork(int albumId, String filePath) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/library/albums/$albumId/artwork'),
-    );
-    request.files.add(await http.MultipartFile.fromPath('file', filePath));
-    final streamed = await request.send().timeout(const Duration(seconds: 60));
-    final resp = await http.Response.fromStream(streamed);
-    if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception('Upload artwork failed: ${resp.statusCode}');
-    }
-    return resp.body.isNotEmpty ? jsonDecode(resp.body) as Map<String, dynamic> : {};
-  }
-
-  // Get all albums (large limit for metadata views)
-
-  Future<List<dynamic>> getAllAlbums() =>
-      _get('/library/albums?limit=10000').then((d) => d as List);
 
   // ---------------------------------------------------------------------------
   // ── Zone Manager ──
@@ -844,7 +666,7 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> updateSmartCollection(int id, Map<String, dynamic> payload) async {
     // Server uses PUT (not PATCH) for the Smart Collections update.
-    final resp = await http.put(
+    final resp = await _client.put(
       Uri.parse('$baseUrl/library/smart-collections/$id'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),

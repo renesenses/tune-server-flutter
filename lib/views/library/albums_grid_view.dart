@@ -11,6 +11,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'add_to_playlist_sheet.dart';
 import 'edit_album_sheet.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T12.2 — AlbumsGridView + AlbumDetailView

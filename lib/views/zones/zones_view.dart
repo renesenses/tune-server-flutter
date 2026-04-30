@@ -13,6 +13,7 @@ import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'zone_manager_view.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // StereoPair — lightweight model for a stereo pair (remote API)

@@ -6,6 +6,7 @@ import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 /// Playlist Manager — Transfer, Sync, Backup tabs
 /// Mirrors PlaylistManagerView.swift (iOS) and web client

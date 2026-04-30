@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../state/app_state.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 /// Spotify Connect receiver settings — drives /api/v1/spotify-connect/*.
 /// Only meaningful when remote-connected to a Tune Server that bundles

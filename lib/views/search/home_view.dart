@@ -12,6 +12,7 @@ import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'history_view.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T15.2 — HomeView

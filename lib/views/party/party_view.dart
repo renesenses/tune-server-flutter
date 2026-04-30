@@ -9,6 +9,7 @@ import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // PartyView — Party mode: add tracks, vote on queue, share link

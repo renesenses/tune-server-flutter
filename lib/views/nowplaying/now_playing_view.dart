@@ -21,6 +21,7 @@ import 'queue_view.dart';
 import 'seek_bar_view.dart';
 import 'volume_control_view.dart';
 import 'zone_management_view.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T11.1 — NowPlayingView

@@ -9,6 +9,7 @@ import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'waveform_painter.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // DJView — DJ mode with two decks, crossfade, auto-crossfade

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../state/app_state.dart';
 import 'tune_colors.dart';
+import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T10.2 — ArtworkView
