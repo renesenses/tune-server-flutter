@@ -16,6 +16,7 @@ import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
+import '../alarms/alarms_view.dart';
 import '../zones/zones_view.dart';
 import 'ipad_now_playing_bar.dart';
 
@@ -57,6 +58,7 @@ class _iPadContentViewState extends State<iPadContentView> {
       if (isRemote) _NavEntry(Icons.celebration_outlined, Icons.celebration_rounded, 'Party', const PartyView()),
       _NavEntry(Icons.auto_awesome_outlined, Icons.auto_awesome_rounded, 'Smart Playlists', const SmartPlaylistsView()),
       _NavEntry(Icons.podcasts_outlined, Icons.podcasts_rounded, l.navPodcasts, const PodcastsView()),
+      if (isRemote) _NavEntry(Icons.alarm_outlined, Icons.alarm_rounded, 'Alarmes', const AlarmsView()),
       _NavEntry(Icons.settings_outlined, Icons.settings_rounded, l.navSettings, const SettingsView()),
     ];
 

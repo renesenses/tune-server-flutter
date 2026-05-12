@@ -16,6 +16,7 @@ import '../collections/smart_collections_view.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
+import '../alarms/alarms_view.dart';
 import '../zones/zones_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,8 @@ class _MoreView extends StatelessWidget {
         (icon: Icons.celebration_rounded,    label: 'Party Mode',        page: const PartyView()),
       (icon: Icons.auto_awesome_rounded,   label: 'Smart Playlists',   page: const SmartPlaylistsView()),
       (icon: Icons.podcasts_rounded,       label: l.navPodcasts,       page: const PodcastsView()),
+      if (isRemote)
+        (icon: Icons.alarm_rounded,        label: 'Alarmes',           page: const AlarmsView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
     ];
 

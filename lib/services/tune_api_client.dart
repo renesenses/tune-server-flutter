@@ -56,6 +56,18 @@ class TuneApiClient {
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
 
+  Future<dynamic> _put(String path, {Map<String, dynamic>? body}) async {
+    final resp = await _client.put(
+      Uri.parse('$baseUrl$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: body != null ? jsonEncode(body) : null,
+    ).timeout(const Duration(seconds: 60));
+    if (resp.statusCode != 200) {
+      throw Exception('PUT $path failed: ${resp.statusCode}');
+    }
+    return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
+  }
+
   Future<void> _delete(String path) async {
     final resp = await _client.delete(Uri.parse('$baseUrl$path'))
         .timeout(const Duration(seconds: 60));
@@ -664,18 +676,8 @@ class TuneApiClient {
   Future<Map<String, dynamic>> createSmartCollection(Map<String, dynamic> payload) async =>
       await _post('/library/smart-collections', body: payload) as Map<String, dynamic>;
 
-  Future<Map<String, dynamic>> updateSmartCollection(int id, Map<String, dynamic> payload) async {
-    // Server uses PUT (not PATCH) for the Smart Collections update.
-    final resp = await _client.put(
-      Uri.parse('$baseUrl/library/smart-collections/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    ).timeout(const Duration(seconds: 60));
-    if (resp.statusCode != 200) {
-      throw Exception('PUT smart-collections/$id failed: ${resp.statusCode}');
-    }
-    return jsonDecode(resp.body) as Map<String, dynamic>;
-  }
+  Future<Map<String, dynamic>> updateSmartCollection(int id, Map<String, dynamic> payload) async =>
+      await _put('/library/smart-collections/$id', body: payload) as Map<String, dynamic>;
 
   Future<void> deleteSmartCollection(int id) async =>
       await _delete('/library/smart-collections/$id');
@@ -723,4 +725,20 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> disableSpotifyConnect() async =>
       await _post('/spotify-connect/disable') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Alarms ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getAlarms() async =>
+      await _get('/api/v1/alarms/') as List<dynamic>;
+
+  Future<Map<String, dynamic>> createAlarm(Map<String, dynamic> body) async =>
+      await _post('/api/v1/alarms/', body: body) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateAlarm(int id, Map<String, dynamic> body) async =>
+      await _put('/api/v1/alarms/$id', body: body) as Map<String, dynamic>;
+
+  Future<void> deleteAlarm(int id) async =>
+      await _delete('/api/v1/alarms/$id');
 }
