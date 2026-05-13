@@ -213,6 +213,7 @@ class MainActivity : FlutterActivity() {
                 "flac" -> readFlacVorbisComments(path, result)
                 "mp3" -> readId3v2TxxxFrames(path, result)
                 "ogg" -> readFlacVorbisComments(path, result)
+                "m4a", "aac", "mp4" -> readM4aFreeformAtoms(path, result)
             }
         } catch (_: Exception) {}
         return result
@@ -337,6 +338,167 @@ class MainActivity : FlutterActivity() {
                     out.putIfAbsent("originalYear", value.take(4))
                 }
                 offset += frameSize
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // readM4aFreeformAtoms — MusicBrainz IDs + originalYear from MP4/M4A atoms
+    // Parses the moov→udta→meta→ilst box hierarchy for ---- freeform atoms
+    // and the ©day atom for original year.
+    // -------------------------------------------------------------------------
+    private fun readM4aFreeformAtoms(path: String, out: MutableMap<String, String?>) {
+        java.io.RandomAccessFile(path, "r").use { raf ->
+            val fileLen = raf.length()
+            // Find moov atom at top level
+            val moovPos = findAtom(raf, 0, fileLen, "moov") ?: return
+            val moovSize = readAtomSize(raf, moovPos)
+            val moovDataStart = moovPos + 8
+            val moovEnd = moovPos + moovSize
+
+            // Find udta inside moov
+            val udtaPos = findAtom(raf, moovDataStart, moovEnd, "udta") ?: return
+            val udtaSize = readAtomSize(raf, udtaPos)
+            val udtaDataStart = udtaPos + 8
+            val udtaEnd = udtaPos + udtaSize
+
+            // Find meta inside udta
+            val metaPos = findAtom(raf, udtaDataStart, udtaEnd, "meta") ?: return
+            val metaSize = readAtomSize(raf, metaPos)
+            // meta atom has a 4-byte version/flags field after the standard 8-byte header
+            val metaDataStart = metaPos + 12
+            val metaEnd = metaPos + metaSize
+
+            // Find ilst inside meta
+            val ilstPos = findAtom(raf, metaDataStart, metaEnd, "ilst") ?: return
+            val ilstSize = readAtomSize(raf, ilstPos)
+            val ilstDataStart = ilstPos + 8
+            val ilstEnd = ilstPos + ilstSize
+
+            // Iterate atoms inside ilst
+            var pos = ilstDataStart
+            while (pos + 8 <= ilstEnd) {
+                raf.seek(pos)
+                val atomSize = raf.readInt().toLong() and 0xFFFFFFFFL
+                if (atomSize < 8) break
+                val typeBytes = ByteArray(4)
+                raf.readFully(typeBytes)
+                val atomType = String(typeBytes, Charsets.ISO_8859_1)
+                val atomEnd = pos + atomSize
+
+                if (atomType == "----") {
+                    // Freeform atom: parse mean, name, data sub-atoms
+                    parseFreeformAtom(raf, pos + 8, atomEnd, out)
+                } else if (atomType == "©day") {
+                    // ©day atom contains date — parse its data sub-atom
+                    val dataPos = findAtom(raf, pos + 8, atomEnd, "data")
+                    if (dataPos != null) {
+                        val dataSize = readAtomSize(raf, dataPos)
+                        val valueLen = (dataSize - 16).toInt()
+                        if (valueLen > 0 && valueLen < 256) {
+                            raf.seek(dataPos + 16) // skip atom header (8) + version/flags + locale (8)
+                            val valBytes = ByteArray(valueLen)
+                            raf.readFully(valBytes)
+                            val dateStr = String(valBytes, Charsets.UTF_8).trim()
+                            if (dateStr.isNotEmpty()) {
+                                out.putIfAbsent("originalYear", dateStr.take(4))
+                            }
+                        }
+                    }
+                }
+
+                pos = atomEnd
+            }
+        }
+    }
+
+    private fun findAtom(raf: java.io.RandomAccessFile, start: Long, end: Long, type: String): Long? {
+        var pos = start
+        while (pos + 8 <= end) {
+            raf.seek(pos)
+            val size = raf.readInt().toLong() and 0xFFFFFFFFL
+            if (size < 8) return null
+            val typeBytes = ByteArray(4)
+            raf.readFully(typeBytes)
+            val atomType = String(typeBytes, Charsets.ISO_8859_1)
+            if (atomType == type) return pos
+            pos += size
+        }
+        return null
+    }
+
+    private fun readAtomSize(raf: java.io.RandomAccessFile, pos: Long): Long {
+        raf.seek(pos)
+        return raf.readInt().toLong() and 0xFFFFFFFFL
+    }
+
+    private fun parseFreeformAtom(
+        raf: java.io.RandomAccessFile,
+        start: Long,
+        end: Long,
+        out: MutableMap<String, String?>
+    ) {
+        var meanStr: String? = null
+        var nameStr: String? = null
+        var dataStr: String? = null
+
+        var pos = start
+        while (pos + 8 <= end) {
+            raf.seek(pos)
+            val subSize = raf.readInt().toLong() and 0xFFFFFFFFL
+            if (subSize < 8) break
+            val typeBytes = ByteArray(4)
+            raf.readFully(typeBytes)
+            val subType = String(typeBytes, Charsets.ISO_8859_1)
+            val subEnd = pos + subSize
+
+            when (subType) {
+                "mean" -> {
+                    // mean: 8-byte header + 4-byte version/flags + string
+                    val strLen = (subSize - 12).toInt()
+                    if (strLen > 0 && strLen < 1024) {
+                        raf.seek(pos + 12)
+                        val buf = ByteArray(strLen)
+                        raf.readFully(buf)
+                        meanStr = String(buf, Charsets.UTF_8)
+                    }
+                }
+                "name" -> {
+                    // name: 8-byte header + 4-byte version/flags + string
+                    val strLen = (subSize - 12).toInt()
+                    if (strLen > 0 && strLen < 1024) {
+                        raf.seek(pos + 12)
+                        val buf = ByteArray(strLen)
+                        raf.readFully(buf)
+                        nameStr = String(buf, Charsets.UTF_8)
+                    }
+                }
+                "data" -> {
+                    // data: 8-byte header + 4-byte type/flags + 4-byte locale + value
+                    val strLen = (subSize - 16).toInt()
+                    if (strLen > 0 && strLen < 4096) {
+                        raf.seek(pos + 16)
+                        val buf = ByteArray(strLen)
+                        raf.readFully(buf)
+                        dataStr = String(buf, Charsets.UTF_8)
+                    }
+                }
+            }
+
+            pos = subEnd
+        }
+
+        // Match known MusicBrainz tags
+        if (meanStr == "com.apple.iTunes" && nameStr != null && dataStr != null) {
+            when (nameStr) {
+                "MusicBrainz Track Id" ->
+                    out.putIfAbsent("musicbrainzRecordingId", dataStr)
+                "MusicBrainz Album Id" ->
+                    out.putIfAbsent("musicbrainzReleaseId", dataStr)
+                "MusicBrainz Release Group Id" ->
+                    out.putIfAbsent("musicbrainzReleaseGroupId", dataStr)
+                "ORIGINALDATE", "ORIGINALYEAR" ->
+                    out.putIfAbsent("originalYear", dataStr.take(4))
             }
         }
     }
