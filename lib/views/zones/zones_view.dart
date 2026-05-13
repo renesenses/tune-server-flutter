@@ -424,6 +424,8 @@ class _ActiveZoneBanner extends StatelessWidget {
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
+      case OutputType.bluos:
+        return Icons.speaker_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -438,6 +440,8 @@ class _ActiveZoneBanner extends StatelessWidget {
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;
+      case OutputType.bluos:
+        return 'BluOS';
       default:
         return l.zonesOutputLocal;
     }
@@ -693,6 +697,8 @@ class _ZoneTile extends StatelessWidget {
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
+      case OutputType.bluos:
+        return Icons.speaker_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -707,6 +713,8 @@ class _ZoneTile extends StatelessWidget {
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;
+      case OutputType.bluos:
+        return 'BluOS';
       default:
         return l.zonesOutputLocal;
     }
@@ -952,13 +960,21 @@ class _DeviceTile extends StatelessWidget {
 
   const _DeviceTile({required this.device, required this.zones});
 
+  IconData get _deviceIcon {
+    if (device.type == 'bluos') return Icons.speaker_rounded;
+    return Icons.cast_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return ListTile(
-      leading: const Icon(Icons.cast_rounded, color: TuneColors.textSecondary),
+      leading: Icon(_deviceIcon, color: TuneColors.textSecondary),
       title: Text(device.name),
-      subtitle: Text('${device.host}:${device.port}',
+      subtitle: Text(
+          device.type == 'bluos'
+              ? 'BluOS - ${device.host}'
+              : '${device.host}:${device.port}',
           style: TuneFonts.caption),
       trailing: IconButton(
         icon: const Icon(Icons.add_circle_rounded, color: TuneColors.accent),

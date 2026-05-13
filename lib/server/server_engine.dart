@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../models/enums.dart';
 import 'configuration.dart';
 import 'database/database.dart';
+import 'discovery/bluos_discovery.dart';
 import 'discovery/discovery_manager.dart';
 import 'discovery/upnp_indexer.dart';
 import 'event_bus.dart';
@@ -72,6 +73,7 @@ class ServerEngine {
   final ServerConfiguration config;
   final ZoneManager zoneManager;
   final DiscoveryManager discoveryManager;
+  final BluOSDiscovery bluosDiscovery;
   final UPnPIndexer upnpIndexer;
   final StreamingManager streamingManager;
   final LibraryScanner libraryScanner;
@@ -85,6 +87,7 @@ class ServerEngine {
     required this.config,
     required this.zoneManager,
     required this.discoveryManager,
+    required this.bluosDiscovery,
     required this.upnpIndexer,
     required this.streamingManager,
     required this.libraryScanner,
@@ -101,6 +104,7 @@ class ServerEngine {
     await config.load();
 
     final discoveryManager = DiscoveryManager(db);
+    final bluosDiscovery = BluOSDiscovery();
     final upnpIndexer = UPnPIndexer(db);
     final zoneManager = ZoneManager(db, discoveryManager);
     final streamingManager = StreamingManager(
@@ -118,6 +122,7 @@ class ServerEngine {
       config: config,
       zoneManager: zoneManager,
       discoveryManager: discoveryManager,
+      bluosDiscovery: bluosDiscovery,
       upnpIndexer: upnpIndexer,
       streamingManager: streamingManager,
       libraryScanner: libraryScanner,
@@ -144,6 +149,7 @@ class ServerEngine {
     // 3. Discovery — charger les saved_devices AVANT les zones
     //    pour que les zones retrouvent leurs outputs DLNA
     await discoveryManager.start();
+    await bluosDiscovery.start();
 
     // 3b. Purge les tracks en doublon hérités d'indexations UPnP
     //     Asset UPnP expose le même morceau sous plusieurs containers
@@ -169,6 +175,7 @@ class ServerEngine {
     if (!_running) return;
     RadioMetadataService.instance.stopAll();
     discoveryManager.stop();
+    bluosDiscovery.stop();
     await httpStreamer.stop();
     await zoneManager.dispose();
     _running = false;
@@ -264,9 +271,11 @@ class ServerEngine {
   // Devices
   // ---------------------------------------------------------------------------
 
-  List<DiscoveredDevice> allDevices() => discoveryManager.allDevices();
+  List<DiscoveredDevice> allDevices() =>
+      [...discoveryManager.allDevices(), ...bluosDiscovery.devices];
   List<DiscoveredDevice> upnpServers() => discoveryManager.servers();
   List<DiscoveredDevice> dlnaRenderers() => discoveryManager.renderers();
+  List<DiscoveredDevice> bluosDevices() => bluosDiscovery.devices;
 
   Future<void> forgetDevice(String id) => discoveryManager.forgetDevice(id);
 

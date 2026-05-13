@@ -19,9 +19,11 @@ extension AppStateZones on AppState {
   /// Creates a zone directly from a discovered device.
   /// The zone inherits the device's name and output type.
   Future<int> createZoneFromDevice(DiscoveredDevice device) async {
-    final outputType = device.type == 'renderer'
-        ? OutputType.dlna
-        : OutputType.local;
+    final outputType = device.type == 'bluos'
+        ? OutputType.bluos
+        : device.type == 'renderer'
+            ? OutputType.dlna
+            : OutputType.local;
     final instance = await engine.zoneManager.createZone(
       device.name,
       outputType: outputType,

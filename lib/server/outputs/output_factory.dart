@@ -6,6 +6,7 @@ import '../../models/enums.dart';
 import '../audio/local_audio_output.dart';
 import '../discovery/discovery_manager.dart';
 import 'airplay_output.dart';
+import 'bluos_output.dart';
 import 'dlna_output.dart';
 import 'output_target.dart';
 
@@ -20,7 +21,7 @@ class OutputFactory {
 
   /// Crée l'output approprié pour le [type] et le [device] fournis.
   ///
-  /// [device] est requis pour DLNA (contient les URLs SOAP).
+  /// [device] est requis pour DLNA et BluOS (contient host/port).
   /// Sur Android, OutputType.airplay est redirigé vers Local.
   static OutputTarget create({
     required OutputType type,
@@ -57,6 +58,18 @@ class OutputFactory {
       case OutputType.bluetooth:
         // Bluetooth géré par le système audio → Local suffit
         return LocalAudioOutput(displayName: 'Bluetooth');
+
+      case OutputType.bluos:
+        if (device == null) {
+          debugPrint('[output_factory] BluOS requested but no device — fallback to Local');
+          return LocalAudioOutput(displayName: 'Local (fallback)');
+        }
+        return BluOSOutput(
+          id: device.id,
+          displayName: device.name,
+          host: device.host,
+          port: device.port,
+        );
     }
   }
 
@@ -65,6 +78,7 @@ class OutputFactory {
     return [
       OutputType.local,
       OutputType.dlna,
+      OutputType.bluos,
       if (Platform.isIOS) OutputType.airplay,
       OutputType.bluetooth,
     ];
