@@ -187,7 +187,8 @@ class ServerEngine {
   // ---------------------------------------------------------------------------
 
   /// Lance le scan de tous les dossiers enregistrés.
-  Future<void> scanLibrary() async {
+  /// Si [full] est true, force une relecture complète des tags (reset mtime).
+  Future<void> scanLibrary({bool full = false}) async {
     final folders = await db.select(db.musicFolders).get();
     final paths = folders.map((f) => f.path).toList();
 
@@ -197,7 +198,7 @@ class ServerEngine {
     }
 
     if (paths.isNotEmpty) {
-      await libraryScanner.scan(paths);
+      await libraryScanner.scan(paths, full: full);
     }
   }
 

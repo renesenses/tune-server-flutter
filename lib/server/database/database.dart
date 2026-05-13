@@ -45,7 +45,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +67,13 @@ class TuneDatabase extends _$TuneDatabase {
           }
           if (from < 5) {
             await m.addColumn(tracks, tracks.favorite);
+          }
+          if (from < 6) {
+            await m.addColumn(albums, albums.originalYear);
+            await m.addColumn(albums, albums.musicbrainzReleaseId);
+            await m.addColumn(albums, albums.musicbrainzReleaseGroupId);
+            await m.addColumn(tracks, tracks.musicbrainzRecordingId);
+            await m.addColumn(tracks, tracks.fileMtime);
           }
         },
         beforeOpen: (details) async {
@@ -201,6 +208,8 @@ class TuneDatabase extends _$TuneDatabase {
         'CREATE INDEX IF NOT EXISTS idx_playlist_tracks ON playlist_tracks(playlist_id)');
     await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_queue_items_zone ON queue_items(zone_id)');
+    await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_albums_mbid ON albums(musicbrainz_release_id)');
   }
 }
 

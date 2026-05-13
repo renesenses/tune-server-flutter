@@ -34,12 +34,15 @@ class Albums extends Table {
       integer().nullable().references(Artists, #id)();
   TextColumn get artistName => text().nullable()();
   IntColumn get year => integer().nullable()();
+  IntColumn get originalYear => integer().nullable()();
   TextColumn get genre => text().nullable()();
   IntColumn get discCount => integer().nullable()();
   IntColumn get trackCount => integer().nullable()();
   TextColumn get coverPath => text().nullable()();
   TextColumn get source => text().withDefault(const Constant('local'))();
   TextColumn get sourceId => text().nullable()();
+  TextColumn get musicbrainzReleaseId => text().nullable()();
+  TextColumn get musicbrainzReleaseGroupId => text().nullable()();
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +72,9 @@ class Tracks extends Table {
   /// Marque la piste comme favori (migration v5)
   BoolColumn get favorite =>
       boolean().withDefault(const Constant(false))();
+  TextColumn get musicbrainzRecordingId => text().nullable()();
+  /// Timestamp du fichier sur disque (mtime) pour détection incrémentale (migration v6)
+  RealColumn get fileMtime => real().nullable()();
 }
 
 // ---------------------------------------------------------------------------

@@ -12,12 +12,15 @@ Album albumFromJson(Map<String, dynamic> j) => Album(
       artistId: j['artist_id'] as int?,
       artistName: j['artist_name'] as String?,
       year: j['year'] as int?,
+      originalYear: j['original_year'] as int?,
       genre: j['genre'] as String?,
       discCount: j['disc_count'] as int?,
       trackCount: j['track_count'] as int?,
       coverPath: j['cover_path'] as String?,
       source: j['source'] as String? ?? 'local',
       sourceId: j['source_id'] as String?,
+      musicbrainzReleaseId: j['musicbrainz_release_id'] as String?,
+      musicbrainzReleaseGroupId: j['musicbrainz_release_group_id'] as String?,
     );
 
 Artist artistFromJson(Map<String, dynamic> j) => Artist(
@@ -49,6 +52,7 @@ Track trackFromJson(Map<String, dynamic> j) => Track(
       source: j['source'] as String? ?? 'local',
       sourceId: j['source_id'] as String?,
       favorite: j['favorite'] as bool? ?? false,
+      musicbrainzRecordingId: j['musicbrainz_recording_id'] as String?,
     );
 
 Radio radioFromJson(Map<String, dynamic> j) => Radio(

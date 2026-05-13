@@ -35,6 +35,35 @@ class AlbumRepository {
             ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
           .getSingleOrNull();
 
+  /// Lookup by MusicBrainz release ID — authoritative discriminant.
+  Future<Album?> getByMusicbrainzReleaseId(String releaseId) =>
+      (_db.select(_db.albums)
+            ..where((a) => a.musicbrainzReleaseId.equals(releaseId)))
+          .getSingleOrNull();
+
+  /// Backfill MusicBrainz IDs on an existing album (only if currently null/empty).
+  Future<void> updateMusicbrainzIds(
+      int albumId, String? releaseId, String? releaseGroupId) async {
+    if (releaseId != null && releaseId.isNotEmpty) {
+      await _db.customUpdate(
+        'UPDATE albums SET musicbrainz_release_id = ? '
+        'WHERE id = ? AND (musicbrainz_release_id IS NULL '
+        "OR musicbrainz_release_id = '')",
+        variables: [Variable(releaseId), Variable(albumId)],
+        updates: {_db.albums},
+      );
+    }
+    if (releaseGroupId != null && releaseGroupId.isNotEmpty) {
+      await _db.customUpdate(
+        'UPDATE albums SET musicbrainz_release_group_id = ? '
+        'WHERE id = ? AND (musicbrainz_release_group_id IS NULL '
+        "OR musicbrainz_release_group_id = '')",
+        variables: [Variable(releaseGroupId), Variable(albumId)],
+        updates: {_db.albums},
+      );
+    }
+  }
+
   Future<void> updateTrackCount(int albumId) async {
     final count = await (_db.selectOnly(_db.tracks)
           ..addColumns([_db.tracks.id.count()])

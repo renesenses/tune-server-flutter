@@ -42,7 +42,9 @@ class LibraryScanner {
   // ---------------------------------------------------------------------------
 
   /// Scanne [folderPaths] récursivement et met à jour la DB.
-  Future<void> scan(List<String> folderPaths) async {
+  /// Si [full] est true, reset les mtime de toutes les pistes pour forcer
+  /// une relecture complète des tags (équivalent Linux full=true).
+  Future<void> scan(List<String> folderPaths, {bool full = false}) async {
     if (_scanning) return;
     _scanning = true;
     _cancelRequested = false;
@@ -53,6 +55,11 @@ class LibraryScanner {
     int tracksUpdated = 0;
 
     try {
+      // 0. Full scan : reset mtime → force relecture de tous les tags
+      if (full) {
+        await _db.trackRepo.resetAllMtimes();
+      }
+
       // 1. Collecte tous les fichiers audio
       final allFiles = <String>[];
       for (final folder in folderPaths) {
@@ -126,15 +133,18 @@ class LibraryScanner {
       final String? coverPath =
           meta.hasCoverData ? await _artworkManager.coverPathForTrack(meta.filePath) : null;
 
-      // Album
+      // Album — MBID-first lookup, then title+artist fallback
       final albumId = meta.album != null
           ? await _upsertAlbum(
               title: meta.album!,
               artistId: artistId,
               artistName: meta.albumArtist ?? meta.artist,
               year: meta.year,
+              originalYear: meta.originalYear,
               genre: meta.genre,
               coverPath: coverPath,
+              musicbrainzReleaseId: meta.musicbrainzReleaseId,
+              musicbrainzReleaseGroupId: meta.musicbrainzReleaseGroupId,
             )
           : null;
 
@@ -142,6 +152,13 @@ class LibraryScanner {
       final existing = await (_db.select(_db.tracks)
             ..where((t) => t.filePath.equals(meta.filePath)))
           .getSingleOrNull();
+
+      // File mtime for incremental scan detection
+      double? fileMtime;
+      try {
+        final stat = await File(meta.filePath).stat();
+        fileMtime = stat.modified.millisecondsSinceEpoch / 1000.0;
+      } catch (_) {}
 
       final companion = TracksCompanion(
         title: Value(meta.title),
@@ -159,6 +176,8 @@ class LibraryScanner {
         channels: Value(meta.channels),
         coverPath: Value(coverPath),
         source: const Value('local'),
+        musicbrainzRecordingId: Value(meta.musicbrainzRecordingId),
+        fileMtime: Value(fileMtime),
       );
 
       if (existing == null) {
@@ -203,19 +222,46 @@ class LibraryScanner {
   // Filtrage des fichiers inchangés
   // ---------------------------------------------------------------------------
 
-  /// Retourne les fichiers dont la piste DB est absente ou dont filePath
-  /// n'est pas encore en base.
+  /// Retourne les fichiers dont la piste DB est absente ou dont le fichier
+  /// a été modifié depuis le dernier scan (comparaison mtime).
   Future<List<String>> _filterUnchanged(List<String> files) async {
-    // Charge tous les filePaths déjà indexés
-    final existing = await _db
-        .customSelect('SELECT file_path FROM tracks WHERE source = \'local\'')
-        .map((r) => r.read<String>('file_path'))
+    // Charge file_path + file_mtime pour toutes les pistes locales
+    final rows = await _db
+        .customSelect(
+            "SELECT file_path, file_mtime FROM tracks WHERE source = 'local'")
         .get();
-    final indexed = existing.toSet();
+    final indexed = <String, double?>{};
+    for (final row in rows) {
+      indexed[row.read<String>('file_path')] =
+          row.readNullable<double>('file_mtime');
+    }
 
-    return files
-        .where((f) => !indexed.contains(f))
-        .toList();
+    final result = <String>[];
+    for (final f in files) {
+      if (!indexed.containsKey(f)) {
+        // Not indexed yet — new file
+        result.add(f);
+        continue;
+      }
+      final storedMtime = indexed[f];
+      if (storedMtime == null) {
+        // Indexed but no mtime recorded (pre-migration v6) — skip, will
+        // get mtime populated on next tag-change or full scan.
+        continue;
+      }
+      // Compare disk mtime with stored mtime (storedMtime == 0 from full
+      // scan reset will always trigger re-read)
+      try {
+        final stat = await File(f).stat();
+        final diskMtime = stat.modified.millisecondsSinceEpoch / 1000.0;
+        if (diskMtime > storedMtime) {
+          result.add(f);
+        }
+      } catch (_) {
+        // Can't stat — skip
+      }
+    }
+    return result;
   }
 
   // ---------------------------------------------------------------------------
@@ -258,23 +304,41 @@ class LibraryScanner {
     int? artistId,
     String? artistName,
     int? year,
+    int? originalYear,
     String? genre,
     String? coverPath,
+    String? musicbrainzReleaseId,
+    String? musicbrainzReleaseGroupId,
   }) async {
-    final existing = await (_db.select(_db.albums)
-          ..where((a) =>
-              a.title.equals(title) &
-              (artistId != null
-                  ? a.artistId.equals(artistId)
-                  : a.artistId.isNull())))
-        .getSingleOrNull();
+    // MBID-first lookup — authoritative discriminant
+    Album? existing;
+    if (musicbrainzReleaseId != null && musicbrainzReleaseId.isNotEmpty) {
+      existing = await _db.albumRepo.getByMusicbrainzReleaseId(
+          musicbrainzReleaseId);
+    }
+
+    // Fallback to title+artist lookup
+    if (existing == null) {
+      existing = await (_db.select(_db.albums)
+            ..where((a) =>
+                a.title.equals(title) &
+                (artistId != null
+                    ? a.artistId.equals(artistId)
+                    : a.artistId.isNull())))
+          .getSingleOrNull();
+    }
 
     if (existing != null) {
       // Met à jour la pochette si elle était absente
       if (existing.coverPath == null && coverPath != null) {
         await (_db.update(_db.albums)
-              ..where((a) => a.id.equals(existing.id)))
+              ..where((a) => a.id.equals(existing!.id)))
             .write(AlbumsCompanion(coverPath: Value(coverPath)));
+      }
+      // Backfill MusicBrainz IDs
+      if (musicbrainzReleaseId != null || musicbrainzReleaseGroupId != null) {
+        await _db.albumRepo.updateMusicbrainzIds(
+            existing.id, musicbrainzReleaseId, musicbrainzReleaseGroupId);
       }
       return existing.id;
     }
@@ -285,9 +349,12 @@ class LibraryScanner {
             artistId: Value(artistId),
             artistName: Value(artistName),
             year: Value(year),
+            originalYear: Value(originalYear),
             genre: Value(genre),
             coverPath: Value(coverPath),
             source: const Value('local'),
+            musicbrainzReleaseId: Value(musicbrainzReleaseId),
+            musicbrainzReleaseGroupId: Value(musicbrainzReleaseGroupId),
           ),
         );
   }

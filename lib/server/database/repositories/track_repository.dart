@@ -127,6 +127,18 @@ class TrackRepository {
           .get();
 
   // ---------------------------------------------------------------------------
+  // File mtime (incremental scan support)
+  // ---------------------------------------------------------------------------
+
+  /// Reset file_mtime to 0 on all local tracks — forces a full rescan.
+  Future<void> resetAllMtimes() async {
+    await _db.customUpdate(
+      "UPDATE tracks SET file_mtime = 0 WHERE file_mtime IS NOT NULL AND source = 'local'",
+      updates: {_db.tracks},
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 

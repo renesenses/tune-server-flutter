@@ -516,6 +516,17 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _originalYearMeta = const VerificationMeta(
+    'originalYear',
+  );
+  @override
+  late final GeneratedColumn<int> originalYear = GeneratedColumn<int>(
+    'original_year',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _genreMeta = const VerificationMeta('genre');
   @override
   late final GeneratedColumn<String> genre = GeneratedColumn<String>(
@@ -579,6 +590,28 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _musicbrainzReleaseIdMeta =
+      const VerificationMeta('musicbrainzReleaseId');
+  @override
+  late final GeneratedColumn<String> musicbrainzReleaseId =
+      GeneratedColumn<String>(
+        'musicbrainz_release_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _musicbrainzReleaseGroupIdMeta =
+      const VerificationMeta('musicbrainzReleaseGroupId');
+  @override
+  late final GeneratedColumn<String> musicbrainzReleaseGroupId =
+      GeneratedColumn<String>(
+        'musicbrainz_release_group_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -586,12 +619,15 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
     artistId,
     artistName,
     year,
+    originalYear,
     genre,
     discCount,
     trackCount,
     coverPath,
     source,
     sourceId,
+    musicbrainzReleaseId,
+    musicbrainzReleaseGroupId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -634,6 +670,15 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
         year.isAcceptableOrUnknown(data['year']!, _yearMeta),
       );
     }
+    if (data.containsKey('original_year')) {
+      context.handle(
+        _originalYearMeta,
+        originalYear.isAcceptableOrUnknown(
+          data['original_year']!,
+          _originalYearMeta,
+        ),
+      );
+    }
     if (data.containsKey('genre')) {
       context.handle(
         _genreMeta,
@@ -670,6 +715,24 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
         sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
       );
     }
+    if (data.containsKey('musicbrainz_release_id')) {
+      context.handle(
+        _musicbrainzReleaseIdMeta,
+        musicbrainzReleaseId.isAcceptableOrUnknown(
+          data['musicbrainz_release_id']!,
+          _musicbrainzReleaseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('musicbrainz_release_group_id')) {
+      context.handle(
+        _musicbrainzReleaseGroupIdMeta,
+        musicbrainzReleaseGroupId.isAcceptableOrUnknown(
+          data['musicbrainz_release_group_id']!,
+          _musicbrainzReleaseGroupIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -699,6 +762,10 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
         DriftSqlType.int,
         data['${effectivePrefix}year'],
       ),
+      originalYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}original_year'],
+      ),
       genre: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}genre'],
@@ -723,6 +790,14 @@ class $AlbumsTable extends Albums with TableInfo<$AlbumsTable, Album> {
         DriftSqlType.string,
         data['${effectivePrefix}source_id'],
       ),
+      musicbrainzReleaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}musicbrainz_release_id'],
+      ),
+      musicbrainzReleaseGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}musicbrainz_release_group_id'],
+      ),
     );
   }
 
@@ -738,24 +813,30 @@ class Album extends DataClass implements Insertable<Album> {
   final int? artistId;
   final String? artistName;
   final int? year;
+  final int? originalYear;
   final String? genre;
   final int? discCount;
   final int? trackCount;
   final String? coverPath;
   final String source;
   final String? sourceId;
+  final String? musicbrainzReleaseId;
+  final String? musicbrainzReleaseGroupId;
   const Album({
     required this.id,
     required this.title,
     this.artistId,
     this.artistName,
     this.year,
+    this.originalYear,
     this.genre,
     this.discCount,
     this.trackCount,
     this.coverPath,
     required this.source,
     this.sourceId,
+    this.musicbrainzReleaseId,
+    this.musicbrainzReleaseGroupId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -770,6 +851,9 @@ class Album extends DataClass implements Insertable<Album> {
     }
     if (!nullToAbsent || year != null) {
       map['year'] = Variable<int>(year);
+    }
+    if (!nullToAbsent || originalYear != null) {
+      map['original_year'] = Variable<int>(originalYear);
     }
     if (!nullToAbsent || genre != null) {
       map['genre'] = Variable<String>(genre);
@@ -787,6 +871,14 @@ class Album extends DataClass implements Insertable<Album> {
     if (!nullToAbsent || sourceId != null) {
       map['source_id'] = Variable<String>(sourceId);
     }
+    if (!nullToAbsent || musicbrainzReleaseId != null) {
+      map['musicbrainz_release_id'] = Variable<String>(musicbrainzReleaseId);
+    }
+    if (!nullToAbsent || musicbrainzReleaseGroupId != null) {
+      map['musicbrainz_release_group_id'] = Variable<String>(
+        musicbrainzReleaseGroupId,
+      );
+    }
     return map;
   }
 
@@ -801,6 +893,9 @@ class Album extends DataClass implements Insertable<Album> {
           ? const Value.absent()
           : Value(artistName),
       year: year == null && nullToAbsent ? const Value.absent() : Value(year),
+      originalYear: originalYear == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalYear),
       genre: genre == null && nullToAbsent
           ? const Value.absent()
           : Value(genre),
@@ -817,6 +912,13 @@ class Album extends DataClass implements Insertable<Album> {
       sourceId: sourceId == null && nullToAbsent
           ? const Value.absent()
           : Value(sourceId),
+      musicbrainzReleaseId: musicbrainzReleaseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(musicbrainzReleaseId),
+      musicbrainzReleaseGroupId:
+          musicbrainzReleaseGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(musicbrainzReleaseGroupId),
     );
   }
 
@@ -831,12 +933,19 @@ class Album extends DataClass implements Insertable<Album> {
       artistId: serializer.fromJson<int?>(json['artistId']),
       artistName: serializer.fromJson<String?>(json['artistName']),
       year: serializer.fromJson<int?>(json['year']),
+      originalYear: serializer.fromJson<int?>(json['originalYear']),
       genre: serializer.fromJson<String?>(json['genre']),
       discCount: serializer.fromJson<int?>(json['discCount']),
       trackCount: serializer.fromJson<int?>(json['trackCount']),
       coverPath: serializer.fromJson<String?>(json['coverPath']),
       source: serializer.fromJson<String>(json['source']),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
+      musicbrainzReleaseId: serializer.fromJson<String?>(
+        json['musicbrainzReleaseId'],
+      ),
+      musicbrainzReleaseGroupId: serializer.fromJson<String?>(
+        json['musicbrainzReleaseGroupId'],
+      ),
     );
   }
   @override
@@ -848,12 +957,17 @@ class Album extends DataClass implements Insertable<Album> {
       'artistId': serializer.toJson<int?>(artistId),
       'artistName': serializer.toJson<String?>(artistName),
       'year': serializer.toJson<int?>(year),
+      'originalYear': serializer.toJson<int?>(originalYear),
       'genre': serializer.toJson<String?>(genre),
       'discCount': serializer.toJson<int?>(discCount),
       'trackCount': serializer.toJson<int?>(trackCount),
       'coverPath': serializer.toJson<String?>(coverPath),
       'source': serializer.toJson<String>(source),
       'sourceId': serializer.toJson<String?>(sourceId),
+      'musicbrainzReleaseId': serializer.toJson<String?>(musicbrainzReleaseId),
+      'musicbrainzReleaseGroupId': serializer.toJson<String?>(
+        musicbrainzReleaseGroupId,
+      ),
     };
   }
 
@@ -863,24 +977,34 @@ class Album extends DataClass implements Insertable<Album> {
     Value<int?> artistId = const Value.absent(),
     Value<String?> artistName = const Value.absent(),
     Value<int?> year = const Value.absent(),
+    Value<int?> originalYear = const Value.absent(),
     Value<String?> genre = const Value.absent(),
     Value<int?> discCount = const Value.absent(),
     Value<int?> trackCount = const Value.absent(),
     Value<String?> coverPath = const Value.absent(),
     String? source,
     Value<String?> sourceId = const Value.absent(),
+    Value<String?> musicbrainzReleaseId = const Value.absent(),
+    Value<String?> musicbrainzReleaseGroupId = const Value.absent(),
   }) => Album(
     id: id ?? this.id,
     title: title ?? this.title,
     artistId: artistId.present ? artistId.value : this.artistId,
     artistName: artistName.present ? artistName.value : this.artistName,
     year: year.present ? year.value : this.year,
+    originalYear: originalYear.present ? originalYear.value : this.originalYear,
     genre: genre.present ? genre.value : this.genre,
     discCount: discCount.present ? discCount.value : this.discCount,
     trackCount: trackCount.present ? trackCount.value : this.trackCount,
     coverPath: coverPath.present ? coverPath.value : this.coverPath,
     source: source ?? this.source,
     sourceId: sourceId.present ? sourceId.value : this.sourceId,
+    musicbrainzReleaseId: musicbrainzReleaseId.present
+        ? musicbrainzReleaseId.value
+        : this.musicbrainzReleaseId,
+    musicbrainzReleaseGroupId: musicbrainzReleaseGroupId.present
+        ? musicbrainzReleaseGroupId.value
+        : this.musicbrainzReleaseGroupId,
   );
   Album copyWithCompanion(AlbumsCompanion data) {
     return Album(
@@ -891,6 +1015,9 @@ class Album extends DataClass implements Insertable<Album> {
           ? data.artistName.value
           : this.artistName,
       year: data.year.present ? data.year.value : this.year,
+      originalYear: data.originalYear.present
+          ? data.originalYear.value
+          : this.originalYear,
       genre: data.genre.present ? data.genre.value : this.genre,
       discCount: data.discCount.present ? data.discCount.value : this.discCount,
       trackCount: data.trackCount.present
@@ -899,6 +1026,12 @@ class Album extends DataClass implements Insertable<Album> {
       coverPath: data.coverPath.present ? data.coverPath.value : this.coverPath,
       source: data.source.present ? data.source.value : this.source,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      musicbrainzReleaseId: data.musicbrainzReleaseId.present
+          ? data.musicbrainzReleaseId.value
+          : this.musicbrainzReleaseId,
+      musicbrainzReleaseGroupId: data.musicbrainzReleaseGroupId.present
+          ? data.musicbrainzReleaseGroupId.value
+          : this.musicbrainzReleaseGroupId,
     );
   }
 
@@ -910,12 +1043,15 @@ class Album extends DataClass implements Insertable<Album> {
           ..write('artistId: $artistId, ')
           ..write('artistName: $artistName, ')
           ..write('year: $year, ')
+          ..write('originalYear: $originalYear, ')
           ..write('genre: $genre, ')
           ..write('discCount: $discCount, ')
           ..write('trackCount: $trackCount, ')
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
-          ..write('sourceId: $sourceId')
+          ..write('sourceId: $sourceId, ')
+          ..write('musicbrainzReleaseId: $musicbrainzReleaseId, ')
+          ..write('musicbrainzReleaseGroupId: $musicbrainzReleaseGroupId')
           ..write(')'))
         .toString();
   }
@@ -927,12 +1063,15 @@ class Album extends DataClass implements Insertable<Album> {
     artistId,
     artistName,
     year,
+    originalYear,
     genre,
     discCount,
     trackCount,
     coverPath,
     source,
     sourceId,
+    musicbrainzReleaseId,
+    musicbrainzReleaseGroupId,
   );
   @override
   bool operator ==(Object other) =>
@@ -943,12 +1082,15 @@ class Album extends DataClass implements Insertable<Album> {
           other.artistId == this.artistId &&
           other.artistName == this.artistName &&
           other.year == this.year &&
+          other.originalYear == this.originalYear &&
           other.genre == this.genre &&
           other.discCount == this.discCount &&
           other.trackCount == this.trackCount &&
           other.coverPath == this.coverPath &&
           other.source == this.source &&
-          other.sourceId == this.sourceId);
+          other.sourceId == this.sourceId &&
+          other.musicbrainzReleaseId == this.musicbrainzReleaseId &&
+          other.musicbrainzReleaseGroupId == this.musicbrainzReleaseGroupId);
 }
 
 class AlbumsCompanion extends UpdateCompanion<Album> {
@@ -957,24 +1099,30 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
   final Value<int?> artistId;
   final Value<String?> artistName;
   final Value<int?> year;
+  final Value<int?> originalYear;
   final Value<String?> genre;
   final Value<int?> discCount;
   final Value<int?> trackCount;
   final Value<String?> coverPath;
   final Value<String> source;
   final Value<String?> sourceId;
+  final Value<String?> musicbrainzReleaseId;
+  final Value<String?> musicbrainzReleaseGroupId;
   const AlbumsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.artistId = const Value.absent(),
     this.artistName = const Value.absent(),
     this.year = const Value.absent(),
+    this.originalYear = const Value.absent(),
     this.genre = const Value.absent(),
     this.discCount = const Value.absent(),
     this.trackCount = const Value.absent(),
     this.coverPath = const Value.absent(),
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
+    this.musicbrainzReleaseId = const Value.absent(),
+    this.musicbrainzReleaseGroupId = const Value.absent(),
   });
   AlbumsCompanion.insert({
     this.id = const Value.absent(),
@@ -982,12 +1130,15 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
     this.artistId = const Value.absent(),
     this.artistName = const Value.absent(),
     this.year = const Value.absent(),
+    this.originalYear = const Value.absent(),
     this.genre = const Value.absent(),
     this.discCount = const Value.absent(),
     this.trackCount = const Value.absent(),
     this.coverPath = const Value.absent(),
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
+    this.musicbrainzReleaseId = const Value.absent(),
+    this.musicbrainzReleaseGroupId = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Album> custom({
     Expression<int>? id,
@@ -995,12 +1146,15 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
     Expression<int>? artistId,
     Expression<String>? artistName,
     Expression<int>? year,
+    Expression<int>? originalYear,
     Expression<String>? genre,
     Expression<int>? discCount,
     Expression<int>? trackCount,
     Expression<String>? coverPath,
     Expression<String>? source,
     Expression<String>? sourceId,
+    Expression<String>? musicbrainzReleaseId,
+    Expression<String>? musicbrainzReleaseGroupId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1008,12 +1162,17 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
       if (artistId != null) 'artist_id': artistId,
       if (artistName != null) 'artist_name': artistName,
       if (year != null) 'year': year,
+      if (originalYear != null) 'original_year': originalYear,
       if (genre != null) 'genre': genre,
       if (discCount != null) 'disc_count': discCount,
       if (trackCount != null) 'track_count': trackCount,
       if (coverPath != null) 'cover_path': coverPath,
       if (source != null) 'source': source,
       if (sourceId != null) 'source_id': sourceId,
+      if (musicbrainzReleaseId != null)
+        'musicbrainz_release_id': musicbrainzReleaseId,
+      if (musicbrainzReleaseGroupId != null)
+        'musicbrainz_release_group_id': musicbrainzReleaseGroupId,
     });
   }
 
@@ -1023,12 +1182,15 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
     Value<int?>? artistId,
     Value<String?>? artistName,
     Value<int?>? year,
+    Value<int?>? originalYear,
     Value<String?>? genre,
     Value<int?>? discCount,
     Value<int?>? trackCount,
     Value<String?>? coverPath,
     Value<String>? source,
     Value<String?>? sourceId,
+    Value<String?>? musicbrainzReleaseId,
+    Value<String?>? musicbrainzReleaseGroupId,
   }) {
     return AlbumsCompanion(
       id: id ?? this.id,
@@ -1036,12 +1198,16 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
       artistId: artistId ?? this.artistId,
       artistName: artistName ?? this.artistName,
       year: year ?? this.year,
+      originalYear: originalYear ?? this.originalYear,
       genre: genre ?? this.genre,
       discCount: discCount ?? this.discCount,
       trackCount: trackCount ?? this.trackCount,
       coverPath: coverPath ?? this.coverPath,
       source: source ?? this.source,
       sourceId: sourceId ?? this.sourceId,
+      musicbrainzReleaseId: musicbrainzReleaseId ?? this.musicbrainzReleaseId,
+      musicbrainzReleaseGroupId:
+          musicbrainzReleaseGroupId ?? this.musicbrainzReleaseGroupId,
     );
   }
 
@@ -1063,6 +1229,9 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
     if (year.present) {
       map['year'] = Variable<int>(year.value);
     }
+    if (originalYear.present) {
+      map['original_year'] = Variable<int>(originalYear.value);
+    }
     if (genre.present) {
       map['genre'] = Variable<String>(genre.value);
     }
@@ -1081,6 +1250,16 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
     if (sourceId.present) {
       map['source_id'] = Variable<String>(sourceId.value);
     }
+    if (musicbrainzReleaseId.present) {
+      map['musicbrainz_release_id'] = Variable<String>(
+        musicbrainzReleaseId.value,
+      );
+    }
+    if (musicbrainzReleaseGroupId.present) {
+      map['musicbrainz_release_group_id'] = Variable<String>(
+        musicbrainzReleaseGroupId.value,
+      );
+    }
     return map;
   }
 
@@ -1092,12 +1271,15 @@ class AlbumsCompanion extends UpdateCompanion<Album> {
           ..write('artistId: $artistId, ')
           ..write('artistName: $artistName, ')
           ..write('year: $year, ')
+          ..write('originalYear: $originalYear, ')
           ..write('genre: $genre, ')
           ..write('discCount: $discCount, ')
           ..write('trackCount: $trackCount, ')
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
-          ..write('sourceId: $sourceId')
+          ..write('sourceId: $sourceId, ')
+          ..write('musicbrainzReleaseId: $musicbrainzReleaseId, ')
+          ..write('musicbrainzReleaseGroupId: $musicbrainzReleaseGroupId')
           ..write(')'))
         .toString();
   }
@@ -1313,6 +1495,28 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _musicbrainzRecordingIdMeta =
+      const VerificationMeta('musicbrainzRecordingId');
+  @override
+  late final GeneratedColumn<String> musicbrainzRecordingId =
+      GeneratedColumn<String>(
+        'musicbrainz_recording_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _fileMtimeMeta = const VerificationMeta(
+    'fileMtime',
+  );
+  @override
+  late final GeneratedColumn<double> fileMtime = GeneratedColumn<double>(
+    'file_mtime',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1333,6 +1537,8 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     source,
     sourceId,
     favorite,
+    musicbrainzRecordingId,
+    fileMtime,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1456,6 +1662,21 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         favorite.isAcceptableOrUnknown(data['favorite']!, _favoriteMeta),
       );
     }
+    if (data.containsKey('musicbrainz_recording_id')) {
+      context.handle(
+        _musicbrainzRecordingIdMeta,
+        musicbrainzRecordingId.isAcceptableOrUnknown(
+          data['musicbrainz_recording_id']!,
+          _musicbrainzRecordingIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('file_mtime')) {
+      context.handle(
+        _fileMtimeMeta,
+        fileMtime.isAcceptableOrUnknown(data['file_mtime']!, _fileMtimeMeta),
+      );
+    }
     return context;
   }
 
@@ -1537,6 +1758,14 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         DriftSqlType.bool,
         data['${effectivePrefix}favorite'],
       )!,
+      musicbrainzRecordingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}musicbrainz_recording_id'],
+      ),
+      fileMtime: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}file_mtime'],
+      ),
     );
   }
 
@@ -1567,6 +1796,10 @@ class Track extends DataClass implements Insertable<Track> {
 
   /// Marque la piste comme favori (migration v5)
   final bool favorite;
+  final String? musicbrainzRecordingId;
+
+  /// Timestamp du fichier sur disque (mtime) pour détection incrémentale (migration v6)
+  final double? fileMtime;
   const Track({
     required this.id,
     required this.title,
@@ -1586,6 +1819,8 @@ class Track extends DataClass implements Insertable<Track> {
     required this.source,
     this.sourceId,
     required this.favorite,
+    this.musicbrainzRecordingId,
+    this.fileMtime,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1636,6 +1871,14 @@ class Track extends DataClass implements Insertable<Track> {
       map['source_id'] = Variable<String>(sourceId);
     }
     map['favorite'] = Variable<bool>(favorite);
+    if (!nullToAbsent || musicbrainzRecordingId != null) {
+      map['musicbrainz_recording_id'] = Variable<String>(
+        musicbrainzRecordingId,
+      );
+    }
+    if (!nullToAbsent || fileMtime != null) {
+      map['file_mtime'] = Variable<double>(fileMtime);
+    }
     return map;
   }
 
@@ -1687,6 +1930,12 @@ class Track extends DataClass implements Insertable<Track> {
           ? const Value.absent()
           : Value(sourceId),
       favorite: Value(favorite),
+      musicbrainzRecordingId: musicbrainzRecordingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(musicbrainzRecordingId),
+      fileMtime: fileMtime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fileMtime),
     );
   }
 
@@ -1714,6 +1963,10 @@ class Track extends DataClass implements Insertable<Track> {
       source: serializer.fromJson<String>(json['source']),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
       favorite: serializer.fromJson<bool>(json['favorite']),
+      musicbrainzRecordingId: serializer.fromJson<String?>(
+        json['musicbrainzRecordingId'],
+      ),
+      fileMtime: serializer.fromJson<double?>(json['fileMtime']),
     );
   }
   @override
@@ -1738,6 +1991,10 @@ class Track extends DataClass implements Insertable<Track> {
       'source': serializer.toJson<String>(source),
       'sourceId': serializer.toJson<String?>(sourceId),
       'favorite': serializer.toJson<bool>(favorite),
+      'musicbrainzRecordingId': serializer.toJson<String?>(
+        musicbrainzRecordingId,
+      ),
+      'fileMtime': serializer.toJson<double?>(fileMtime),
     };
   }
 
@@ -1760,6 +2017,8 @@ class Track extends DataClass implements Insertable<Track> {
     String? source,
     Value<String?> sourceId = const Value.absent(),
     bool? favorite,
+    Value<String?> musicbrainzRecordingId = const Value.absent(),
+    Value<double?> fileMtime = const Value.absent(),
   }) => Track(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1779,6 +2038,10 @@ class Track extends DataClass implements Insertable<Track> {
     source: source ?? this.source,
     sourceId: sourceId.present ? sourceId.value : this.sourceId,
     favorite: favorite ?? this.favorite,
+    musicbrainzRecordingId: musicbrainzRecordingId.present
+        ? musicbrainzRecordingId.value
+        : this.musicbrainzRecordingId,
+    fileMtime: fileMtime.present ? fileMtime.value : this.fileMtime,
   );
   Track copyWithCompanion(TracksCompanion data) {
     return Track(
@@ -1812,6 +2075,10 @@ class Track extends DataClass implements Insertable<Track> {
       source: data.source.present ? data.source.value : this.source,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       favorite: data.favorite.present ? data.favorite.value : this.favorite,
+      musicbrainzRecordingId: data.musicbrainzRecordingId.present
+          ? data.musicbrainzRecordingId.value
+          : this.musicbrainzRecordingId,
+      fileMtime: data.fileMtime.present ? data.fileMtime.value : this.fileMtime,
     );
   }
 
@@ -1835,7 +2102,9 @@ class Track extends DataClass implements Insertable<Track> {
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
           ..write('sourceId: $sourceId, ')
-          ..write('favorite: $favorite')
+          ..write('favorite: $favorite, ')
+          ..write('musicbrainzRecordingId: $musicbrainzRecordingId, ')
+          ..write('fileMtime: $fileMtime')
           ..write(')'))
         .toString();
   }
@@ -1860,6 +2129,8 @@ class Track extends DataClass implements Insertable<Track> {
     source,
     sourceId,
     favorite,
+    musicbrainzRecordingId,
+    fileMtime,
   );
   @override
   bool operator ==(Object other) =>
@@ -1882,7 +2153,9 @@ class Track extends DataClass implements Insertable<Track> {
           other.coverPath == this.coverPath &&
           other.source == this.source &&
           other.sourceId == this.sourceId &&
-          other.favorite == this.favorite);
+          other.favorite == this.favorite &&
+          other.musicbrainzRecordingId == this.musicbrainzRecordingId &&
+          other.fileMtime == this.fileMtime);
 }
 
 class TracksCompanion extends UpdateCompanion<Track> {
@@ -1904,6 +2177,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
   final Value<String> source;
   final Value<String?> sourceId;
   final Value<bool> favorite;
+  final Value<String?> musicbrainzRecordingId;
+  final Value<double?> fileMtime;
   const TracksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1923,6 +2198,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
     this.favorite = const Value.absent(),
+    this.musicbrainzRecordingId = const Value.absent(),
+    this.fileMtime = const Value.absent(),
   });
   TracksCompanion.insert({
     this.id = const Value.absent(),
@@ -1943,6 +2220,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.source = const Value.absent(),
     this.sourceId = const Value.absent(),
     this.favorite = const Value.absent(),
+    this.musicbrainzRecordingId = const Value.absent(),
+    this.fileMtime = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Track> custom({
     Expression<int>? id,
@@ -1963,6 +2242,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Expression<String>? source,
     Expression<String>? sourceId,
     Expression<bool>? favorite,
+    Expression<String>? musicbrainzRecordingId,
+    Expression<double>? fileMtime,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1983,6 +2264,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
       if (source != null) 'source': source,
       if (sourceId != null) 'source_id': sourceId,
       if (favorite != null) 'favorite': favorite,
+      if (musicbrainzRecordingId != null)
+        'musicbrainz_recording_id': musicbrainzRecordingId,
+      if (fileMtime != null) 'file_mtime': fileMtime,
     });
   }
 
@@ -2005,6 +2289,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Value<String>? source,
     Value<String?>? sourceId,
     Value<bool>? favorite,
+    Value<String?>? musicbrainzRecordingId,
+    Value<double?>? fileMtime,
   }) {
     return TracksCompanion(
       id: id ?? this.id,
@@ -2025,6 +2311,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
       source: source ?? this.source,
       sourceId: sourceId ?? this.sourceId,
       favorite: favorite ?? this.favorite,
+      musicbrainzRecordingId:
+          musicbrainzRecordingId ?? this.musicbrainzRecordingId,
+      fileMtime: fileMtime ?? this.fileMtime,
     );
   }
 
@@ -2085,6 +2374,14 @@ class TracksCompanion extends UpdateCompanion<Track> {
     if (favorite.present) {
       map['favorite'] = Variable<bool>(favorite.value);
     }
+    if (musicbrainzRecordingId.present) {
+      map['musicbrainz_recording_id'] = Variable<String>(
+        musicbrainzRecordingId.value,
+      );
+    }
+    if (fileMtime.present) {
+      map['file_mtime'] = Variable<double>(fileMtime.value);
+    }
     return map;
   }
 
@@ -2108,7 +2405,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
           ..write('coverPath: $coverPath, ')
           ..write('source: $source, ')
           ..write('sourceId: $sourceId, ')
-          ..write('favorite: $favorite')
+          ..write('favorite: $favorite, ')
+          ..write('musicbrainzRecordingId: $musicbrainzRecordingId, ')
+          ..write('fileMtime: $fileMtime')
           ..write(')'))
         .toString();
   }
@@ -6381,12 +6680,15 @@ typedef $$AlbumsTableCreateCompanionBuilder =
       Value<int?> artistId,
       Value<String?> artistName,
       Value<int?> year,
+      Value<int?> originalYear,
       Value<String?> genre,
       Value<int?> discCount,
       Value<int?> trackCount,
       Value<String?> coverPath,
       Value<String> source,
       Value<String?> sourceId,
+      Value<String?> musicbrainzReleaseId,
+      Value<String?> musicbrainzReleaseGroupId,
     });
 typedef $$AlbumsTableUpdateCompanionBuilder =
     AlbumsCompanion Function({
@@ -6395,12 +6697,15 @@ typedef $$AlbumsTableUpdateCompanionBuilder =
       Value<int?> artistId,
       Value<String?> artistName,
       Value<int?> year,
+      Value<int?> originalYear,
       Value<String?> genre,
       Value<int?> discCount,
       Value<int?> trackCount,
       Value<String?> coverPath,
       Value<String> source,
       Value<String?> sourceId,
+      Value<String?> musicbrainzReleaseId,
+      Value<String?> musicbrainzReleaseGroupId,
     });
 
 final class $$AlbumsTableReferences
@@ -6473,6 +6778,11 @@ class $$AlbumsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get originalYear => $composableBuilder(
+    column: $table.originalYear,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get genre => $composableBuilder(
     column: $table.genre,
     builder: (column) => ColumnFilters(column),
@@ -6500,6 +6810,16 @@ class $$AlbumsTableFilterComposer
 
   ColumnFilters<String> get sourceId => $composableBuilder(
     column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get musicbrainzReleaseId => $composableBuilder(
+    column: $table.musicbrainzReleaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get musicbrainzReleaseGroupId => $composableBuilder(
+    column: $table.musicbrainzReleaseGroupId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6581,6 +6901,11 @@ class $$AlbumsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get originalYear => $composableBuilder(
+    column: $table.originalYear,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get genre => $composableBuilder(
     column: $table.genre,
     builder: (column) => ColumnOrderings(column),
@@ -6608,6 +6933,16 @@ class $$AlbumsTableOrderingComposer
 
   ColumnOrderings<String> get sourceId => $composableBuilder(
     column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get musicbrainzReleaseId => $composableBuilder(
+    column: $table.musicbrainzReleaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get musicbrainzReleaseGroupId => $composableBuilder(
+    column: $table.musicbrainzReleaseGroupId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6658,6 +6993,11 @@ class $$AlbumsTableAnnotationComposer
   GeneratedColumn<int> get year =>
       $composableBuilder(column: $table.year, builder: (column) => column);
 
+  GeneratedColumn<int> get originalYear => $composableBuilder(
+    column: $table.originalYear,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get genre =>
       $composableBuilder(column: $table.genre, builder: (column) => column);
 
@@ -6677,6 +7017,16 @@ class $$AlbumsTableAnnotationComposer
 
   GeneratedColumn<String> get sourceId =>
       $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<String> get musicbrainzReleaseId => $composableBuilder(
+    column: $table.musicbrainzReleaseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get musicbrainzReleaseGroupId => $composableBuilder(
+    column: $table.musicbrainzReleaseGroupId,
+    builder: (column) => column,
+  );
 
   $$ArtistsTableAnnotationComposer get artistId {
     final $$ArtistsTableAnnotationComposer composer = $composerBuilder(
@@ -6760,24 +7110,30 @@ class $$AlbumsTableTableManager
                 Value<int?> artistId = const Value.absent(),
                 Value<String?> artistName = const Value.absent(),
                 Value<int?> year = const Value.absent(),
+                Value<int?> originalYear = const Value.absent(),
                 Value<String?> genre = const Value.absent(),
                 Value<int?> discCount = const Value.absent(),
                 Value<int?> trackCount = const Value.absent(),
                 Value<String?> coverPath = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
+                Value<String?> musicbrainzReleaseId = const Value.absent(),
+                Value<String?> musicbrainzReleaseGroupId = const Value.absent(),
               }) => AlbumsCompanion(
                 id: id,
                 title: title,
                 artistId: artistId,
                 artistName: artistName,
                 year: year,
+                originalYear: originalYear,
                 genre: genre,
                 discCount: discCount,
                 trackCount: trackCount,
                 coverPath: coverPath,
                 source: source,
                 sourceId: sourceId,
+                musicbrainzReleaseId: musicbrainzReleaseId,
+                musicbrainzReleaseGroupId: musicbrainzReleaseGroupId,
               ),
           createCompanionCallback:
               ({
@@ -6786,24 +7142,30 @@ class $$AlbumsTableTableManager
                 Value<int?> artistId = const Value.absent(),
                 Value<String?> artistName = const Value.absent(),
                 Value<int?> year = const Value.absent(),
+                Value<int?> originalYear = const Value.absent(),
                 Value<String?> genre = const Value.absent(),
                 Value<int?> discCount = const Value.absent(),
                 Value<int?> trackCount = const Value.absent(),
                 Value<String?> coverPath = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
+                Value<String?> musicbrainzReleaseId = const Value.absent(),
+                Value<String?> musicbrainzReleaseGroupId = const Value.absent(),
               }) => AlbumsCompanion.insert(
                 id: id,
                 title: title,
                 artistId: artistId,
                 artistName: artistName,
                 year: year,
+                originalYear: originalYear,
                 genre: genre,
                 discCount: discCount,
                 trackCount: trackCount,
                 coverPath: coverPath,
                 source: source,
                 sourceId: sourceId,
+                musicbrainzReleaseId: musicbrainzReleaseId,
+                musicbrainzReleaseGroupId: musicbrainzReleaseGroupId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -6903,6 +7265,8 @@ typedef $$TracksTableCreateCompanionBuilder =
       Value<String> source,
       Value<String?> sourceId,
       Value<bool> favorite,
+      Value<String?> musicbrainzRecordingId,
+      Value<double?> fileMtime,
     });
 typedef $$TracksTableUpdateCompanionBuilder =
     TracksCompanion Function({
@@ -6924,6 +7288,8 @@ typedef $$TracksTableUpdateCompanionBuilder =
       Value<String> source,
       Value<String?> sourceId,
       Value<bool> favorite,
+      Value<String?> musicbrainzRecordingId,
+      Value<double?> fileMtime,
     });
 
 final class $$TracksTableReferences
@@ -7070,6 +7436,16 @@ class $$TracksTableFilterComposer
 
   ColumnFilters<bool> get favorite => $composableBuilder(
     column: $table.favorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get musicbrainzRecordingId => $composableBuilder(
+    column: $table.musicbrainzRecordingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fileMtime => $composableBuilder(
+    column: $table.fileMtime,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7234,6 +7610,16 @@ class $$TracksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get musicbrainzRecordingId => $composableBuilder(
+    column: $table.musicbrainzRecordingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fileMtime => $composableBuilder(
+    column: $table.fileMtime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AlbumsTableOrderingComposer get albumId {
     final $$AlbumsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7349,6 +7735,14 @@ class $$TracksTableAnnotationComposer
 
   GeneratedColumn<bool> get favorite =>
       $composableBuilder(column: $table.favorite, builder: (column) => column);
+
+  GeneratedColumn<String> get musicbrainzRecordingId => $composableBuilder(
+    column: $table.musicbrainzRecordingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get fileMtime =>
+      $composableBuilder(column: $table.fileMtime, builder: (column) => column);
 
   $$AlbumsTableAnnotationComposer get albumId {
     final $$AlbumsTableAnnotationComposer composer = $composerBuilder(
@@ -7472,6 +7866,8 @@ class $$TracksTableTableManager
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
                 Value<bool> favorite = const Value.absent(),
+                Value<String?> musicbrainzRecordingId = const Value.absent(),
+                Value<double?> fileMtime = const Value.absent(),
               }) => TracksCompanion(
                 id: id,
                 title: title,
@@ -7491,6 +7887,8 @@ class $$TracksTableTableManager
                 source: source,
                 sourceId: sourceId,
                 favorite: favorite,
+                musicbrainzRecordingId: musicbrainzRecordingId,
+                fileMtime: fileMtime,
               ),
           createCompanionCallback:
               ({
@@ -7512,6 +7910,8 @@ class $$TracksTableTableManager
                 Value<String> source = const Value.absent(),
                 Value<String?> sourceId = const Value.absent(),
                 Value<bool> favorite = const Value.absent(),
+                Value<String?> musicbrainzRecordingId = const Value.absent(),
+                Value<double?> fileMtime = const Value.absent(),
               }) => TracksCompanion.insert(
                 id: id,
                 title: title,
@@ -7531,6 +7931,8 @@ class $$TracksTableTableManager
                 source: source,
                 sourceId: sourceId,
                 favorite: favorite,
+                musicbrainzRecordingId: musicbrainzRecordingId,
+                fileMtime: fileMtime,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -25,9 +25,9 @@ extension AppStateLibrary on AppState {
     return storageStatus.isGranted || storageStatus.isLimited;
   }
 
-  Future<void> scanLibrary() async {
+  Future<void> scanLibrary({bool full = false}) async {
     await requestStoragePermission();
-    return engine.scanLibrary();
+    return engine.scanLibrary(full: full);
   }
 
   Future<void> addMusicFolder(String path) async {

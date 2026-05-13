@@ -31,6 +31,7 @@ class TrackMetadata {
   final int? trackNumber;
   final int? discNumber;
   final int? year;
+  final int? originalYear;
   final String? genre;
   final int? durationMs;
   final String? format;    // 'flac' | 'mp3' | 'aac' | 'alac' …
@@ -39,6 +40,10 @@ class TrackMetadata {
   final int? channels;
   final int? bitrate;      // kbps
   final bool hasCoverData;
+  // MusicBrainz IDs — read from TXXX/Vorbis/MP4 tags by platform channel
+  final String? musicbrainzRecordingId;
+  final String? musicbrainzReleaseId;
+  final String? musicbrainzReleaseGroupId;
 
   const TrackMetadata({
     required this.filePath,
@@ -49,6 +54,7 @@ class TrackMetadata {
     this.trackNumber,
     this.discNumber,
     this.year,
+    this.originalYear,
     this.genre,
     this.durationMs,
     this.format,
@@ -57,6 +63,9 @@ class TrackMetadata {
     this.channels,
     this.bitrate,
     this.hasCoverData = false,
+    this.musicbrainzRecordingId,
+    this.musicbrainzReleaseId,
+    this.musicbrainzReleaseGroupId,
   });
 }
 
@@ -176,6 +185,7 @@ class MetadataReader {
       trackNumber: _parseInt(raw['trackNumber']),
       discNumber: _parseInt(raw['discNumber']),
       year: _parseInt(raw['year']),
+      originalYear: _parseInt(raw['originalYear']),
       genre: raw['genre'] as String?,
       durationMs: _parseInt(raw['durationMs']),
       format: raw['format'] as String? ??
@@ -185,6 +195,9 @@ class MetadataReader {
       channels: _parseInt(raw['channels']),
       bitrate: _parseInt(raw['bitrate']),
       hasCoverData: raw['hasCoverData'] == true,
+      musicbrainzRecordingId: raw['musicbrainzRecordingId'] as String?,
+      musicbrainzReleaseId: raw['musicbrainzReleaseId'] as String?,
+      musicbrainzReleaseGroupId: raw['musicbrainzReleaseGroupId'] as String?,
     );
   }
 
