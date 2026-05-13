@@ -112,6 +112,8 @@ class MainActivity : FlutterActivity() {
             // on utilise MediaExtractor pour lire le MediaFormat de la piste audio.
             val (sampleRate, channels, bitDepth) = readAudioFormat(path)
 
+            val extraTags = readExtraTags(path)
+
             mapOf(
                 "filePath"    to path,
                 "title"       to title,
@@ -123,11 +125,15 @@ class MainActivity : FlutterActivity() {
                 "discNumber"  to discNumber,
                 "durationMs"  to durationMs,
                 "year"        to year,
+                "originalYear" to (extraTags["originalYear"]?.toIntOrNull()),
                 "format"      to formatFromExtension(path),
                 "hasCoverData" to hasCoverData,
                 "sampleRate"  to sampleRate,
                 "channels"    to channels,
                 "bitDepth"    to bitDepth,
+                "musicbrainzRecordingId" to extraTags["musicbrainzRecordingId"],
+                "musicbrainzReleaseId" to extraTags["musicbrainzReleaseId"],
+                "musicbrainzReleaseGroupId" to extraTags["musicbrainzReleaseGroupId"],
             )
         } catch (e: Exception) {
             // Fallback : nom de fichier uniquement
@@ -192,6 +198,146 @@ class MainActivity : FlutterActivity() {
             Triple(null, null, null)
         } finally {
             extractor.release()
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // readExtraTags — MusicBrainz IDs + originalYear from FLAC/MP3 tags
+    // MediaMetadataRetriever doesn't expose these, so we parse manually.
+    // -------------------------------------------------------------------------
+    private fun readExtraTags(path: String): Map<String, String?> {
+        val result = mutableMapOf<String, String?>()
+        try {
+            val ext = path.substringAfterLast('.', "").lowercase()
+            when (ext) {
+                "flac" -> readFlacVorbisComments(path, result)
+                "mp3" -> readId3v2TxxxFrames(path, result)
+                "ogg" -> readFlacVorbisComments(path, result)
+            }
+        } catch (_: Exception) {}
+        return result
+    }
+
+    private fun readFlacVorbisComments(path: String, out: MutableMap<String, String?>) {
+        java.io.RandomAccessFile(path, "r").use { raf ->
+            val header = ByteArray(4)
+            raf.readFully(header)
+            val isFLAC = String(header) == "fLaC"
+            val isOGG = header[0] == 'O'.code.toByte()
+            if (!isFLAC && !isOGG) return
+
+            if (isFLAC) {
+                // Skip metadata blocks until we find VORBIS_COMMENT (type 4)
+                while (true) {
+                    val blockHeader = raf.read()
+                    if (blockHeader == -1) return
+                    val isLast = (blockHeader and 0x80) != 0
+                    val blockType = blockHeader and 0x7F
+                    val sizeBytes = ByteArray(3)
+                    raf.readFully(sizeBytes)
+                    val blockSize = ((sizeBytes[0].toInt() and 0xFF) shl 16) or
+                            ((sizeBytes[1].toInt() and 0xFF) shl 8) or
+                            (sizeBytes[2].toInt() and 0xFF)
+                    if (blockType == 4) {
+                        val data = ByteArray(blockSize)
+                        raf.readFully(data)
+                        parseVorbisComments(data, out)
+                        return
+                    }
+                    raf.skipBytes(blockSize)
+                    if (isLast) return
+                }
+            }
+        }
+    }
+
+    private fun parseVorbisComments(data: ByteArray, out: MutableMap<String, String?>) {
+        var offset = 0
+        fun readLE32(): Int {
+            if (offset + 4 > data.size) return 0
+            val v = (data[offset].toInt() and 0xFF) or
+                    ((data[offset + 1].toInt() and 0xFF) shl 8) or
+                    ((data[offset + 2].toInt() and 0xFF) shl 16) or
+                    ((data[offset + 3].toInt() and 0xFF) shl 24)
+            offset += 4
+            return v
+        }
+        // Skip vendor string
+        val vendorLen = readLE32()
+        offset += vendorLen
+        val commentCount = readLE32()
+        for (i in 0 until commentCount) {
+            if (offset + 4 > data.size) break
+            val len = readLE32()
+            if (offset + len > data.size) break
+            val comment = String(data, offset, len, Charsets.UTF_8)
+            offset += len
+            val eq = comment.indexOf('=')
+            if (eq < 0) continue
+            val key = comment.substring(0, eq).uppercase()
+            val value = comment.substring(eq + 1)
+            when (key) {
+                "ORIGINALDATE", "ORIGINALYEAR" ->
+                    out.putIfAbsent("originalYear", value.take(4))
+                "MUSICBRAINZ_TRACKID" ->
+                    out.putIfAbsent("musicbrainzRecordingId", value)
+                "MUSICBRAINZ_ALBUMID" ->
+                    out.putIfAbsent("musicbrainzReleaseId", value)
+                "MUSICBRAINZ_RELEASEGROUPID" ->
+                    out.putIfAbsent("musicbrainzReleaseGroupId", value)
+            }
+        }
+    }
+
+    private fun readId3v2TxxxFrames(path: String, out: MutableMap<String, String?>) {
+        java.io.RandomAccessFile(path, "r").use { raf ->
+            val header = ByteArray(10)
+            if (raf.read(header) < 10) return
+            if (header[0] != 'I'.code.toByte() || header[1] != 'D'.code.toByte() || header[2] != '3'.code.toByte()) return
+            val tagSize = ((header[6].toInt() and 0x7F) shl 21) or
+                    ((header[7].toInt() and 0x7F) shl 14) or
+                    ((header[8].toInt() and 0x7F) shl 7) or
+                    (header[9].toInt() and 0x7F)
+            val tagData = ByteArray(tagSize)
+            raf.readFully(tagData)
+            var offset = 0
+            while (offset + 10 <= tagData.size) {
+                val frameId = String(tagData, offset, 4, Charsets.ISO_8859_1)
+                if (frameId[0] == ' ') break
+                val frameSize = ((tagData[offset + 4].toInt() and 0xFF) shl 24) or
+                        ((tagData[offset + 5].toInt() and 0xFF) shl 16) or
+                        ((tagData[offset + 6].toInt() and 0xFF) shl 8) or
+                        (tagData[offset + 7].toInt() and 0xFF)
+                offset += 10
+                if (frameSize <= 0 || offset + frameSize > tagData.size) break
+                if (frameId == "TXXX" && frameSize > 1) {
+                    val encoding = tagData[offset].toInt()
+                    val textData = tagData.copyOfRange(offset + 1, offset + frameSize)
+                    val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
+                    val text = String(textData, charset)
+                    val nullIdx = text.indexOf(' ')
+                    if (nullIdx >= 0) {
+                        val desc = text.substring(0, nullIdx).lowercase()
+                        val value = text.substring(nullIdx + 1).trimEnd(' ')
+                        when (desc) {
+                            "musicbrainz track id", "musicbrainz recording id", "musicbrainz_trackid" ->
+                                out.putIfAbsent("musicbrainzRecordingId", value)
+                            "musicbrainz album id", "musicbrainz release id", "musicbrainz_albumid" ->
+                                out.putIfAbsent("musicbrainzReleaseId", value)
+                            "musicbrainz release group id", "musicbrainz_releasegroupid" ->
+                                out.putIfAbsent("musicbrainzReleaseGroupId", value)
+                            "originaldate", "originalyear" ->
+                                out.putIfAbsent("originalYear", value.take(4))
+                        }
+                    }
+                } else if ((frameId == "TDOR" || frameId == "TORY") && frameSize > 1) {
+                    val encoding = tagData[offset].toInt()
+                    val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
+                    val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
+                    out.putIfAbsent("originalYear", value.take(4))
+                }
+                offset += frameSize
+            }
         }
     }
 
