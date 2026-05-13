@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
+import '../../models/extensions.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -555,8 +556,8 @@ class _AlbumCard extends StatelessWidget {
                     .copyWith(color: TuneColors.textPrimary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
-            if (album.year != null)
-              Text(album.year.toString(), style: TuneFonts.caption),
+            if (album.displayYear != null)
+              Text(album.displayYear!, style: TuneFonts.caption),
           ],
         ),
       ),

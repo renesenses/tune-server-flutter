@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
+import '../../models/extensions.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -626,9 +627,9 @@ class _AlbumHeader extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                 ],
-                if (album.year != null) ...[
+                if (album.displayYear != null) ...[
                   const SizedBox(height: 2),
-                  Text(album.year.toString(), style: TuneFonts.caption),
+                  Text(album.displayYear!, style: TuneFonts.caption),
                 ],
                 if (album.genre != null) ...[
                   const SizedBox(height: 2),

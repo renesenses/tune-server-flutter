@@ -83,6 +83,18 @@ extension AlbumExtensions on Album {
   }
 
   Source? get sourceEnum => source != null ? Source.fromRawValue(source!) : null;
+
+  /// Formatted year display:
+  /// - originalYear differs from year: "1975 (rééd. 2010)"
+  /// - only originalYear: show it
+  /// - only year: show it
+  /// - neither: null
+  String? get displayYear {
+    final oy = originalYear;
+    final y = year;
+    if (oy != null && y != null && oy != y) return '$oy (rééd. $y)';
+    return (oy ?? y)?.toString();
+  }
 }
 
 // ---------------------------------------------------------------------------
