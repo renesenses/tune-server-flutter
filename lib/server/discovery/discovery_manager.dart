@@ -200,10 +200,105 @@ class DiscoveryManager {
       if (resp.statusCode != 200) return;
 
       final device = UPnPDeviceParser.parse(resp.body, location);
-      if (device == null) return;
+      if (device != null) {
+        await _registerDevice(device, location);
+        return;
+      }
 
-      await _registerDevice(device, location);
+      // XML parsing failed — try SOAP probe fallback for quirky devices
+      final uri = Uri.tryParse(location);
+      if (uri == null) return;
+      await _soapProbeFallback(uri.host, uri.port, location, resp.body);
     } catch (_) {}
+  }
+
+  Future<void> _soapProbeFallback(
+      String host, int port, String location, String xmlBody) async {
+    // Try to extract friendly name from raw XML even if structured parsing failed
+    String name = 'Unknown DLNA';
+    final nameMatch = RegExp(r'<friendlyName>([^<]+)</friendlyName>').firstMatch(xmlBody);
+    if (nameMatch != null) name = nameMatch.group(1)!;
+
+    // Extract UDN if possible
+    String udn = '';
+    final udnMatch = RegExp(r'<UDN>([^<]+)</UDN>').firstMatch(xmlBody);
+    if (udnMatch != null) udn = udnMatch.group(1)!;
+
+    // Try extracting control URLs via regex (bypass strict XML parsing)
+    String? avtUrl, rcUrl;
+    final serviceBlocks = RegExp(r'<service>(.*?)</service>', dotAll: true);
+    for (final m in serviceBlocks.allMatches(xmlBody)) {
+      final block = m.group(1) ?? '';
+      final ctrlMatch = RegExp(r'<controlURL>([^<]+)</controlURL>').firstMatch(block);
+      if (ctrlMatch == null) continue;
+      var path = ctrlMatch.group(1)!;
+      if (!path.startsWith('/')) path = '/$path';
+      final fullUrl = 'http://$host:$port$path';
+      if (block.contains('AVTransport')) avtUrl = fullUrl;
+      if (block.contains('RenderingControl')) rcUrl = fullUrl;
+    }
+
+    // If regex didn't find AVTransport, blind-probe common paths
+    if (avtUrl == null) {
+      const paths = [
+        '/AVTransport/control',
+        '/MediaRenderer/AVTransport/Control',
+        '/upnp/control/AVTransport',
+        '/ctl/AVTransport',
+        '/upnp/control/rendertransport1',
+        '/dev/AVTransport/ctrl',
+      ];
+      for (final path in paths) {
+        if (await _testSoapEndpoint('http://$host:$port$path')) {
+          avtUrl = 'http://$host:$port$path';
+          break;
+        }
+      }
+    }
+
+    if (avtUrl == null) return;
+
+    final id = udn.isNotEmpty ? udn : '${host}_$port';
+    final caps = UPnPCapabilities(
+      avTransportControlUrl: avtUrl,
+      renderingControlUrl: rcUrl,
+    );
+    final discovered = DiscoveredDevice(
+      id: id,
+      name: name,
+      type: 'renderer',
+      host: host,
+      port: port,
+      available: true,
+      capabilities: caps,
+    );
+    _cache[id] = discovered;
+    await _persistDevice(discovered);
+    EventBus.instance.emit(DeviceDiscoveredEvent(discovered));
+    debugPrint('[discovery] SOAP probe fallback: $name at $host:$port');
+  }
+
+  Future<bool> _testSoapEndpoint(String url) async {
+    const body = '<?xml version="1.0" encoding="utf-8"?>'
+        '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
+        's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
+        '<s:Body><u:GetTransportInfo '
+        'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
+        '<InstanceID>0</InstanceID>'
+        '</u:GetTransportInfo></s:Body></s:Envelope>';
+    try {
+      final resp = await _http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'text/xml; charset="utf-8"',
+          'SOAPAction': '"urn:schemas-upnp-org:service:AVTransport:1#GetTransportInfo"',
+        },
+        body: body,
+      ).timeout(const Duration(seconds: 5));
+      return resp.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<DiscoveredDevice> _registerDevice(
