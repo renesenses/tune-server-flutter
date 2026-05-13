@@ -33,6 +33,11 @@ class _PodcastsViewState extends State<PodcastsView>
   PodcastShow? _selectedShow;
   List<PodcastEpisodeItem> _episodes = [];
 
+  // Subscribed podcasts
+  List<Map<String, dynamic>> _subscribed = [];
+  bool _loadingSubscribed = false;
+  bool _refreshingAll = false;
+
   bool _loadingShows = false;
   bool _loadingEpisodes = false;
   bool _searching = false;
@@ -40,8 +45,9 @@ class _PodcastsViewState extends State<PodcastsView>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: 3, vsync: this);
     _loadRadioFrance();
+    _loadSubscribed();
   }
 
   @override
@@ -68,20 +74,40 @@ class _PodcastsViewState extends State<PodcastsView>
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
         title: Text(l.podcastsTitle, style: TuneFonts.title3),
+        actions: [
+          if (_tabCtrl.index == 0)
+            IconButton(
+              icon: _refreshingAll
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
+                  : const Icon(Icons.refresh_rounded, color: TuneColors.textSecondary),
+              tooltip: 'Refresh all',
+              onPressed: _refreshingAll ? null : _refreshAllPodcasts,
+            ),
+        ],
         bottom: TabBar(
           controller: _tabCtrl,
           indicatorColor: TuneColors.accent,
           labelColor: TuneColors.accent,
           unselectedLabelColor: TuneColors.textSecondary,
+          onTap: (_) => setState(() {}),
           tabs: [
+            const Tab(text: 'Subscribed'),
             Tab(text: l.podcastsTabRadioFrance),
             Tab(text: l.podcastsTabSearch),
           ],
         ),
       ),
+      floatingActionButton: _tabCtrl.index == 0
+          ? FloatingActionButton(
+              backgroundColor: TuneColors.accent,
+              onPressed: _showSubscribeDialog,
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: TabBarView(
         controller: _tabCtrl,
         children: [
+          _buildSubscribedTab(l),
           _buildShowGrid(_radioFranceShows, l, isLoading: _loadingShows),
           _buildSearchTab(l),
         ],
@@ -239,8 +265,277 @@ class _PodcastsViewState extends State<PodcastsView>
   }
 
   // -------------------------------------------------------------------------
+  // Subscribed podcasts tab
+  // -------------------------------------------------------------------------
+
+  Widget _buildSubscribedTab(AppLocalizations l) {
+    if (_loadingSubscribed) {
+      return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
+    }
+    if (_subscribed.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.rss_feed_rounded, size: 56, color: TuneColors.textTertiary),
+            const SizedBox(height: 12),
+            Text('No subscriptions yet', style: TuneFonts.subheadline),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _showSubscribeDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('Subscribe to RSS feed'),
+              style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadSubscribed,
+      child: ListView.separated(
+        padding: const EdgeInsets.only(bottom: 80),
+        itemCount: _subscribed.length,
+        separatorBuilder: (_, __) => const Divider(height: 1, indent: 72, color: TuneColors.divider),
+        itemBuilder: (_, i) {
+          final podcast = _subscribed[i];
+          final id = podcast['id']?.toString() ?? '';
+          final name = podcast['name'] as String? ?? 'Unknown';
+          final coverUrl = podcast['cover_url'] as String? ?? '';
+          final episodeCount = podcast['episode_count'] as int? ?? 0;
+
+          return Dismissible(
+            key: ValueKey(id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: TuneColors.error,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(Icons.delete_rounded, color: Colors.white),
+            ),
+            confirmDismiss: (_) async {
+              return await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: TuneColors.surface,
+                  title: const Text('Unsubscribe?'),
+                  content: Text('Unsubscribe from "$name"?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Unsubscribe', style: TextStyle(color: TuneColors.error)),
+                    ),
+                  ],
+                ),
+              ) ?? false;
+            },
+            onDismissed: (_) => _unsubscribe(id, i),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: coverUrl.isNotEmpty
+                      ? Image.network(coverUrl, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: TuneColors.surface,
+                            child: const Icon(Icons.podcasts_rounded, color: TuneColors.textTertiary),
+                          ))
+                      : Container(
+                          color: TuneColors.surface,
+                          child: const Icon(Icons.podcasts_rounded, color: TuneColors.textTertiary),
+                        ),
+                ),
+              ),
+              title: Text(name, style: TuneFonts.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+              subtitle: Text('$episodeCount episodes', style: TuneFonts.caption),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, size: 20, color: TuneColors.textSecondary),
+                    tooltip: 'Refresh',
+                    onPressed: () => _refreshPodcast(id),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                ],
+              ),
+              onTap: () => _openSubscribedPodcast(podcast),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // -------------------------------------------------------------------------
   // Actions
   // -------------------------------------------------------------------------
+
+  Future<void> _loadSubscribed() async {
+    final app = context.read<AppState>();
+    if (!app.isRemoteMode || app.apiClient == null) {
+      if (mounted) setState(() => _loadingSubscribed = false);
+      return;
+    }
+    setState(() => _loadingSubscribed = true);
+    try {
+      final data = await app.apiClient!.getSubscribedPodcasts();
+      if (!mounted) return;
+      setState(() {
+        _subscribed = data.cast<Map<String, dynamic>>();
+        _loadingSubscribed = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingSubscribed = false);
+    }
+  }
+
+  Future<void> _showSubscribeDialog() async {
+    final urlCtrl = TextEditingController();
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Subscribe to podcast', style: TuneFonts.title3),
+        content: TextField(
+          controller: urlCtrl,
+          style: TuneFonts.body,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          decoration: InputDecoration(
+            hintText: 'https://example.com/feed.xml',
+            hintStyle: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
+            labelText: 'RSS Feed URL',
+            filled: true,
+            fillColor: TuneColors.surfaceVariant,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, urlCtrl.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            child: const Text('Subscribe'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || result.isEmpty || !mounted) return;
+
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      await app.apiClient!.subscribePodcast(result);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Subscribed.')),
+      );
+      _loadSubscribed();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Subscribe error: $e')),
+      );
+    }
+  }
+
+  Future<void> _unsubscribe(String podcastId, int index) async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      await app.apiClient!.unsubscribePodcast(podcastId);
+      if (mounted) setState(() => _subscribed.removeAt(index));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unsubscribe error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _refreshPodcast(String podcastId) async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    try {
+      await app.apiClient!.refreshPodcast(podcastId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Podcast refreshed.')),
+      );
+      _loadSubscribed();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Refresh error: $e')),
+      );
+    }
+  }
+
+  Future<void> _refreshAllPodcasts() async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    setState(() => _refreshingAll = true);
+    try {
+      await app.apiClient!.refreshAllPodcasts();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All podcasts refreshed.')),
+      );
+      _loadSubscribed();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Refresh error: $e')),
+      );
+    }
+    if (mounted) setState(() => _refreshingAll = false);
+  }
+
+  Future<void> _openSubscribedPodcast(Map<String, dynamic> podcast) async {
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    final id = podcast['id']?.toString() ?? '';
+    final name = podcast['name'] as String? ?? 'Unknown';
+    final feedUrl = podcast['feed_url'] as String? ?? '';
+
+    // Build a PodcastShow from subscribed data
+    final show = PodcastShow(
+      id: id,
+      name: name,
+      artist: podcast['artist'] as String? ?? '',
+      coverUrl: podcast['cover_url'] as String? ?? '',
+      description: podcast['description'] as String? ?? '',
+      feedUrl: feedUrl,
+    );
+
+    setState(() {
+      _selectedShow = show;
+      _episodes = [];
+      _loadingEpisodes = true;
+    });
+
+    try {
+      final data = await app.apiClient!.getSubscribedPodcastEpisodes(id);
+      final eps = data.map((j) => PodcastEpisodeItem.fromJson(j as Map<String, dynamic>)).toList();
+      if (mounted) setState(() { _episodes = eps; _loadingEpisodes = false; });
+    } catch (_) {
+      // Fallback to regular episodes endpoint
+      try {
+        final data = await app.apiClient!.getPodcastEpisodes(feedUrl);
+        final eps = data.map((j) => PodcastEpisodeItem.fromJson(j as Map<String, dynamic>)).toList();
+        if (mounted) setState(() { _episodes = eps; _loadingEpisodes = false; });
+      } catch (_) {
+        if (mounted) setState(() => _loadingEpisodes = false);
+      }
+    }
+  }
 
   Future<void> _loadRadioFrance() async {
     setState(() => _loadingShows = true);

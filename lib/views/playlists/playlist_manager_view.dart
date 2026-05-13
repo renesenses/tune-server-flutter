@@ -37,10 +37,20 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   bool _batching = false;
   Map<String, dynamic>? _batchResult;
 
+  // Compare
+  List<Map<String, dynamic>> _allPlaylists = [];
+  bool _loadingPlaylists = false;
+  String _compareSourceService = '';
+  String _compareSourceId = '';
+  String _compareTargetService = '';
+  String _compareTargetId = '';
+  bool _comparing = false;
+  Map<String, dynamic>? _compareResult;
+
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl = TabController(length: 5, vsync: this);
     _tabCtrl.addListener(() {
       if (!_tabCtrl.indexIsChanging) _loadTab();
     });
@@ -66,6 +76,8 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       } else if (_tabCtrl.index == 3) {
         final data = await app.apiClient!.listPlaylistSnapshots();
         _snapshots = data.cast<Map<String, dynamic>>();
+      } else if (_tabCtrl.index == 4) {
+        await _loadAllPlaylistsForCompare();
       }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
@@ -258,6 +270,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             Tab(text: 'Transferts'),
             Tab(text: 'Sync'),
             Tab(text: 'Backup'),
+            Tab(text: 'Compare'),
           ],
         ),
       ),
@@ -268,6 +281,221 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           _buildHistoryTab(),
           _buildSyncTab(),
           _buildBackupTab(),
+          _buildCompareTab(),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Compare Tab — compare playlists between services
+  // ---------------------------------------------------------------------------
+
+  Future<void> _loadAllPlaylistsForCompare() async {
+    if (_loadingPlaylists) return;
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    _loadingPlaylists = true;
+    final items = <Map<String, dynamic>>[];
+
+    try {
+      final local = await app.apiClient!.getPlaylists();
+      for (final p in local) {
+        final m = p as Map<String, dynamic>;
+        items.add({
+          'service': 'local',
+          'id': '${m['id']}',
+          'name': m['name'] as String? ?? '',
+        });
+      }
+    } catch (_) {}
+
+    final services = context.read<LibraryState>().streamingServices
+        .where((s) => s.authenticated)
+        .map((s) => s.serviceId)
+        .toList();
+    await Future.wait(services.map((svc) async {
+      try {
+        final pls = await app.apiClient!.getStreamingPlaylists(svc);
+        for (final p in pls) {
+          final m = p as Map<String, dynamic>;
+          items.add({
+            'service': svc,
+            'id': '${m['source_id'] ?? m['id'] ?? ''}',
+            'name': m['name'] as String? ?? '',
+          });
+        }
+      } catch (_) {}
+    }));
+
+    if (mounted) {
+      setState(() {
+        _allPlaylists = items;
+        _loadingPlaylists = false;
+      });
+    }
+  }
+
+  Future<void> _doCompare() async {
+    if (_compareSourceService.isEmpty || _compareSourceId.isEmpty ||
+        _compareTargetService.isEmpty || _compareTargetId.isEmpty) return;
+    final app = context.read<AppState>();
+    if (app.apiClient == null) return;
+    setState(() { _comparing = true; _compareResult = null; });
+    try {
+      final result = await app.apiClient!.comparePlaylists(
+        sourceService: _compareSourceService,
+        sourcePlaylistId: _compareSourceId,
+        targetService: _compareTargetService,
+        targetPlaylistId: _compareTargetId,
+      );
+      if (mounted) setState(() { _compareResult = result; _comparing = false; });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _comparing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Compare error: $e')),
+        );
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _playlistsForService(String service) {
+    return _allPlaylists.where((p) => p['service'] == service).toList();
+  }
+
+  List<String> get _compareAvailableServices {
+    final set = <String>{};
+    for (final p in _allPlaylists) {
+      set.add(p['service'] as String);
+    }
+    return set.toList();
+  }
+
+  Widget _buildCompareTab() {
+    if (_loadingPlaylists && _allPlaylists.isEmpty) {
+      return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
+    }
+    if (_allPlaylists.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.compare_arrows_rounded, size: 48, color: TuneColors.textTertiary),
+            SizedBox(height: 12),
+            Text('No playlists available', style: TuneFonts.body),
+          ],
+        ),
+      );
+    }
+
+    final services = _compareAvailableServices;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('SOURCE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _compareSourceService.isEmpty ? null : _compareSourceService,
+                  decoration: InputDecoration(
+                    labelText: 'Service',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    filled: true, fillColor: TuneColors.surface,
+                  ),
+                  dropdownColor: TuneColors.surfaceVariant,
+                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? 'Local' : s.toUpperCase()))).toList(),
+                  onChanged: (v) => setState(() {
+                    _compareSourceService = v ?? '';
+                    _compareSourceId = '';
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  value: _compareSourceId.isEmpty ? null : _compareSourceId,
+                  decoration: InputDecoration(
+                    labelText: 'Playlist',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    filled: true, fillColor: TuneColors.surface,
+                  ),
+                  dropdownColor: TuneColors.surfaceVariant,
+                  items: _playlistsForService(_compareSourceService).map((p) =>
+                    DropdownMenuItem(value: p['id'] as String, child: Text(p['name'] as String, overflow: TextOverflow.ellipsis))
+                  ).toList(),
+                  onChanged: (v) => setState(() => _compareSourceId = v ?? ''),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('TARGET', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _compareTargetService.isEmpty ? null : _compareTargetService,
+                  decoration: InputDecoration(
+                    labelText: 'Service',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    filled: true, fillColor: TuneColors.surface,
+                  ),
+                  dropdownColor: TuneColors.surfaceVariant,
+                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? 'Local' : s.toUpperCase()))).toList(),
+                  onChanged: (v) => setState(() {
+                    _compareTargetService = v ?? '';
+                    _compareTargetId = '';
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  value: _compareTargetId.isEmpty ? null : _compareTargetId,
+                  decoration: InputDecoration(
+                    labelText: 'Playlist',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    filled: true, fillColor: TuneColors.surface,
+                  ),
+                  dropdownColor: TuneColors.surfaceVariant,
+                  items: _playlistsForService(_compareTargetService).map((p) =>
+                    DropdownMenuItem(value: p['id'] as String, child: Text(p['name'] as String, overflow: TextOverflow.ellipsis))
+                  ).toList(),
+                  onChanged: (v) => setState(() => _compareTargetId = v ?? ''),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _comparing || _compareSourceId.isEmpty || _compareTargetId.isEmpty
+                  ? null
+                  : _doCompare,
+              icon: _comparing
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.compare_arrows_rounded),
+              label: Text(_comparing ? 'Comparing...' : 'Compare'),
+              style: FilledButton.styleFrom(
+                backgroundColor: TuneColors.accent,
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+          ),
+          if (_compareResult != null) ...[
+            const SizedBox(height: 20),
+            _CompareResultCard(result: _compareResult!),
+          ],
         ],
       ),
     );
@@ -1104,6 +1332,127 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Compare result card
+// ---------------------------------------------------------------------------
+
+class _CompareResultCard extends StatelessWidget {
+  final Map<String, dynamic> result;
+  const _CompareResultCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final common = result['common'] as List? ?? [];
+    final onlyInSource = result['only_in_source'] as List? ?? [];
+    final onlyInTarget = result['only_in_target'] as List? ?? [];
+    final matchRate = result['match_rate'] as num? ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: TuneColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('RESULTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _StatBadge(label: 'Common', count: common.length, color: TuneColors.success),
+              const SizedBox(width: 8),
+              _StatBadge(label: 'Source only', count: onlyInSource.length, color: TuneColors.warning),
+              const SizedBox(width: 8),
+              _StatBadge(label: 'Target only', count: onlyInTarget.length, color: TuneColors.error),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: matchRate / 100,
+            backgroundColor: TuneColors.surfaceVariant,
+            color: TuneColors.accent,
+            minHeight: 6,
+            borderRadius: BorderRadius.circular(3),
+          ),
+          const SizedBox(height: 4),
+          Text('${matchRate.toStringAsFixed(1)}% match rate', style: TuneFonts.caption),
+          if (onlyInSource.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('Only in source (${onlyInSource.length})', style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            for (int i = 0; i < onlyInSource.length && i < 10; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  _trackLabel(onlyInSource[i]),
+                  style: TuneFonts.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if (onlyInSource.length > 10)
+              Text('+ ${onlyInSource.length - 10} more', style: TuneFonts.caption),
+          ],
+          if (onlyInTarget.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('Only in target (${onlyInTarget.length})', style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            for (int i = 0; i < onlyInTarget.length && i < 10; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  _trackLabel(onlyInTarget[i]),
+                  style: TuneFonts.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if (onlyInTarget.length > 10)
+              Text('+ ${onlyInTarget.length - 10} more', style: TuneFonts.caption),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _trackLabel(dynamic track) {
+    if (track is Map<String, dynamic>) {
+      final title = track['title'] as String? ?? '';
+      final artist = track['artist_name'] as String? ?? track['artist'] as String? ?? '';
+      return artist.isEmpty ? title : '$artist - $title';
+    }
+    return track.toString();
+  }
+}
+
+class _StatBadge extends StatelessWidget {
+  final String label;
+  final int count;
+  final Color color;
+  const _StatBadge({required this.label, required this.count, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Text('$count', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: TuneFonts.caption.copyWith(color: color), textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }

@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'database_view.dart';
+import 'lastfm_view.dart';
 import 'spotify_connect_view.dart';
 import 'library_setup_view.dart';
 import 'metadata_view.dart';
@@ -366,6 +368,16 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
+                title: 'Last.fm Scrobble',
+                subtitle: 'Scrobble listening history',
+                trailing: const _LastfmStatusIndicator(),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LastfmView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
                 title: 'Base de données',
                 subtitle: 'Import / Export',
                 trailing: const Icon(Icons.chevron_right_rounded,
@@ -378,6 +390,12 @@ class _SettingsList extends StatelessWidget {
             ],
           ),
         ),
+
+        // ---- Profiles ----
+        if (app.apiClient != null) ...[
+          const _SectionHeader('PROFILES'),
+          _ProfilesSection(api: app.apiClient!),
+        ],
 
         // ---- À propos ----
         _SectionHeader(l.settingsSectionAbout),
@@ -582,6 +600,265 @@ class _SettingsTile extends StatelessWidget {
           : null,
       trailing: trailing,
       onTap: onTap,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Profiles section — server-side profiles (GET/POST/PUT/DELETE /api/v1/profiles)
+// ---------------------------------------------------------------------------
+
+class _ProfilesSection extends StatefulWidget {
+  final TuneApiClient api;
+  const _ProfilesSection({required this.api});
+
+  @override
+  State<_ProfilesSection> createState() => _ProfilesSectionState();
+}
+
+class _ProfilesSectionState extends State<_ProfilesSection> {
+  List<dynamic> _profiles = [];
+  int? _activeProfileId;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfiles();
+  }
+
+  Future<void> _loadProfiles() async {
+    setState(() => _loading = true);
+    try {
+      final data = await widget.api.getProfiles();
+      if (mounted) {
+        setState(() {
+          _profiles = data;
+          // Find active profile
+          for (final p in data) {
+            if (p is Map<String, dynamic> && p['active'] == true) {
+              _activeProfileId = p['id'] as int?;
+              break;
+            }
+          }
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _selectProfile(int id) async {
+    try {
+      await widget.api.updateProfile(id, {'active': true});
+      setState(() => _activeProfileId = id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile activated'),
+            backgroundColor: TuneColors.accent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: TuneColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createProfile() async {
+    final nameCtrl = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('New profile', style: TuneFonts.title3),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          style: TuneFonts.body,
+          decoration: const InputDecoration(
+            labelText: 'Profile name',
+            hintText: 'e.g. Evening, Morning',
+            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+    if (result == true && nameCtrl.text.trim().isNotEmpty) {
+      try {
+        await widget.api.createProfile({'name': nameCtrl.text.trim()});
+        _loadProfiles();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteProfile(int id) async {
+    try {
+      await widget.api.deleteProfile(id);
+      _loadProfiles();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: TuneColors.surface,
+      child: Column(
+        children: [
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: TuneColors.accent),
+                ),
+              ),
+            )
+          else if (_profiles.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No profiles',
+                style: TuneFonts.footnote
+                    .copyWith(color: TuneColors.textTertiary),
+              ),
+            )
+          else
+            ..._profiles.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final p = entry.value as Map<String, dynamic>;
+              final id = p['id'] as int? ?? 0;
+              final name = p['name'] as String? ?? 'Profile';
+              final isActive = id == _activeProfileId;
+              return Column(
+                children: [
+                  if (idx > 0)
+                    const Divider(
+                        height: 1, indent: 56, color: TuneColors.divider),
+                  ListTile(
+                    leading: Icon(
+                      isActive
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: isActive
+                          ? TuneColors.accent
+                          : TuneColors.textTertiary,
+                    ),
+                    title: Text(
+                      name,
+                      style: TuneFonts.body.copyWith(
+                        fontWeight:
+                            isActive ? FontWeight.w600 : FontWeight.normal,
+                        color: isActive
+                            ? TuneColors.accent
+                            : TuneColors.textPrimary,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          size: 20, color: TuneColors.error),
+                      onPressed: () => _deleteProfile(id),
+                    ),
+                    onTap: () => _selectProfile(id),
+                  ),
+                ],
+              );
+            }),
+          const Divider(height: 1, indent: 16, color: TuneColors.divider),
+          ListTile(
+            leading: const Icon(Icons.add_rounded, color: TuneColors.accent),
+            title: Text('New profile',
+                style: TuneFonts.body.copyWith(color: TuneColors.accent)),
+            onTap: _createProfile,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Last.fm status indicator — shows connection status inline in settings
+// ---------------------------------------------------------------------------
+
+class _LastfmStatusIndicator extends StatefulWidget {
+  const _LastfmStatusIndicator();
+
+  @override
+  State<_LastfmStatusIndicator> createState() => _LastfmStatusIndicatorState();
+}
+
+class _LastfmStatusIndicatorState extends State<_LastfmStatusIndicator> {
+  bool? _connected;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      final s = await api.getLastfmStatus();
+      if (mounted) setState(() => _connected = s['connected'] == true);
+    } catch (_) {
+      // Silently fail — indicator stays hidden
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_connected != null)
+          Container(
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: _connected! ? TuneColors.success : TuneColors.textTertiary,
+              shape: BoxShape.circle,
+            ),
+          ),
+        const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+      ],
     );
   }
 }

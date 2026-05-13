@@ -6,13 +6,13 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../server/streaming/qobuz_service.dart';
 import '../../server/streaming/streaming_service.dart';
+import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'streaming_album_detail_view.dart';
 import 'streaming_helpers.dart';
-import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // T13.2 — StreamingServiceDetailView
@@ -410,12 +410,15 @@ class _CatalogView extends StatefulWidget {
 class _CatalogViewState extends State<_CatalogView> {
   final Map<String, List<StreamingSearchResult>> _sections = {};
   List<StreamingSearchResult> _playlists = [];
+  List<dynamic> _favoriteAlbums = [];
+  List<dynamic> _favoriteTracks = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _loadCatalog();
+    _loadFavorites();
   }
 
   Future<void> _loadCatalog() async {
@@ -443,6 +446,23 @@ class _CatalogViewState extends State<_CatalogView> {
     }
   }
 
+  Future<void> _loadFavorites() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      final albums = await api.getStreamingFavorites(widget.serviceId, 'albums');
+      final tracks = await api.getStreamingFavorites(widget.serviceId, 'tracks');
+      if (mounted) {
+        setState(() {
+          _favoriteAlbums = albums;
+          _favoriteTracks = tracks;
+        });
+      }
+    } catch (_) {
+      // Favorites endpoint might not be available for all services
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading && _sections.isEmpty) {
@@ -451,13 +471,59 @@ class _CatalogViewState extends State<_CatalogView> {
       );
     }
 
-    if (_sections.isEmpty && _playlists.isEmpty) {
+    if (_sections.isEmpty && _playlists.isEmpty && _favoriteAlbums.isEmpty && _favoriteTracks.isEmpty) {
       return const _SearchPrompt();
     }
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
+        // Favorites section
+        if (_favoriteAlbums.isNotEmpty || _favoriteTracks.isNotEmpty) ...[
+          if (_favoriteAlbums.isNotEmpty) ...[
+            _SectionHeader(title: 'Favorite Albums'),
+            SizedBox(
+              height: 180,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _favoriteAlbums.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (_, i) {
+                  final fav = _favoriteAlbums[i] as Map<String, dynamic>;
+                  return _FavoriteAlbumCard(
+                    fav: fav,
+                    serviceId: widget.serviceId,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_favoriteTracks.isNotEmpty) ...[
+            _SectionHeader(title: 'Favorite Tracks'),
+            ..._favoriteTracks.take(10).map((fav) {
+              final m = fav as Map<String, dynamic>;
+              return ListTile(
+                leading: const Icon(Icons.favorite_rounded,
+                    size: 18, color: TuneColors.error),
+                title: Text(
+                  m['title'] as String? ?? m['name'] as String? ?? '-',
+                  style: TuneFonts.body,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  m['artist'] as String? ?? m['artist_name'] as String? ?? '',
+                  style: TuneFonts.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
+        ],
         // Sections featured
         for (final entry in _sections.entries) ...[
           _SectionHeader(title: entry.key),
@@ -497,6 +563,54 @@ class _CatalogViewState extends State<_CatalogView> {
               )),
         ],
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Favorite album card
+// ---------------------------------------------------------------------------
+
+class _FavoriteAlbumCard extends StatelessWidget {
+  final Map<String, dynamic> fav;
+  final String serviceId;
+  const _FavoriteAlbumCard({required this.fav, required this.serviceId});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = fav['title'] as String? ?? fav['name'] as String? ?? '-';
+    final artist = fav['artist'] as String? ?? fav['artist_name'] as String?;
+    final cover = fav['cover_url'] as String? ?? fav['image'] as String?;
+
+    return SizedBox(
+      width: 130,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ArtworkView(url: cover, size: 130, cornerRadius: 8),
+              const Positioned(
+                top: 4,
+                right: 4,
+                child: Icon(Icons.favorite_rounded,
+                    size: 18, color: TuneColors.error),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(title,
+              style: TuneFonts.caption,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          if (artist != null)
+            Text(artist,
+                style:
+                    TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+        ],
+      ),
     );
   }
 }

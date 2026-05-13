@@ -17,6 +17,8 @@ import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
 import '../alarms/alarms_view.dart';
+import '../diagnostics/diagnostics_view.dart';
+import '../library/genre_tree_view.dart';
 import '../zones/zones_view.dart';
 import 'ipad_now_playing_bar.dart';
 
@@ -59,6 +61,8 @@ class _iPadContentViewState extends State<iPadContentView> {
       _NavEntry(Icons.auto_awesome_outlined, Icons.auto_awesome_rounded, 'Smart Playlists', const SmartPlaylistsView()),
       _NavEntry(Icons.podcasts_outlined, Icons.podcasts_rounded, l.navPodcasts, const PodcastsView()),
       if (isRemote) _NavEntry(Icons.alarm_outlined, Icons.alarm_rounded, 'Alarmes', const AlarmsView()),
+      if (isRemote) _NavEntry(Icons.account_tree_outlined, Icons.account_tree_rounded, 'Genre Tree', const GenreTreeView()),
+      if (isRemote) _NavEntry(Icons.monitor_heart_outlined, Icons.monitor_heart_rounded, 'Diagnostics', const DiagnosticsView()),
       _NavEntry(Icons.settings_outlined, Icons.settings_rounded, l.navSettings, const SettingsView()),
     ];
 

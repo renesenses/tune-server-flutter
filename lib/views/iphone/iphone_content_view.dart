@@ -17,6 +17,8 @@ import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
 import '../alarms/alarms_view.dart';
+import '../diagnostics/diagnostics_view.dart';
+import '../library/genre_tree_view.dart';
 import '../zones/zones_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -101,6 +103,10 @@ class _MoreView extends StatelessWidget {
       (icon: Icons.podcasts_rounded,       label: l.navPodcasts,       page: const PodcastsView()),
       if (isRemote)
         (icon: Icons.alarm_rounded,        label: 'Alarmes',           page: const AlarmsView()),
+      if (isRemote)
+        (icon: Icons.account_tree_rounded, label: 'Genre Tree',        page: const GenreTreeView()),
+      if (isRemote)
+        (icon: Icons.monitor_heart_rounded, label: 'Diagnostics',      page: const DiagnosticsView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
     ];
 

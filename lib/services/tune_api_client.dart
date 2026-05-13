@@ -524,6 +524,23 @@ class TuneApiClient {
   Future<void> deleteSmartPlaylist(int id) async =>
       await _delete('/library/smart-playlists/$id');
 
+  Future<Map<String, dynamic>> createSmartPlaylist(Map<String, dynamic> body) async =>
+      await _post('/api/v1/smart-playlists', body: body) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateSmartPlaylist(int id, Map<String, dynamic> body) async =>
+      await _put('/api/v1/smart-playlists/$id', body: body) as Map<String, dynamic>;
+
+  Future<List<dynamic>> previewSmartPlaylistTracks({
+    required List<Map<String, dynamic>> rules,
+    String matchMode = 'all',
+    int limit = 50,
+  }) async =>
+      await _post('/api/v1/smart-playlists/preview', body: {
+        'rules': rules,
+        'match_mode': matchMode,
+        'limit': limit,
+      }) as List<dynamic>;
+
   // ---------------------------------------------------------------------------
   // ── EQ ──
   // ---------------------------------------------------------------------------
@@ -741,4 +758,117 @@ class TuneApiClient {
 
   Future<void> deleteAlarm(int id) async =>
       await _delete('/api/v1/alarms/$id');
+
+  // ---------------------------------------------------------------------------
+  // ── Podcasts — Subscribe / Unsubscribe / Refresh ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getSubscribedPodcasts() async =>
+      await _get('/api/v1/podcasts') as List<dynamic>;
+
+  Future<Map<String, dynamic>> subscribePodcast(String feedUrl, {String? name}) async =>
+      await _post('/api/v1/podcasts', body: {
+        'feed_url': feedUrl,
+        if (name != null) 'name': name,
+      }) as Map<String, dynamic>;
+
+  Future<void> unsubscribePodcast(String podcastId) async =>
+      await _delete('/api/v1/podcasts/$podcastId');
+
+  Future<List<dynamic>> getSubscribedPodcastEpisodes(String podcastId, {int limit = 50}) async =>
+      await _get('/api/v1/podcasts/$podcastId/episodes?limit=$limit') as List<dynamic>;
+
+  Future<Map<String, dynamic>> refreshPodcast(String podcastId) async =>
+      await _post('/api/v1/podcasts/$podcastId/refresh') as Map<String, dynamic>;
+
+  Future<void> refreshAllPodcasts() async =>
+      await _post('/api/v1/podcasts/refresh');
+
+  // ---------------------------------------------------------------------------
+  // ── Last.fm Scrobble ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> lastfmAuthenticate({
+    required String username,
+    required String password,
+  }) async =>
+      await _post('/api/v1/lastfm/authenticate', body: {
+        'username': username,
+        'password': password,
+      }) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> getLastfmStatus() async =>
+      await _get('/api/v1/lastfm/status') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> disconnectLastfm() async =>
+      await _post('/api/v1/lastfm/disconnect') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Playlist Compare ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> comparePlaylists({
+    required String sourceService,
+    required String sourcePlaylistId,
+    required String targetService,
+    required String targetPlaylistId,
+  }) async =>
+      await _post('/api/v1/playlists/compare', body: {
+        'source_service': sourceService,
+        'source_playlist_id': sourcePlaylistId,
+        'target_service': targetService,
+        'target_playlist_id': targetPlaylistId,
+      }) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Diagnostics ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getDiagnostics() async =>
+      await _get('/api/v1/system/diagnostics') as Map<String, dynamic>;
+
+  Future<dynamic> getSystemLogs({int limit = 200}) async =>
+      await _get('/api/v1/system/logs?limit=$limit');
+
+  // ---------------------------------------------------------------------------
+  // ── Profiles ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getProfiles() async =>
+      await _get('/api/v1/profiles') as List<dynamic>;
+
+  Future<Map<String, dynamic>> getProfile(int id) async =>
+      await _get('/api/v1/profiles/$id') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> createProfile(Map<String, dynamic> body) async =>
+      await _post('/api/v1/profiles', body: body) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateProfile(int id, Map<String, dynamic> body) async =>
+      await _put('/api/v1/profiles/$id', body: body) as Map<String, dynamic>;
+
+  Future<void> deleteProfile(int id) async =>
+      await _delete('/api/v1/profiles/$id');
+
+  // ---------------------------------------------------------------------------
+  // ── Streaming Favorites ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getStreamingFavorites(String service, String type) async =>
+      await _get('/api/v1/streaming/$service/favorites/$type') as List<dynamic>;
+
+  Future<void> addStreamingFavorite(String service, String type, {required String itemId}) async =>
+      await _post('/api/v1/streaming/$service/favorites/$type', body: {'item_id': itemId});
+
+  Future<void> removeStreamingFavorite(String service, String type, {required String itemId}) async =>
+      await _delete('/api/v1/streaming/$service/favorites/$type?item_id=${Uri.encodeComponent(itemId)}');
+
+  // ---------------------------------------------------------------------------
+  // ── Genre Tree ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getGenreTree() async =>
+      await _get('/api/v1/library/genre-tree') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateGenreTree(Map<String, dynamic> tree) async =>
+      await _put('/api/v1/library/genre-tree', body: tree) as Map<String, dynamic>;
 }
