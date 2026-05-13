@@ -272,7 +272,7 @@ class ServerEngine {
   // ---------------------------------------------------------------------------
 
   List<DiscoveredDevice> allDevices() =>
-      [...discoveryManager.allDevices(), ...bluosDiscovery.devices];
+      [...discoveryManager.allDevices(), ...bluosDiscovery.devices, ...discoveryManager.chromecastDevices];
   List<DiscoveredDevice> upnpServers() => discoveryManager.servers();
   List<DiscoveredDevice> dlnaRenderers() => discoveryManager.renderers();
   List<DiscoveredDevice> bluosDevices() => bluosDiscovery.devices;

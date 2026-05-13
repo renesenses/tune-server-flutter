@@ -133,14 +133,17 @@ class ZoneState extends ChangeNotifier {
   List<DiscoveredDevice> get bluosDevices =>
       _devices.where((d) => d.type == 'bluos').toList();
 
-  /// Renderers non encore assignés à une zone (DLNA + BluOS).
+  List<DiscoveredDevice> get chromecastDevices =>
+      _devices.where((d) => d.type == 'chromecast').toList();
+
+  /// Renderers non encore assignés à une zone (DLNA + BluOS + Chromecast).
   List<DiscoveredDevice> get unboundRenderers {
     final boundIds = _zones
         .where((z) => z.outputDeviceId != null)
         .map((z) => z.outputDeviceId!)
         .toSet();
     final assignable = _devices.where(
-        (d) => d.type == 'renderer' || d.type == 'bluos');
+        (d) => d.type == 'renderer' || d.type == 'bluos' || d.type == 'chromecast');
     return assignable.where((d) => !boundIds.contains(d.id)).toList();
   }
 

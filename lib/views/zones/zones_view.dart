@@ -426,6 +426,8 @@ class _ActiveZoneBanner extends StatelessWidget {
         return Icons.bluetooth_rounded;
       case OutputType.bluos:
         return Icons.speaker_rounded;
+      case OutputType.chromecast:
+        return Icons.cast_connected_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -442,6 +444,8 @@ class _ActiveZoneBanner extends StatelessWidget {
         return l.zonesOutputBluetooth;
       case OutputType.bluos:
         return 'BluOS';
+      case OutputType.chromecast:
+        return 'Chromecast';
       default:
         return l.zonesOutputLocal;
     }
@@ -699,6 +703,8 @@ class _ZoneTile extends StatelessWidget {
         return Icons.bluetooth_rounded;
       case OutputType.bluos:
         return Icons.speaker_rounded;
+      case OutputType.chromecast:
+        return Icons.cast_connected_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -715,6 +721,8 @@ class _ZoneTile extends StatelessWidget {
         return l.zonesOutputBluetooth;
       case OutputType.bluos:
         return 'BluOS';
+      case OutputType.chromecast:
+        return 'Chromecast';
       default:
         return l.zonesOutputLocal;
     }
@@ -839,6 +847,44 @@ class _OutputPickerSheet extends StatelessWidget {
                         context.read<AppState>().setZoneOutput(
                               zone.id,
                               OutputType.dlna,
+                              deviceId: device.id,
+                            );
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                )),
+          ],
+
+          // Chromecast devices
+          if (zoneState.chromecastDevices.isNotEmpty) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'CHROMECAST',
+                  style: TuneFonts.caption.copyWith(
+                    color: TuneColors.textTertiary,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ),
+            ...zoneState.chromecastDevices.map((device) => Column(
+                  children: [
+                    const Divider(height: 1, indent: 56),
+                    _OutputOption(
+                      icon: Icons.cast_connected_rounded,
+                      label: device.name,
+                      subtitle: device.host,
+                      isSelected: currentType == OutputType.chromecast &&
+                          zone.outputDeviceId == device.id,
+                      onTap: () {
+                        context.read<AppState>().setZoneOutput(
+                              zone.id,
+                              OutputType.chromecast,
                               deviceId: device.id,
                             );
                         Navigator.pop(context);
