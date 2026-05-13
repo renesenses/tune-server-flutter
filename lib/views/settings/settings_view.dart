@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/server_discovery.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
@@ -130,7 +131,7 @@ class _SettingsList extends StatelessWidget {
                         ButtonSegment(value: 'remote', icon: Icon(Icons.wifi_tethering_rounded, size: 16), label: Text('Remote')),
                       ],
                       selected: {settings.appMode},
-                      onSelectionChanged: (v) => settings.setAppMode(v.first),
+                      onSelectionChanged: (v) => app.switchMode(v.first),
                       style: ButtonStyle(
                         textStyle: WidgetStatePropertyAll(TuneFonts.caption),
                         visualDensity: VisualDensity.compact,
@@ -197,6 +198,14 @@ class _SettingsList extends StatelessWidget {
                   ),
                   onTap: app.isRemoteConnected ? null : () => _editRemotePort(context, settings),
                 ),
+                if (!app.isRemoteConnected) ...[
+                  const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                  _SettingsTile(
+                    title: 'Scanner le réseau',
+                    trailing: const Icon(Icons.radar_rounded, color: TuneColors.accent),
+                    onTap: () => _scanForServers(context, settings),
+                  ),
+                ],
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -552,6 +561,15 @@ class _SettingsList extends StatelessWidget {
       await settings.resetSetup();
     }
   }
+
+  Future<void> _scanForServers(
+      BuildContext context, SettingsState settings) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _ServerScanDialog(settings: settings),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -807,6 +825,188 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server scan dialog — discovers Tune servers on the local subnet
+// ---------------------------------------------------------------------------
+
+class _ServerScanDialog extends StatefulWidget {
+  final SettingsState settings;
+  const _ServerScanDialog({required this.settings});
+
+  @override
+  State<_ServerScanDialog> createState() => _ServerScanDialogState();
+}
+
+class _ServerScanDialogState extends State<_ServerScanDialog> {
+  bool _scanning = true;
+  List<DiscoveredServer> _servers = [];
+  String _statusText = 'Scan du réseau en cours...';
+  int _scanned = 0;
+  int _total = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startScan();
+  }
+
+  Future<void> _startScan() async {
+    setState(() {
+      _scanning = true;
+      _servers = [];
+      _statusText = 'Scan du réseau en cours...';
+    });
+
+    try {
+      final servers = await ServerDiscovery.scan(
+        onProgress: (scanned, total) {
+          if (mounted) {
+            setState(() {
+              _scanned = scanned;
+              _total = total;
+              _statusText = 'Vérification $scanned/$total...';
+            });
+          }
+        },
+      );
+      if (mounted) {
+        setState(() {
+          _scanning = false;
+          _servers = servers;
+          _statusText = servers.isEmpty
+              ? 'Aucun serveur Tune trouvé'
+              : '${servers.length} serveur${servers.length > 1 ? "s" : ""} trouvé${servers.length > 1 ? "s" : ""}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _scanning = false;
+          _statusText = 'Erreur: $e';
+        });
+      }
+    }
+  }
+
+  void _selectServer(DiscoveredServer server) {
+    widget.settings.setRemoteHost(server.host);
+    widget.settings.setRemotePort(server.port);
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Row(
+        children: [
+          const Icon(Icons.radar_rounded, color: TuneColors.accent, size: 24),
+          const SizedBox(width: 10),
+          Text('Serveurs Tune', style: TuneFonts.title3),
+        ],
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_scanning) ...[
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: TuneColors.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _statusText,
+                      style: TuneFonts.footnote.copyWith(
+                        color: TuneColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              Text(
+                _statusText,
+                style: TuneFonts.footnote.copyWith(
+                  color: _servers.isEmpty
+                      ? TuneColors.textTertiary
+                      : TuneColors.textSecondary,
+                ),
+              ),
+            ],
+            if (_servers.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ..._servers.map((server) => Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      color: TuneColors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: TuneColors.divider,
+                        width: 1,
+                      ),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 2,
+                      ),
+                      leading: const Icon(
+                        Icons.dns_rounded,
+                        color: TuneColors.accent,
+                        size: 22,
+                      ),
+                      title: Text(
+                        server.displayName,
+                        style: TuneFonts.body.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${server.host}:${server.port}'
+                        '${server.version != null ? " — v${server.version}" : ""}',
+                        style: TuneFonts.caption.copyWith(
+                          color: TuneColors.textTertiary,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: TuneColors.textTertiary,
+                      ),
+                      onTap: () => _selectServer(server),
+                    ),
+                  )),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        if (!_scanning)
+          TextButton.icon(
+            onPressed: _startScan,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Rescanner'),
+          ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
     );
   }
 }

@@ -29,6 +29,23 @@ class Player {
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<Duration>? _positionSub;
 
+  // ---------------------------------------------------------------------------
+  // Crossfade
+  // ---------------------------------------------------------------------------
+
+  bool crossfadeEnabled = false;
+  double crossfadeDuration = 3.0; // seconds
+
+  /// Second output used during crossfade transition.
+  LocalAudioOutput? _crossfadeOutput;
+  Timer? _crossfadeTimer;
+  Timer? _crossfadeCheckTimer;
+  bool _crossfading = false;
+
+  /// Subscriptions for the crossfade output (transferred after swap).
+  StreamSubscription<PlayerState>? _crossfadePlayerStateSub;
+  StreamSubscription<Duration>? _crossfadePositionSub;
+
   Player({required this.zoneId, required this.queue});
 
   // ---------------------------------------------------------------------------
@@ -73,11 +90,20 @@ class Player {
       _positionSub = output.positionStream.listen((pos) {
         _position = pos;
         EventBus.instance.emit(PlaybackPositionEvent(zoneId, pos.inMilliseconds));
+
+        // Crossfade check: monitor position to trigger crossfade
+        if (crossfadeEnabled && !_crossfading && isPlaying) {
+          _checkCrossfadeThreshold(pos);
+        }
       });
 
       _playerStateSub = output.playerStateStream.listen((ps) {
         if (ps.processingState == ProcessingState.completed) {
-          _onTrackCompleted();
+          // If crossfade is active, the swap handles the transition —
+          // don't trigger _onTrackCompleted again.
+          if (!_crossfading) {
+            _onTrackCompleted();
+          }
         } else if (ps.processingState == ProcessingState.buffering ||
             ps.processingState == ProcessingState.loading) {
           _setState(PlaybackState.buffering);
@@ -109,6 +135,7 @@ class Player {
   }
 
   Future<void> _teardownOutput() async {
+    await _cancelCrossfade();
     _positionTimer?.cancel();
     _positionTimer = null;
     await _playerStateSub?.cancel();
@@ -153,6 +180,7 @@ class Player {
   }
 
   Future<void> stop() async {
+    await _cancelCrossfade();
     await _output?.stop();
     _position = Duration.zero;
     _setState(PlaybackState.stopped);
@@ -166,6 +194,7 @@ class Player {
 
   /// Passe à la piste suivante.
   Future<void> next() async {
+    await _cancelCrossfade();
     final track = queue.next();
     if (track == null) {
       await stop();
@@ -178,6 +207,7 @@ class Player {
   /// Retourne à la piste précédente.
   /// Si position > 3 s, recommence la piste courante.
   Future<void> previous() async {
+    await _cancelCrossfade();
     if (_position > const Duration(seconds: 3)) {
       await seek(Duration.zero);
       return;
@@ -190,6 +220,147 @@ class Player {
 
   Future<void> setVolume(double volume) async {
     await _output?.setVolume(volume);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Crossfade — threshold detection
+  // ---------------------------------------------------------------------------
+
+  /// Called on every position update. Checks whether we're within
+  /// [crossfadeDuration] seconds of the end, and if so, starts the crossfade.
+  void _checkCrossfadeThreshold(Duration currentPos) {
+    final output = _output;
+    if (output is! LocalAudioOutput) return;
+
+    // Use a separate async call so the position listener stays sync.
+    _checkCrossfadeThresholdAsync(output, currentPos);
+  }
+
+  Future<void> _checkCrossfadeThresholdAsync(
+    LocalAudioOutput output,
+    Duration currentPos,
+  ) async {
+    if (_crossfading) return;
+
+    final dur = await output.duration();
+    if (dur == null || dur <= Duration.zero) return;
+
+    final threshold = dur - Duration(milliseconds: (crossfadeDuration * 1000).round());
+    if (threshold <= Duration.zero) return; // track too short for crossfade
+
+    if (currentPos >= threshold) {
+      final nextTrack = queue.nextTrack;
+      if (nextTrack != null) {
+        await _startCrossfade(nextTrack);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Crossfade — execution
+  // ---------------------------------------------------------------------------
+
+  /// Starts the crossfade: creates a second LocalAudioOutput for [nextTrack],
+  /// fades out the current player and fades in the next, then swaps.
+  Future<void> _startCrossfade(Track nextTrack) async {
+    if (_crossfading) return;
+    final currentOutput = _output;
+    if (currentOutput is! LocalAudioOutput) return;
+
+    final url = nextTrack.filePath;
+    if (url == null) return;
+
+    _crossfading = true;
+
+    // Create a second LocalAudioOutput for the next track
+    final nextOutput = LocalAudioOutput(
+      id: 'crossfade_next',
+      displayName: 'Crossfade',
+    );
+    final prepResult = await nextOutput.prepare();
+    if (prepResult is OutputFailure) {
+      _crossfading = false;
+      return;
+    }
+
+    // Start the next track at volume 0
+    await nextOutput.setVolume(0.0);
+    final playResult = await nextOutput.play(
+      url,
+      title: nextTrack.title,
+      artist: nextTrack.artistName,
+    );
+    if (playResult is OutputFailure) {
+      await nextOutput.dispose();
+      _crossfading = false;
+      return;
+    }
+
+    _crossfadeOutput = nextOutput;
+
+    // Fade: 50ms tick interval for smooth volume transitions
+    final totalSteps = (crossfadeDuration * 1000 / 50).round();
+    var step = 0;
+
+    _crossfadeTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) async {
+      step++;
+      final progress = (step / totalSteps).clamp(0.0, 1.0);
+
+      // Fade out current, fade in next
+      await currentOutput.setVolume((1.0 - progress).clamp(0.0, 1.0));
+      await nextOutput.setVolume(progress.clamp(0.0, 1.0));
+
+      if (progress >= 1.0) {
+        timer.cancel();
+        await _completeCrossfade(nextTrack, nextOutput);
+      }
+    });
+  }
+
+  /// Completes the crossfade: stops the old output, swaps to the new one,
+  /// advances the queue, and re-hooks position/state streams.
+  Future<void> _completeCrossfade(Track nextTrack, LocalAudioOutput nextOutput) async {
+    // Teardown the old output's streams and player
+    await _playerStateSub?.cancel();
+    _playerStateSub = null;
+    await _positionSub?.cancel();
+    _positionSub = null;
+    await _output?.stop();
+    await _output?.dispose();
+
+    // Advance queue
+    queue.next();
+
+    // Swap: the next output becomes the current output
+    _output = nextOutput;
+    _hookOutput(nextOutput);
+
+    _crossfadeOutput = null;
+    _crossfadeTimer = null;
+    _crossfading = false;
+
+    EventBus.instance.emit(TrackChangedEvent(zoneId, nextTrack));
+    EventBus.instance.emit(QueueChangedEvent(zoneId));
+  }
+
+  /// Cancels any in-progress crossfade and cleans up the secondary output.
+  Future<void> _cancelCrossfade() async {
+    _crossfadeTimer?.cancel();
+    _crossfadeTimer = null;
+    _crossfadeCheckTimer?.cancel();
+    _crossfadeCheckTimer = null;
+    _crossfading = false;
+
+    if (_crossfadeOutput != null) {
+      await _crossfadeOutput!.stop();
+      await _crossfadeOutput!.dispose();
+      _crossfadeOutput = null;
+    }
+
+    await _crossfadePlayerStateSub?.cancel();
+    _crossfadePlayerStateSub = null;
+    await _crossfadePositionSub?.cancel();
+    _crossfadePositionSub = null;
   }
 
   // ---------------------------------------------------------------------------
@@ -211,6 +382,9 @@ class Player {
   // ---------------------------------------------------------------------------
 
   Future<void> _playTrack(Track track, {Duration? startAt}) async {
+    // Cancel any ongoing crossfade when starting a new track explicitly
+    await _cancelCrossfade();
+
     final url = track.filePath;
     if (url == null || _output == null) return;
 
@@ -231,6 +405,11 @@ class Player {
 
     if (startAt != null && startAt > Duration.zero) {
       await _output!.seek(startAt);
+    }
+
+    // Restore volume to 1.0 after a crossfade might have left it at 0
+    if (_output is LocalAudioOutput) {
+      await _output!.setVolume(1.0);
     }
 
     _setState(PlaybackState.playing);

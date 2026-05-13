@@ -95,7 +95,8 @@ enum OutputType {
   dlna,
   airplay,
   bluetooth,
-  bluos;
+  bluos,
+  chromecast;
 
   String get rawValue => name;
 

@@ -132,6 +132,37 @@ extension AppStateLifecycle on AppState {
     notify();
   }
 
+  // ---------------------------------------------------------------------------
+  // Mode switch — stop current mode, start new one
+  // ---------------------------------------------------------------------------
+
+  /// Switch between 'server' and 'remote' mode at runtime.
+  /// Stops the current connection/engine and starts the new one.
+  Future<void> switchMode(String newMode) async {
+    final currentMode = settingsState.appMode;
+    if (newMode == currentMode) return;
+
+    // 1. Tear down current mode
+    if (currentMode == 'remote') {
+      await disconnectRemote();
+    } else {
+      await stopServer();
+    }
+
+    // 2. Persist new mode
+    await settingsState.setAppMode(newMode);
+
+    // 3. Start new mode
+    if (newMode == 'remote') {
+      // Only auto-connect if host is configured
+      if (settingsState.remoteHost.isNotEmpty) {
+        await connectRemote();
+      }
+    } else {
+      await startServer();
+    }
+  }
+
   void _handleRemoteEvent(Map<String, dynamic> event) {
     final type = event['type'] as String? ?? '';
     final data = event['data'] as Map<String, dynamic>? ?? {};

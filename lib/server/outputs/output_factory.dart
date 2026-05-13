@@ -7,6 +7,7 @@ import '../audio/local_audio_output.dart';
 import '../discovery/discovery_manager.dart';
 import 'airplay_output.dart';
 import 'bluos_output.dart';
+import 'chromecast_output.dart';
 import 'dlna_output.dart';
 import 'output_target.dart';
 
@@ -65,6 +66,18 @@ class OutputFactory {
           return LocalAudioOutput(displayName: 'Local (fallback)');
         }
         return BluOSOutput(
+          id: device.id,
+          displayName: device.name,
+          host: device.host,
+          port: device.port,
+        );
+
+      case OutputType.chromecast:
+        if (device == null) {
+          debugPrint('[output_factory] Chromecast requested but no device — fallback to Local');
+          return LocalAudioOutput(displayName: 'Local (fallback)');
+        }
+        return ChromecastOutput(
           id: device.id,
           displayName: device.name,
           host: device.host,
