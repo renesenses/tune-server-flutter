@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../database/database.dart';
+import 'deezer_service.dart';
 import 'qobuz_service.dart';
+import 'spotify_service.dart';
 import 'streaming_service.dart';
 import 'tidal_service.dart';
 import 'youtube_service.dart';
@@ -22,6 +24,7 @@ class StreamingManager {
   StreamingManager(this._db, {
     String qobuzAppId = '798273057',
     String qobuzAppSecret = 'abb21364945c0583309667d13ca3d93a',
+    String spotifyClientId = '',
   }) {
     // Enregistre tous les services (auth configurée plus tard via UI)
     _services['qobuz'] = QobuzService(
@@ -30,6 +33,10 @@ class StreamingManager {
     );
     _services['tidal'] = TidalService();
     _services['youtube'] = YouTubeService();
+    if (spotifyClientId.isNotEmpty) {
+      _services['spotify'] = SpotifyService(clientId: spotifyClientId);
+    }
+    _services['deezer'] = DeezerService();
   }
 
   // ---------------------------------------------------------------------------
@@ -131,6 +138,52 @@ class StreamingManager {
     return result;
   }
 
+  // ---------------------------------------------------------------------------
+  // Auth — Spotify OAuth PKCE
+  // ---------------------------------------------------------------------------
+
+  /// Génère l'URL d'autorisation Spotify OAuth PKCE.
+  String? generateSpotifyAuthUrl(String redirectUri) {
+    final service = _services['spotify'];
+    if (service is SpotifyService) {
+      return service.generateAuthUrl(redirectUri);
+    }
+    return null;
+  }
+
+  /// Échange le code Spotify contre un token et persiste.
+  Future<StreamingAuthResult> exchangeSpotifyCode(
+    String code,
+    String redirectUri,
+  ) async {
+    final service = _services['spotify'];
+    if (service is! SpotifyService) {
+      return const StreamingAuthFailure('Spotify non configuré');
+    }
+    final result = await service.exchangeCodeForToken(code, redirectUri);
+    if (result is StreamingAuthSuccess) {
+      await _persistAuth(service);
+    }
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auth — Deezer ARL
+  // ---------------------------------------------------------------------------
+
+  /// Authentifie Deezer avec un cookie ARL et persiste.
+  Future<StreamingAuthResult> authenticateDeezerArl(String arl) async {
+    final service = _services['deezer'];
+    if (service is! DeezerService) {
+      return const StreamingAuthFailure('Deezer non disponible');
+    }
+    final result = await service.authenticateWithArl(arl);
+    if (result is StreamingAuthSuccess) {
+      await _persistAuth(service);
+    }
+    return result;
+  }
+
   Future<void> logout(String serviceId) async {
     await _services[serviceId]?.logout();
     await (_db.delete(_db.streamingAuth)
@@ -187,6 +240,8 @@ class StreamingManager {
     if (service is QobuzService) tokenData = service.tokenJson;
     if (service is TidalService) tokenData = service.tokenJson;
     if (service is YouTubeService) tokenData = service.tokenJson;
+    if (service is SpotifyService) tokenData = service.tokenJson;
+    if (service is DeezerService) tokenData = service.tokenJson;
 
     await _db.into(_db.streamingAuth).insertOnConflictUpdate(
           StreamingAuthCompanion.insert(
