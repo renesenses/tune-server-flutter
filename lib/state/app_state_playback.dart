@@ -49,6 +49,8 @@ extension AppStatePlayback on AppState {
           : track;
       instance.queue.load([resolved], startIndex: 0);
     }
+    instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+    instance.player.crossfadeDuration = settingsState.crossfadeDuration;
     await instance.player.play();
   }
 
@@ -201,6 +203,8 @@ extension AppStatePlayback on AppState {
     );
 
     instance.queue.load([track], startIndex: 0);
+    instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+    instance.player.crossfadeDuration = settingsState.crossfadeDuration;
     await instance.player.play();
   }
 
@@ -241,6 +245,8 @@ extension AppStatePlayback on AppState {
 
     if (tracks.isEmpty) return;
     instance.queue.load(tracks, startIndex: startIndex.clamp(0, tracks.length - 1));
+    instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+    instance.player.crossfadeDuration = settingsState.crossfadeDuration;
     await instance.player.play();
   }
 
@@ -312,6 +318,8 @@ extension AppStatePlayback on AppState {
     try {
       final resolved = tracks.map(_resolveTrackSync).toList();
       instance.queue.load(resolved, startIndex: startIndex);
+      instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+      instance.player.crossfadeDuration = settingsState.crossfadeDuration;
       await instance.player.play();
     } catch (e, st) {
       _lastPlaybackError = 'playback_failed';

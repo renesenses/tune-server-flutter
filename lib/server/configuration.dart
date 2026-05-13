@@ -131,6 +131,19 @@ class ServerConfiguration {
   String get remoteWsUrl => 'ws://$remoteHost:$remotePort/api/v1/ws';
 
   // ---------------------------------------------------------------------------
+  // Crossfade
+  // ---------------------------------------------------------------------------
+
+  static const _kCrossfadeEnabled = 'crossfade_enabled';
+  static const _kCrossfadeDuration = 'crossfade_duration';
+
+  bool get crossfadeEnabled => _p.getBool(_kCrossfadeEnabled) ?? false;
+  Future<void> setCrossfadeEnabled(bool value) => _p.setBool(_kCrossfadeEnabled, value);
+
+  double get crossfadeDuration => (_p.getDouble(_kCrossfadeDuration) ?? 3.0);
+  Future<void> setCrossfadeDuration(double value) => _p.setDouble(_kCrossfadeDuration, value);
+
+  // ---------------------------------------------------------------------------
   // Reset (tests / onboarding)
   // ---------------------------------------------------------------------------
 

@@ -313,6 +313,45 @@ class _SettingsList extends StatelessWidget {
           ),
         ),
 
+        // ---- Lecture ----
+        const _SectionHeader('LECTURE'),
+        Container(
+          color: TuneColors.surface,
+          child: Column(
+            children: [
+              _SettingsTile(
+                title: 'Crossfade',
+                trailing: Switch(
+                  value: settings.crossfadeEnabled,
+                  onChanged: (v) => settings.setCrossfadeEnabled(v),
+                  activeThumbColor: TuneColors.accent,
+                ),
+              ),
+              if (settings.crossfadeEnabled) ...[
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Text('${settings.crossfadeDuration.toInt()}s', style: TuneFonts.caption),
+                      Expanded(
+                        child: Slider(
+                          value: settings.crossfadeDuration,
+                          min: 1,
+                          max: 12,
+                          divisions: 11,
+                          activeColor: TuneColors.accent,
+                          onChanged: (v) => settings.setCrossfadeDuration(v),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
         // ---- Bibliothèque ----
         _SectionHeader(l.settingsSectionLibrary),
         Container(

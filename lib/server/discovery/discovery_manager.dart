@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../event_bus.dart';
 import '../database/database.dart';
 import '../utils/network_utils.dart';
+import 'chromecast_discovery.dart';
 import 'ssdp_discovery.dart';
 import 'upnp_device_parser.dart';
 
@@ -65,6 +66,7 @@ class DiscoveryManager {
   final _cache = <String, DiscoveredDevice>{}; // keyed by UDN
   final _seen = <String>{};                     // LOCATION URLs déjà traitées
   StreamSubscription<SSDPResponse>? _ssdpSub;
+  ChromecastDiscovery? _chromecastDiscovery;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -74,6 +76,8 @@ class DiscoveryManager {
     await _loadSavedDevices();
     _ssdpSub = SSDPDiscovery.instance.responses.listen(_onSSDPResponse);
     await SSDPDiscovery.instance.start();
+    _chromecastDiscovery = ChromecastDiscovery(client: _http);
+    unawaited(_chromecastDiscovery!.start());
     // Fallback: probe direct après un délai (laisse SSDP une chance)
     Future.delayed(const Duration(seconds: 3), () => _subnetProbe());
   }
@@ -82,11 +86,14 @@ class DiscoveryManager {
     _ssdpSub?.cancel();
     _ssdpSub = null;
     SSDPDiscovery.instance.stop();
+    _chromecastDiscovery?.stop();
+    _chromecastDiscovery = null;
   }
 
   Future<void> refresh() async {
     _seen.clear();
     SSDPDiscovery.instance.refresh();
+    unawaited(_chromecastDiscovery?.refresh() ?? Future.value());
     // Fallback: probe direct du sous-réseau si SSDP ne trouve rien
     // (iOS bloque souvent le multicast UDP silencieusement)
     unawaited(_subnetProbe());
@@ -158,6 +165,8 @@ class DiscoveryManager {
       _cache.values.where((d) => d.type == 'server').toList();
 
   DiscoveredDevice? deviceById(String id) => _cache[id];
+
+  List<DiscoveredDevice> get chromecastDevices => _chromecastDiscovery?.devices ?? [];
 
   /// Probe manuel d'un hôte (port 49152 par défaut UPnP).
   Future<DiscoveredDevice?> probeHost(String host,
