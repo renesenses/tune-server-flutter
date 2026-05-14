@@ -243,7 +243,8 @@ class MetadataReader {
       case '.aiff':
       case '.aif':  return 'aiff';
       case '.dsf':
-      case '.dff':  return 'dsd';
+      case '.dff':
+      case '.dst':  return 'dsd';
       default:      return null;
     }
   }
