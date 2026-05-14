@@ -167,7 +167,30 @@ extension AppStateLifecycle on AppState {
     final type = event['type'] as String? ?? '';
     final data = event['data'] as Map<String, dynamic>? ?? {};
 
-    if (type.startsWith('playback.') || type.startsWith('zone.')) {
+    if (type == 'playback.started' || type == 'playback.track_changed') {
+      // Optimistic update: use track metadata from event to update UI immediately
+      final zoneId = data['zone_id'] as int?;
+      final trackId = data['track_id'] as int?;
+      final trackTitle = data['track_title'] as String?;
+      if (zoneId != null && trackId != null && trackTitle != null) {
+        final zone = zoneState.zones.where((z) => z.id == zoneId).firstOrNull;
+        if (zone != null) {
+          final optimisticTrack = trackFromJson({
+            'id': trackId,
+            'title': trackTitle,
+            'artist_name': data['artist_name'],
+            'album_title': data['album_title'],
+            'cover_path': data['cover_path'],
+          });
+          zoneState.updateZone(zone.copyWith(
+            state: PlaybackState.playing,
+            currentTrack: optimisticTrack,
+          ));
+        }
+      }
+      // Still fetch full zone state from API for complete data
+      refreshZonesRemote();
+    } else if (type.startsWith('playback.') || type.startsWith('zone.')) {
       // Refresh zones from API
       refreshZonesRemote();
     }
