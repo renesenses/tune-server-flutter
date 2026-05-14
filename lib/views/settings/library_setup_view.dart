@@ -40,7 +40,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
   }
 
   void _goNext() {
-    if (_page < 3) {
+    if (_page < 4) {
       _pageCtrl.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -73,7 +73,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
               padding: const EdgeInsets.only(top: 20, bottom: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (i) {
+                children: List.generate(5, (i) {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -98,6 +98,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
                   _WelcomePage(onNext: _goNext),
                   _ConfigPage(onNext: _goNext),
                   _ZonePage(onNext: _goNext),
+                  _AudioCheckPage(onNext: _goNext),
                   _DonePage(onDone: _complete),
                 ],
               ),
@@ -611,7 +612,253 @@ class _ZonePageState extends State<_ZonePage> {
 }
 
 // ---------------------------------------------------------------------------
-// Page 4 — Terminé
+// Page 4 — Audio Check
+// ---------------------------------------------------------------------------
+
+class _AudioCheckPage extends StatefulWidget {
+  final VoidCallback onNext;
+  const _AudioCheckPage({required this.onNext});
+
+  @override
+  State<_AudioCheckPage> createState() => _AudioCheckPageState();
+}
+
+class _AudioCheckPageState extends State<_AudioCheckPage> {
+  Map<String, dynamic>? _audioData;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAudioCheck();
+  }
+
+  Future<void> _loadAudioCheck() async {
+    setState(() { _loading = true; _error = null; });
+    final app = context.read<AppState>();
+    final api = app.apiClient;
+    if (api != null) {
+      try {
+        final data = await api.audioCheck();
+        if (mounted) setState(() { _audioData = data; _loading = false; });
+        return;
+      } catch (e) {
+        if (mounted) setState(() { _error = '$e'; _loading = false; });
+        return;
+      }
+    }
+    // No remote API — build local summary from state
+    if (mounted) setState(() => _loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final zoneState = context.watch<ZoneState>();
+    final zones = zoneState.zones;
+    final devices = zoneState.devices;
+
+    final dlnaDevices = devices.where((d) => d.type == 'renderer').toList();
+    final bluosDevices = devices.where((d) => d.type == 'bluos').toList();
+    final chromecastDevices = devices.where((d) => d.type == 'chromecast').toList();
+    final networkDeviceCount = dlnaDevices.length + bluosDevices.length + chromecastDevices.length;
+
+    final outputs = _audioData?['outputs'] as List<dynamic>? ?? [];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 24),
+            const Icon(Icons.tune_rounded, size: 64, color: TuneColors.accent),
+            const SizedBox(height: 24),
+            Text('Diagnostic audio', style: TuneFonts.title1),
+            const SizedBox(height: 12),
+            Text(
+              'Verification de la configuration audio de votre systeme.',
+              style: TuneFonts.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(color: TuneColors.accent),
+              )
+            else ...[
+              // Diagnostic cards
+              Container(
+                decoration: BoxDecoration(
+                  color: TuneColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    // Zones
+                    _DiagRow(
+                      icon: Icons.speaker_group_rounded,
+                      label: 'Zones configurees',
+                      value: '${zones.length}',
+                      status: zones.isNotEmpty
+                          ? _DiagStatus.ok
+                          : _DiagStatus.warning,
+                    ),
+                    const Divider(height: 1, indent: 56, color: TuneColors.divider),
+                    // Audio outputs
+                    _DiagRow(
+                      icon: Icons.headphones_rounded,
+                      label: 'Sorties audio',
+                      value: outputs.isNotEmpty
+                          ? '${outputs.length} detectee${outputs.length != 1 ? "s" : ""}'
+                          : 'Local',
+                      status: _DiagStatus.ok,
+                    ),
+                    const Divider(height: 1, indent: 56, color: TuneColors.divider),
+                    // Network devices
+                    _DiagRow(
+                      icon: Icons.cast_rounded,
+                      label: 'Appareils reseau',
+                      value: networkDeviceCount > 0
+                          ? [
+                              if (dlnaDevices.isNotEmpty) '${dlnaDevices.length} DLNA',
+                              if (bluosDevices.isNotEmpty) '${bluosDevices.length} BluOS',
+                              if (chromecastDevices.isNotEmpty) '${chromecastDevices.length} Chromecast',
+                            ].join(', ')
+                          : 'Aucun',
+                      status: networkDeviceCount > 0
+                          ? _DiagStatus.ok
+                          : _DiagStatus.warning,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Warnings
+              if (zones.isEmpty) ...[
+                const SizedBox(height: 12),
+                _WarningCard(
+                  text: 'Aucune zone configuree. Vous pouvez en creer une depuis les parametres Zones.',
+                ),
+              ],
+
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                _WarningCard(text: 'Audio-check indisponible : $_error'),
+              ],
+            ],
+
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: widget.onNext,
+                style: FilledButton.styleFrom(
+                  backgroundColor: TuneColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+            if (!_loading) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _loadAudioCheck,
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('Reverifier'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _DiagStatus { ok, warning }
+
+class _DiagRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final _DiagStatus status;
+
+  const _DiagRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = status == _DiagStatus.ok
+        ? TuneColors.success
+        : TuneColors.warning;
+    return ListTile(
+      leading: Icon(icon, color: TuneColors.accent, size: 22),
+      title: Text(label, style: TuneFonts.body),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8, height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(
+              value,
+              style: TuneFonts.caption.copyWith(
+                color: TuneColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WarningCard extends StatelessWidget {
+  final String text;
+  const _WarningCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: TuneColors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: TuneColors.warning.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              size: 18, color: TuneColors.warning),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TuneFonts.caption.copyWith(color: TuneColors.warning),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page 5 — Terminé
 // ---------------------------------------------------------------------------
 
 class _DonePage extends StatelessWidget {

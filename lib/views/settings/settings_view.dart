@@ -7,6 +7,7 @@ import '../../services/server_discovery.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
+import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'database_view.dart';
@@ -98,6 +99,9 @@ class _SettingsList extends StatelessWidget {
             ),
           ),
         ],
+        // ---- Audio Diagnostic ----
+        const _AudioDiagnosticSection(),
+
         // ---- Mode ----
         const _SectionHeader('Mode'),
         Container(
@@ -608,6 +612,241 @@ class _SettingsList extends StatelessWidget {
       barrierDismissible: false,
       builder: (_) => _ServerScanDialog(settings: settings),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Audio Diagnostic Section — zone count, outputs, network devices
+// ---------------------------------------------------------------------------
+
+class _AudioDiagnosticSection extends StatefulWidget {
+  const _AudioDiagnosticSection();
+
+  @override
+  State<_AudioDiagnosticSection> createState() => _AudioDiagnosticSectionState();
+}
+
+class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
+  Map<String, dynamic>? _audioData;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAudioCheck();
+  }
+
+  Future<void> _loadAudioCheck() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    setState(() => _loading = true);
+    try {
+      final data = await api.audioCheck();
+      if (mounted) setState(() { _audioData = data; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    final zoneState = context.watch<ZoneState>();
+    final zones = zoneState.zones;
+    final devices = zoneState.devices;
+
+    // Categorize network devices
+    final dlnaDevices = devices.where((d) => d.type == 'renderer').toList();
+    final bluosDevices = devices.where((d) => d.type == 'bluos').toList();
+    final chromecastDevices = devices.where((d) => d.type == 'chromecast').toList();
+    final networkDeviceCount = dlnaDevices.length + bluosDevices.length + chromecastDevices.length;
+
+    // Audio outputs from audio-check response
+    final outputs = _audioData?['outputs'] as List<dynamic>? ?? [];
+    final warnings = <String>[];
+
+    if (zones.isEmpty) {
+      warnings.add('Aucune zone configuree. Creez-en une pour commencer la lecture.');
+    }
+    if (networkDeviceCount == 0 && !app.isRemoteMode) {
+      warnings.add('Aucun appareil reseau detecte (DLNA/BluOS/Chromecast).');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeader('AUDIO'),
+        Container(
+          color: TuneColors.surface,
+          child: Column(
+            children: [
+              // Zone count
+              ListTile(
+                leading: Icon(
+                  Icons.speaker_group_rounded,
+                  color: zones.isNotEmpty ? TuneColors.success : TuneColors.warning,
+                  size: 22,
+                ),
+                title: Text('Zones', style: TuneFonts.body),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${zones.length}',
+                      style: TuneFonts.callout.copyWith(
+                        color: zones.isNotEmpty
+                            ? TuneColors.success
+                            : TuneColors.warning,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (zones.isEmpty) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _showCreateZoneDialog(context, app),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: TuneColors.accent.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Creer',
+                            style: TuneFonts.caption.copyWith(
+                              color: TuneColors.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Divider(height: 1, indent: 56, color: TuneColors.divider),
+              // Audio outputs (from server audio-check)
+              ListTile(
+                leading: Icon(
+                  Icons.headphones_rounded,
+                  color: outputs.isNotEmpty || !app.isRemoteConnected
+                      ? TuneColors.accent
+                      : TuneColors.warning,
+                  size: 22,
+                ),
+                title: Text('Sorties audio', style: TuneFonts.body),
+                trailing: _loading
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2, color: TuneColors.accent),
+                      )
+                    : Text(
+                        app.isRemoteConnected
+                            ? '${outputs.length} detectee${outputs.length != 1 ? "s" : ""}'
+                            : 'Local',
+                        style: TuneFonts.callout.copyWith(
+                          color: TuneColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+              ),
+              const Divider(height: 1, indent: 56, color: TuneColors.divider),
+              // Network devices
+              ListTile(
+                leading: Icon(
+                  Icons.cast_rounded,
+                  color: networkDeviceCount > 0 ? TuneColors.success : TuneColors.textTertiary,
+                  size: 22,
+                ),
+                title: Text('Appareils reseau', style: TuneFonts.body),
+                subtitle: networkDeviceCount > 0
+                    ? Text(
+                        [
+                          if (dlnaDevices.isNotEmpty) '${dlnaDevices.length} DLNA',
+                          if (bluosDevices.isNotEmpty) '${bluosDevices.length} BluOS',
+                          if (chromecastDevices.isNotEmpty) '${chromecastDevices.length} Chromecast',
+                        ].join(' / '),
+                        style: TuneFonts.caption,
+                      )
+                    : null,
+                trailing: Text(
+                  '$networkDeviceCount',
+                  style: TuneFonts.callout.copyWith(
+                    color: networkDeviceCount > 0
+                        ? TuneColors.success
+                        : TuneColors.textTertiary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              // Warnings
+              if (warnings.isNotEmpty) ...[
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: warnings.map((w) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded,
+                              size: 16, color: TuneColors.warning),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              w,
+                              style: TuneFonts.caption.copyWith(
+                                color: TuneColors.warning,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )).toList(),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showCreateZoneDialog(BuildContext context, AppState app) async {
+    final nameCtrl = TextEditingController(text: 'Zone 1');
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Nouvelle zone', style: TuneFonts.title3),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          style: TuneFonts.body,
+          decoration: const InputDecoration(
+            labelText: 'Nom de la zone',
+            hintText: 'ex: Salon, Bureau',
+            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Creer'),
+          ),
+        ],
+      ),
+    );
+    if (result == true && nameCtrl.text.trim().isNotEmpty) {
+      await app.createZone(nameCtrl.text.trim());
+    }
   }
 }
 

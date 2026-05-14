@@ -833,6 +833,9 @@ class TuneApiClient {
   Future<dynamic> getSystemLogs({int limit = 200}) async =>
       await _get('/api/v1/system/logs?limit=$limit');
 
+  Future<Map<String, dynamic>> audioCheck() async =>
+      await _get('/system/audio-check') as Map<String, dynamic>;
+
   // ---------------------------------------------------------------------------
   // ── Profiles ──
   // ---------------------------------------------------------------------------
