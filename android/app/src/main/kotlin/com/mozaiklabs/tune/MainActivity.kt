@@ -105,6 +105,8 @@ class MainActivity : FlutterActivity() {
             val discNumber  = discStr?.split("/")?.firstOrNull()?.trim()?.toIntOrNull()
             val durationMs  = durationStr?.toLongOrNull()?.toInt()
             val year        = yearStr?.toIntOrNull()
+            // Full release date: yearStr may contain ISO date like "2007-04-11"
+            val releaseDate = if (yearStr != null && yearStr.length > 4) yearStr else null
 
             val hasCoverData = retriever.embeddedPicture != null
 
@@ -126,6 +128,8 @@ class MainActivity : FlutterActivity() {
                 "durationMs"  to durationMs,
                 "year"        to year,
                 "originalYear" to (extraTags["originalYear"]?.toIntOrNull()),
+                "releaseDate" to (extraTags["releaseDate"] ?: releaseDate),
+                "originalDate" to extraTags["originalDate"],
                 "format"      to formatFromExtension(path),
                 "hasCoverData" to hasCoverData,
                 "sampleRate"  to sampleRate,
@@ -134,6 +138,7 @@ class MainActivity : FlutterActivity() {
                 "musicbrainzRecordingId" to extraTags["musicbrainzRecordingId"],
                 "musicbrainzReleaseId" to extraTags["musicbrainzReleaseId"],
                 "musicbrainzReleaseGroupId" to extraTags["musicbrainzReleaseGroupId"],
+                "discSubtitle" to extraTags["discSubtitle"],
             )
         } catch (e: Exception) {
             // Fallback : nom de fichier uniquement
@@ -278,14 +283,21 @@ class MainActivity : FlutterActivity() {
             val key = comment.substring(0, eq).uppercase()
             val value = comment.substring(eq + 1)
             when (key) {
-                "ORIGINALDATE", "ORIGINALYEAR" ->
+                "ORIGINALDATE", "ORIGINALYEAR" -> {
                     out.putIfAbsent("originalYear", value.take(4))
+                    if (value.length > 4) out.putIfAbsent("originalDate", value)
+                }
+                "DATE" -> {
+                    if (value.length > 4) out.putIfAbsent("releaseDate", value)
+                }
                 "MUSICBRAINZ_TRACKID" ->
                     out.putIfAbsent("musicbrainzRecordingId", value)
                 "MUSICBRAINZ_ALBUMID" ->
                     out.putIfAbsent("musicbrainzReleaseId", value)
                 "MUSICBRAINZ_RELEASEGROUPID" ->
                     out.putIfAbsent("musicbrainzReleaseGroupId", value)
+                "DISCSUBTITLE", "SETSUBTITLE" ->
+                    out.putIfAbsent("discSubtitle", value)
             }
         }
     }
@@ -327,8 +339,12 @@ class MainActivity : FlutterActivity() {
                                 out.putIfAbsent("musicbrainzReleaseId", value)
                             "musicbrainz release group id", "musicbrainz_releasegroupid" ->
                                 out.putIfAbsent("musicbrainzReleaseGroupId", value)
-                            "originaldate", "originalyear" ->
+                            "originaldate", "originalyear" -> {
                                 out.putIfAbsent("originalYear", value.take(4))
+                                if (value.length > 4) out.putIfAbsent("originalDate", value)
+                            }
+                            "discsubtitle", "setsubtitle" ->
+                                out.putIfAbsent("discSubtitle", value)
                         }
                     }
                 } else if ((frameId == "TDOR" || frameId == "TORY") && frameSize > 1) {
@@ -336,6 +352,13 @@ class MainActivity : FlutterActivity() {
                     val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
                     val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
                     out.putIfAbsent("originalYear", value.take(4))
+                    if (value.length > 4) out.putIfAbsent("originalDate", value)
+                } else if (frameId == "TSST" && frameSize > 1) {
+                    // Disc subtitle (ID3v2 TSST = Set Subtitle)
+                    val encoding = tagData[offset].toInt()
+                    val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
+                    val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
+                    out.putIfAbsent("discSubtitle", value)
                 }
                 offset += frameSize
             }
@@ -402,6 +425,7 @@ class MainActivity : FlutterActivity() {
                             val dateStr = String(valBytes, Charsets.UTF_8).trim()
                             if (dateStr.isNotEmpty()) {
                                 out.putIfAbsent("originalYear", dateStr.take(4))
+                                if (dateStr.length > 4) out.putIfAbsent("releaseDate", dateStr)
                             }
                         }
                     }
@@ -497,8 +521,12 @@ class MainActivity : FlutterActivity() {
                     out.putIfAbsent("musicbrainzReleaseId", dataStr)
                 "MusicBrainz Release Group Id" ->
                     out.putIfAbsent("musicbrainzReleaseGroupId", dataStr)
-                "ORIGINALDATE", "ORIGINALYEAR" ->
+                "ORIGINALDATE", "ORIGINALYEAR" -> {
                     out.putIfAbsent("originalYear", dataStr.take(4))
+                    if (dataStr.length > 4) out.putIfAbsent("originalDate", dataStr)
+                }
+                "DISCSUBTITLE", "SETSUBTITLE" ->
+                    out.putIfAbsent("discSubtitle", dataStr)
             }
         }
     }

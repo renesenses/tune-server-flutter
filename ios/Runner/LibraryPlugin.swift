@@ -108,6 +108,9 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                 if let n = item.numberValue?.intValue { dict["discNumber"] = n }
             case .iTunesMetadataReleaseDate:
                 dict["year"] = extractYear(item.stringValue)
+                if let s = item.stringValue, s.count > 4 {
+                    dict["releaseDate"] = s
+                }
             default: break
             }
         }
@@ -125,7 +128,47 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                 dict["discNumber"] = parseTrackNumber(item.stringValue)
             case .id3MetadataYear, .id3MetadataRecordingTime:
                 dict["year"] = extractYear(item.stringValue)
+                if let s = item.stringValue, s.count > 4 {
+                    dict["releaseDate"] = s
+                }
+            case .id3MetadataSetSubtitle:
+                dict["discSubtitle"] = item.stringValue
             default: break
+            }
+        }
+
+        // Extra metadata: disc subtitle + dates from raw keys (Vorbis, iTunes freeform)
+        for format in formats {
+            let items = asset.metadata(forFormat: format)
+            for item in items {
+                let ks = ((item.key as? String) ?? "").lowercased()
+                let idStr = (item.identifier?.rawValue ?? "").lowercased()
+                // Disc subtitle: DISCSUBTITLE / SETSUBTITLE (Vorbis/iTunes freeform)
+                if ks == "discsubtitle" || ks == "setsubtitle"
+                    || idStr.contains("discsubtitle") || idStr.contains("setsubtitle") {
+                    if dict["discSubtitle"] == nil {
+                        dict["discSubtitle"] = item.stringValue
+                    }
+                }
+                // Original date/year from Vorbis/iTunes freeform
+                if ks == "originaldate" || ks == "originalyear"
+                    || idStr.contains("originaldate") || idStr.contains("originalyear") {
+                    if let s = item.stringValue, !s.isEmpty {
+                        dict["originalYear"] = extractYear(s)
+                        if s.count > 4 { dict["originalDate"] = s }
+                    }
+                }
+                // TDOR / TORY (original release date in ID3v2)
+                if idStr.hasSuffix("/tdor") || idStr.hasSuffix("/tory") {
+                    if let s = item.stringValue, !s.isEmpty {
+                        if dict["originalYear"] == nil {
+                            dict["originalYear"] = extractYear(s)
+                        }
+                        if s.count > 4 && dict["originalDate"] == nil {
+                            dict["originalDate"] = s
+                        }
+                    }
+                }
             }
         }
 

@@ -145,6 +145,8 @@ class LibraryScanner {
               coverPath: coverPath,
               musicbrainzReleaseId: meta.musicbrainzReleaseId,
               musicbrainzReleaseGroupId: meta.musicbrainzReleaseGroupId,
+              releaseDate: meta.releaseDate,
+              originalDate: meta.originalDate,
             )
           : null;
 
@@ -178,6 +180,7 @@ class LibraryScanner {
         source: const Value('local'),
         musicbrainzRecordingId: Value(meta.musicbrainzRecordingId),
         fileMtime: Value(fileMtime),
+        discSubtitle: Value(meta.discSubtitle),
       );
 
       if (existing == null) {
@@ -309,6 +312,8 @@ class LibraryScanner {
     String? coverPath,
     String? musicbrainzReleaseId,
     String? musicbrainzReleaseGroupId,
+    String? releaseDate,
+    String? originalDate,
   }) async {
     // MBID-first lookup — authoritative discriminant
     Album? existing;
@@ -364,6 +369,8 @@ class LibraryScanner {
             source: const Value('local'),
             musicbrainzReleaseId: Value(musicbrainzReleaseId),
             musicbrainzReleaseGroupId: Value(musicbrainzReleaseGroupId),
+            releaseDate: Value(releaseDate),
+            originalDate: Value(originalDate),
           ),
         );
   }

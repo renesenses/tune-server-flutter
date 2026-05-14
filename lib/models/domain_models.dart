@@ -21,6 +21,8 @@ Album albumFromJson(Map<String, dynamic> j) => Album(
       sourceId: j['source_id'] as String?,
       musicbrainzReleaseId: j['musicbrainz_release_id'] as String?,
       musicbrainzReleaseGroupId: j['musicbrainz_release_group_id'] as String?,
+      releaseDate: j['release_date'] as String?,
+      originalDate: j['original_date'] as String?,
     );
 
 Artist artistFromJson(Map<String, dynamic> j) => Artist(

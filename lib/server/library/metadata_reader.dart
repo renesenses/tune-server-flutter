@@ -44,6 +44,11 @@ class TrackMetadata {
   final String? musicbrainzRecordingId;
   final String? musicbrainzReleaseId;
   final String? musicbrainzReleaseGroupId;
+  // Disc subtitle (TSST ID3v2 / DISCSUBTITLE / SETSUBTITLE Vorbis)
+  final String? discSubtitle;
+  // Full ISO dates (e.g. "2007-04-11") — only set when tag value is longer than 4 chars
+  final String? releaseDate;
+  final String? originalDate;
 
   const TrackMetadata({
     required this.filePath,
@@ -66,6 +71,9 @@ class TrackMetadata {
     this.musicbrainzRecordingId,
     this.musicbrainzReleaseId,
     this.musicbrainzReleaseGroupId,
+    this.discSubtitle,
+    this.releaseDate,
+    this.originalDate,
   });
 }
 
@@ -198,6 +206,9 @@ class MetadataReader {
       musicbrainzRecordingId: raw['musicbrainzRecordingId'] as String?,
       musicbrainzReleaseId: raw['musicbrainzReleaseId'] as String?,
       musicbrainzReleaseGroupId: raw['musicbrainzReleaseGroupId'] as String?,
+      discSubtitle: raw['discSubtitle'] as String?,
+      releaseDate: raw['releaseDate'] as String?,
+      originalDate: raw['originalDate'] as String?,
     );
   }
 

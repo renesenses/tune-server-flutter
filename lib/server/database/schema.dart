@@ -43,6 +43,10 @@ class Albums extends Table {
   TextColumn get sourceId => text().nullable()();
   TextColumn get musicbrainzReleaseId => text().nullable()();
   TextColumn get musicbrainzReleaseGroupId => text().nullable()();
+  /// Full ISO release date e.g. "2007-04-11" (migration v8)
+  TextColumn get releaseDate => text().nullable()();
+  /// Full ISO original release date (migration v8)
+  TextColumn get originalDate => text().nullable()();
 }
 
 // ---------------------------------------------------------------------------
