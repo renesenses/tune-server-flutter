@@ -111,7 +111,12 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                 if let s = item.stringValue, s.count > 4 {
                     dict["releaseDate"] = s
                 }
-            default: break
+            default:
+                // soaa atom → album artist sort order (iTunes/M4A)
+                if let idStr = id.rawValue as? String,
+                   idStr.contains("soaa") || idStr.contains("SOAA") {
+                    dict["albumArtistSort"] = item.stringValue
+                }
             }
         }
 
@@ -133,7 +138,12 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                 }
             case .id3MetadataSetSubtitle:
                 dict["discSubtitle"] = item.stringValue
-            default: break
+            default:
+                // TSO2 frame → album artist sort order (ID3v2)
+                if let idStr = id.rawValue as? String,
+                   idStr.hasSuffix("/tso2") || idStr.hasSuffix("/TSO2") {
+                    dict["albumArtistSort"] = item.stringValue
+                }
             }
         }
 
@@ -156,6 +166,13 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                     if let s = item.stringValue, !s.isEmpty {
                         dict["originalYear"] = extractYear(s)
                         if s.count > 4 { dict["originalDate"] = s }
+                    }
+                }
+                // ALBUMARTISTSORT (Vorbis comment)
+                if ks == "albumartistsort"
+                    || idStr.contains("albumartistsort") || idStr.contains("ALBUMARTISTSORT") {
+                    if dict["albumArtistSort"] == nil {
+                        dict["albumArtistSort"] = item.stringValue
                     }
                 }
                 // TDOR / TORY (original release date in ID3v2)

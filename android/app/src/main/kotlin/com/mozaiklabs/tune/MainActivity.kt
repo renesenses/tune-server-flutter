@@ -123,6 +123,7 @@ class MainActivity : FlutterActivity() {
                 "album"       to album,
                 "genre"       to genre,
                 "albumArtist" to albumArtist,
+                "albumArtistSort" to extraTags["albumArtistSort"],
                 "trackNumber" to trackNumber,
                 "discNumber"  to discNumber,
                 "durationMs"  to durationMs,
@@ -298,6 +299,8 @@ class MainActivity : FlutterActivity() {
                     out.putIfAbsent("musicbrainzReleaseGroupId", value)
                 "DISCSUBTITLE", "SETSUBTITLE" ->
                     out.putIfAbsent("discSubtitle", value)
+                "ALBUMARTISTSORT" ->
+                    out.putIfAbsent("albumArtistSort", value)
             }
         }
     }
@@ -359,6 +362,12 @@ class MainActivity : FlutterActivity() {
                     val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
                     val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
                     out.putIfAbsent("discSubtitle", value)
+                } else if (frameId == "TSO2" && frameSize > 1) {
+                    // Album artist sort order (ID3v2 TSO2)
+                    val encoding = tagData[offset].toInt()
+                    val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
+                    val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
+                    out.putIfAbsent("albumArtistSort", value)
                 }
                 offset += frameSize
             }
@@ -412,6 +421,22 @@ class MainActivity : FlutterActivity() {
                 if (atomType == "----") {
                     // Freeform atom: parse mean, name, data sub-atoms
                     parseFreeformAtom(raf, pos + 8, atomEnd, out)
+                } else if (atomType == "soaa") {
+                    // Album artist sort order (M4A soaa atom)
+                    val dataPos = findAtom(raf, pos + 8, atomEnd, "data")
+                    if (dataPos != null) {
+                        val dataSize = readAtomSize(raf, dataPos)
+                        val valueLen = (dataSize - 16).toInt()
+                        if (valueLen > 0 && valueLen < 256) {
+                            raf.seek(dataPos + 16)
+                            val valBytes = ByteArray(valueLen)
+                            raf.readFully(valBytes)
+                            val sortStr = String(valBytes, Charsets.UTF_8).trim()
+                            if (sortStr.isNotEmpty()) {
+                                out.putIfAbsent("albumArtistSort", sortStr)
+                            }
+                        }
+                    }
                 } else if (atomType == "©day") {
                     // ©day atom contains date — parse its data sub-atom
                     val dataPos = findAtom(raf, pos + 8, atomEnd, "data")

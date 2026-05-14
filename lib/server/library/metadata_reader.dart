@@ -27,6 +27,7 @@ class TrackMetadata {
   final String title;
   final String? artist;
   final String? albumArtist;
+  final String? albumArtistSort;
   final String? album;
   final int? trackNumber;
   final int? discNumber;
@@ -55,6 +56,7 @@ class TrackMetadata {
     required this.title,
     this.artist,
     this.albumArtist,
+    this.albumArtistSort,
     this.album,
     this.trackNumber,
     this.discNumber,
@@ -189,6 +191,7 @@ class MetadataReader {
       title: title,
       artist: raw['artist'] as String?,
       albumArtist: raw['albumArtist'] as String?,
+      albumArtistSort: raw['albumArtistSort'] as String?,
       album: raw['album'] as String?,
       trackNumber: _parseInt(raw['trackNumber']),
       discNumber: _parseInt(raw['discNumber']),

@@ -105,7 +105,7 @@ class AlbumRepository {
       (_db.select(_db.albums)
             ..where((a) => a.artistId.equals(artistId))
             ..orderBy([
-              (a) => OrderingTerm(expression: a.year, mode: OrderingMode.desc),
+              (a) => OrderingTerm(expression: coalesce([a.originalYear, a.year]), mode: OrderingMode.asc),
               (a) => OrderingTerm(expression: a.title, mode: OrderingMode.asc),
             ]))
           .get();

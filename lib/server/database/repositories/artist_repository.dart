@@ -42,7 +42,7 @@ class ArtistRepository {
       (_db.select(_db.artists)
             ..orderBy([
               (a) => OrderingTerm(
-                    expression: coalesce([a.sortName, a.name]),
+                    expression: coalesce([a.sortName, a.name]).collate(Collate.noCase),
                     mode: OrderingMode.asc,
                   ),
             ]))

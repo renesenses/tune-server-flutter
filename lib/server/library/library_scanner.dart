@@ -124,7 +124,7 @@ class LibraryScanner {
     await _db.transaction(() async {
       // Artist
       final artistId = meta.artist != null
-          ? await _upsertArtist(meta.artist!, meta.albumArtist)
+          ? await _upsertArtist(meta.artist!, meta.albumArtistSort)
           : null;
 
       // Artwork : uniquement depuis le fichier (embarqué).
@@ -293,7 +293,18 @@ class LibraryScanner {
     final existing = await (_db.select(_db.artists)
           ..where((a) => a.name.equals(name)))
         .getSingleOrNull();
-    if (existing != null) return existing.id;
+    if (existing != null) {
+      // Backfill sortName if the current one is null or equals the name
+      // (i.e. was never set from a real tag)
+      if (sortName != null &&
+          sortName.isNotEmpty &&
+          (existing.sortName == null || existing.sortName == existing.name)) {
+        await (_db.update(_db.artists)
+              ..where((a) => a.id.equals(existing.id)))
+            .write(ArtistsCompanion(sortName: Value(sortName)));
+      }
+      return existing.id;
+    }
     return _db.into(_db.artists).insert(
           ArtistsCompanion.insert(
             name: name,
