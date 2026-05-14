@@ -326,6 +326,15 @@ class LibraryScanner {
                     ? a.artistId.equals(artistId)
                     : a.artistId.isNull())))
           .getSingleOrNull();
+      // Don't merge into an album that belongs to a different release
+      if (existing != null &&
+          musicbrainzReleaseId != null &&
+          musicbrainzReleaseId.isNotEmpty &&
+          existing.musicbrainzReleaseId != null &&
+          existing.musicbrainzReleaseId!.isNotEmpty &&
+          existing.musicbrainzReleaseId != musicbrainzReleaseId) {
+        existing = null;
+      }
     }
 
     if (existing != null) {
