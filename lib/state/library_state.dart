@@ -11,13 +11,22 @@ import '../server/streaming/streaming_service.dart';
 // Miroir de LibraryState.swift (iOS / @Observable)
 // ---------------------------------------------------------------------------
 
+/// Sort field for album list.
+enum AlbumSortField {
+  title,
+  artist,
+  year,
+  originalYear,
+  addedDate,
+}
+
 class LibraryState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Albums
   // ---------------------------------------------------------------------------
 
   List<Album> _albums = [];
-  List<Album> get albums => List.unmodifiable(_albums);
+  List<Album> get albums => _sortedAlbums;
 
   List<Album> _recentAlbums = [];
   List<Album> get recentAlbums => List.unmodifiable(_recentAlbums);
@@ -30,6 +39,39 @@ class LibraryState extends ChangeNotifier {
   void setRecentAlbums(List<Album> albums) {
     _recentAlbums = albums;
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Album sort
+  // ---------------------------------------------------------------------------
+
+  AlbumSortField _albumSortField = AlbumSortField.title;
+  AlbumSortField get albumSortField => _albumSortField;
+
+  void setAlbumSort(AlbumSortField field) {
+    if (_albumSortField == field) return;
+    _albumSortField = field;
+    notifyListeners();
+  }
+
+  List<Album> get _sortedAlbums {
+    final sorted = List<Album>.from(_albums);
+    switch (_albumSortField) {
+      case AlbumSortField.title:
+        sorted.sort((a, b) => (a.title).compareTo(b.title));
+      case AlbumSortField.artist:
+        sorted.sort((a, b) =>
+            (a.artistName ?? '').compareTo(b.artistName ?? ''));
+      case AlbumSortField.year:
+        sorted.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+      case AlbumSortField.originalYear:
+        sorted.sort((a, b) =>
+            (b.originalYear ?? b.year ?? 0)
+                .compareTo(a.originalYear ?? a.year ?? 0));
+      case AlbumSortField.addedDate:
+        sorted.sort((a, b) => b.id.compareTo(a.id)); // higher ID = added later
+    }
+    return sorted;
   }
 
   // ---------------------------------------------------------------------------
@@ -89,7 +131,7 @@ class LibraryState extends ChangeNotifier {
   /// Returns albums filtered by current quality/format/sampleRate filters.
   List<Album> get filteredAlbums {
     if (!hasActiveFilters) return albums;
-    return _albums.where((album) {
+    return _sortedAlbums.where((album) {
       final info = _albumAudioInfo[album.id];
       if (info == null) return false;
 

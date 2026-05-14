@@ -95,6 +95,18 @@ class TrackRepository {
     return result.read<int>('c');
   }
 
+  /// Returns up to [limit] random tracks from the library.
+  Future<List<Track>> random({int limit = 5000}) async {
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM tracks ORDER BY RANDOM() LIMIT ?',
+          variables: [Variable(limit)],
+          readsFrom: {_db.tracks},
+        )
+        .get();
+    return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
+  }
+
   // ---------------------------------------------------------------------------
   // Favoris
   // ---------------------------------------------------------------------------

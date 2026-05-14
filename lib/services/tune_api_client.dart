@@ -111,6 +111,9 @@ class TuneApiClient {
   Future<dynamic> setRepeat(int zoneId, String mode) =>
       _post('/zones/$zoneId/repeat', body: {'mode': mode});
 
+  Future<dynamic> shuffleAll(int zoneId) =>
+      _post('/playback/shuffle-all?zone_id=$zoneId');
+
   // ---------------------------------------------------------------------------
   // Queue
   // ---------------------------------------------------------------------------

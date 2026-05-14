@@ -272,6 +272,40 @@ class DLNAOutput implements OutputTarget {
   bool get isPlaying => _playing;
 
   // ---------------------------------------------------------------------------
+  // Gapless — SetNextAVTransportURI
+  // ---------------------------------------------------------------------------
+
+  /// Pre-loads the next track on the DLNA renderer for gapless playback.
+  /// Works for ALL track types (local files + streaming URLs).
+  Future<OutputResult> setNextTrack({
+    required String url,
+    String? title,
+    String? artist,
+    String? albumArtUrl,
+  }) async {
+    final didl = _buildDIDLMetadata(
+      url: url,
+      title: title ?? 'Unknown',
+      artist: artist,
+      albumArtUrl: albumArtUrl,
+    );
+
+    final ok = await _soapAction(
+      url: avTransportUrl,
+      service: 'AVTransport',
+      action: 'SetNextAVTransportURI',
+      args: {
+        'InstanceID': '0',
+        'NextURI': url,
+        'NextURIMetaData': didl,
+      },
+    );
+    return ok
+        ? const OutputSuccess()
+        : const OutputFailure('DLNA SetNextAVTransportURI failed');
+  }
+
+  // ---------------------------------------------------------------------------
   // SetAVTransportURI avec métadonnées DIDL-Lite
   // ---------------------------------------------------------------------------
 

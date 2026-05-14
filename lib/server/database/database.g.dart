@@ -1517,6 +1517,17 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _discSubtitleMeta = const VerificationMeta(
+    'discSubtitle',
+  );
+  @override
+  late final GeneratedColumn<String> discSubtitle = GeneratedColumn<String>(
+    'disc_subtitle',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1539,6 +1550,7 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     favorite,
     musicbrainzRecordingId,
     fileMtime,
+    discSubtitle,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1677,6 +1689,15 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         fileMtime.isAcceptableOrUnknown(data['file_mtime']!, _fileMtimeMeta),
       );
     }
+    if (data.containsKey('disc_subtitle')) {
+      context.handle(
+        _discSubtitleMeta,
+        discSubtitle.isAcceptableOrUnknown(
+          data['disc_subtitle']!,
+          _discSubtitleMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1766,6 +1787,10 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         DriftSqlType.double,
         data['${effectivePrefix}file_mtime'],
       ),
+      discSubtitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}disc_subtitle'],
+      ),
     );
   }
 
@@ -1800,6 +1825,9 @@ class Track extends DataClass implements Insertable<Track> {
 
   /// Timestamp du fichier sur disque (mtime) pour détection incrémentale (migration v6)
   final double? fileMtime;
+
+  /// Disc subtitle (e.g. "Bonus Disc", "Live at Wembley") from audio tags (migration v7)
+  final String? discSubtitle;
   const Track({
     required this.id,
     required this.title,
@@ -1821,6 +1849,7 @@ class Track extends DataClass implements Insertable<Track> {
     required this.favorite,
     this.musicbrainzRecordingId,
     this.fileMtime,
+    this.discSubtitle,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1879,6 +1908,9 @@ class Track extends DataClass implements Insertable<Track> {
     if (!nullToAbsent || fileMtime != null) {
       map['file_mtime'] = Variable<double>(fileMtime);
     }
+    if (!nullToAbsent || discSubtitle != null) {
+      map['disc_subtitle'] = Variable<String>(discSubtitle);
+    }
     return map;
   }
 
@@ -1936,6 +1968,9 @@ class Track extends DataClass implements Insertable<Track> {
       fileMtime: fileMtime == null && nullToAbsent
           ? const Value.absent()
           : Value(fileMtime),
+      discSubtitle: discSubtitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discSubtitle),
     );
   }
 
@@ -1967,6 +2002,7 @@ class Track extends DataClass implements Insertable<Track> {
         json['musicbrainzRecordingId'],
       ),
       fileMtime: serializer.fromJson<double?>(json['fileMtime']),
+      discSubtitle: serializer.fromJson<String?>(json['discSubtitle']),
     );
   }
   @override
@@ -1995,6 +2031,7 @@ class Track extends DataClass implements Insertable<Track> {
         musicbrainzRecordingId,
       ),
       'fileMtime': serializer.toJson<double?>(fileMtime),
+      'discSubtitle': serializer.toJson<String?>(discSubtitle),
     };
   }
 
@@ -2019,6 +2056,7 @@ class Track extends DataClass implements Insertable<Track> {
     bool? favorite,
     Value<String?> musicbrainzRecordingId = const Value.absent(),
     Value<double?> fileMtime = const Value.absent(),
+    Value<String?> discSubtitle = const Value.absent(),
   }) => Track(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -2042,6 +2080,7 @@ class Track extends DataClass implements Insertable<Track> {
         ? musicbrainzRecordingId.value
         : this.musicbrainzRecordingId,
     fileMtime: fileMtime.present ? fileMtime.value : this.fileMtime,
+    discSubtitle: discSubtitle.present ? discSubtitle.value : this.discSubtitle,
   );
   Track copyWithCompanion(TracksCompanion data) {
     return Track(
@@ -2079,6 +2118,9 @@ class Track extends DataClass implements Insertable<Track> {
           ? data.musicbrainzRecordingId.value
           : this.musicbrainzRecordingId,
       fileMtime: data.fileMtime.present ? data.fileMtime.value : this.fileMtime,
+      discSubtitle: data.discSubtitle.present
+          ? data.discSubtitle.value
+          : this.discSubtitle,
     );
   }
 
@@ -2104,13 +2146,14 @@ class Track extends DataClass implements Insertable<Track> {
           ..write('sourceId: $sourceId, ')
           ..write('favorite: $favorite, ')
           ..write('musicbrainzRecordingId: $musicbrainzRecordingId, ')
-          ..write('fileMtime: $fileMtime')
+          ..write('fileMtime: $fileMtime, ')
+          ..write('discSubtitle: $discSubtitle')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     title,
     albumId,
@@ -2131,7 +2174,8 @@ class Track extends DataClass implements Insertable<Track> {
     favorite,
     musicbrainzRecordingId,
     fileMtime,
-  );
+    discSubtitle,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2155,7 +2199,8 @@ class Track extends DataClass implements Insertable<Track> {
           other.sourceId == this.sourceId &&
           other.favorite == this.favorite &&
           other.musicbrainzRecordingId == this.musicbrainzRecordingId &&
-          other.fileMtime == this.fileMtime);
+          other.fileMtime == this.fileMtime &&
+          other.discSubtitle == this.discSubtitle);
 }
 
 class TracksCompanion extends UpdateCompanion<Track> {
@@ -2179,6 +2224,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
   final Value<bool> favorite;
   final Value<String?> musicbrainzRecordingId;
   final Value<double?> fileMtime;
+  final Value<String?> discSubtitle;
   const TracksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -2200,6 +2246,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.favorite = const Value.absent(),
     this.musicbrainzRecordingId = const Value.absent(),
     this.fileMtime = const Value.absent(),
+    this.discSubtitle = const Value.absent(),
   });
   TracksCompanion.insert({
     this.id = const Value.absent(),
@@ -2222,6 +2269,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.favorite = const Value.absent(),
     this.musicbrainzRecordingId = const Value.absent(),
     this.fileMtime = const Value.absent(),
+    this.discSubtitle = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Track> custom({
     Expression<int>? id,
@@ -2244,6 +2292,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Expression<bool>? favorite,
     Expression<String>? musicbrainzRecordingId,
     Expression<double>? fileMtime,
+    Expression<String>? discSubtitle,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2267,6 +2316,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       if (musicbrainzRecordingId != null)
         'musicbrainz_recording_id': musicbrainzRecordingId,
       if (fileMtime != null) 'file_mtime': fileMtime,
+      if (discSubtitle != null) 'disc_subtitle': discSubtitle,
     });
   }
 
@@ -2291,6 +2341,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Value<bool>? favorite,
     Value<String?>? musicbrainzRecordingId,
     Value<double?>? fileMtime,
+    Value<String?>? discSubtitle,
   }) {
     return TracksCompanion(
       id: id ?? this.id,
@@ -2314,6 +2365,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       musicbrainzRecordingId:
           musicbrainzRecordingId ?? this.musicbrainzRecordingId,
       fileMtime: fileMtime ?? this.fileMtime,
+      discSubtitle: discSubtitle ?? this.discSubtitle,
     );
   }
 
@@ -2382,6 +2434,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
     if (fileMtime.present) {
       map['file_mtime'] = Variable<double>(fileMtime.value);
     }
+    if (discSubtitle.present) {
+      map['disc_subtitle'] = Variable<String>(discSubtitle.value);
+    }
     return map;
   }
 
@@ -2407,7 +2462,8 @@ class TracksCompanion extends UpdateCompanion<Track> {
           ..write('sourceId: $sourceId, ')
           ..write('favorite: $favorite, ')
           ..write('musicbrainzRecordingId: $musicbrainzRecordingId, ')
-          ..write('fileMtime: $fileMtime')
+          ..write('fileMtime: $fileMtime, ')
+          ..write('discSubtitle: $discSubtitle')
           ..write(')'))
         .toString();
   }
@@ -7267,6 +7323,7 @@ typedef $$TracksTableCreateCompanionBuilder =
       Value<bool> favorite,
       Value<String?> musicbrainzRecordingId,
       Value<double?> fileMtime,
+      Value<String?> discSubtitle,
     });
 typedef $$TracksTableUpdateCompanionBuilder =
     TracksCompanion Function({
@@ -7290,6 +7347,7 @@ typedef $$TracksTableUpdateCompanionBuilder =
       Value<bool> favorite,
       Value<String?> musicbrainzRecordingId,
       Value<double?> fileMtime,
+      Value<String?> discSubtitle,
     });
 
 final class $$TracksTableReferences
@@ -7446,6 +7504,11 @@ class $$TracksTableFilterComposer
 
   ColumnFilters<double> get fileMtime => $composableBuilder(
     column: $table.fileMtime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discSubtitle => $composableBuilder(
+    column: $table.discSubtitle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7620,6 +7683,11 @@ class $$TracksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get discSubtitle => $composableBuilder(
+    column: $table.discSubtitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AlbumsTableOrderingComposer get albumId {
     final $$AlbumsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7743,6 +7811,11 @@ class $$TracksTableAnnotationComposer
 
   GeneratedColumn<double> get fileMtime =>
       $composableBuilder(column: $table.fileMtime, builder: (column) => column);
+
+  GeneratedColumn<String> get discSubtitle => $composableBuilder(
+    column: $table.discSubtitle,
+    builder: (column) => column,
+  );
 
   $$AlbumsTableAnnotationComposer get albumId {
     final $$AlbumsTableAnnotationComposer composer = $composerBuilder(
@@ -7868,6 +7941,7 @@ class $$TracksTableTableManager
                 Value<bool> favorite = const Value.absent(),
                 Value<String?> musicbrainzRecordingId = const Value.absent(),
                 Value<double?> fileMtime = const Value.absent(),
+                Value<String?> discSubtitle = const Value.absent(),
               }) => TracksCompanion(
                 id: id,
                 title: title,
@@ -7889,6 +7963,7 @@ class $$TracksTableTableManager
                 favorite: favorite,
                 musicbrainzRecordingId: musicbrainzRecordingId,
                 fileMtime: fileMtime,
+                discSubtitle: discSubtitle,
               ),
           createCompanionCallback:
               ({
@@ -7912,6 +7987,7 @@ class $$TracksTableTableManager
                 Value<bool> favorite = const Value.absent(),
                 Value<String?> musicbrainzRecordingId = const Value.absent(),
                 Value<double?> fileMtime = const Value.absent(),
+                Value<String?> discSubtitle = const Value.absent(),
               }) => TracksCompanion.insert(
                 id: id,
                 title: title,
@@ -7933,6 +8009,7 @@ class $$TracksTableTableManager
                 favorite: favorite,
                 musicbrainzRecordingId: musicbrainzRecordingId,
                 fileMtime: fileMtime,
+                discSubtitle: discSubtitle,
               ),
           withReferenceMapper: (p0) => p0
               .map(

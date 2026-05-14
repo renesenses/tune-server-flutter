@@ -176,6 +176,53 @@ extension AppStatePlayback on AppState {
   }
 
   // ---------------------------------------------------------------------------
+  // Shuffle all — lecture aléatoire de toute la bibliothèque
+  // ---------------------------------------------------------------------------
+
+  /// Shuffle-play the entire local library (up to 5000 tracks).
+  /// Remote mode: calls POST /playback/shuffle-all?zone_id=N.
+  /// Local mode: fetches random tracks from DB, shuffles, plays.
+  Future<void> shuffleAll({int? zoneId}) async {
+    var id = zoneId ?? zoneState.currentZoneId;
+    if (id == null && zoneState.zones.isNotEmpty) {
+      id = zoneState.zones.first.id;
+      zoneState.setCurrentZoneId(id);
+    }
+    if (id == null) {
+      _lastPlaybackError = 'no_zone';
+      notify();
+      return;
+    }
+
+    if (isRemoteMode && _apiClient != null) {
+      try {
+        await _apiClient!.shuffleAll(id);
+        await refreshZonesRemote();
+      } catch (e) {
+        _lastPlaybackError = 'shuffle_all_failed';
+        debugPrint('[shuffleAll] remote error: $e');
+        notify();
+      }
+      return;
+    }
+
+    try {
+      final tracks = await engine.db.trackRepo.random(limit: 5000);
+      if (tracks.isEmpty) {
+        _lastPlaybackError = 'library_empty';
+        notify();
+        return;
+      }
+      tracks.shuffle();
+      await playTracks(tracks, zoneId: id);
+    } catch (e) {
+      _lastPlaybackError = 'shuffle_all_failed';
+      debugPrint('[shuffleAll] local error: $e');
+      notify();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Lecture streaming (résolution URL à la volée)
   // ---------------------------------------------------------------------------
 

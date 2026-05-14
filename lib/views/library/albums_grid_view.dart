@@ -42,6 +42,9 @@ class AlbumsGridView extends StatelessWidget {
 
     return Column(
       children: [
+        // Shuffle all button
+        _ShuffleAllBar(),
+
         // Filter chips row
         if (hasAudioInfo) _AlbumFilterChips(lib: lib),
 
@@ -67,6 +70,86 @@ class AlbumsGridView extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _ShuffleAllBar — "Tout lire en aleatoire" action bar
+// ---------------------------------------------------------------------------
+
+class _ShuffleAllBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final lib = context.watch<LibraryState>();
+    final l = AppLocalizations.of(context);
+
+    return Container(
+      color: TuneColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          // Shuffle all library
+          TextButton.icon(
+            icon: const Icon(Icons.shuffle_rounded, size: 18),
+            label: Text(l.libraryShuffleAll),
+            style: TextButton.styleFrom(
+              foregroundColor: TuneColors.accent,
+              visualDensity: VisualDensity.compact,
+            ),
+            onPressed: lib.albums.isEmpty ? null : () => app.shuffleAll(),
+          ),
+          const Spacer(),
+          // Sort selector
+          _AlbumSortSelector(lib: lib),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _AlbumSortSelector — dropdown to choose album sort order
+// ---------------------------------------------------------------------------
+
+class _AlbumSortSelector extends StatelessWidget {
+  final LibraryState lib;
+  const _AlbumSortSelector({required this.lib});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PopupMenuButton<AlbumSortField>(
+      icon: const Icon(Icons.sort_rounded, size: 20, color: TuneColors.textSecondary),
+      tooltip: l.librarySortBy,
+      onSelected: (field) => lib.setAlbumSort(field),
+      itemBuilder: (_) => [
+        _item(AlbumSortField.title, l.librarySortTitle),
+        _item(AlbumSortField.artist, l.librarySortArtist),
+        _item(AlbumSortField.year, l.librarySortYear),
+        _item(AlbumSortField.originalYear, l.librarySortOriginalYear),
+        _item(AlbumSortField.addedDate, l.librarySortAddedDate),
+      ],
+    );
+  }
+
+  PopupMenuItem<AlbumSortField> _item(AlbumSortField field, String label) {
+    final selected = lib.albumSortField == field;
+    return PopupMenuItem(
+      value: field,
+      child: Row(
+        children: [
+          if (selected) ...[
+            const Icon(Icons.check_rounded, size: 16, color: TuneColors.accent),
+            const SizedBox(width: 8),
+          ],
+          Text(label, style: TextStyle(
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            color: selected ? TuneColors.accent : TuneColors.textPrimary,
+          )),
+        ],
+      ),
     );
   }
 }
@@ -422,6 +505,102 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
     );
   }
 
+  /// Builds slivers for the track list with disc headers when the album has
+  /// multiple discs. Shows "Disc N — Subtitle" when discSubtitle is available.
+  List<Widget> _buildDiscAwareTrackSlivers() {
+    if (_tracks == null || _tracks!.isEmpty) return [];
+
+    final app = context.read<AppState>();
+    final hasMultipleDiscs =
+        _tracks!.map((t) => t.discNumber ?? 1).toSet().length > 1;
+
+    if (!hasMultipleDiscs) {
+      // Single disc: simple list
+      return [
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, i) => _AlbumTrackTile(
+              track: _tracks![i],
+              onTap: () => app.playTracks(_tracks!, startIndex: i),
+              onAddToPlaylist: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: TuneColors.surface,
+                builder: (_) => AddToPlaylistSheet(track: _tracks![i]),
+              ),
+            ),
+            childCount: _tracks!.length,
+          ),
+        ),
+      ];
+    }
+
+    // Multi-disc: group tracks by disc number, insert headers
+    final slivers = <Widget>[];
+    int? lastDisc;
+    int groupStart = 0;
+
+    void flushGroup(int groupEnd) {
+      if (groupStart >= groupEnd) return;
+      final start = groupStart;
+      final count = groupEnd - start;
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, i) {
+              final idx = start + i;
+              return _AlbumTrackTile(
+                track: _tracks![idx],
+                onTap: () => app.playTracks(_tracks!, startIndex: idx),
+                onAddToPlaylist: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: TuneColors.surface,
+                  builder: (_) => AddToPlaylistSheet(track: _tracks![idx]),
+                ),
+              );
+            },
+            childCount: count,
+          ),
+        ),
+      );
+    }
+
+    for (var i = 0; i < _tracks!.length; i++) {
+      final track = _tracks![i];
+      final disc = track.discNumber ?? 1;
+
+      if (disc != lastDisc) {
+        // Flush previous group
+        flushGroup(i);
+        groupStart = i;
+
+        final subtitle = track.discSubtitle;
+        final label = subtitle != null && subtitle.isNotEmpty
+            ? 'Disc $disc — $subtitle'
+            : 'Disc $disc';
+        slivers.add(SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              label,
+              style: TuneFonts.subheadline.copyWith(
+                fontWeight: FontWeight.w600,
+                color: TuneColors.textSecondary,
+              ),
+            ),
+          ),
+        ));
+        lastDisc = disc;
+      }
+    }
+
+    // Flush last group
+    flushGroup(_tracks!.length);
+
+    return slivers;
+  }
+
   Future<void> _loadTracks() async {
     final app = context.read<AppState>();
     if (app.isRemoteMode && app.apiClient != null) {
@@ -569,22 +748,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
                   message: AppLocalizations.of(context).playlistEmpty),
             )
           else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) => _AlbumTrackTile(
-                  track: _tracks![i],
-                  onTap: () => app.playTracks(_tracks!, startIndex: i),
-                  onAddToPlaylist: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: TuneColors.surface,
-                    builder: (_) =>
-                        AddToPlaylistSheet(track: _tracks![i]),
-                  ),
-                ),
-                childCount: _tracks!.length,
-              ),
-            ),
+            ..._buildDiscAwareTrackSlivers(),
 
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],

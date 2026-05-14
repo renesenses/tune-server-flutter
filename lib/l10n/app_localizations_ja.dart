@@ -1158,4 +1158,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get artistEnriching => 'エンリッチ中…';
+
+  @override
+  String get libraryShuffleAll => 'すべてシャッフル';
+
+  @override
+  String get librarySortBy => '並び替え';
+
+  @override
+  String get librarySortTitle => 'タイトル';
+
+  @override
+  String get librarySortArtist => 'アーティスト';
+
+  @override
+  String get librarySortYear => 'リリース日';
+
+  @override
+  String get librarySortOriginalYear => 'オリジナル年';
+
+  @override
+  String get librarySortAddedDate => '追加日';
 }

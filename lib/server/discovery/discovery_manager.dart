@@ -32,6 +32,15 @@ class DiscoveredDevice {
   final bool available;
   final UPnPCapabilities capabilities;
   final String? iconUrl;
+  final String? manufacturer;
+  final String? modelName;
+  final bool isDsdCapable;
+
+  /// AirPlay version (1 or 2). Null for non-AirPlay devices.
+  final int? airplayVersion;
+
+  /// MAC address of the device (from AirPlay TXT records or UPnP).
+  final String? macAddress;
 
   const DiscoveredDevice({
     required this.id,
@@ -42,6 +51,11 @@ class DiscoveredDevice {
     required this.available,
     required this.capabilities,
     this.iconUrl,
+    this.manufacturer,
+    this.modelName,
+    this.isDsdCapable = false,
+    this.airplayVersion,
+    this.macAddress,
   });
 
   DiscoveredDevice copyWith({bool? available}) => DiscoveredDevice(
@@ -53,6 +67,11 @@ class DiscoveredDevice {
         available: available ?? this.available,
         capabilities: capabilities,
         iconUrl: iconUrl,
+        manufacturer: manufacturer,
+        modelName: modelName,
+        isDsdCapable: isDsdCapable,
+        airplayVersion: airplayVersion,
+        macAddress: macAddress,
       );
 }
 
@@ -322,6 +341,12 @@ class DiscoveryManager {
             ? 'server'
             : 'unknown';
 
+    final dsdCapable = detectDsdFromDeviceInfo(
+      parsed.friendlyName,
+      parsed.modelName,
+      parsed.manufacturer,
+    );
+
     final discovered = DiscoveredDevice(
       id: parsed.id,
       name: parsed.friendlyName,
@@ -331,6 +356,9 @@ class DiscoveryManager {
       available: true,
       capabilities: parsed.capabilities,
       iconUrl: parsed.iconUrl,
+      manufacturer: parsed.manufacturer,
+      modelName: parsed.modelName,
+      isDsdCapable: dsdCapable,
     );
 
     final existing = _cache[parsed.id];
@@ -365,6 +393,14 @@ class DiscoveryManager {
           ? UPnPCapabilities.fromJson(caps)
           : const UPnPCapabilities();
 
+      final manufacturer = caps?['manufacturer'] as String?;
+      final modelName = caps?['modelName'] as String?;
+      final dsdCapable = detectDsdFromDeviceInfo(
+        row.name,
+        modelName,
+        manufacturer,
+      );
+
       _cache[row.deviceId] = DiscoveredDevice(
         id: row.deviceId,
         name: row.name,
@@ -373,11 +409,19 @@ class DiscoveryManager {
         port: row.port,
         available: false, // sera confirmé par SSDP
         capabilities: capabilities,
+        manufacturer: manufacturer,
+        modelName: modelName,
+        isDsdCapable: dsdCapable,
       );
     }
   }
 
   Future<void> _persistDevice(DiscoveredDevice d) async {
+    final capsJson = <String, dynamic>{
+      ...d.capabilities.toJson(),
+      if (d.manufacturer != null) 'manufacturer': d.manufacturer,
+      if (d.modelName != null) 'modelName': d.modelName,
+    };
     await _db.into(_db.savedDevices).insertOnConflictUpdate(
           SavedDevicesCompanion.insert(
             deviceId: d.id,
@@ -386,7 +430,7 @@ class DiscoveryManager {
             host: d.host,
             port: d.port,
             capabilitiesJson:
-                Value(jsonEncode(d.capabilities.toJson())),
+                Value(jsonEncode(capsJson)),
             addedAt: DateTime.now().toIso8601String(),
           ),
         );

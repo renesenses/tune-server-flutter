@@ -1167,4 +1167,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get artistEnriching => 'Anreicherung läuft…';
+
+  @override
+  String get libraryShuffleAll => 'Alle zufällig';
+
+  @override
+  String get librarySortBy => 'Sortieren nach';
+
+  @override
+  String get librarySortTitle => 'Titel';
+
+  @override
+  String get librarySortArtist => 'Künstler';
+
+  @override
+  String get librarySortYear => 'Erscheinungsdatum';
+
+  @override
+  String get librarySortOriginalYear => 'Originaljahr';
+
+  @override
+  String get librarySortAddedDate => 'Hinzugefügt am';
 }

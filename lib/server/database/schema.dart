@@ -75,6 +75,8 @@ class Tracks extends Table {
   TextColumn get musicbrainzRecordingId => text().nullable()();
   /// Timestamp du fichier sur disque (mtime) pour détection incrémentale (migration v6)
   RealColumn get fileMtime => real().nullable()();
+  /// Disc subtitle (e.g. "Bonus Disc", "Live at Wembley") from audio tags (migration v7)
+  TextColumn get discSubtitle => text().nullable()();
 }
 
 // ---------------------------------------------------------------------------

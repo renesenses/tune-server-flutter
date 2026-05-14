@@ -1153,4 +1153,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get artistEnriching => '正在丰富信息…';
+
+  @override
+  String get libraryShuffleAll => '随机播放全部';
+
+  @override
+  String get librarySortBy => '排序方式';
+
+  @override
+  String get librarySortTitle => '标题';
+
+  @override
+  String get librarySortArtist => '艺术家';
+
+  @override
+  String get librarySortYear => '发行日期';
+
+  @override
+  String get librarySortOriginalYear => '原始年份';
+
+  @override
+  String get librarySortAddedDate => '添加日期';
 }

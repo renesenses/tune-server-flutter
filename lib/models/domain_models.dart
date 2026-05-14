@@ -53,6 +53,7 @@ Track trackFromJson(Map<String, dynamic> j) => Track(
       sourceId: j['source_id'] as String?,
       favorite: j['favorite'] as bool? ?? false,
       musicbrainzRecordingId: j['musicbrainz_recording_id'] as String?,
+      discSubtitle: j['disc_subtitle'] as String?,
     );
 
 Radio radioFromJson(Map<String, dynamic> j) => Radio(

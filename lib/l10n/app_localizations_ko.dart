@@ -1157,4 +1157,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get artistEnriching => '보강 진행 중…';
+
+  @override
+  String get libraryShuffleAll => '전체 셔플';
+
+  @override
+  String get librarySortBy => '정렬 기준';
+
+  @override
+  String get librarySortTitle => '제목';
+
+  @override
+  String get librarySortArtist => '아티스트';
+
+  @override
+  String get librarySortYear => '발매일';
+
+  @override
+  String get librarySortOriginalYear => '원본 연도';
+
+  @override
+  String get librarySortAddedDate => '추가 날짜';
 }

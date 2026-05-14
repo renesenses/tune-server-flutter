@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart' show ProcessingState, PlayerState;
 
 import '../../models/enums.dart';
 import '../audio/local_audio_output.dart';
 import '../database/database.dart';
 import '../event_bus.dart';
+import '../outputs/dlna_output.dart';
 import '../outputs/output_target.dart';
 import 'play_queue.dart';
 
@@ -414,6 +416,31 @@ class Player {
 
     _setState(PlaybackState.playing);
     EventBus.instance.emit(TrackChangedEvent(zoneId, track));
+
+    // Gapless: pre-load next track on DLNA renderers via SetNextAVTransportURI.
+    // Works for all track types (local files + streaming URLs).
+    if (_output is DLNAOutput) {
+      _preloadNextTrackForDlna();
+    }
+  }
+
+  /// Pre-loads the next track on a DLNA renderer for gapless playback.
+  Future<void> _preloadNextTrackForDlna() async {
+    final dlna = _output;
+    if (dlna is! DLNAOutput) return;
+    final nextTrack = queue.nextTrack;
+    if (nextTrack == null) return;
+    final url = nextTrack.filePath;
+    if (url == null) return;
+
+    final result = await dlna.setNextTrack(
+      url: url,
+      title: nextTrack.title,
+      artist: nextTrack.artistName,
+    );
+    if (result is OutputSuccess) {
+      debugPrint('[Player] gapless: pre-loaded next track "${nextTrack.title}"');
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -2317,6 +2317,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enrichment in progress…'**
   String get artistEnriching;
+
+  /// No description provided for @libraryShuffleAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle all'**
+  String get libraryShuffleAll;
+
+  /// No description provided for @librarySortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get librarySortBy;
+
+  /// No description provided for @librarySortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get librarySortTitle;
+
+  /// No description provided for @librarySortArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get librarySortArtist;
+
+  /// No description provided for @librarySortYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Release date'**
+  String get librarySortYear;
+
+  /// No description provided for @librarySortOriginalYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Original year'**
+  String get librarySortOriginalYear;
+
+  /// No description provided for @librarySortAddedDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get librarySortAddedDate;
 }
 
 class _AppLocalizationsDelegate
