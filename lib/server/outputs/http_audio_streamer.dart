@@ -4,6 +4,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
+import '../database/database.dart';
 import '../utils/mime_utils.dart';
 
 // ---------------------------------------------------------------------------
@@ -20,8 +21,9 @@ import '../utils/mime_utils.dart';
 
 class HttpAudioStreamer {
   final int preferredPort;
+  final TuneDatabase? _db;
 
-  HttpAudioStreamer({this.preferredPort = 8081});
+  HttpAudioStreamer({this.preferredPort = 8081, TuneDatabase? db}) : _db = db;
 
   HttpServer? _server;
 
@@ -40,7 +42,10 @@ class HttpAudioStreamer {
     final router = Router()
       ..get('/health', _health)
       ..get('/track/<filePath>', _serveTrack)
-      ..get('/cover/<coverPath>', _serveCover);
+      ..get('/cover/<coverPath>', _serveCover)
+      ..get('/api/v1/export/albums.csv', _exportAlbumsCsv)
+      ..get('/api/v1/export/tracks.csv', _exportTracksCsv)
+      ..get('/api/v1/export/artists.csv', _exportArtistsCsv);
 
     final handler = Pipeline()
         .addMiddleware(_corsMiddleware())
@@ -121,6 +126,122 @@ class HttpAudioStreamer {
         'Cache-Control': 'public, max-age=86400',
       },
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // CSV Export
+  // ---------------------------------------------------------------------------
+
+  static const _bom = '﻿';
+
+  String _csvEscape(Object? value) {
+    if (value == null) return '';
+    final s = value.toString();
+    if (s.contains(';') || s.contains('"') || s.contains('\n')) {
+      return '"${s.replaceAll('"', '""')}"';
+    }
+    return s;
+  }
+
+  String _formatDuration(int? ms) {
+    if (ms == null || ms <= 0) return '';
+    final minutes = ms ~/ 60000;
+    final seconds = (ms % 60000) ~/ 1000;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<Response> _exportAlbumsCsv(Request request) async {
+    if (_db == null) return Response.internalServerError(body: 'Database not available');
+
+    final albums = await _db.albumRepo.all();
+    final audioInfoMap = await _db.albumRepo.allAudioInfo();
+
+    final buf = StringBuffer()
+      ..write(_bom)
+      ..writeln('id;title;artistName;year;originalYear;releaseDate;originalDate;genre;trackCount;format;sampleRate;bitDepth;source');
+
+    for (final a in albums) {
+      final info = audioInfoMap[a.id];
+      buf.writeln([
+        _csvEscape(a.id),
+        _csvEscape(a.title),
+        _csvEscape(a.artistName),
+        _csvEscape(a.year),
+        _csvEscape(a.originalYear),
+        _csvEscape(a.releaseDate),
+        _csvEscape(a.originalDate),
+        _csvEscape(a.genre),
+        _csvEscape(a.trackCount),
+        _csvEscape(info?.format),
+        _csvEscape(info?.sampleRate),
+        _csvEscape(info?.bitDepth),
+        _csvEscape(a.source),
+      ].join(';'));
+    }
+
+    return Response.ok(buf.toString(), headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="albums.csv"',
+    });
+  }
+
+  Future<Response> _exportTracksCsv(Request request) async {
+    if (_db == null) return Response.internalServerError(body: 'Database not available');
+
+    final tracks = await _db.trackRepo.all(limit: 999999);
+
+    final buf = StringBuffer()
+      ..write(_bom)
+      ..writeln('id;title;artistName;albumTitle;trackNumber;discNumber;discSubtitle;durationMs;duration;format;sampleRate;bitDepth;channels;filePath;source');
+
+    for (final t in tracks) {
+      buf.writeln([
+        _csvEscape(t.id),
+        _csvEscape(t.title),
+        _csvEscape(t.artistName),
+        _csvEscape(t.albumTitle),
+        _csvEscape(t.trackNumber),
+        _csvEscape(t.discNumber),
+        _csvEscape(t.discSubtitle),
+        _csvEscape(t.durationMs),
+        _csvEscape(_formatDuration(t.durationMs)),
+        _csvEscape(t.format),
+        _csvEscape(t.sampleRate),
+        _csvEscape(t.bitDepth),
+        _csvEscape(t.channels),
+        _csvEscape(t.filePath),
+        _csvEscape(t.source),
+      ].join(';'));
+    }
+
+    return Response.ok(buf.toString(), headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="tracks.csv"',
+    });
+  }
+
+  Future<Response> _exportArtistsCsv(Request request) async {
+    if (_db == null) return Response.internalServerError(body: 'Database not available');
+
+    final artists = await _db.artistRepo.all();
+
+    final buf = StringBuffer()
+      ..write(_bom)
+      ..writeln('id;name;sortName;musicbrainzId');
+
+    for (final a in artists) {
+      buf.writeln([
+        _csvEscape(a.id),
+        _csvEscape(a.name),
+        _csvEscape(a.sortName),
+        _csvEscape(a.musicbrainzId),
+      ].join(';'));
+    }
+
+    return Response.ok(buf.toString(), headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="artists.csv"',
+    });
   }
 
   // ---------------------------------------------------------------------------
