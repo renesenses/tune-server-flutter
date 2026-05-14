@@ -75,6 +75,7 @@ class BluOSOutput implements OutputTarget {
     String url, {
     String? title,
     String? artist,
+    String? album,
     String? albumArtUrl,
   }) async {
     try {
@@ -82,8 +83,14 @@ class BluOSOutput implements OutputTarget {
       await _apiGet('Stop');
       await Future.delayed(const Duration(milliseconds: 200));
 
-      // Play the URL
-      await _apiGet('Play', params: {'url': url});
+      // Build Play parameters with metadata
+      final params = <String, String>{'url': url};
+      if (title != null) params['title'] = title;
+      if (artist != null) params['artist'] = artist;
+      if (album != null) params['album'] = album;
+      if (albumArtUrl != null) params['image'] = albumArtUrl;
+
+      await _apiGet('Play', params: params);
       _playing = true;
       debugPrint('[BluOS] Playing: ${title ?? url} on $displayName');
       return const OutputSuccess();

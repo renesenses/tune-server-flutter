@@ -378,12 +378,20 @@ extension AppStatePlayback on AppState {
   /// Résout l'URL d'un track local de manière synchrone (sans await).
   Track _resolveTrackSync(Track track) {
     if (track.filePath == null) return track;
+    var resolved = track;
     if (track.source == 'local' && !track.filePath!.startsWith('http')) {
       final url = engine.trackStreamUrl(track.filePath!);
       if (url != track.filePath) {
-        return track.copyWith(filePath: Value(url));
+        resolved = resolved.copyWith(filePath: Value(url));
       }
     }
-    return track;
+    // Resolve local cover path to HTTP URL for remote outputs (BluOS, DLNA…)
+    if (track.coverPath != null &&
+        track.coverPath!.startsWith('/') &&
+        !track.coverPath!.startsWith('http')) {
+      final coverUrl = engine.coverStreamUrl(track.coverPath!);
+      resolved = resolved.copyWith(coverPath: Value(coverUrl));
+    }
+    return resolved;
   }
 }

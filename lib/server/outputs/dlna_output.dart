@@ -97,6 +97,7 @@ class DLNAOutput implements OutputTarget {
     String url, {
     String? title,
     String? artist,
+    String? album,
     String? albumArtUrl,
   }) async {
     // 1. SetAVTransportURI avec métadonnées DIDL-Lite

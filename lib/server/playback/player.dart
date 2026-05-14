@@ -291,6 +291,8 @@ class Player {
       url,
       title: nextTrack.title,
       artist: nextTrack.artistName,
+      album: nextTrack.albumTitle,
+      albumArtUrl: nextTrack.coverPath,
     );
     if (playResult is OutputFailure) {
       await nextOutput.dispose();
@@ -397,6 +399,8 @@ class Player {
       url,
       title: track.title,
       artist: track.artistName,
+      album: track.albumTitle,
+      albumArtUrl: track.coverPath,
     );
 
     if (result is OutputFailure) {

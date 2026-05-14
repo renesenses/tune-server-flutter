@@ -66,6 +66,7 @@ class AirPlayOutput implements OutputTarget {
     String url, {
     String? title,
     String? artist,
+    String? album,
     String? albumArtUrl,
   }) async {
     try {

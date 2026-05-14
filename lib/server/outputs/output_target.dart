@@ -54,11 +54,12 @@ abstract interface class OutputTarget {
 
   /// Charge une URL audio et démarre la lecture.
   /// [url]   : URL HTTP (streamer local) ou chemin fichier.
-  /// [title] / [artist] / [albumArtUrl] : métadonnées pour l'affichage.
+  /// [title] / [artist] / [album] / [albumArtUrl] : métadonnées pour l'affichage.
   Future<OutputResult> play(
     String url, {
     String? title,
     String? artist,
+    String? album,
     String? albumArtUrl,
   });
 
