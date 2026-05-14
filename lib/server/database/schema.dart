@@ -222,3 +222,15 @@ class StreamingConfig extends Table {
   @override
   Set<Column> get primaryKey => {service};
 }
+
+// ---------------------------------------------------------------------------
+// SyncLinkSnapshots (migration v9) — delta detection for bidirectional sync
+// ---------------------------------------------------------------------------
+
+class SyncLinkSnapshots extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get playlistLinkId => integer()();
+  TextColumn get side => text()();       // 'local' or 'remote'
+  TextColumn get tracksJson => text()();
+  TextColumn get createdAt => text()();
+}

@@ -593,10 +593,16 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           },
           child: ListTile(
             leading: const Icon(Icons.sync_rounded, color: TuneColors.accent),
-            title: Text('Playlist #${link['local_playlist_id']}', style: TuneFonts.body),
+            title: Text(
+              (link['service_playlist_name'] as String?)?.isNotEmpty == true
+                  ? link['service_playlist_name'] as String
+                  : 'Playlist #${link['local_playlist_id']}',
+              style: TuneFonts.body,
+            ),
             subtitle: Text(
               '${link['service']} · ${link['sync_direction']}'
-              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · auto ${link['sync_interval_minutes']}min' : ''}',
+              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · auto ${link['sync_interval_minutes']}min' : ''}'
+              '${link['last_synced_at'] != null ? ' · ${(link['last_synced_at'] as String).split('T').first}' : ''}',
               style: TuneFonts.footnote,
             ),
             trailing: Row(
@@ -610,7 +616,27 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 FilledButton(
                   onPressed: () async {
                     final app = context.read<AppState>();
-                    await app.apiClient?.triggerPlaylistSync(link['id'] as int);
+                    try {
+                      final result = await app.apiClient?.syncPlaylistLink(link['id'] as int);
+                      if (!mounted || result == null) return;
+                      final addedLocal = result['added_to_local'] ?? 0;
+                      final removedLocal = result['removed_from_local'] ?? 0;
+                      final addedRemote = result['added_to_remote'] ?? 0;
+                      final removedRemote = result['removed_from_remote'] ?? 0;
+                      final conflicts = (result['conflicts'] as List?)?.length ?? 0;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(
+                          'Sync OK : +$addedLocal/-$removedLocal local, '
+                          '+$addedRemote/-$removedRemote remote'
+                          '${conflicts > 0 ? ', $conflicts conflits' : ''}',
+                        )),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Sync error: $e')),
+                      );
+                    }
                     _loadTab();
                   },
                   style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size(60, 32)),

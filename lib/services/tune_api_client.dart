@@ -283,8 +283,13 @@ class TuneApiClient {
     'service_playlist_id': servicePlaylistId, 'sync_direction': syncDirection,
   });
 
-  Future<dynamic> triggerPlaylistSync(int linkId) =>
-      _post('/playlist-manager/links/$linkId/sync');
+  Future<Map<String, dynamic>> triggerPlaylistSync(int linkId) =>
+      _post('/playlist-manager/links/$linkId/sync')
+          .then((d) => d as Map<String, dynamic>);
+
+  /// Alias for [triggerPlaylistSync] — matches `SyncResult` naming from Linux API.
+  Future<Map<String, dynamic>> syncPlaylistLink(int linkId) =>
+      triggerPlaylistSync(linkId);
 
   Future<void> deletePlaylistLink(int linkId) =>
       _delete('/playlist-manager/links/$linkId');

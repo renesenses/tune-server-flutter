@@ -28,6 +28,7 @@ part 'database.g.dart';
   RadioFavorites,
   StreamingAuth,
   StreamingConfig,
+  SyncLinkSnapshots,
 ])
 class TuneDatabase extends _$TuneDatabase {
   TuneDatabase() : super(_openConnection());
@@ -45,7 +46,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -81,6 +82,12 @@ class TuneDatabase extends _$TuneDatabase {
           if (from < 8) {
             await m.addColumn(albums, albums.releaseDate);
             await m.addColumn(albums, albums.originalDate);
+          }
+          if (from < 9) {
+            await m.createTable(syncLinkSnapshots);
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_sync_snapshots_link '
+                'ON sync_link_snapshots(playlist_link_id, side)');
           }
         },
         beforeOpen: (details) async {
@@ -217,6 +224,8 @@ class TuneDatabase extends _$TuneDatabase {
         'CREATE INDEX IF NOT EXISTS idx_queue_items_zone ON queue_items(zone_id)');
     await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_albums_mbid ON albums(musicbrainz_release_id)');
+    await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_sync_snapshots_link ON sync_link_snapshots(playlist_link_id, side)');
   }
 }
 

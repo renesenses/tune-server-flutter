@@ -6367,6 +6367,365 @@ class StreamingConfigCompanion extends UpdateCompanion<StreamingConfigData> {
   }
 }
 
+class $SyncLinkSnapshotsTable extends SyncLinkSnapshots
+    with TableInfo<$SyncLinkSnapshotsTable, SyncLinkSnapshot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncLinkSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _playlistLinkIdMeta = const VerificationMeta(
+    'playlistLinkId',
+  );
+  @override
+  late final GeneratedColumn<int> playlistLinkId = GeneratedColumn<int>(
+    'playlist_link_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sideMeta = const VerificationMeta('side');
+  @override
+  late final GeneratedColumn<String> side = GeneratedColumn<String>(
+    'side',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tracksJsonMeta = const VerificationMeta(
+    'tracksJson',
+  );
+  @override
+  late final GeneratedColumn<String> tracksJson = GeneratedColumn<String>(
+    'tracks_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    playlistLinkId,
+    side,
+    tracksJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_link_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncLinkSnapshot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('playlist_link_id')) {
+      context.handle(
+        _playlistLinkIdMeta,
+        playlistLinkId.isAcceptableOrUnknown(
+          data['playlist_link_id']!,
+          _playlistLinkIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_playlistLinkIdMeta);
+    }
+    if (data.containsKey('side')) {
+      context.handle(
+        _sideMeta,
+        side.isAcceptableOrUnknown(data['side']!, _sideMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sideMeta);
+    }
+    if (data.containsKey('tracks_json')) {
+      context.handle(
+        _tracksJsonMeta,
+        tracksJson.isAcceptableOrUnknown(data['tracks_json']!, _tracksJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tracksJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncLinkSnapshot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncLinkSnapshot(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      playlistLinkId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}playlist_link_id'],
+      )!,
+      side: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}side'],
+      )!,
+      tracksJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tracks_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncLinkSnapshotsTable createAlias(String alias) {
+    return $SyncLinkSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncLinkSnapshot extends DataClass
+    implements Insertable<SyncLinkSnapshot> {
+  final int id;
+  final int playlistLinkId;
+  final String side;
+  final String tracksJson;
+  final String createdAt;
+  const SyncLinkSnapshot({
+    required this.id,
+    required this.playlistLinkId,
+    required this.side,
+    required this.tracksJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['playlist_link_id'] = Variable<int>(playlistLinkId);
+    map['side'] = Variable<String>(side);
+    map['tracks_json'] = Variable<String>(tracksJson);
+    map['created_at'] = Variable<String>(createdAt);
+    return map;
+  }
+
+  SyncLinkSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return SyncLinkSnapshotsCompanion(
+      id: Value(id),
+      playlistLinkId: Value(playlistLinkId),
+      side: Value(side),
+      tracksJson: Value(tracksJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SyncLinkSnapshot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncLinkSnapshot(
+      id: serializer.fromJson<int>(json['id']),
+      playlistLinkId: serializer.fromJson<int>(json['playlistLinkId']),
+      side: serializer.fromJson<String>(json['side']),
+      tracksJson: serializer.fromJson<String>(json['tracksJson']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playlistLinkId': serializer.toJson<int>(playlistLinkId),
+      'side': serializer.toJson<String>(side),
+      'tracksJson': serializer.toJson<String>(tracksJson),
+      'createdAt': serializer.toJson<String>(createdAt),
+    };
+  }
+
+  SyncLinkSnapshot copyWith({
+    int? id,
+    int? playlistLinkId,
+    String? side,
+    String? tracksJson,
+    String? createdAt,
+  }) => SyncLinkSnapshot(
+    id: id ?? this.id,
+    playlistLinkId: playlistLinkId ?? this.playlistLinkId,
+    side: side ?? this.side,
+    tracksJson: tracksJson ?? this.tracksJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SyncLinkSnapshot copyWithCompanion(SyncLinkSnapshotsCompanion data) {
+    return SyncLinkSnapshot(
+      id: data.id.present ? data.id.value : this.id,
+      playlistLinkId: data.playlistLinkId.present
+          ? data.playlistLinkId.value
+          : this.playlistLinkId,
+      side: data.side.present ? data.side.value : this.side,
+      tracksJson: data.tracksJson.present
+          ? data.tracksJson.value
+          : this.tracksJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncLinkSnapshot(')
+          ..write('id: $id, ')
+          ..write('playlistLinkId: $playlistLinkId, ')
+          ..write('side: $side, ')
+          ..write('tracksJson: $tracksJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playlistLinkId, side, tracksJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncLinkSnapshot &&
+          other.id == this.id &&
+          other.playlistLinkId == this.playlistLinkId &&
+          other.side == this.side &&
+          other.tracksJson == this.tracksJson &&
+          other.createdAt == this.createdAt);
+}
+
+class SyncLinkSnapshotsCompanion extends UpdateCompanion<SyncLinkSnapshot> {
+  final Value<int> id;
+  final Value<int> playlistLinkId;
+  final Value<String> side;
+  final Value<String> tracksJson;
+  final Value<String> createdAt;
+  const SyncLinkSnapshotsCompanion({
+    this.id = const Value.absent(),
+    this.playlistLinkId = const Value.absent(),
+    this.side = const Value.absent(),
+    this.tracksJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SyncLinkSnapshotsCompanion.insert({
+    this.id = const Value.absent(),
+    required int playlistLinkId,
+    required String side,
+    required String tracksJson,
+    required String createdAt,
+  }) : playlistLinkId = Value(playlistLinkId),
+       side = Value(side),
+       tracksJson = Value(tracksJson),
+       createdAt = Value(createdAt);
+  static Insertable<SyncLinkSnapshot> custom({
+    Expression<int>? id,
+    Expression<int>? playlistLinkId,
+    Expression<String>? side,
+    Expression<String>? tracksJson,
+    Expression<String>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playlistLinkId != null) 'playlist_link_id': playlistLinkId,
+      if (side != null) 'side': side,
+      if (tracksJson != null) 'tracks_json': tracksJson,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SyncLinkSnapshotsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? playlistLinkId,
+    Value<String>? side,
+    Value<String>? tracksJson,
+    Value<String>? createdAt,
+  }) {
+    return SyncLinkSnapshotsCompanion(
+      id: id ?? this.id,
+      playlistLinkId: playlistLinkId ?? this.playlistLinkId,
+      side: side ?? this.side,
+      tracksJson: tracksJson ?? this.tracksJson,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playlistLinkId.present) {
+      map['playlist_link_id'] = Variable<int>(playlistLinkId.value);
+    }
+    if (side.present) {
+      map['side'] = Variable<String>(side.value);
+    }
+    if (tracksJson.present) {
+      map['tracks_json'] = Variable<String>(tracksJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncLinkSnapshotsCompanion(')
+          ..write('id: $id, ')
+          ..write('playlistLinkId: $playlistLinkId, ')
+          ..write('side: $side, ')
+          ..write('tracksJson: $tracksJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TuneDatabase extends GeneratedDatabase {
   _$TuneDatabase(QueryExecutor e) : super(e);
   $TuneDatabaseManager get managers => $TuneDatabaseManager(this);
@@ -6385,6 +6744,8 @@ abstract class _$TuneDatabase extends GeneratedDatabase {
   late final $StreamingConfigTable streamingConfig = $StreamingConfigTable(
     this,
   );
+  late final $SyncLinkSnapshotsTable syncLinkSnapshots =
+      $SyncLinkSnapshotsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6403,6 +6764,7 @@ abstract class _$TuneDatabase extends GeneratedDatabase {
     radioFavorites,
     streamingAuth,
     streamingConfig,
+    syncLinkSnapshots,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -10869,6 +11231,217 @@ typedef $$StreamingConfigTableProcessedTableManager =
       StreamingConfigData,
       PrefetchHooks Function()
     >;
+typedef $$SyncLinkSnapshotsTableCreateCompanionBuilder =
+    SyncLinkSnapshotsCompanion Function({
+      Value<int> id,
+      required int playlistLinkId,
+      required String side,
+      required String tracksJson,
+      required String createdAt,
+    });
+typedef $$SyncLinkSnapshotsTableUpdateCompanionBuilder =
+    SyncLinkSnapshotsCompanion Function({
+      Value<int> id,
+      Value<int> playlistLinkId,
+      Value<String> side,
+      Value<String> tracksJson,
+      Value<String> createdAt,
+    });
+
+class $$SyncLinkSnapshotsTableFilterComposer
+    extends Composer<_$TuneDatabase, $SyncLinkSnapshotsTable> {
+  $$SyncLinkSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get playlistLinkId => $composableBuilder(
+    column: $table.playlistLinkId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tracksJson => $composableBuilder(
+    column: $table.tracksJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncLinkSnapshotsTableOrderingComposer
+    extends Composer<_$TuneDatabase, $SyncLinkSnapshotsTable> {
+  $$SyncLinkSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get playlistLinkId => $composableBuilder(
+    column: $table.playlistLinkId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tracksJson => $composableBuilder(
+    column: $table.tracksJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncLinkSnapshotsTableAnnotationComposer
+    extends Composer<_$TuneDatabase, $SyncLinkSnapshotsTable> {
+  $$SyncLinkSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playlistLinkId => $composableBuilder(
+    column: $table.playlistLinkId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get side =>
+      $composableBuilder(column: $table.side, builder: (column) => column);
+
+  GeneratedColumn<String> get tracksJson => $composableBuilder(
+    column: $table.tracksJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$SyncLinkSnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$TuneDatabase,
+          $SyncLinkSnapshotsTable,
+          SyncLinkSnapshot,
+          $$SyncLinkSnapshotsTableFilterComposer,
+          $$SyncLinkSnapshotsTableOrderingComposer,
+          $$SyncLinkSnapshotsTableAnnotationComposer,
+          $$SyncLinkSnapshotsTableCreateCompanionBuilder,
+          $$SyncLinkSnapshotsTableUpdateCompanionBuilder,
+          (
+            SyncLinkSnapshot,
+            BaseReferences<
+              _$TuneDatabase,
+              $SyncLinkSnapshotsTable,
+              SyncLinkSnapshot
+            >,
+          ),
+          SyncLinkSnapshot,
+          PrefetchHooks Function()
+        > {
+  $$SyncLinkSnapshotsTableTableManager(
+    _$TuneDatabase db,
+    $SyncLinkSnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncLinkSnapshotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncLinkSnapshotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncLinkSnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> playlistLinkId = const Value.absent(),
+                Value<String> side = const Value.absent(),
+                Value<String> tracksJson = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+              }) => SyncLinkSnapshotsCompanion(
+                id: id,
+                playlistLinkId: playlistLinkId,
+                side: side,
+                tracksJson: tracksJson,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int playlistLinkId,
+                required String side,
+                required String tracksJson,
+                required String createdAt,
+              }) => SyncLinkSnapshotsCompanion.insert(
+                id: id,
+                playlistLinkId: playlistLinkId,
+                side: side,
+                tracksJson: tracksJson,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncLinkSnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TuneDatabase,
+      $SyncLinkSnapshotsTable,
+      SyncLinkSnapshot,
+      $$SyncLinkSnapshotsTableFilterComposer,
+      $$SyncLinkSnapshotsTableOrderingComposer,
+      $$SyncLinkSnapshotsTableAnnotationComposer,
+      $$SyncLinkSnapshotsTableCreateCompanionBuilder,
+      $$SyncLinkSnapshotsTableUpdateCompanionBuilder,
+      (
+        SyncLinkSnapshot,
+        BaseReferences<
+          _$TuneDatabase,
+          $SyncLinkSnapshotsTable,
+          SyncLinkSnapshot
+        >,
+      ),
+      SyncLinkSnapshot,
+      PrefetchHooks Function()
+    >;
 
 class $TuneDatabaseManager {
   final _$TuneDatabase _db;
@@ -10899,4 +11472,6 @@ class $TuneDatabaseManager {
       $$StreamingAuthTableTableManager(_db, _db.streamingAuth);
   $$StreamingConfigTableTableManager get streamingConfig =>
       $$StreamingConfigTableTableManager(_db, _db.streamingConfig);
+  $$SyncLinkSnapshotsTableTableManager get syncLinkSnapshots =>
+      $$SyncLinkSnapshotsTableTableManager(_db, _db.syncLinkSnapshots);
 }
