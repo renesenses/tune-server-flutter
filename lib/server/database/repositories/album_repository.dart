@@ -35,6 +35,16 @@ class AlbumRepository {
             ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
           .getSingleOrNull();
 
+  /// Title-only lookup — used for compilations and albums without artist.
+  /// Returns the first match (oldest id) if multiple albums share the same title.
+  Future<Album?> findByTitle(String title) async {
+    final results = await (_db.select(_db.albums)
+          ..where((a) => a.title.equals(title))
+          ..limit(1))
+        .get();
+    return results.isEmpty ? null : results.first;
+  }
+
   /// Lookup by MusicBrainz release ID — authoritative discriminant.
   Future<Album?> getByMusicbrainzReleaseId(String releaseId) =>
       (_db.select(_db.albums)

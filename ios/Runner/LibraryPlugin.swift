@@ -147,7 +147,7 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
             }
         }
 
-        // Extra metadata: disc subtitle + dates from raw keys (Vorbis, iTunes freeform)
+        // Extra metadata: disc subtitle + dates + compilation from raw keys (Vorbis, iTunes freeform)
         for format in formats {
             let items = asset.metadata(forFormat: format)
             for item in items {
@@ -184,6 +184,34 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                         if s.count > 4 && dict["originalDate"] == nil {
                             dict["originalDate"] = s
                         }
+                    }
+                }
+                // Compilation tag: COMPILATION / itunescompilation (Vorbis/freeform)
+                // TCMP (ID3v2) — value "1" means true
+                if ks == "compilation" || ks == "itunescompilation"
+                    || idStr.contains("compilation") || idStr.contains("itunescompilation")
+                    || idStr.hasSuffix("/tcmp") {
+                    if dict["compilation"] == nil {
+                        if let s = item.stringValue {
+                            dict["compilation"] = (s == "1" || s.lowercased() == "true")
+                        } else if let n = item.numberValue?.intValue {
+                            dict["compilation"] = (n == 1)
+                        }
+                    }
+                }
+            }
+        }
+
+        // iTunes cpil atom (native boolean for compilation)
+        for item in iTunesItems {
+            guard let id = item.identifier else { continue }
+            if let idStr = id.rawValue as? String,
+               idStr.contains("cpil") || idStr.contains("CPIL") {
+                if dict["compilation"] == nil {
+                    if let n = item.numberValue?.intValue {
+                        dict["compilation"] = (n == 1)
+                    } else if let s = item.stringValue {
+                        dict["compilation"] = (s == "1" || s.lowercased() == "true")
                     }
                 }
             }

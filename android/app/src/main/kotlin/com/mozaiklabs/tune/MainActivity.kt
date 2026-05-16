@@ -116,6 +116,11 @@ class MainActivity : FlutterActivity() {
 
             val extraTags = readExtraTags(path)
 
+            // Compilation flag: from extra tags (Vorbis/ID3/M4A) or MediaMetadataRetriever (API 30+)
+            val isCompilation = extraTags["compilation"] == "1" ||
+                (android.os.Build.VERSION.SDK_INT >= 30 &&
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPILATION) == "1")
+
             mapOf(
                 "filePath"    to path,
                 "title"       to title,
@@ -140,6 +145,7 @@ class MainActivity : FlutterActivity() {
                 "musicbrainzReleaseId" to extraTags["musicbrainzReleaseId"],
                 "musicbrainzReleaseGroupId" to extraTags["musicbrainzReleaseGroupId"],
                 "discSubtitle" to extraTags["discSubtitle"],
+                "compilation" to isCompilation,
             )
         } catch (e: Exception) {
             // Fallback : nom de fichier uniquement
@@ -301,6 +307,11 @@ class MainActivity : FlutterActivity() {
                     out.putIfAbsent("discSubtitle", value)
                 "ALBUMARTISTSORT" ->
                     out.putIfAbsent("albumArtistSort", value)
+                "COMPILATION", "ITUNESCOMPILATION" -> {
+                    if (value == "1" || value.lowercase() == "true") {
+                        out.putIfAbsent("compilation", "1")
+                    }
+                }
             }
         }
     }
@@ -348,7 +359,20 @@ class MainActivity : FlutterActivity() {
                             }
                             "discsubtitle", "setsubtitle" ->
                                 out.putIfAbsent("discSubtitle", value)
+                            "compilation", "itunescompilation" -> {
+                                if (value == "1" || value.lowercase() == "true") {
+                                    out.putIfAbsent("compilation", "1")
+                                }
+                            }
                         }
+                    }
+                } else if (frameId == "TCMP" && frameSize > 1) {
+                    // TCMP frame — iTunes compilation flag (ID3v2)
+                    val encoding = tagData[offset].toInt()
+                    val charset = if (encoding == 3) Charsets.UTF_8 else Charsets.ISO_8859_1
+                    val value = String(tagData, offset + 1, frameSize - 1, charset).trimEnd(' ')
+                    if (value == "1" || value.lowercase() == "true") {
+                        out.putIfAbsent("compilation", "1")
                     }
                 } else if ((frameId == "TDOR" || frameId == "TORY") && frameSize > 1) {
                     val encoding = tagData[offset].toInt()
@@ -454,6 +478,20 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                } else if (atomType == "cpil") {
+                    // cpil atom — compilation flag (native MP4 boolean)
+                    val dataPos = findAtom(raf, pos + 8, atomEnd, "data")
+                    if (dataPos != null) {
+                        val dataSize = readAtomSize(raf, dataPos)
+                        val valueLen = (dataSize - 16).toInt()
+                        if (valueLen > 0) {
+                            raf.seek(dataPos + 16)
+                            val b = raf.read()
+                            if (b == 1) {
+                                out.putIfAbsent("compilation", "1")
+                            }
+                        }
+                    }
                 }
 
                 pos = atomEnd
@@ -552,6 +590,11 @@ class MainActivity : FlutterActivity() {
                 }
                 "DISCSUBTITLE", "SETSUBTITLE" ->
                     out.putIfAbsent("discSubtitle", dataStr)
+                "COMPILATION", "iTunesCompilation" -> {
+                    if (dataStr == "1" || dataStr.lowercase() == "true") {
+                        out.putIfAbsent("compilation", "1")
+                    }
+                }
             }
         }
     }

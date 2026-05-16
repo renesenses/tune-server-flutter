@@ -147,6 +147,8 @@ class LibraryScanner {
               musicbrainzReleaseGroupId: meta.musicbrainzReleaseGroupId,
               releaseDate: meta.releaseDate,
               originalDate: meta.originalDate,
+              compilation: meta.compilation,
+              albumArtist: meta.albumArtist,
             )
           : null;
 
@@ -313,6 +315,12 @@ class LibraryScanner {
         );
   }
 
+  /// Well-known album artist names that indicate a compilation.
+  static const _compilationArtists = {
+    'various artists', 'various', 'compilation', 'va',
+    'artistes divers', 'divers',
+  };
+
   Future<int> _upsertAlbum({
     required String title,
     int? artistId,
@@ -325,6 +333,8 @@ class LibraryScanner {
     String? musicbrainzReleaseGroupId,
     String? releaseDate,
     String? originalDate,
+    bool compilation = false,
+    String? albumArtist,
   }) async {
     // MBID-first lookup — authoritative discriminant
     Album? existing;
@@ -333,15 +343,26 @@ class LibraryScanner {
           musicbrainzReleaseId);
     }
 
-    // Fallback to title+artist lookup
+    // Determine if this is a compilation album (tag or well-known artist name)
+    final isCompilation = compilation ||
+        (albumArtist != null &&
+            _compilationArtists.contains(albumArtist.toLowerCase()));
+
+    // Fallback lookup when MBID didn't match
     if (existing == null) {
-      existing = await (_db.select(_db.albums)
-            ..where((a) =>
-                a.title.equals(title) &
-                (artistId != null
-                    ? a.artistId.equals(artistId)
-                    : a.artistId.isNull())))
-          .getSingleOrNull();
+      if (isCompilation) {
+        // Compilation → title-only lookup to avoid splitting by track artist
+        existing = await _db.albumRepo.findByTitle(title);
+      } else if (artistId != null) {
+        // Normal album with known artist → title+artist lookup
+        existing = await (_db.select(_db.albums)
+              ..where((a) =>
+                  a.title.equals(title) & a.artistId.equals(artistId)))
+            .getSingleOrNull();
+      } else {
+        // No artist → title-only lookup
+        existing = await _db.albumRepo.findByTitle(title);
+      }
       // Don't merge into an album that belongs to a different release
       if (existing != null &&
           musicbrainzReleaseId != null &&

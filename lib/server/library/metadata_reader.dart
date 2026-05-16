@@ -50,6 +50,8 @@ class TrackMetadata {
   // Full ISO dates (e.g. "2007-04-11") — only set when tag value is longer than 4 chars
   final String? releaseDate;
   final String? originalDate;
+  // Compilation flag — true if COMPILATION/cpil tag is "1" or true
+  final bool compilation;
 
   const TrackMetadata({
     required this.filePath,
@@ -76,6 +78,7 @@ class TrackMetadata {
     this.discSubtitle,
     this.releaseDate,
     this.originalDate,
+    this.compilation = false,
   });
 }
 
@@ -212,6 +215,7 @@ class MetadataReader {
       discSubtitle: raw['discSubtitle'] as String?,
       releaseDate: raw['releaseDate'] as String?,
       originalDate: raw['originalDate'] as String?,
+      compilation: raw['compilation'] == true,
     );
   }
 
