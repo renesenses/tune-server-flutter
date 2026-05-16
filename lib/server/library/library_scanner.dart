@@ -359,6 +359,13 @@ class LibraryScanner {
               ..where((a) =>
                   a.title.equals(title) & a.artistId.equals(artistId)))
             .getSingleOrNull();
+        // Fallback: same title under a different artist → compilation merge
+        if (existing == null) {
+          final byTitle = await _db.albumRepo.findByTitle(title);
+          if (byTitle != null && byTitle.artistId != artistId) {
+            existing = byTitle;
+          }
+        }
       } else {
         // No artist → title-only lookup
         existing = await _db.albumRepo.findByTitle(title);
