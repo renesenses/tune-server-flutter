@@ -144,6 +144,15 @@ class ServerConfiguration {
   Future<void> setCrossfadeDuration(double value) => _p.setDouble(_kCrossfadeDuration, value);
 
   // ---------------------------------------------------------------------------
+  // Exclusive Mode (WASAPI / bit-perfect)
+  // ---------------------------------------------------------------------------
+
+  static const _kExclusiveMode = 'exclusive_mode_enabled';
+
+  bool get exclusiveModeEnabled => _p.getBool(_kExclusiveMode) ?? false;
+  Future<void> setExclusiveModeEnabled(bool value) => _p.setBool(_kExclusiveMode, value);
+
+  // ---------------------------------------------------------------------------
   // Reset (tests / onboarding)
   // ---------------------------------------------------------------------------
 

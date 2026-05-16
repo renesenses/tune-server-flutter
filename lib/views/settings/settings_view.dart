@@ -356,6 +356,20 @@ class _SettingsList extends StatelessWidget {
           ),
         ),
 
+        const SizedBox(height: 8),
+        Container(
+          color: TuneColors.surface,
+          child: _SettingsTile(
+            title: 'Mode Exclusif (bit-perfect)',
+            subtitle: 'WASAPI Exclusive — accès direct au DAC USB',
+            trailing: Switch(
+              value: settings.exclusiveModeEnabled,
+              onChanged: (v) => settings.setExclusiveModeEnabled(v),
+              activeThumbColor: TuneColors.accent,
+            ),
+          ),
+        ),
+
         // ---- Bibliothèque ----
         _SectionHeader(l.settingsSectionLibrary),
         Container(

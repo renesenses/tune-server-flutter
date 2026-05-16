@@ -121,4 +121,15 @@ class SettingsState extends ChangeNotifier {
     await _config.setCrossfadeDuration(value);
     notifyListeners();
   }
+
+  // ---------------------------------------------------------------------------
+  // Exclusive Mode (WASAPI / bit-perfect)
+  // ---------------------------------------------------------------------------
+
+  bool get exclusiveModeEnabled => _config.exclusiveModeEnabled;
+
+  Future<void> setExclusiveModeEnabled(bool value) async {
+    await _config.setExclusiveModeEnabled(value);
+    notifyListeners();
+  }
 }
