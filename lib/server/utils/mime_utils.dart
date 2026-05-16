@@ -10,5 +10,7 @@ String mimeTypeForAudioPath(String path) {
   if (lower.endsWith('.wav')) return 'audio/wav';
   if (lower.endsWith('.aiff') || lower.endsWith('.aif')) return 'audio/aiff';
   if (lower.endsWith('.dsf') || lower.endsWith('.dff')) return 'audio/x-dsf';
+  if (lower.endsWith('.ape')) return 'audio/x-ape';
+  if (lower.endsWith('.wv')) return 'audio/x-wavpack';
   return 'audio/mpeg';
 }

@@ -44,7 +44,9 @@ enum AudioFormat {
   opus,
   dsd,
   aiff,
-  wma;
+  wma,
+  ape,
+  wavpack;
 
   String get rawValue => name;
 

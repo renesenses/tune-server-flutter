@@ -858,6 +858,8 @@ class ChromecastOutput implements OutputTarget {
     if (lower.contains('.opus')) return 'audio/ogg; codecs=opus';
     if (lower.contains('.aac') || lower.contains('.m4a')) return 'audio/mp4';
     if (lower.contains('.aiff') || lower.contains('.aif')) return 'audio/aiff';
+    if (lower.contains('.ape')) return 'audio/x-ape';
+    if (lower.contains('.wv')) return 'audio/x-wavpack';
     return 'audio/mpeg'; // default to MP3
   }
 }

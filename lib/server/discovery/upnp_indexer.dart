@@ -313,6 +313,8 @@ class UPnPIndexer {
       if (m.contains('aac') || m.contains('mp4')) return 'aac';
       if (m.contains('dsf') || m.contains('dsd')) return 'dsd';
       if (m.contains('wma')) return 'wma';
+      if (m.contains('ape') || m.contains('monkey')) return 'ape';
+      if (m.contains('wavpack') || m.contains('x-wv')) return 'wavpack';
     }
     // Fallback depuis l'extension du fichier
     if (url != null) {
@@ -321,6 +323,7 @@ class UPnPIndexer {
         'flac': 'flac', 'mp3': 'mp3', 'aac': 'aac', 'm4a': 'alac',
         'wav': 'wav', 'aiff': 'aiff', 'aif': 'aiff', 'ogg': 'ogg',
         'opus': 'opus', 'dsf': 'dsd', 'dff': 'dsd', 'wma': 'wma',
+        'ape': 'ape', 'wv': 'wavpack',
       };
       if (map.containsKey(ext)) return map[ext];
     }
