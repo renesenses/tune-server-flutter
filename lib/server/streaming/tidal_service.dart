@@ -25,7 +25,7 @@ class TidalService implements StreamingService {
   String? _refreshToken;
   DateTime? _tokenExpiry;
   String? _accountName;
-  String _quality = 'lossless'; // lossless | hi_res | high | low
+  String _quality = 'lossless'; // hi_res_lossless | lossless | hi_res | high | low
 
   TidalService({http.Client? client}) : _http = client ?? http.Client();
 
@@ -344,6 +344,8 @@ class TidalService implements StreamingService {
 
   List<String> _qualityFallback() {
     switch (_quality) {
+      case 'hi_res_lossless':
+        return ['HI_RES_LOSSLESS', 'HI_RES', 'LOSSLESS', 'HIGH', 'LOW'];
       case 'hi_res':
         return ['HI_RES', 'LOSSLESS', 'HIGH', 'LOW'];
       case 'lossless':

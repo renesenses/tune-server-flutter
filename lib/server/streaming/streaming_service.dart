@@ -17,7 +17,7 @@ class StreamingSearchResult {
   final int? durationMs;
   final String? coverUrl;
   final String? previewUrl;
-  final String serviceId; // 'qobuz' | 'tidal' | 'youtube' | 'spotify' | 'deezer'
+  final String serviceId; // 'qobuz' | 'tidal' | 'youtube' | 'spotify' | 'deezer' | 'amazon'
   final String type; // 'track' | 'album' | 'artist'
   final Map<String, dynamic> raw; // données brutes pour getStreamUrl
 
@@ -118,10 +118,10 @@ enum StreamingError {
 
 /// Interface commune à tous les services de streaming.
 abstract interface class StreamingService {
-  /// Identifiant du service ('qobuz', 'tidal', 'youtube', 'spotify', 'deezer').
+  /// Identifiant du service ('qobuz', 'tidal', 'youtube', 'spotify', 'deezer', 'amazon').
   String get serviceId;
 
-  /// Nom affiché ('Qobuz', 'Tidal', 'YouTube', 'Spotify', 'Deezer').
+  /// Nom affiché ('Qobuz', 'Tidal', 'YouTube', 'Spotify', 'Deezer', 'Amazon Music').
   String get displayName;
 
   /// true si les credentials sont présents et valides.

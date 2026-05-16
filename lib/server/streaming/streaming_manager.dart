@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../database/database.dart';
+import 'amazon_service.dart';
 import 'deezer_service.dart';
 import 'qobuz_service.dart';
 import 'spotify_service.dart';
@@ -37,6 +38,7 @@ class StreamingManager {
       _services['spotify'] = SpotifyService(clientId: spotifyClientId);
     }
     _services['deezer'] = DeezerService();
+    _services['amazon'] = AmazonService();
   }
 
   // ---------------------------------------------------------------------------
@@ -242,6 +244,7 @@ class StreamingManager {
     if (service is YouTubeService) tokenData = service.tokenJson;
     if (service is SpotifyService) tokenData = service.tokenJson;
     if (service is DeezerService) tokenData = service.tokenJson;
+    if (service is AmazonService) tokenData = service.tokenJson;
 
     await _db.into(_db.streamingAuth).insertOnConflictUpdate(
           StreamingAuthCompanion.insert(

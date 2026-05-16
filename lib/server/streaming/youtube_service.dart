@@ -289,6 +289,95 @@ class YouTubeService implements StreamingService {
   }
 
   // ---------------------------------------------------------------------------
+  // Browse — trending / charts / moods (Piped)
+  // ---------------------------------------------------------------------------
+
+  /// Retourne les vidéos tendances musique.
+  Future<List<StreamingSearchResult>> getTrending({String region = 'FR'}) async {
+    try {
+      final uri = Uri.parse('$_pipedInstance/trending').replace(
+        queryParameters: {'region': region},
+      );
+      final response =
+          await _http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return [];
+
+      final items = jsonDecode(response.body) as List? ?? [];
+      return items
+          .where((i) => (i as Map<String, dynamic>)['type'] == 'stream')
+          .take(20)
+          .map((i) => _mapPipedItem(i as Map<String, dynamic>))
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Retourne les playlists de la page d'accueil YouTube Music (via channel).
+  Future<List<StreamingSearchResult>> getCharts({String region = 'FR'}) async {
+    // YouTube Music charts via Piped channel "UC-9-kyTW8ZkZNDHQJ6FgpwQ" (Music)
+    try {
+      final uri = Uri.parse('$_pipedInstance/channels/tabs').replace(
+        queryParameters: {
+          'data': 'https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ',
+        },
+      );
+      final response =
+          await _http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return getTrending(region: region);
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final items = (data['content'] as List?) ?? [];
+      return items
+          .take(20)
+          .map((i) => _mapPipedItem(i as Map<String, dynamic>))
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return getTrending(region: region);
+    }
+  }
+
+  /// Retourne les catégories/moods musicales.
+  /// Chaque résultat est une playlist ID navigable via getPlaylistTracks.
+  Future<List<StreamingSearchResult>> getMoodPlaylists(String moodParams) async {
+    try {
+      final uri = Uri.parse('$_pipedInstance/search').replace(
+        queryParameters: {'q': moodParams, 'filter': 'music_playlists'},
+      );
+      final response =
+          await _http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final items = (data['items'] as List?) ?? [];
+      return items
+          .take(20)
+          .map((i) {
+            final item = i as Map<String, dynamic>;
+            final url = item['url'] as String?;
+            final id = url?.replaceFirst('/playlist?list=', '') ?? '';
+            final title = item['name'] as String? ?? item['title'] as String?;
+            if (id.isEmpty || title == null) return null;
+            return StreamingSearchResult(
+              id: id,
+              title: title,
+              artist: item['uploaderName'] as String?,
+              coverUrl: item['thumbnail'] as String?,
+              serviceId: serviceId,
+              type: 'playlist',
+              raw: item,
+            );
+          })
+          .whereType<StreamingSearchResult>()
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // État
   // ---------------------------------------------------------------------------
 
