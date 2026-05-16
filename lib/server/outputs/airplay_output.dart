@@ -70,6 +70,7 @@ class AirPlayOutput implements OutputTarget {
     String? albumArtUrl,
   }) async {
     try {
+      await stop();
       await _channel.invokeMethod<void>('play', {
         'url': url,
         if (title != null) 'title': title,
