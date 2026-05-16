@@ -68,15 +68,23 @@
   "playlistNewPlaylist": "新播放列表",
   "playlistTrackAdded": "已添加到\"{name}\"",
   "@playlistTrackAdded": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistTrackAlreadyIn": "已在\"{name}\"中",
   "@playlistTrackAlreadyIn": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistDeleteTitle": "删除播放列表？",
   "playlistDeleteBody": "此播放列表将被永久删除。",
-  "searchHint": "搜索\u2026",
+  "searchHint": "搜索…",
   "searchNoResults": "没有结果",
   "searchSectionTracks": "曲目",
   "searchSectionAlbums": "专辑",
@@ -114,7 +122,13 @@
   "zonesTransferTitle": "播放到...",
   "zonesNowPlaying": "正在播放",
   "zonesActivated": "活动区域: {name}",
-  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
+  "@zonesActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "radiosTitle": "收音机",
   "radiosTabAll": "全部",
   "radiosTabFavorites": "收藏",
@@ -142,9 +156,9 @@
   "streamingEmail": "电子邮件",
   "streamingPassword": "密码",
   "streamingSignIn": "登录",
-  "streamingSigningIn": "登录中\u2026",
+  "streamingSigningIn": "登录中…",
   "streamingDeviceCode": "验证码",
-  "streamingOpenLink": "打开\u2026",
+  "streamingOpenLink": "打开…",
   "streamingLogoutTitle": "断开连接？",
   "streamingLogoutBody": "从{service}断开连接？",
   "streamingAuthError": "认证失败",
@@ -182,7 +196,7 @@
   "settingsResetTitle": "重置？",
   "settingsResetBody": "所有首选项将被重置。下次启动时将显示启动向导。",
   "settingsPortTitle": "HTTP端口",
-  "settingsPortHint": "端口 (1024\u201365535)",
+  "settingsPortHint": "端口 (1024–65535)",
   "metadataTitle": "音乐与元数据",
   "metadataRefreshStats": "刷新统计",
   "metadataSectionStats": "统计",
@@ -193,7 +207,7 @@
   "metadataStatRadios": "收音机",
   "metadataStatArtwork": "封面缓存",
   "metadataSectionScan": "媒体库扫描",
-  "metadataScanInProgress": "扫描中\u2026 {current}/{total}",
+  "metadataScanInProgress": "扫描中… {current}/{total}",
   "metadataScanResult": "上次扫描：+{added}新增，{updated}更新",
   "metadataScanBtn": "扫描媒体库",
   "metadataScanDesc": "索引所有已配置的文件夹",
@@ -220,36 +234,37 @@
   "setupWelcomeBody": "您的嵌入式多房间音乐服务器。将本地媒体库、流媒体服务和收音机传输到任何DLNA或AirPlay音箱。",
   "setupStart": "开始",
   "setupLocalTitle": "本地媒体库",
-  "setupLocalBody": "指定包含音频文件的文件夹路径（FLAC、MP3、AAC\u2026）。您可以稍后在设置中添加更多。",
+  "setupLocalBody": "指定包含音频文件的文件夹路径（FLAC、MP3、AAC…）。您可以稍后在设置中添加更多。",
   "setupFolderPath": "文件夹路径",
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "添加此文件夹",
-  "setupFolderAdded": "文件夹已添加 \u2014 扫描中\u2026",
+  "setupFolderAdded": "文件夹已添加 — 扫描中…",
   "setupFolderEmpty": "请输入文件夹路径",
   "setupUPnPTitle": "UPnP/DLNA服务器",
-  "setupUPnPBody": "Tune Server自动发现本地网络上的UPnP/DLNA服务器。通过搜索 \u2192 浏览来浏览其媒体库。",
+  "setupUPnPBody": "Tune Server自动发现本地网络上的UPnP/DLNA服务器。通过搜索 → 浏览来浏览其媒体库。",
   "setupFeatureSsdp": "自动SSDP发现",
   "setupFeatureContentDir": "ContentDirectory导航",
   "setupFeaturePlayback": "直接DLNA文件播放",
   "setupFinish": "完成配置",
-
   "libraryPlayAlbum": "播放专辑",
   "libraryPlayNext": "下一首播放",
   "radioFavExportDone": "CSV 已导出：{path}",
   "@radioFavExportDone": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "radioFavExportError": "导出错误",
   "streamingViewAlbum": "查看专辑",
   "streamingLogoutContent": "您的账户将断开连接。",
   "streamingUrlCopied": "URL 已复制到剪贴板",
   "streamingDeviceCodeHint": "前往此网址并输入上方代码：",
-  "searchHintFull": "搜索艺术家、专辑、曲目\u2026",
-  "browseNavError": "导航错误"
-,
+  "searchHintFull": "搜索艺术家、专辑、曲目…",
+  "browseNavError": "导航错误",
   "streamingCodeEntered": "我已输入代码",
   "appleMusicAuthorize": "允许访问",
-
   "smbNavTitle": "SMB来源",
   "smbTitle": "SMB连接",
   "smbHostHint": "输入SMB服务器地址",
@@ -264,13 +279,23 @@
   "smbScan": "扫描",
   "smbScanning": "扫描中…",
   "smbScanCount": "找到{count}个音频文件",
-  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "@smbScanCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "smbDoneTitle": "索引完成",
   "smbDoneBody": "从{share}导入了{count}首曲目",
   "@smbDoneBody": {
     "placeholders": {
-      "count": { "type": "int" },
-      "share": { "type": "String" }
+      "count": {
+        "type": "int"
+      },
+      "share": {
+        "type": "String"
+      }
     }
   },
   "smbAddAnother": "添加其他共享",
@@ -282,14 +307,16 @@
   "podcastsEmpty": "无播客",
   "podcastsSearchHint": "搜索播客…",
   "podcastsNoEpisodes": "无剧集",
-  "navPodcasts": "播客"
-,
+  "navPodcasts": "播客",
   "streamingConnectedSuccess": "已连接！",
   "browseItemCount": "{count} 项目",
   "@browseItemCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "settingsSources": "来源与设备",
   "settingsSourcesDesc": "UPnP服务器、DLNA渲染器",
   "sourcesTitle": "来源与设备",
@@ -309,9 +336,8 @@
   "sourcesIpHint": "192.168.1.100",
   "sourcesPortLabel": "端口",
   "sourcesPortHint": "49152",
-  "sourcesProbing": "扫描中\u2026",
+  "sourcesProbing": "扫描中…",
   "sourcesNotFound": "在此地址未找到UPnP设备",
-
   "zonesMultiRoom": "多房间",
   "zonesCreateGroup": "创建分组",
   "zonesGroupLeader": "主控",
@@ -332,7 +358,6 @@
   "zonesGroupNeedTwo": "请至少选择2个区域",
   "zonesGroupCreated": "分组已创建",
   "zonesGroupDissolved": "分组已解散",
-
   "metadataSectionEnrich": "丰富",
   "metadataSectionDuplicates": "重复",
   "metadataSectionCorrect": "修正",
@@ -342,7 +367,7 @@
   "metadataFilterMissingYear": "缺少年份",
   "metadataFilterMissingArtist": "缺少艺术家",
   "metadataFilterDoubtful": "可疑",
-  "metadataSearchHint": "搜索专辑\u2026",
+  "metadataSearchHint": "搜索专辑…",
   "metadataArtistFilter": "艺术家",
   "metadataGenreFilter": "流派",
   "metadataAllArtists": "所有艺术家",
@@ -352,25 +377,57 @@
   "metadataSaveChanges": "保存",
   "metadataWriteTags": "写入标签",
   "metadataWriteTagsSuccess": "标签已写入：{count}个文件",
-  "@metadataWriteTagsSuccess": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataWriteTagsSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeGroup": "合并",
   "metadataMergeConfirm": "合并这{count}个专辑？曲目最多的专辑将被保留。",
-  "@metadataMergeConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataMergeConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeSuccess": "已合并：移动了{moved}首曲目，共{total}首",
-  "@metadataMergeSuccess": { "placeholders": { "moved": { "type": "int" }, "total": { "type": "int" } } },
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "metadataUploadCover": "上传封面",
   "metadataCoverUploaded": "封面已上传",
   "metadataAlbumSaved": "专辑已保存",
   "metadataDupAlbums": "{count}个重复专辑",
-  "@metadataDupAlbums": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataDupAlbums": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataDoubtfulReasons": "问题",
   "metadataArtistField": "艺术家",
   "metadataAlbumField": "专辑",
   "metadataGenreField": "流派",
   "metadataYearField": "年份",
   "metadataTracksCount": "{count}首曲目",
-  "@metadataTracksCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@metadataTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "stereoPairsTitle": "立体声配对",
   "stereoPairCreate": "创建立体声配对",
   "stereoPairName": "配对名称",
@@ -399,15 +456,27 @@
   "onboardingZoneBody": "以下设备已在您的网络中发现。点击一个来创建您的第一个音频区域。",
   "onboardingZoneEmpty": "尚未发现设备。您可以稍后添加。",
   "onboardingZoneCreated": "区域已创建：{name}",
-  "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
+  "@onboardingZoneCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "onboardingDoneTitle": "完成！",
   "onboardingDoneBody": "您的设置已就绪。享受您的音乐吧！",
   "onboardingDoneButton": "进入仪表板",
-
   "artistBio": "传记",
   "artistAnecdotes": "轶事",
   "artistSimilarArtists": "相似艺术家",
   "artistMembers": "成员",
   "artistDiscography": "唱片目录",
-  "artistEnriching": "正在丰富信息\u2026"
+  "artistEnriching": "正在丰富信息…",
+  "libraryShuffleAll": "随机播放全部",
+  "librarySortBy": "排序方式",
+  "librarySortTitle": "标题",
+  "librarySortArtist": "艺术家",
+  "librarySortYear": "年份",
+  "librarySortOriginalYear": "原始年份",
+  "librarySortAddedDate": "添加日期"
 }

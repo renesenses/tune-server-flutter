@@ -1162,7 +1162,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get libraryShuffleAll => '전체 셔플';
 
   @override
-  String get librarySortBy => '정렬 기준';
+  String get librarySortBy => '정렬';
 
   @override
   String get librarySortTitle => '제목';
@@ -1171,7 +1171,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get librarySortArtist => '아티스트';
 
   @override
-  String get librarySortYear => '발매일';
+  String get librarySortYear => '연도';
 
   @override
   String get librarySortOriginalYear => '원본 연도';

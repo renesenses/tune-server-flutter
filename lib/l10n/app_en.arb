@@ -1,8 +1,6 @@
 {
   "@@locale": "en",
-
   "appTitle": "Tune Server",
-
   "btnOk": "OK",
   "btnCancel": "Cancel",
   "btnAdd": "Add",
@@ -30,19 +28,16 @@
   "btnScan": "Scan library",
   "btnAddFolder": "Add a folder",
   "actionIrreversible": "This action is irreversible.",
-
   "rootStartError": "Startup error",
   "playbackErrorNoZone": "No zone selected — create or select a zone",
   "playbackErrorZoneNotFound": "Zone not found",
   "playbackErrorFailed": "Playback failed",
-
   "navLibrary": "Library",
   "navSearch": "Search",
   "navStreaming": "Streaming",
   "navRadios": "Radios",
   "navZones": "Zones",
   "navSettings": "Settings",
-
   "libraryTitle": "Library",
   "tabAlbums": "Albums",
   "tabArtists": "Artists",
@@ -65,9 +60,7 @@
   "libraryEditAlbum": "Edit album",
   "libraryEditTrack": "Edit track",
   "libraryPlay": "Play",
-
   "genresAllTracks": "All tracks",
-
   "playlistCreate": "Create playlist",
   "playlistName": "Playlist name",
   "playlistEmpty": "No tracks",
@@ -75,22 +68,28 @@
   "playlistNewPlaylist": "New playlist",
   "playlistTrackAdded": "Added to \"{name}\"",
   "@playlistTrackAdded": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistTrackAlreadyIn": "Already in \"{name}\"",
   "@playlistTrackAlreadyIn": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistDeleteTitle": "Delete playlist?",
   "playlistDeleteBody": "This playlist will be permanently deleted.",
-
-  "searchHint": "Search\u2026",
+  "searchHint": "Search…",
   "searchNoResults": "No results",
   "searchSectionTracks": "Tracks",
   "searchSectionAlbums": "Albums",
   "searchSectionArtists": "Artists",
   "searchSectionStreaming": "Streaming",
-
   "homeRecentlyPlayed": "Recently played",
   "homeLibrary": "Library",
   "homeQuickAccess": "Quick access",
@@ -99,17 +98,13 @@
   "homeStatTracks": "tracks",
   "homeStatAlbums": "albums",
   "homeStatArtists": "artists",
-
   "historyTitle": "History",
   "historyEmpty": "No history",
   "historyClear": "Clear",
   "historyClearTitle": "Clear history",
-
   "nowPlayingNoTrack": "No track",
-
   "queueTitle": "Playback queue",
   "queueEmpty": "Empty queue",
-
   "zonesTitle": "Zones",
   "zonesNew": "New zone",
   "zonesNewName": "Zone name",
@@ -127,8 +122,13 @@
   "zonesTransferTitle": "Play on...",
   "zonesNowPlaying": "Playing here",
   "zonesActivated": "Active zone: {name}",
-  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
-
+  "@zonesActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "radiosTitle": "Radios",
   "radiosTabAll": "All",
   "radiosTabFavorites": "Favorites",
@@ -144,44 +144,52 @@
   "radiosImportUrlLabel": "M3U file URL",
   "radiosImportResult": "{count} station(s) imported",
   "@radiosImportResult": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "radiosImportHttpError": "HTTP error {code}",
   "@radiosImportHttpError": {
-    "placeholders": { "code": { "type": "int" } }
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
   },
   "radiosImportFailed": "Could not download the file",
   "radiosFavSaved": "Track saved",
   "radioSaveFavorite": "Save track",
-
   "radioFavTitle": "Radio favorites",
   "radioFavEmpty": "No saved favorites",
   "radioFavExportCsv": "Export CSV",
-
   "streamingTitle": "Streaming",
   "streamingConnected": "Connected",
   "streamingNotConnected": "Not connected",
   "streamingEmail": "Email",
   "streamingPassword": "Password",
   "streamingSignIn": "Sign in",
-  "streamingSigningIn": "Signing in\u2026",
+  "streamingSigningIn": "Signing in…",
   "streamingDeviceCode": "Verification code",
-  "streamingOpenLink": "Open\u2026",
+  "streamingOpenLink": "Open…",
   "streamingLogoutTitle": "Disconnect?",
   "streamingLogoutBody": "Disconnect from {service}?",
   "@streamingLogoutBody": {
-    "placeholders": { "service": { "type": "String" } }
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
   },
   "streamingAuthError": "Authentication failed",
   "streamingAlbumsSection": "Albums",
   "streamingPlaylistsSection": "Playlists",
-
   "browseTitle": "Browse",
   "browseRefreshTooltip": "Refresh",
   "browseNoServers": "No UPnP/DLNA servers detected",
   "browseNoServersHint": "Make sure your server is on the same Wi-Fi network.",
   "browseNoContent": "Empty folder",
-
   "settingsTitle": "Settings",
   "settingsSectionAppearance": "Appearance",
   "settingsTheme": "Theme",
@@ -209,8 +217,7 @@
   "settingsResetTitle": "Reset?",
   "settingsResetBody": "All preferences will be reset. The startup wizard will appear on next launch.",
   "settingsPortTitle": "HTTP port",
-  "settingsPortHint": "Port (1024\u201365535)",
-
+  "settingsPortHint": "Port (1024–65535)",
   "metadataTitle": "Music & Metadata",
   "metadataRefreshStats": "Refresh stats",
   "metadataSectionStats": "Statistics",
@@ -221,18 +228,26 @@
   "metadataStatRadios": "Radios",
   "metadataStatArtwork": "Artwork cache",
   "metadataSectionScan": "Library scan",
-  "metadataScanInProgress": "Scanning\u2026 {current}/{total}",
+  "metadataScanInProgress": "Scanning… {current}/{total}",
   "@metadataScanInProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "metadataScanResult": "Last scan: +{added} added, {updated} updated",
   "@metadataScanResult": {
     "placeholders": {
-      "added": { "type": "int" },
-      "updated": { "type": "int" }
+      "added": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      }
     }
   },
   "metadataScanBtn": "Scan library",
@@ -241,7 +256,11 @@
   "metadataFoldersNone": "No folders configured",
   "metadataFolderAddedOn": "Added on {date}",
   "@metadataFolderAddedOn": {
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "metadataAddFolder": "Add a folder",
   "metadataFolderPath": "Folder path",
@@ -259,41 +278,41 @@
   "metadataLibraryCleared": "Library cleared",
   "metadataDeleteBtn": "Delete",
   "metadataClearBtn": "Clear",
-
   "setupWelcomeTitle": "Welcome to\nTune Server",
   "setupWelcomeBody": "Your embedded multi-room music server. Stream your local library, your favorite streaming services and your radios to any DLNA or AirPlay speaker.",
   "setupStart": "Start",
   "setupLocalTitle": "Local library",
-  "setupLocalBody": "Specify the path of a folder containing your audio files (FLAC, MP3, AAC\u2026). You can add more later in Settings.",
+  "setupLocalBody": "Specify the path of a folder containing your audio files (FLAC, MP3, AAC…). You can add more later in Settings.",
   "setupFolderPath": "Folder path",
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "Add this folder",
-  "setupFolderAdded": "Folder added \u2014 scanning\u2026",
+  "setupFolderAdded": "Folder added — scanning…",
   "setupFolderEmpty": "Please enter a folder path",
   "setupUPnPTitle": "UPnP/DLNA Servers",
-  "setupUPnPBody": "Tune Server automatically discovers UPnP/DLNA servers on your local network. Browse their libraries via Search \u2192 Browse.",
+  "setupUPnPBody": "Tune Server automatically discovers UPnP/DLNA servers on your local network. Browse their libraries via Search → Browse.",
   "setupFeatureSsdp": "Automatic SSDP discovery",
   "setupFeatureContentDir": "ContentDirectory navigation",
   "setupFeaturePlayback": "Direct DLNA file playback",
   "setupFinish": "Finish configuration",
-
   "libraryPlayAlbum": "Play album",
   "libraryPlayNext": "Play next",
   "radioFavExportDone": "CSV exported: {path}",
   "@radioFavExportDone": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "radioFavExportError": "Export error",
   "streamingViewAlbum": "View album",
   "streamingLogoutContent": "Your account will be disconnected.",
   "streamingUrlCopied": "URL copied to clipboard",
   "streamingDeviceCodeHint": "Go to this URL and enter the code above:",
-  "searchHintFull": "Search artists, albums, tracks\u2026",
-  "browseNavError": "Navigation error"
-,
+  "searchHintFull": "Search artists, albums, tracks…",
+  "browseNavError": "Navigation error",
   "streamingCodeEntered": "I've entered the code",
   "appleMusicAuthorize": "Allow access",
-
   "smbNavTitle": "SMB Source",
   "smbTitle": "SMB Connection",
   "smbHostHint": "Enter the address of the SMB server",
@@ -308,13 +327,23 @@
   "smbScan": "Scan",
   "smbScanning": "Scanning…",
   "smbScanCount": "{count} audio files found",
-  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "@smbScanCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "smbDoneTitle": "Indexing complete",
   "smbDoneBody": "{count} tracks imported from {share}",
   "@smbDoneBody": {
     "placeholders": {
-      "count": { "type": "int" },
-      "share": { "type": "String" }
+      "count": {
+        "type": "int"
+      },
+      "share": {
+        "type": "String"
+      }
     }
   },
   "smbAddAnother": "Add another share",
@@ -326,14 +355,16 @@
   "podcastsEmpty": "No podcasts",
   "podcastsSearchHint": "Search for a podcast…",
   "podcastsNoEpisodes": "No episodes",
-  "navPodcasts": "Podcasts"
-,
+  "navPodcasts": "Podcasts",
   "streamingConnectedSuccess": "Connected!",
   "browseItemCount": "{count} items",
   "@browseItemCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "settingsSources": "Sources & Devices",
   "settingsSourcesDesc": "UPnP servers, DLNA renderers",
   "sourcesTitle": "Sources & Devices",
@@ -353,9 +384,8 @@
   "sourcesIpHint": "192.168.1.100",
   "sourcesPortLabel": "Port",
   "sourcesPortHint": "49152",
-  "sourcesProbing": "Probing\u2026",
+  "sourcesProbing": "Probing…",
   "sourcesNotFound": "No UPnP device found at this address",
-
   "zonesMultiRoom": "Multi-Room",
   "zonesCreateGroup": "Create group",
   "zonesGroupLeader": "Leader",
@@ -376,7 +406,6 @@
   "zonesGroupNeedTwo": "Select at least 2 zones",
   "zonesGroupCreated": "Group created",
   "zonesGroupDissolved": "Group dissolved",
-
   "metadataSectionEnrich": "Enrich",
   "metadataSectionDuplicates": "Duplicates",
   "metadataSectionCorrect": "Correct",
@@ -386,7 +415,7 @@
   "metadataFilterMissingYear": "Missing year",
   "metadataFilterMissingArtist": "Missing artist",
   "metadataFilterDoubtful": "Doubtful",
-  "metadataSearchHint": "Search albums\u2026",
+  "metadataSearchHint": "Search albums…",
   "metadataArtistFilter": "Artist",
   "metadataGenreFilter": "Genre",
   "metadataAllArtists": "All artists",
@@ -397,27 +426,42 @@
   "metadataWriteTags": "Write Tags",
   "metadataWriteTagsSuccess": "Tags written: {count} files",
   "@metadataWriteTagsSuccess": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "metadataMergeGroup": "Merge",
   "metadataMergeConfirm": "Merge these {count} albums into one? The album with the most tracks will be kept.",
   "@metadataMergeConfirm": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "metadataMergeSuccess": "Merged: {moved} tracks moved, {total} total",
   "@metadataMergeSuccess": {
     "placeholders": {
-      "moved": { "type": "int" },
-      "total": { "type": "int" }
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "metadataUploadCover": "Upload cover",
   "metadataCoverUploaded": "Cover uploaded",
   "metadataAlbumSaved": "Album saved",
-  "metadataFolderPath": "Folder path",
   "metadataDupAlbums": "{count} duplicate albums",
   "@metadataDupAlbums": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "metadataDoubtfulReasons": "Issues",
   "metadataArtistField": "Artist",
@@ -426,9 +470,12 @@
   "metadataYearField": "Year",
   "metadataTracksCount": "{count} tracks",
   "@metadataTracksCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "stereoPairsTitle": "Stereo Pairs",
   "stereoPairCreate": "Create stereo pair",
   "stereoPairName": "Pair name",
@@ -442,12 +489,10 @@
   "stereoPairDissolve": "Dissolve",
   "stereoPairBadgeL": "L",
   "stereoPairBadgeR": "R",
-
   "streamingEnable": "Enable",
   "streamingDisable": "Disable",
   "streamingEnabled": "Service enabled",
   "streamingDisabled": "Service disabled",
-
   "onboardingWelcomeTitle": "Welcome to Tune!",
   "onboardingWelcomeBody": "Your embedded multi-room music server. Let's set up your installation in a few steps.",
   "onboardingWelcomeStart": "Get started",
@@ -460,16 +505,26 @@
   "onboardingZoneEmpty": "No devices discovered yet. You can add more later.",
   "onboardingZoneCreated": "Zone created: {name}",
   "@onboardingZoneCreated": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "onboardingDoneTitle": "All done!",
   "onboardingDoneBody": "Your setup is ready. Enjoy your music!",
   "onboardingDoneButton": "Go to dashboard",
-
   "artistBio": "Biography",
   "artistAnecdotes": "Anecdotes",
   "artistSimilarArtists": "Similar artists",
   "artistMembers": "Members",
   "artistDiscography": "Discography",
-  "artistEnriching": "Enrichment in progress\u2026"
+  "artistEnriching": "Enrichment in progress…",
+  "libraryShuffleAll": "Shuffle All",
+  "librarySortBy": "Sort by",
+  "librarySortTitle": "Title",
+  "librarySortArtist": "Artist",
+  "librarySortYear": "Year",
+  "librarySortOriginalYear": "Original Year",
+  "librarySortAddedDate": "Date Added"
 }

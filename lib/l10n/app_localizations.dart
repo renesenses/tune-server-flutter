@@ -2321,7 +2321,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryShuffleAll.
   ///
   /// In en, this message translates to:
-  /// **'Shuffle all'**
+  /// **'Shuffle All'**
   String get libraryShuffleAll;
 
   /// No description provided for @librarySortBy.
@@ -2345,19 +2345,19 @@ abstract class AppLocalizations {
   /// No description provided for @librarySortYear.
   ///
   /// In en, this message translates to:
-  /// **'Release date'**
+  /// **'Year'**
   String get librarySortYear;
 
   /// No description provided for @librarySortOriginalYear.
   ///
   /// In en, this message translates to:
-  /// **'Original year'**
+  /// **'Original Year'**
   String get librarySortOriginalYear;
 
   /// No description provided for @librarySortAddedDate.
   ///
   /// In en, this message translates to:
-  /// **'Date added'**
+  /// **'Date Added'**
   String get librarySortAddedDate;
 }
 

@@ -68,15 +68,23 @@
   "playlistNewPlaylist": "새 플레이리스트",
   "playlistTrackAdded": "「{name}」에 추가됨",
   "@playlistTrackAdded": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistTrackAlreadyIn": "이미 「{name}」에 있음",
   "@playlistTrackAlreadyIn": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistDeleteTitle": "플레이리스트를 삭제하시겠습니까?",
   "playlistDeleteBody": "이 플레이리스트는 영구적으로 삭제됩니다.",
-  "searchHint": "검색\u2026",
+  "searchHint": "검색…",
   "searchNoResults": "결과 없음",
   "searchSectionTracks": "트랙",
   "searchSectionAlbums": "앨범",
@@ -114,7 +122,13 @@
   "zonesTransferTitle": "재생 위치...",
   "zonesNowPlaying": "여기서 재생 중",
   "zonesActivated": "활성 구역: {name}",
-  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
+  "@zonesActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "radiosTitle": "라디오",
   "radiosTabAll": "전체",
   "radiosTabFavorites": "즐겨찾기",
@@ -142,9 +156,9 @@
   "streamingEmail": "이메일",
   "streamingPassword": "비밀번호",
   "streamingSignIn": "로그인",
-  "streamingSigningIn": "로그인 중\u2026",
+  "streamingSigningIn": "로그인 중…",
   "streamingDeviceCode": "확인 코드",
-  "streamingOpenLink": "열기\u2026",
+  "streamingOpenLink": "열기…",
   "streamingLogoutTitle": "연결 해제하시겠습니까?",
   "streamingLogoutBody": "{service}에서 연결 해제하시겠습니까?",
   "streamingAuthError": "인증 실패",
@@ -182,7 +196,7 @@
   "settingsResetTitle": "초기화하시겠습니까?",
   "settingsResetBody": "모든 환경설정이 초기화됩니다. 다음 실행 시 시작 마법사가 표시됩니다.",
   "settingsPortTitle": "HTTP 포트",
-  "settingsPortHint": "포트 (1024\u201365535)",
+  "settingsPortHint": "포트 (1024–65535)",
   "metadataTitle": "음악 및 메타데이터",
   "metadataRefreshStats": "통계 새로 고침",
   "metadataSectionStats": "통계",
@@ -193,7 +207,7 @@
   "metadataStatRadios": "라디오",
   "metadataStatArtwork": "커버 캐시",
   "metadataSectionScan": "라이브러리 스캔",
-  "metadataScanInProgress": "스캔 중\u2026 {current}/{total}",
+  "metadataScanInProgress": "스캔 중… {current}/{total}",
   "metadataScanResult": "마지막 스캔: +{added}개 추가, {updated}개 업데이트",
   "metadataScanBtn": "라이브러리 스캔",
   "metadataScanDesc": "설정된 모든 폴더를 인덱싱",
@@ -220,36 +234,37 @@
   "setupWelcomeBody": "내장형 멀티룸 음악 서버입니다. 로컬 라이브러리, 스트리밍 서비스, 라디오를 모든 DLNA 또는 AirPlay 스피커로 전송하세요.",
   "setupStart": "시작",
   "setupLocalTitle": "로컬 라이브러리",
-  "setupLocalBody": "오디오 파일(FLAC, MP3, AAC\u2026)이 포함된 폴더 경로를 지정하세요. 나중에 설정에서 더 추가할 수 있습니다.",
+  "setupLocalBody": "오디오 파일(FLAC, MP3, AAC…)이 포함된 폴더 경로를 지정하세요. 나중에 설정에서 더 추가할 수 있습니다.",
   "setupFolderPath": "폴더 경로",
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "이 폴더 추가",
-  "setupFolderAdded": "폴더가 추가되었습니다 \u2014 스캔 중\u2026",
+  "setupFolderAdded": "폴더가 추가되었습니다 — 스캔 중…",
   "setupFolderEmpty": "폴더 경로를 입력하세요",
   "setupUPnPTitle": "UPnP/DLNA 서버",
-  "setupUPnPBody": "Tune Server는 로컬 네트워크의 UPnP/DLNA 서버를 자동으로 검색합니다. 검색 \u2192 탐색에서 라이브러리를 탐색하세요.",
+  "setupUPnPBody": "Tune Server는 로컬 네트워크의 UPnP/DLNA 서버를 자동으로 검색합니다. 검색 → 탐색에서 라이브러리를 탐색하세요.",
   "setupFeatureSsdp": "자동 SSDP 검색",
   "setupFeatureContentDir": "ContentDirectory 탐색",
   "setupFeaturePlayback": "DLNA 파일 직접 재생",
   "setupFinish": "설정 완료",
-
   "libraryPlayAlbum": "앨범 재생",
   "libraryPlayNext": "다음에 재생",
   "radioFavExportDone": "CSV 내보내기 완료: {path}",
   "@radioFavExportDone": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "radioFavExportError": "내보내기 오류",
   "streamingViewAlbum": "앨범 보기",
   "streamingLogoutContent": "계정 연결이 끊어집니다.",
   "streamingUrlCopied": "URL이 클립보드에 복사되었습니다",
   "streamingDeviceCodeHint": "이 URL로 이동하여 위의 코드를 입력하세요:",
-  "searchHintFull": "아티스트, 앨범, 트랙 검색\u2026",
-  "browseNavError": "탐색 오류"
-,
+  "searchHintFull": "아티스트, 앨범, 트랙 검색…",
+  "browseNavError": "탐색 오류",
   "streamingCodeEntered": "코드를 입력했습니다",
   "appleMusicAuthorize": "접근 허용",
-
   "smbNavTitle": "SMB 소스",
   "smbTitle": "SMB 연결",
   "smbHostHint": "SMB 서버 주소를 입력하세요",
@@ -264,13 +279,23 @@
   "smbScan": "스캔",
   "smbScanning": "스캔 중…",
   "smbScanCount": "오디오 파일 {count}개 발견",
-  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "@smbScanCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "smbDoneTitle": "인덱싱 완료",
   "smbDoneBody": "{share}에서 {count}개 트랙 가져옴",
   "@smbDoneBody": {
     "placeholders": {
-      "count": { "type": "int" },
-      "share": { "type": "String" }
+      "count": {
+        "type": "int"
+      },
+      "share": {
+        "type": "String"
+      }
     }
   },
   "smbAddAnother": "다른 공유 추가",
@@ -282,14 +307,16 @@
   "podcastsEmpty": "팟캐스트 없음",
   "podcastsSearchHint": "팟캐스트 검색…",
   "podcastsNoEpisodes": "에피소드 없음",
-  "navPodcasts": "팟캐스트"
-,
+  "navPodcasts": "팟캐스트",
   "streamingConnectedSuccess": "연결됨!",
   "browseItemCount": "{count} 항목",
   "@browseItemCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "settingsSources": "소스 및 기기",
   "settingsSourcesDesc": "UPnP 서버, DLNA 렌더러",
   "sourcesTitle": "소스 및 기기",
@@ -309,9 +336,8 @@
   "sourcesIpHint": "192.168.1.100",
   "sourcesPortLabel": "포트",
   "sourcesPortHint": "49152",
-  "sourcesProbing": "검색 중\u2026",
+  "sourcesProbing": "검색 중…",
   "sourcesNotFound": "이 주소에서 UPnP 기기를 찾을 수 없습니다",
-
   "zonesMultiRoom": "멀티룸",
   "zonesCreateGroup": "그룹 만들기",
   "zonesGroupLeader": "리더",
@@ -332,7 +358,6 @@
   "zonesGroupNeedTwo": "최소 2개 존을 선택하세요",
   "zonesGroupCreated": "그룹 생성됨",
   "zonesGroupDissolved": "그룹 해제됨",
-
   "metadataSectionEnrich": "보강",
   "metadataSectionDuplicates": "중복",
   "metadataSectionCorrect": "수정",
@@ -342,7 +367,7 @@
   "metadataFilterMissingYear": "연도 없음",
   "metadataFilterMissingArtist": "아티스트 없음",
   "metadataFilterDoubtful": "의심스러운",
-  "metadataSearchHint": "앨범 검색\u2026",
+  "metadataSearchHint": "앨범 검색…",
   "metadataArtistFilter": "아티스트",
   "metadataGenreFilter": "장르",
   "metadataAllArtists": "모든 아티스트",
@@ -352,25 +377,57 @@
   "metadataSaveChanges": "저장",
   "metadataWriteTags": "태그 쓰기",
   "metadataWriteTagsSuccess": "태그 작성 완료: {count}개 파일",
-  "@metadataWriteTagsSuccess": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataWriteTagsSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeGroup": "병합",
   "metadataMergeConfirm": "이 {count}개 앨범을 병합하시겠습니까? 트랙이 가장 많은 앨범이 유지됩니다.",
-  "@metadataMergeConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataMergeConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeSuccess": "병합 완료: {moved}개 트랙 이동, 총 {total}개",
-  "@metadataMergeSuccess": { "placeholders": { "moved": { "type": "int" }, "total": { "type": "int" } } },
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "metadataUploadCover": "커버 업로드",
   "metadataCoverUploaded": "커버 업로드 완료",
   "metadataAlbumSaved": "앨범 저장됨",
   "metadataDupAlbums": "{count}개 중복 앨범",
-  "@metadataDupAlbums": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataDupAlbums": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataDoubtfulReasons": "문제",
   "metadataArtistField": "아티스트",
   "metadataAlbumField": "앨범",
   "metadataGenreField": "장르",
   "metadataYearField": "연도",
   "metadataTracksCount": "{count}개 트랙",
-  "@metadataTracksCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@metadataTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "stereoPairsTitle": "스테레오 페어",
   "stereoPairCreate": "스테레오 페어 생성",
   "stereoPairName": "페어 이름",
@@ -399,15 +456,27 @@
   "onboardingZoneBody": "아래 장치가 네트워크에서 발견되었습니다. 하나를 탭하여 첫 번째 오디오 존을 만드세요.",
   "onboardingZoneEmpty": "아직 장치가 발견되지 않았습니다. 나중에 추가할 수 있습니다.",
   "onboardingZoneCreated": "존 생성됨: {name}",
-  "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
+  "@onboardingZoneCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "onboardingDoneTitle": "완료!",
   "onboardingDoneBody": "설정이 완료되었습니다. 음악을 즐기세요!",
   "onboardingDoneButton": "대시보드로 이동",
-
   "artistBio": "바이오그래피",
   "artistAnecdotes": "일화",
   "artistSimilarArtists": "비슷한 아티스트",
   "artistMembers": "멤버",
   "artistDiscography": "디스코그래피",
-  "artistEnriching": "보강 진행 중\u2026"
+  "artistEnriching": "보강 진행 중…",
+  "libraryShuffleAll": "전체 셔플",
+  "librarySortBy": "정렬",
+  "librarySortTitle": "제목",
+  "librarySortArtist": "아티스트",
+  "librarySortYear": "연도",
+  "librarySortOriginalYear": "원본 연도",
+  "librarySortAddedDate": "추가 날짜"
 }

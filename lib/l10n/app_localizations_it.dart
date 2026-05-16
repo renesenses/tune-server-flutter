@@ -1182,11 +1182,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get librarySortArtist => 'Artista';
 
   @override
-  String get librarySortYear => 'Data di uscita';
+  String get librarySortYear => 'Anno';
 
   @override
   String get librarySortOriginalYear => 'Anno originale';
 
   @override
-  String get librarySortAddedDate => 'Data aggiunta';
+  String get librarySortAddedDate => 'Data di aggiunta';
 }

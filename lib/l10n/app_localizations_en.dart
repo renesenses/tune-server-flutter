@@ -1167,7 +1167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get artistEnriching => 'Enrichment in progress…';
 
   @override
-  String get libraryShuffleAll => 'Shuffle all';
+  String get libraryShuffleAll => 'Shuffle All';
 
   @override
   String get librarySortBy => 'Sort by';
@@ -1179,11 +1179,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get librarySortArtist => 'Artist';
 
   @override
-  String get librarySortYear => 'Release date';
+  String get librarySortYear => 'Year';
 
   @override
-  String get librarySortOriginalYear => 'Original year';
+  String get librarySortOriginalYear => 'Original Year';
 
   @override
-  String get librarySortAddedDate => 'Date added';
+  String get librarySortAddedDate => 'Date Added';
 }

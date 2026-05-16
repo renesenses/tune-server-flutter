@@ -68,15 +68,23 @@
   "playlistNewPlaylist": "Neue Playlist",
   "playlistTrackAdded": "Zu „{name}\" hinzugefügt",
   "@playlistTrackAdded": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistTrackAlreadyIn": "Bereits in „{name}\"",
   "@playlistTrackAlreadyIn": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistDeleteTitle": "Playlist löschen?",
   "playlistDeleteBody": "Diese Playlist wird dauerhaft gelöscht.",
-  "searchHint": "Suchen\u2026",
+  "searchHint": "Suchen…",
   "searchNoResults": "Keine Ergebnisse",
   "searchSectionTracks": "Titel",
   "searchSectionAlbums": "Alben",
@@ -114,7 +122,13 @@
   "zonesTransferTitle": "Wiedergabe auf...",
   "zonesNowPlaying": "Läuft hier",
   "zonesActivated": "Aktive Zone: {name}",
-  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
+  "@zonesActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "radiosTitle": "Radios",
   "radiosTabAll": "Alle",
   "radiosTabFavorites": "Favoriten",
@@ -142,9 +156,9 @@
   "streamingEmail": "E-Mail",
   "streamingPassword": "Passwort",
   "streamingSignIn": "Anmelden",
-  "streamingSigningIn": "Anmeldung\u2026",
+  "streamingSigningIn": "Anmeldung…",
   "streamingDeviceCode": "Bestätigungscode",
-  "streamingOpenLink": "Öffnen\u2026",
+  "streamingOpenLink": "Öffnen…",
   "streamingLogoutTitle": "Abmelden?",
   "streamingLogoutBody": "Von {service} abmelden?",
   "streamingAuthError": "Authentifizierung fehlgeschlagen",
@@ -182,7 +196,7 @@
   "settingsResetTitle": "Zurücksetzen?",
   "settingsResetBody": "Alle Einstellungen werden zurückgesetzt. Der Startassistent wird beim nächsten Start angezeigt.",
   "settingsPortTitle": "HTTP-Port",
-  "settingsPortHint": "Port (1024\u201365535)",
+  "settingsPortHint": "Port (1024–65535)",
   "metadataTitle": "Musik & Metadaten",
   "metadataRefreshStats": "Statistiken aktualisieren",
   "metadataSectionStats": "Statistiken",
@@ -193,7 +207,7 @@
   "metadataStatRadios": "Radios",
   "metadataStatArtwork": "Cover-Cache",
   "metadataSectionScan": "Bibliothek-Scan",
-  "metadataScanInProgress": "Scan läuft\u2026 {current}/{total}",
+  "metadataScanInProgress": "Scan läuft… {current}/{total}",
   "metadataScanResult": "Letzter Scan: +{added} hinzugefügt, {updated} aktualisiert",
   "metadataScanBtn": "Bibliothek scannen",
   "metadataScanDesc": "Alle konfigurierten Ordner indexieren",
@@ -220,36 +234,37 @@
   "setupWelcomeBody": "Ihr eingebetteter Multiroom-Musikserver. Streamen Sie Ihre lokale Bibliothek, Ihre Lieblings-Streaming-Dienste und Radios zu jedem DLNA- oder AirPlay-Lautsprecher.",
   "setupStart": "Starten",
   "setupLocalTitle": "Lokale Bibliothek",
-  "setupLocalBody": "Geben Sie den Pfad eines Ordners mit Ihren Audiodateien an (FLAC, MP3, AAC\u2026). Sie können später in den Einstellungen weitere hinzufügen.",
+  "setupLocalBody": "Geben Sie den Pfad eines Ordners mit Ihren Audiodateien an (FLAC, MP3, AAC…). Sie können später in den Einstellungen weitere hinzufügen.",
   "setupFolderPath": "Ordnerpfad",
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "Diesen Ordner hinzufügen",
-  "setupFolderAdded": "Ordner hinzugefügt \u2014 Scan läuft\u2026",
+  "setupFolderAdded": "Ordner hinzugefügt — Scan läuft…",
   "setupFolderEmpty": "Bitte geben Sie einen Ordnerpfad ein",
   "setupUPnPTitle": "UPnP/DLNA-Server",
-  "setupUPnPBody": "Tune Server erkennt automatisch UPnP/DLNA-Server in Ihrem lokalen Netzwerk. Durchsuchen Sie deren Bibliotheken über Suche \u2192 Durchsuchen.",
+  "setupUPnPBody": "Tune Server erkennt automatisch UPnP/DLNA-Server in Ihrem lokalen Netzwerk. Durchsuchen Sie deren Bibliotheken über Suche → Durchsuchen.",
   "setupFeatureSsdp": "Automatische SSDP-Erkennung",
   "setupFeatureContentDir": "ContentDirectory-Navigation",
   "setupFeaturePlayback": "Direkte DLNA-Dateiwiedergabe",
   "setupFinish": "Konfiguration abschließen",
-
   "libraryPlayAlbum": "Album abspielen",
   "libraryPlayNext": "Als Nächstes spielen",
   "radioFavExportDone": "CSV exportiert: {path}",
   "@radioFavExportDone": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "radioFavExportError": "Exportfehler",
   "streamingViewAlbum": "Album anzeigen",
   "streamingLogoutContent": "Ihr Konto wird getrennt.",
   "streamingUrlCopied": "URL in die Zwischenablage kopiert",
   "streamingDeviceCodeHint": "Rufen Sie diese URL auf und geben Sie den obigen Code ein:",
-  "searchHintFull": "K\u00fcnstler, Alben, Titel suchen\u2026",
-  "browseNavError": "Navigationsfehler"
-,
+  "searchHintFull": "Künstler, Alben, Titel suchen…",
+  "browseNavError": "Navigationsfehler",
   "streamingCodeEntered": "Code eingegeben",
   "appleMusicAuthorize": "Zugriff erlauben",
-
   "smbNavTitle": "SMB-Quelle",
   "smbTitle": "SMB-Verbindung",
   "smbHostHint": "IP-Adresse des SMB-Servers eingeben",
@@ -264,13 +279,23 @@
   "smbScan": "Scannen",
   "smbScanning": "Scan läuft…",
   "smbScanCount": "{count} Audiodateien gefunden",
-  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "@smbScanCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "smbDoneTitle": "Indizierung abgeschlossen",
   "smbDoneBody": "{count} Tracks importiert von {share}",
   "@smbDoneBody": {
     "placeholders": {
-      "count": { "type": "int" },
-      "share": { "type": "String" }
+      "count": {
+        "type": "int"
+      },
+      "share": {
+        "type": "String"
+      }
     }
   },
   "smbAddAnother": "Weitere Freigabe hinzufügen",
@@ -282,42 +307,43 @@
   "podcastsEmpty": "Keine Podcasts",
   "podcastsSearchHint": "Podcast suchen…",
   "podcastsNoEpisodes": "Keine Episoden",
-  "navPodcasts": "Podcasts"
-,
+  "navPodcasts": "Podcasts",
   "streamingConnectedSuccess": "Verbunden!",
   "browseItemCount": "{count} Elemente",
   "@browseItemCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
-  "settingsSources": "Quellen & Ger\u00e4te",
+  "settingsSources": "Quellen & Geräte",
   "settingsSourcesDesc": "UPnP-Server, DLNA-Renderer",
-  "sourcesTitle": "Quellen & Ger\u00e4te",
+  "sourcesTitle": "Quellen & Geräte",
   "sourcesServersSection": "UPnP-Inhaltsserver",
   "sourcesRenderersSection": "DLNA-Renderer",
-  "sourcesNoDevices": "Kein Ger\u00e4t gefunden",
+  "sourcesNoDevices": "Kein Gerät gefunden",
   "sourcesTypeServer": "Server",
   "sourcesTypeRenderer": "Renderer",
-  "sourcesAvailable": "Verf\u00fcgbar",
+  "sourcesAvailable": "Verfügbar",
   "sourcesUnavailable": "Offline",
   "sourcesIndexBtn": "Bibliothek indizieren",
   "sourcesRescanBtn": "Erneut scannen",
   "sourcesForget": "Vergessen",
-  "sourcesAddManually": "Manuell hinzuf\u00fcgen",
+  "sourcesAddManually": "Manuell hinzufügen",
   "sourcesAddTitle": "Manueller Scan",
   "sourcesIpLabel": "IP-Adresse",
   "sourcesIpHint": "192.168.1.100",
   "sourcesPortLabel": "Port",
   "sourcesPortHint": "49152",
-  "sourcesProbing": "Suche l\u00e4uft\u2026",
-  "sourcesNotFound": "Kein UPnP-Ger\u00e4t unter dieser Adresse gefunden",
-
+  "sourcesProbing": "Suche läuft…",
+  "sourcesNotFound": "Kein UPnP-Gerät unter dieser Adresse gefunden",
   "zonesMultiRoom": "Multi-Room",
   "zonesCreateGroup": "Gruppe erstellen",
   "zonesGroupLeader": "Leader",
   "zonesGroupFollower": "Follower",
-  "zonesGroupDissolve": "Gruppe aufl\u00f6sen",
-  "zonesGroupSyncDelay": "Sync-Verz\u00f6gerung",
+  "zonesGroupDissolve": "Gruppe auflösen",
+  "zonesGroupSyncDelay": "Sync-Verzögerung",
   "zonesGroupSyncDelayMs": "{ms} ms",
   "@zonesGroupSyncDelayMs": {
     "placeholders": {
@@ -326,13 +352,12 @@
       }
     }
   },
-  "zonesGroupSelectZones": "Zonen ausw\u00e4hlen",
-  "zonesGroupSelectLeader": "Leader ausw\u00e4hlen",
+  "zonesGroupSelectZones": "Zonen auswählen",
+  "zonesGroupSelectLeader": "Leader auswählen",
   "zonesGroupNoZones": "Keine aktiven Gruppen",
-  "zonesGroupNeedTwo": "Mindestens 2 Zonen ausw\u00e4hlen",
+  "zonesGroupNeedTwo": "Mindestens 2 Zonen auswählen",
   "zonesGroupCreated": "Gruppe erstellt",
-  "zonesGroupDissolved": "Gruppe aufgel\u00f6st",
-
+  "zonesGroupDissolved": "Gruppe aufgelöst",
   "metadataSectionEnrich": "Anreichern",
   "metadataSectionDuplicates": "Duplikate",
   "metadataSectionCorrect": "Korrigieren",
@@ -340,37 +365,69 @@
   "metadataFilterMissingCover": "Fehlende Cover",
   "metadataFilterMissingGenre": "Fehlendes Genre",
   "metadataFilterMissingYear": "Fehlendes Jahr",
-  "metadataFilterMissingArtist": "Fehlender K\u00fcnstler",
+  "metadataFilterMissingArtist": "Fehlender Künstler",
   "metadataFilterDoubtful": "Zweifelhaft",
-  "metadataSearchHint": "Alben suchen\u2026",
-  "metadataArtistFilter": "K\u00fcnstler",
+  "metadataSearchHint": "Alben suchen…",
+  "metadataArtistFilter": "Künstler",
   "metadataGenreFilter": "Genre",
-  "metadataAllArtists": "Alle K\u00fcnstler",
+  "metadataAllArtists": "Alle Künstler",
   "metadataAllGenres": "Alle Genres",
   "metadataNoAlbums": "Keine passenden Alben",
   "metadataEditAlbum": "Album bearbeiten",
   "metadataSaveChanges": "Speichern",
   "metadataWriteTags": "Tags schreiben",
   "metadataWriteTagsSuccess": "Tags geschrieben: {count} Dateien",
-  "@metadataWriteTagsSuccess": { "placeholders": { "count": { "type": "int" } } },
-  "metadataMergeGroup": "Zusammenf\u00fchren",
-  "metadataMergeConfirm": "Diese {count} Alben zusammenf\u00fchren? Das Album mit den meisten Tracks wird beibehalten.",
-  "@metadataMergeConfirm": { "placeholders": { "count": { "type": "int" } } },
-  "metadataMergeSuccess": "Zusammengef\u00fchrt: {moved} Tracks verschoben, {total} gesamt",
-  "@metadataMergeSuccess": { "placeholders": { "moved": { "type": "int" }, "total": { "type": "int" } } },
+  "@metadataWriteTagsSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metadataMergeGroup": "Zusammenführen",
+  "metadataMergeConfirm": "Diese {count} Alben zusammenführen? Das Album mit den meisten Tracks wird beibehalten.",
+  "@metadataMergeConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metadataMergeSuccess": "Zusammengeführt: {moved} Tracks verschoben, {total} gesamt",
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "metadataUploadCover": "Cover hochladen",
   "metadataCoverUploaded": "Cover hochgeladen",
   "metadataAlbumSaved": "Album gespeichert",
   "metadataDupAlbums": "{count} doppelte Alben",
-  "@metadataDupAlbums": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataDupAlbums": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataDoubtfulReasons": "Probleme",
-  "metadataArtistField": "K\u00fcnstler",
+  "metadataArtistField": "Künstler",
   "metadataAlbumField": "Album",
   "metadataGenreField": "Genre",
   "metadataYearField": "Jahr",
   "metadataTracksCount": "{count} Tracks",
-  "@metadataTracksCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@metadataTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "stereoPairsTitle": "Stereopaare",
   "stereoPairCreate": "Stereopaar erstellen",
   "stereoPairName": "Paarname",
@@ -399,15 +456,27 @@
   "onboardingZoneBody": "Die folgenden Geräte wurden in Ihrem Netzwerk entdeckt. Tippen Sie auf eines, um Ihre erste Audiozone zu erstellen.",
   "onboardingZoneEmpty": "Noch keine Geräte entdeckt. Sie können später weitere hinzufügen.",
   "onboardingZoneCreated": "Zone erstellt: {name}",
-  "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
+  "@onboardingZoneCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "onboardingDoneTitle": "Fertig!",
   "onboardingDoneBody": "Ihre Einrichtung ist bereit. Genießen Sie Ihre Musik!",
   "onboardingDoneButton": "Zum Dashboard",
-
   "artistBio": "Biografie",
   "artistAnecdotes": "Anekdoten",
-  "artistSimilarArtists": "\u00c4hnliche K\u00fcnstler",
+  "artistSimilarArtists": "Ähnliche Künstler",
   "artistMembers": "Mitglieder",
   "artistDiscography": "Diskografie",
-  "artistEnriching": "Anreicherung l\u00e4uft\u2026"
+  "artistEnriching": "Anreicherung läuft…",
+  "libraryShuffleAll": "Alle zufällig wiedergeben",
+  "librarySortBy": "Sortieren nach",
+  "librarySortTitle": "Titel",
+  "librarySortArtist": "Künstler",
+  "librarySortYear": "Jahr",
+  "librarySortOriginalYear": "Originaljahr",
+  "librarySortAddedDate": "Hinzugefügt am"
 }

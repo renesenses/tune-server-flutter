@@ -1169,7 +1169,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get artistEnriching => 'Anreicherung läuft…';
 
   @override
-  String get libraryShuffleAll => 'Alle zufällig';
+  String get libraryShuffleAll => 'Alle zufällig wiedergeben';
 
   @override
   String get librarySortBy => 'Sortieren nach';
@@ -1181,7 +1181,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get librarySortArtist => 'Künstler';
 
   @override
-  String get librarySortYear => 'Erscheinungsdatum';
+  String get librarySortYear => 'Jahr';
 
   @override
   String get librarySortOriginalYear => 'Originaljahr';

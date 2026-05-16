@@ -1167,7 +1167,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get librarySortArtist => '艺术家';
 
   @override
-  String get librarySortYear => '发行日期';
+  String get librarySortYear => '年份';
 
   @override
   String get librarySortOriginalYear => '原始年份';

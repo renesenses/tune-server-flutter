@@ -1163,7 +1163,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryShuffleAll => 'すべてシャッフル';
 
   @override
-  String get librarySortBy => '並び替え';
+  String get librarySortBy => '並べ替え';
 
   @override
   String get librarySortTitle => 'タイトル';
@@ -1172,7 +1172,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get librarySortArtist => 'アーティスト';
 
   @override
-  String get librarySortYear => 'リリース日';
+  String get librarySortYear => '年';
 
   @override
   String get librarySortOriginalYear => 'オリジナル年';

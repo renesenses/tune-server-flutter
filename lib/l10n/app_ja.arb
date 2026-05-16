@@ -68,15 +68,23 @@
   "playlistNewPlaylist": "新規プレイリスト",
   "playlistTrackAdded": "「{name}」に追加しました",
   "@playlistTrackAdded": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistTrackAlreadyIn": "すでに「{name}」にあります",
   "@playlistTrackAlreadyIn": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "playlistDeleteTitle": "プレイリストを削除？",
   "playlistDeleteBody": "このプレイリストは完全に削除されます。",
-  "searchHint": "検索\u2026",
+  "searchHint": "検索…",
   "searchNoResults": "結果なし",
   "searchSectionTracks": "曲",
   "searchSectionAlbums": "アルバム",
@@ -114,7 +122,13 @@
   "zonesTransferTitle": "再生先...",
   "zonesNowPlaying": "ここで再生中",
   "zonesActivated": "アクティブゾーン: {name}",
-  "@zonesActivated": { "placeholders": { "name": { "type": "String" } } },
+  "@zonesActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "radiosTitle": "ラジオ",
   "radiosTabAll": "すべて",
   "radiosTabFavorites": "お気に入り",
@@ -142,9 +156,9 @@
   "streamingEmail": "メール",
   "streamingPassword": "パスワード",
   "streamingSignIn": "サインイン",
-  "streamingSigningIn": "サインイン中\u2026",
+  "streamingSigningIn": "サインイン中…",
   "streamingDeviceCode": "確認コード",
-  "streamingOpenLink": "開く\u2026",
+  "streamingOpenLink": "開く…",
   "streamingLogoutTitle": "切断しますか？",
   "streamingLogoutBody": "{service}から切断しますか？",
   "streamingAuthError": "認証に失敗しました",
@@ -182,7 +196,7 @@
   "settingsResetTitle": "リセットしますか？",
   "settingsResetBody": "すべての設定がリセットされます。次回起動時にスタートアップウィザードが表示されます。",
   "settingsPortTitle": "HTTPポート",
-  "settingsPortHint": "ポート (1024\u201365535)",
+  "settingsPortHint": "ポート (1024–65535)",
   "metadataTitle": "音楽とメタデータ",
   "metadataRefreshStats": "統計を更新",
   "metadataSectionStats": "統計",
@@ -193,7 +207,7 @@
   "metadataStatRadios": "ラジオ",
   "metadataStatArtwork": "カバーキャッシュ",
   "metadataSectionScan": "ライブラリスキャン",
-  "metadataScanInProgress": "スキャン中\u2026 {current}/{total}",
+  "metadataScanInProgress": "スキャン中… {current}/{total}",
   "metadataScanResult": "最後のスキャン: +{added}追加、{updated}更新",
   "metadataScanBtn": "ライブラリをスキャン",
   "metadataScanDesc": "設定済みフォルダをすべてインデックス",
@@ -220,36 +234,37 @@
   "setupWelcomeBody": "組み込み型マルチルーム音楽サーバー。ローカルライブラリ、ストリーミングサービス、ラジオをDLNAまたはAirPlayスピーカーに配信できます。",
   "setupStart": "始める",
   "setupLocalTitle": "ローカルライブラリ",
-  "setupLocalBody": "オーディオファイル（FLAC、MP3、AAC\u2026）が含まれるフォルダのパスを指定してください。後で設定から追加できます。",
+  "setupLocalBody": "オーディオファイル（FLAC、MP3、AAC…）が含まれるフォルダのパスを指定してください。後で設定から追加できます。",
   "setupFolderPath": "フォルダパス",
   "setupFolderHint": "/storage/emulated/0/Music",
   "setupAddFolder": "このフォルダを追加",
-  "setupFolderAdded": "フォルダを追加しました \u2014 スキャン中\u2026",
+  "setupFolderAdded": "フォルダを追加しました — スキャン中…",
   "setupFolderEmpty": "フォルダパスを入力してください",
   "setupUPnPTitle": "UPnP/DLNAサーバー",
-  "setupUPnPBody": "Tune Serverはローカルネットワーク上のUPnP/DLNAサーバーを自動的に検出します。検索 \u2192 参照でライブラリを閲覧できます。",
+  "setupUPnPBody": "Tune Serverはローカルネットワーク上のUPnP/DLNAサーバーを自動的に検出します。検索 → 参照でライブラリを閲覧できます。",
   "setupFeatureSsdp": "自動SSDP検出",
   "setupFeatureContentDir": "ContentDirectoryナビゲーション",
   "setupFeaturePlayback": "DLNAファイルの直接再生",
   "setupFinish": "設定を完了",
-
   "libraryPlayAlbum": "アルバムを再生",
   "libraryPlayNext": "次に再生",
   "radioFavExportDone": "CSVをエクスポートしました：{path}",
   "@radioFavExportDone": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "radioFavExportError": "エクスポートエラー",
   "streamingViewAlbum": "アルバムを見る",
   "streamingLogoutContent": "アカウントが切断されます。",
   "streamingUrlCopied": "URLをクリップボードにコピーしました",
   "streamingDeviceCodeHint": "このURLにアクセスして、上記のコードを入力してください：",
-  "searchHintFull": "アーティスト、アルバム、トラックを検索\u2026",
-  "browseNavError": "ナビゲーションエラー"
-,
+  "searchHintFull": "アーティスト、アルバム、トラックを検索…",
+  "browseNavError": "ナビゲーションエラー",
   "streamingCodeEntered": "コードを入力しました",
   "appleMusicAuthorize": "アクセスを許可",
-
   "smbNavTitle": "SMBソース",
   "smbTitle": "SMB接続",
   "smbHostHint": "SMBサーバーのアドレスを入力",
@@ -264,13 +279,23 @@
   "smbScan": "スキャン",
   "smbScanning": "スキャン中…",
   "smbScanCount": "{count}個のオーディオファイルが見つかりました",
-  "@smbScanCount": { "placeholders": { "count": { "type": "int" } } },
+  "@smbScanCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "smbDoneTitle": "インデックス完了",
   "smbDoneBody": "{share}から{count}曲をインポートしました",
   "@smbDoneBody": {
     "placeholders": {
-      "count": { "type": "int" },
-      "share": { "type": "String" }
+      "count": {
+        "type": "int"
+      },
+      "share": {
+        "type": "String"
+      }
     }
   },
   "smbAddAnother": "別の共有を追加",
@@ -282,14 +307,16 @@
   "podcastsEmpty": "ポッドキャストなし",
   "podcastsSearchHint": "ポッドキャストを検索…",
   "podcastsNoEpisodes": "エピソードなし",
-  "navPodcasts": "ポッドキャスト"
-,
+  "navPodcasts": "ポッドキャスト",
   "streamingConnectedSuccess": "接続しました！",
   "browseItemCount": "{count} 件",
   "@browseItemCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "settingsSources": "ソースとデバイス",
   "settingsSourcesDesc": "UPnPサーバー、DLNAレンダラー",
   "sourcesTitle": "ソースとデバイス",
@@ -309,9 +336,8 @@
   "sourcesIpHint": "192.168.1.100",
   "sourcesPortLabel": "ポート",
   "sourcesPortHint": "49152",
-  "sourcesProbing": "スキャン中\u2026",
+  "sourcesProbing": "スキャン中…",
   "sourcesNotFound": "このアドレスにUPnPデバイスが見つかりません",
-
   "zonesMultiRoom": "マルチルーム",
   "zonesCreateGroup": "グループ作成",
   "zonesGroupLeader": "リーダー",
@@ -332,7 +358,6 @@
   "zonesGroupNeedTwo": "2つ以上のゾーンを選択してください",
   "zonesGroupCreated": "グループを作成しました",
   "zonesGroupDissolved": "グループを解除しました",
-
   "metadataSectionEnrich": "エンリッチ",
   "metadataSectionDuplicates": "重複",
   "metadataSectionCorrect": "修正",
@@ -342,7 +367,7 @@
   "metadataFilterMissingYear": "年なし",
   "metadataFilterMissingArtist": "アーティストなし",
   "metadataFilterDoubtful": "疑わしい",
-  "metadataSearchHint": "アルバムを検索\u2026",
+  "metadataSearchHint": "アルバムを検索…",
   "metadataArtistFilter": "アーティスト",
   "metadataGenreFilter": "ジャンル",
   "metadataAllArtists": "すべてのアーティスト",
@@ -352,25 +377,57 @@
   "metadataSaveChanges": "保存",
   "metadataWriteTags": "タグを書き込む",
   "metadataWriteTagsSuccess": "タグ書き込み完了: {count}ファイル",
-  "@metadataWriteTagsSuccess": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataWriteTagsSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeGroup": "統合",
   "metadataMergeConfirm": "これらの{count}アルバムを統合しますか？トラック数が最も多いアルバムが残ります。",
-  "@metadataMergeConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataMergeConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataMergeSuccess": "統合完了: {moved}トラック移動、合計{total}",
-  "@metadataMergeSuccess": { "placeholders": { "moved": { "type": "int" }, "total": { "type": "int" } } },
+  "@metadataMergeSuccess": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "metadataUploadCover": "カバーをアップロード",
   "metadataCoverUploaded": "カバーアップロード完了",
   "metadataAlbumSaved": "アルバムを保存しました",
   "metadataDupAlbums": "{count}件の重複アルバム",
-  "@metadataDupAlbums": { "placeholders": { "count": { "type": "int" } } },
+  "@metadataDupAlbums": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "metadataDoubtfulReasons": "問題",
   "metadataArtistField": "アーティスト",
   "metadataAlbumField": "アルバム",
   "metadataGenreField": "ジャンル",
   "metadataYearField": "年",
   "metadataTracksCount": "{count}トラック",
-  "@metadataTracksCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@metadataTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "stereoPairsTitle": "ステレオペア",
   "stereoPairCreate": "ステレオペアを作成",
   "stereoPairName": "ペア名",
@@ -399,15 +456,27 @@
   "onboardingZoneBody": "以下のデバイスがネットワーク上で発見されました。タップして最初のオーディオゾーンを作成してください。",
   "onboardingZoneEmpty": "まだデバイスが見つかりません。後で追加できます。",
   "onboardingZoneCreated": "ゾーンを作成しました: {name}",
-  "@onboardingZoneCreated": { "placeholders": { "name": { "type": "String" } } },
+  "@onboardingZoneCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "onboardingDoneTitle": "完了！",
   "onboardingDoneBody": "セットアップが完了しました。音楽をお楽しみください！",
   "onboardingDoneButton": "ダッシュボードへ",
-
   "artistBio": "バイオグラフィー",
   "artistAnecdotes": "エピソード",
   "artistSimilarArtists": "類似アーティスト",
   "artistMembers": "メンバー",
   "artistDiscography": "ディスコグラフィー",
-  "artistEnriching": "エンリッチ中\u2026"
+  "artistEnriching": "エンリッチ中…",
+  "libraryShuffleAll": "すべてシャッフル",
+  "librarySortBy": "並べ替え",
+  "librarySortTitle": "タイトル",
+  "librarySortArtist": "アーティスト",
+  "librarySortYear": "年",
+  "librarySortOriginalYear": "オリジナル年",
+  "librarySortAddedDate": "追加日"
 }
