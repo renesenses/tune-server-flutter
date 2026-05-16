@@ -13,6 +13,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'streaming_album_detail_view.dart';
 import 'streaming_helpers.dart';
+import 'youtube_browse_view.dart';
 
 // ---------------------------------------------------------------------------
 // T13.2 — StreamingServiceDetailView
@@ -109,6 +110,17 @@ class _StreamingServiceDetailViewState
             Text(info.name, style: TuneFonts.title3),
           ],
         ),
+        actions: [
+          if (widget.status.serviceId == 'youtube')
+            IconButton(
+              icon: const Icon(Icons.explore_rounded, color: TuneColors.accent),
+              tooltip: 'Explorer',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const YouTubeBrowseView()),
+              ),
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(

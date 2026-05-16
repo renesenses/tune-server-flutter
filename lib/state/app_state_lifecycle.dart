@@ -209,18 +209,30 @@ extension AppStateLifecycle on AppState {
         try {
           final queueJson = await _apiClient!.getQueue(zoneId);
           if (queueJson is Map<String, dynamic>) {
-            final tracks = (queueJson['tracks'] as List? ?? [])
+            final tracksList = queueJson['tracks'] as List? ?? [];
+            final tracks = tracksList
                 .map((t) => trackFromJson(t as Map<String, dynamic>))
                 .toList();
             final position = queueJson['position'] as int? ?? 0;
             final shuffle = queueJson['shuffle'] as bool? ?? false;
             final repeatStr = queueJson['repeat'] as String? ?? 'off';
-            zoneState.setQueueSnapshot(QueueSnapshot(
-              tracks: tracks,
-              position: position,
-              shuffleEnabled: shuffle,
-              repeatMode: RepeatMode.fromRawValue(repeatStr) ?? RepeatMode.off,
-            ));
+            // Parse gapless indices from queue response
+            final gaplessSet = <int>{};
+            for (int i = 0; i < tracksList.length; i++) {
+              final t = tracksList[i] as Map<String, dynamic>;
+              if (t['gapless_next'] == true) {
+                gaplessSet.add(i);
+              }
+            }
+            zoneState.setQueueSnapshot(
+              QueueSnapshot(
+                tracks: tracks,
+                position: position,
+                shuffleEnabled: shuffle,
+                repeatMode: RepeatMode.fromRawValue(repeatStr) ?? RepeatMode.off,
+              ),
+              gaplessIndices: gaplessSet,
+            );
           }
         } catch (_) {}
       }

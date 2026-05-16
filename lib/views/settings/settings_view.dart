@@ -10,8 +10,12 @@ import '../../state/settings_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'config_export_view.dart';
 import 'database_view.dart';
+import 'equalizer_view.dart';
 import 'lastfm_view.dart';
+import 'network_diagnostics_view.dart';
+import 'plugins_view.dart';
 import 'spotify_connect_view.dart';
 import 'library_setup_view.dart';
 import 'metadata_view.dart';
@@ -361,7 +365,7 @@ class _SettingsList extends StatelessWidget {
           color: TuneColors.surface,
           child: _SettingsTile(
             title: 'Mode Exclusif (bit-perfect)',
-            subtitle: 'WASAPI Exclusive — accès direct au DAC USB',
+            subtitle: 'WASAPI Exclusive — acces direct au DAC USB',
             trailing: Switch(
               value: settings.exclusiveModeEnabled,
               onChanged: (v) => settings.setExclusiveModeEnabled(v),
@@ -369,6 +373,31 @@ class _SettingsList extends StatelessWidget {
             ),
           ),
         ),
+
+        // ---- Audiophile / Qualite / EQ ----
+        if (app.apiClient != null) ...[
+          const _SectionHeader('AUDIO AVANCE'),
+          Container(
+            color: TuneColors.surface,
+            child: Column(
+              children: [
+                const _AudiophileToggle(),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                const _StreamingQualitySelector(),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Equalizer 10 bandes',
+                  subtitle: 'Reglage fin par frequence',
+                  trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EqualizerView()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
 
         // ---- Bibliothèque ----
         _SectionHeader(l.settingsSectionLibrary),
@@ -461,6 +490,47 @@ class _SettingsList extends StatelessWidget {
         if (app.apiClient != null) ...[
           const _SectionHeader('PROFILES'),
           _ProfilesSection(api: app.apiClient!),
+        ],
+
+        // ---- Systeme (Network Diagnostics, Config, Plugins) ----
+        if (app.apiClient != null) ...[
+          const _SectionHeader('SYSTEME'),
+          Container(
+            color: TuneColors.surface,
+            child: Column(
+              children: [
+                _SettingsTile(
+                  title: 'Diagnostics reseau',
+                  subtitle: 'Multicast, DNS, connectivite',
+                  trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NetworkDiagnosticsView()),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Configuration',
+                  subtitle: 'Exporter / Importer',
+                  trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ConfigExportView()),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Plugins',
+                  subtitle: 'Extensions installees',
+                  trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PluginsView()),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
 
         // ---- À propos ----
@@ -1351,6 +1421,158 @@ class _LastfmStatusIndicatorState extends State<_LastfmStatusIndicator> {
           ),
         const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Audiophile Mode toggle — GET/POST /zones/{zoneId}/audiophile
+// ---------------------------------------------------------------------------
+
+class _AudiophileToggle extends StatefulWidget {
+  const _AudiophileToggle();
+
+  @override
+  State<_AudiophileToggle> createState() => _AudiophileToggleState();
+}
+
+class _AudiophileToggleState extends State<_AudiophileToggle> {
+  bool _enabled = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final api = context.read<AppState>().apiClient;
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (api == null || zoneId == null) return;
+    try {
+      final data = await api.getAudiophileMode(zoneId);
+      if (mounted) setState(() { _enabled = data['enabled'] == true; _loaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
+
+  Future<void> _toggle(bool value) async {
+    final api = context.read<AppState>().apiClient;
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (api == null || zoneId == null) return;
+    setState(() => _enabled = value);
+    try {
+      await api.setAudiophileMode(zoneId, value);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _enabled = !value);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      tileColor: TuneColors.surface,
+      title: Text('Mode Audiophile', style: TuneFonts.body),
+      subtitle: Text(
+        'Bypass DSP, EQ desactive, bit-perfect',
+        style: TuneFonts.footnote,
+      ),
+      trailing: Switch(
+        value: _enabled,
+        onChanged: _loaded ? _toggle : null,
+        activeColor: TuneColors.accent,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Streaming Quality selector — GET/POST /zones/{zoneId}/quality
+// ---------------------------------------------------------------------------
+
+class _StreamingQualitySelector extends StatefulWidget {
+  const _StreamingQualitySelector();
+
+  @override
+  State<_StreamingQualitySelector> createState() => _StreamingQualitySelectorState();
+}
+
+class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
+  String _quality = 'maximum';
+  bool _loaded = false;
+
+  static const _qualities = [
+    ('maximum', 'Maximum'),
+    ('hires', 'Hi-Res'),
+    ('cd', 'CD (16/44)'),
+    ('economy', 'Economique'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final api = context.read<AppState>().apiClient;
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (api == null || zoneId == null) return;
+    try {
+      final data = await api.getStreamingQuality(zoneId);
+      if (mounted) {
+        setState(() {
+          _quality = data['quality'] as String? ?? 'maximum';
+          _loaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
+
+  Future<void> _setQuality(String? value) async {
+    if (value == null) return;
+    final api = context.read<AppState>().apiClient;
+    final zoneId = context.read<ZoneState>().currentZoneId;
+    if (api == null || zoneId == null) return;
+    final prev = _quality;
+    setState(() => _quality = value);
+    try {
+      await api.setStreamingQuality(zoneId, value);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _quality = prev);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      tileColor: TuneColors.surface,
+      title: Text('Qualite streaming', style: TuneFonts.body),
+      trailing: DropdownButton<String>(
+        value: _quality,
+        dropdownColor: TuneColors.surfaceVariant,
+        underline: const SizedBox(),
+        style: TuneFonts.body,
+        items: _qualities.map((q) => DropdownMenuItem(
+          value: q.$1,
+          child: Text(q.$2),
+        )).toList(),
+        onChanged: _loaded ? _setQuality : null,
+      ),
     );
   }
 }

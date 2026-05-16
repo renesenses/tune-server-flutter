@@ -77,11 +77,14 @@ class QueueView extends StatelessWidget {
                   itemBuilder: (_, i) {
                     final track = tracks[i];
                     final isCurrent = i == currentPosition;
+                    final gaplessIndices = context.read<ZoneState>().gaplessIndices;
+                    final isGapless = gaplessIndices.contains(i);
                     return _QueueItem(
                       key: ValueKey('q-$i-${track.id}'),
                       track: track,
                       index: i,
                       isCurrent: isCurrent,
+                      showGaplessIndicator: isGapless,
                     );
                   },
                 ),
@@ -99,12 +102,14 @@ class _QueueItem extends StatelessWidget {
   final Track track;
   final int index;
   final bool isCurrent;
+  final bool showGaplessIndicator;
 
   const _QueueItem({
     super.key,
     required this.track,
     required this.index,
     required this.isCurrent,
+    this.showGaplessIndicator = false,
   });
 
   @override
@@ -120,46 +125,68 @@ class _QueueItem extends StatelessWidget {
       ),
       onDismissed: (_) =>
           context.read<AppState>().removeQueueItem(index),
-      child: Container(
-        color: isCurrent
-            ? TuneColors.accent.withValues(alpha: 0.12)
-            : Colors.transparent,
-        child: ListTile(
-          leading: ArtworkView(
-            filePath: track.coverPath,
-            size: 42,
-            cornerRadius: 4,
-          ),
-          title: Text(
-            track.title,
-            style: TextStyle(
-              color: isCurrent
-                  ? TuneColors.accent
-                  : TuneColors.textPrimary,
-              fontWeight:
-                  isCurrent ? FontWeight.w600 : FontWeight.normal,
-              fontSize: 15,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: track.artistName != null
-              ? Text(
-                  track.artistName!,
-                  style: TuneFonts.caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null,
-          trailing: isCurrent
-              ? const Icon(Icons.equalizer_rounded,
-                  color: TuneColors.accent, size: 18)
-              : ReorderableDragStartListener(
-                  index: index,
-                  child: const Icon(Icons.drag_handle_rounded,
-                      color: TuneColors.textTertiary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            color: isCurrent
+                ? TuneColors.accent.withValues(alpha: 0.12)
+                : Colors.transparent,
+            child: ListTile(
+              leading: ArtworkView(
+                filePath: track.coverPath,
+                size: 42,
+                cornerRadius: 4,
+              ),
+              title: Text(
+                track.title,
+                style: TextStyle(
+                  color: isCurrent
+                      ? TuneColors.accent
+                      : TuneColors.textPrimary,
+                  fontWeight:
+                      isCurrent ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 15,
                 ),
-        ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: track.artistName != null
+                  ? Text(
+                      track.artistName!,
+                      style: TuneFonts.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              trailing: isCurrent
+                  ? const Icon(Icons.equalizer_rounded,
+                      color: TuneColors.accent, size: 18)
+                  : ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_handle_rounded,
+                          color: TuneColors.textTertiary),
+                    ),
+            ),
+          ),
+          // Gapless indicator — chain icon between gapless tracks
+          if (showGaplessIndicator)
+            Container(
+              height: 20,
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 20, height: 1, color: TuneColors.accent.withValues(alpha: 0.4)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(Icons.link_rounded, size: 14, color: TuneColors.accent.withValues(alpha: 0.7)),
+                  ),
+                  Container(width: 20, height: 1, color: TuneColors.accent.withValues(alpha: 0.4)),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

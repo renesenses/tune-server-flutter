@@ -99,6 +99,48 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
     _loadData();
   }
 
+  Future<void> _reportImage(BuildContext context, int artistId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        title: const Text('Signaler l\'image', style: TuneFonts.title3),
+        content: const Text(
+          'Signaler cette image artiste comme incorrecte ? Le serveur la remplacera lors du prochain enrichissement.',
+          style: TuneFonts.body,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.warning),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Signaler'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      await api.reportArtistImage(artistId, reason: 'incorrect');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image signalee'), backgroundColor: TuneColors.success),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
   Future<void> _loadData() async {
     final app = context.read<AppState>();
 
@@ -157,6 +199,14 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
             style: TuneFonts.title3,
             maxLines: 1,
             overflow: TextOverflow.ellipsis),
+        actions: [
+          if (context.read<AppState>().apiClient != null && artist.imagePath != null)
+            IconButton(
+              icon: const Icon(Icons.flag_outlined, color: TuneColors.textSecondary, size: 20),
+              tooltip: 'Signaler l\'image',
+              onPressed: () => _reportImage(context, artist.id),
+            ),
+        ],
       ),
       body: _albums == null
           ? const Center(child: CircularProgressIndicator())

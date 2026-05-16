@@ -556,6 +556,83 @@ class TuneApiClient {
   Future<void> setEqualizer(int zoneId, String preset) async =>
       await _post('/zones/$zoneId/eq', body: {'preset': preset});
 
+  /// Get current EQ bands state (10-band parametric)
+  Future<Map<String, dynamic>> getEqualizerBands(int zoneId) async =>
+      await _get('/zones/$zoneId/eq') as Map<String, dynamic>;
+
+  /// Set 10-band EQ gains (list of 10 doubles, -12 to +12 dB)
+  Future<void> setEqualizerBands(int zoneId, List<double> gains) async =>
+      await _post('/zones/$zoneId/eq', body: {'bands': gains});
+
+  // ---------------------------------------------------------------------------
+  // ── Audiophile Mode ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getAudiophileMode(int zoneId) async =>
+      await _get('/zones/$zoneId/audiophile') as Map<String, dynamic>;
+
+  Future<void> setAudiophileMode(int zoneId, bool enabled) async =>
+      await _post('/zones/$zoneId/audiophile', body: {'enabled': enabled});
+
+  // ---------------------------------------------------------------------------
+  // ── Streaming Quality ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getStreamingQuality(int zoneId) async =>
+      await _get('/zones/$zoneId/quality') as Map<String, dynamic>;
+
+  Future<void> setStreamingQuality(int zoneId, String quality) async =>
+      await _post('/zones/$zoneId/quality', body: {'quality': quality});
+
+  // ---------------------------------------------------------------------------
+  // ── YouTube Music Browse ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getYoutubeHome() async =>
+      await _get('/streaming/youtube/home') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> getYoutubeCharts() async =>
+      await _get('/streaming/youtube/charts') as Map<String, dynamic>;
+
+  Future<List<dynamic>> getYoutubeMoods() async =>
+      await _get('/streaming/youtube/moods') as List<dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Artist Image Report ──
+  // ---------------------------------------------------------------------------
+
+  Future<void> reportArtistImage(int artistId, {String? reason}) async =>
+      await _post('/library/artists/$artistId/image/report', body: {
+        if (reason != null) 'reason': reason,
+      });
+
+  // ---------------------------------------------------------------------------
+  // ── Network Diagnostics ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getNetworkDiagnostics() async =>
+      await _get('/system/diagnostics/network') as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Config Export/Import ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> exportConfig() async =>
+      await _get('/system/config/export') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> importConfig(Map<String, dynamic> config) async =>
+      await _post('/system/config/import', body: config) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Plugins ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getPlugins() async =>
+      await _get('/system/plugins') as List<dynamic>;
+
+  Future<Map<String, dynamic>> setPluginEnabled(String pluginId, bool enabled) async =>
+      await _post('/system/plugins/$pluginId', body: {'enabled': enabled}) as Map<String, dynamic>;
+
   // ---------------------------------------------------------------------------
   // ── Share ──
   // ---------------------------------------------------------------------------

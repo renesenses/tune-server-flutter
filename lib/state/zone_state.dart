@@ -102,11 +102,15 @@ class ZoneState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   QueueSnapshot? _queueSnapshot;
+  /// Indices of tracks that play gapless into the next track.
+  Set<int> _gaplessIndices = {};
 
   QueueSnapshot? get queueSnapshot => _queueSnapshot;
+  Set<int> get gaplessIndices => _gaplessIndices;
 
-  void setQueueSnapshot(QueueSnapshot snapshot) {
+  void setQueueSnapshot(QueueSnapshot snapshot, {Set<int> gaplessIndices = const {}}) {
     _queueSnapshot = snapshot;
+    _gaplessIndices = gaplessIndices;
     notifyListeners();
   }
 
