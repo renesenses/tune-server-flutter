@@ -22,7 +22,7 @@ import 'metadata_reader.dart';
 const _audioExtensions = {
   '.flac', '.mp3', '.m4a', '.aac', '.alac',
   '.ogg', '.opus', '.wav', '.aiff', '.aif',
-  '.dsf', '.dff', '.dst', '.ape', '.wma',
+  '.dsf', '.dff', '.dst', '.ape', '.wv', '.wma',
 };
 
 class LibraryScanner {

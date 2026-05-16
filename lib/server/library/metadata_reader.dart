@@ -249,7 +249,8 @@ class MetadataReader {
       case '.dsf':
       case '.dff':
       case '.dst':  return 'dsd';
-      case '.ape':  return 'flac';
+      case '.ape':  return 'ape';
+      case '.wv':   return 'wavpack';
       default:      return null;
     }
   }
