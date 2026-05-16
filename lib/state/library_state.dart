@@ -253,16 +253,46 @@ class LibraryState extends ChangeNotifier {
   List<HistoryEntry> _history = [];
   List<HistoryEntry> get history => List.unmodifiable(_history);
 
+  /// Wall-clock start time per zone for accurate listened_ms tracking.
+  final Map<String, ({Track track, String zoneName, DateTime startTime})>
+      _zonePlayStart = {};
+
   void prependHistory(Track track, {required String zoneName}) {
-    final entry = HistoryEntry(
+    // Flush previous track for this zone with actual elapsed time
+    flushZoneHistory(zoneName);
+
+    // Store start time for wall-clock elapsed tracking
+    _zonePlayStart[zoneName] = (
       track: track,
       zoneName: zoneName,
-      playedAt: DateTime.now().toIso8601String(),
+      startTime: DateTime.now(),
+    );
+  }
+
+  /// Flush the currently tracked track for a zone, saving actual listened time.
+  void flushZoneHistory(String zoneName) {
+    final prev = _zonePlayStart.remove(zoneName);
+    if (prev == null) return;
+    final elapsedMs =
+        DateTime.now().difference(prev.startTime).inMilliseconds;
+    if (elapsedMs < 2000) return;
+
+    // Avoid duplicate if same track already at top
+    if (_history.isNotEmpty) {
+      final first = _history.first.track as Track;
+      if (first.id == prev.track.id) return;
+    }
+
+    final entry = HistoryEntry(
+      track: prev.track,
+      zoneName: prev.zoneName,
+      playedAt: prev.startTime.toIso8601String(),
+      listenedMs: elapsedMs,
     );
     _history = [
       entry,
       ..._history
-          .where((e) => (e.track as Track).id != track.id)
+          .where((e) => (e.track as Track).id != prev.track.id)
           .take(99),
     ];
     notifyListeners();

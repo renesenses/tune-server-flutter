@@ -206,11 +206,13 @@ class HistoryEntry {
   final dynamic track; // Track (drift type)
   final String playedAt;
   final String zoneName;
+  final int? listenedMs;
 
   const HistoryEntry({
     required this.track,
     required this.playedAt,
     required this.zoneName,
+    this.listenedMs,
   });
 }
 

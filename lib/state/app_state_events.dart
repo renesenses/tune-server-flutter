@@ -74,6 +74,9 @@ extension AppStateEvents on AppState {
     if (zone != null) {
       final state = PlaybackState.fromRawValue(e.state) ?? PlaybackState.stopped;
       zoneState.updateZone(zone.copyWith(state: state));
+      if (state == PlaybackState.stopped) {
+        libraryState.flushZoneHistory(zone.name);
+      }
     }
   }
 
