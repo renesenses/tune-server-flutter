@@ -50,6 +50,13 @@ class Player {
 
   Player({required this.zoneId, required this.queue});
 
+  String? _resolveArtUrl(String? coverPath) {
+    if (coverPath == null || coverPath.isEmpty) return null;
+    if (coverPath.startsWith('http')) return coverPath;
+    final filename = coverPath.split('/').last;
+    return 'http://localhost:8888/api/v1/library/artwork/$filename';
+  }
+
   // ---------------------------------------------------------------------------
   // Lecture seule
   // ---------------------------------------------------------------------------
@@ -292,7 +299,7 @@ class Player {
       title: nextTrack.title,
       artist: nextTrack.artistName,
       album: nextTrack.albumTitle,
-      albumArtUrl: nextTrack.coverPath,
+      albumArtUrl: _resolveArtUrl(nextTrack.coverPath),
     );
     if (playResult is OutputFailure) {
       await nextOutput.dispose();
@@ -400,7 +407,7 @@ class Player {
       title: track.title,
       artist: track.artistName,
       album: track.albumTitle,
-      albumArtUrl: track.coverPath,
+      albumArtUrl: _resolveArtUrl(track.coverPath),
     );
 
     if (result is OutputFailure) {
