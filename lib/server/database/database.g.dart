@@ -83,6 +83,17 @@ class $ArtistsTable extends Artists with TableInfo<$ArtistsTable, Artist> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imageSourceMeta = const VerificationMeta(
+    'imageSource',
+  );
+  @override
+  late final GeneratedColumn<String> imageSource = GeneratedColumn<String>(
+    'image_source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -92,6 +103,7 @@ class $ArtistsTable extends Artists with TableInfo<$ArtistsTable, Artist> {
     discogsId,
     bio,
     imagePath,
+    imageSource,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -149,6 +161,15 @@ class $ArtistsTable extends Artists with TableInfo<$ArtistsTable, Artist> {
         imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
       );
     }
+    if (data.containsKey('image_source')) {
+      context.handle(
+        _imageSourceMeta,
+        imageSource.isAcceptableOrUnknown(
+          data['image_source']!,
+          _imageSourceMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -186,6 +207,10 @@ class $ArtistsTable extends Artists with TableInfo<$ArtistsTable, Artist> {
         DriftSqlType.string,
         data['${effectivePrefix}image_path'],
       ),
+      imageSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_source'],
+      ),
     );
   }
 
@@ -203,6 +228,9 @@ class Artist extends DataClass implements Insertable<Artist> {
   final String? discogsId;
   final String? bio;
   final String? imagePath;
+
+  /// Source of the artist image: user, discogs, community, musicbrainz, wikipedia
+  final String? imageSource;
   const Artist({
     required this.id,
     required this.name,
@@ -211,6 +239,7 @@ class Artist extends DataClass implements Insertable<Artist> {
     this.discogsId,
     this.bio,
     this.imagePath,
+    this.imageSource,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -232,6 +261,9 @@ class Artist extends DataClass implements Insertable<Artist> {
     if (!nullToAbsent || imagePath != null) {
       map['image_path'] = Variable<String>(imagePath);
     }
+    if (!nullToAbsent || imageSource != null) {
+      map['image_source'] = Variable<String>(imageSource);
+    }
     return map;
   }
 
@@ -252,6 +284,9 @@ class Artist extends DataClass implements Insertable<Artist> {
       imagePath: imagePath == null && nullToAbsent
           ? const Value.absent()
           : Value(imagePath),
+      imageSource: imageSource == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageSource),
     );
   }
 
@@ -268,6 +303,7 @@ class Artist extends DataClass implements Insertable<Artist> {
       discogsId: serializer.fromJson<String?>(json['discogsId']),
       bio: serializer.fromJson<String?>(json['bio']),
       imagePath: serializer.fromJson<String?>(json['imagePath']),
+      imageSource: serializer.fromJson<String?>(json['imageSource']),
     );
   }
   @override
@@ -281,6 +317,7 @@ class Artist extends DataClass implements Insertable<Artist> {
       'discogsId': serializer.toJson<String?>(discogsId),
       'bio': serializer.toJson<String?>(bio),
       'imagePath': serializer.toJson<String?>(imagePath),
+      'imageSource': serializer.toJson<String?>(imageSource),
     };
   }
 
@@ -292,6 +329,7 @@ class Artist extends DataClass implements Insertable<Artist> {
     Value<String?> discogsId = const Value.absent(),
     Value<String?> bio = const Value.absent(),
     Value<String?> imagePath = const Value.absent(),
+    Value<String?> imageSource = const Value.absent(),
   }) => Artist(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -302,6 +340,7 @@ class Artist extends DataClass implements Insertable<Artist> {
     discogsId: discogsId.present ? discogsId.value : this.discogsId,
     bio: bio.present ? bio.value : this.bio,
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
+    imageSource: imageSource.present ? imageSource.value : this.imageSource,
   );
   Artist copyWithCompanion(ArtistsCompanion data) {
     return Artist(
@@ -314,6 +353,9 @@ class Artist extends DataClass implements Insertable<Artist> {
       discogsId: data.discogsId.present ? data.discogsId.value : this.discogsId,
       bio: data.bio.present ? data.bio.value : this.bio,
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      imageSource: data.imageSource.present
+          ? data.imageSource.value
+          : this.imageSource,
     );
   }
 
@@ -326,14 +368,23 @@ class Artist extends DataClass implements Insertable<Artist> {
           ..write('musicbrainzId: $musicbrainzId, ')
           ..write('discogsId: $discogsId, ')
           ..write('bio: $bio, ')
-          ..write('imagePath: $imagePath')
+          ..write('imagePath: $imagePath, ')
+          ..write('imageSource: $imageSource')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, sortName, musicbrainzId, discogsId, bio, imagePath);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    sortName,
+    musicbrainzId,
+    discogsId,
+    bio,
+    imagePath,
+    imageSource,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -344,7 +395,8 @@ class Artist extends DataClass implements Insertable<Artist> {
           other.musicbrainzId == this.musicbrainzId &&
           other.discogsId == this.discogsId &&
           other.bio == this.bio &&
-          other.imagePath == this.imagePath);
+          other.imagePath == this.imagePath &&
+          other.imageSource == this.imageSource);
 }
 
 class ArtistsCompanion extends UpdateCompanion<Artist> {
@@ -355,6 +407,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
   final Value<String?> discogsId;
   final Value<String?> bio;
   final Value<String?> imagePath;
+  final Value<String?> imageSource;
   const ArtistsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -363,6 +416,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
     this.discogsId = const Value.absent(),
     this.bio = const Value.absent(),
     this.imagePath = const Value.absent(),
+    this.imageSource = const Value.absent(),
   });
   ArtistsCompanion.insert({
     this.id = const Value.absent(),
@@ -372,6 +426,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
     this.discogsId = const Value.absent(),
     this.bio = const Value.absent(),
     this.imagePath = const Value.absent(),
+    this.imageSource = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Artist> custom({
     Expression<int>? id,
@@ -381,6 +436,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
     Expression<String>? discogsId,
     Expression<String>? bio,
     Expression<String>? imagePath,
+    Expression<String>? imageSource,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -390,6 +446,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
       if (discogsId != null) 'discogs_id': discogsId,
       if (bio != null) 'bio': bio,
       if (imagePath != null) 'image_path': imagePath,
+      if (imageSource != null) 'image_source': imageSource,
     });
   }
 
@@ -401,6 +458,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
     Value<String?>? discogsId,
     Value<String?>? bio,
     Value<String?>? imagePath,
+    Value<String?>? imageSource,
   }) {
     return ArtistsCompanion(
       id: id ?? this.id,
@@ -410,6 +468,7 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
       discogsId: discogsId ?? this.discogsId,
       bio: bio ?? this.bio,
       imagePath: imagePath ?? this.imagePath,
+      imageSource: imageSource ?? this.imageSource,
     );
   }
 
@@ -437,6 +496,9 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
     if (imagePath.present) {
       map['image_path'] = Variable<String>(imagePath.value);
     }
+    if (imageSource.present) {
+      map['image_source'] = Variable<String>(imageSource.value);
+    }
     return map;
   }
 
@@ -449,7 +511,8 @@ class ArtistsCompanion extends UpdateCompanion<Artist> {
           ..write('musicbrainzId: $musicbrainzId, ')
           ..write('discogsId: $discogsId, ')
           ..write('bio: $bio, ')
-          ..write('imagePath: $imagePath')
+          ..write('imagePath: $imagePath, ')
+          ..write('imageSource: $imageSource')
           ..write(')'))
         .toString();
   }
@@ -3275,6 +3338,33 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _wasPlayingMeta = const VerificationMeta(
+    'wasPlaying',
+  );
+  @override
+  late final GeneratedColumn<bool> wasPlaying = GeneratedColumn<bool>(
+    'was_playing',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("was_playing" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lastPositionMsMeta = const VerificationMeta(
+    'lastPositionMs',
+  );
+  @override
+  late final GeneratedColumn<int> lastPositionMs = GeneratedColumn<int>(
+    'last_position_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3284,6 +3374,8 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
     volume,
     groupId,
     syncDelayMs,
+    wasPlaying,
+    lastPositionMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3344,6 +3436,21 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
         ),
       );
     }
+    if (data.containsKey('was_playing')) {
+      context.handle(
+        _wasPlayingMeta,
+        wasPlaying.isAcceptableOrUnknown(data['was_playing']!, _wasPlayingMeta),
+      );
+    }
+    if (data.containsKey('last_position_ms')) {
+      context.handle(
+        _lastPositionMsMeta,
+        lastPositionMs.isAcceptableOrUnknown(
+          data['last_position_ms']!,
+          _lastPositionMsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3381,6 +3488,14 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
         DriftSqlType.int,
         data['${effectivePrefix}sync_delay_ms'],
       )!,
+      wasPlaying: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}was_playing'],
+      )!,
+      lastPositionMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_position_ms'],
+      )!,
     );
   }
 
@@ -3398,6 +3513,8 @@ class Zone extends DataClass implements Insertable<Zone> {
   final double volume;
   final String? groupId;
   final int syncDelayMs;
+  final bool wasPlaying;
+  final int lastPositionMs;
   const Zone({
     required this.id,
     required this.name,
@@ -3406,6 +3523,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     required this.volume,
     this.groupId,
     required this.syncDelayMs,
+    required this.wasPlaying,
+    required this.lastPositionMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3423,6 +3542,8 @@ class Zone extends DataClass implements Insertable<Zone> {
       map['group_id'] = Variable<String>(groupId);
     }
     map['sync_delay_ms'] = Variable<int>(syncDelayMs);
+    map['was_playing'] = Variable<bool>(wasPlaying);
+    map['last_position_ms'] = Variable<int>(lastPositionMs);
     return map;
   }
 
@@ -3441,6 +3562,8 @@ class Zone extends DataClass implements Insertable<Zone> {
           ? const Value.absent()
           : Value(groupId),
       syncDelayMs: Value(syncDelayMs),
+      wasPlaying: Value(wasPlaying),
+      lastPositionMs: Value(lastPositionMs),
     );
   }
 
@@ -3457,6 +3580,8 @@ class Zone extends DataClass implements Insertable<Zone> {
       volume: serializer.fromJson<double>(json['volume']),
       groupId: serializer.fromJson<String?>(json['groupId']),
       syncDelayMs: serializer.fromJson<int>(json['syncDelayMs']),
+      wasPlaying: serializer.fromJson<bool>(json['wasPlaying']),
+      lastPositionMs: serializer.fromJson<int>(json['lastPositionMs']),
     );
   }
   @override
@@ -3470,6 +3595,8 @@ class Zone extends DataClass implements Insertable<Zone> {
       'volume': serializer.toJson<double>(volume),
       'groupId': serializer.toJson<String?>(groupId),
       'syncDelayMs': serializer.toJson<int>(syncDelayMs),
+      'wasPlaying': serializer.toJson<bool>(wasPlaying),
+      'lastPositionMs': serializer.toJson<int>(lastPositionMs),
     };
   }
 
@@ -3481,6 +3608,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     double? volume,
     Value<String?> groupId = const Value.absent(),
     int? syncDelayMs,
+    bool? wasPlaying,
+    int? lastPositionMs,
   }) => Zone(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -3491,6 +3620,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     volume: volume ?? this.volume,
     groupId: groupId.present ? groupId.value : this.groupId,
     syncDelayMs: syncDelayMs ?? this.syncDelayMs,
+    wasPlaying: wasPlaying ?? this.wasPlaying,
+    lastPositionMs: lastPositionMs ?? this.lastPositionMs,
   );
   Zone copyWithCompanion(ZonesCompanion data) {
     return Zone(
@@ -3507,6 +3638,12 @@ class Zone extends DataClass implements Insertable<Zone> {
       syncDelayMs: data.syncDelayMs.present
           ? data.syncDelayMs.value
           : this.syncDelayMs,
+      wasPlaying: data.wasPlaying.present
+          ? data.wasPlaying.value
+          : this.wasPlaying,
+      lastPositionMs: data.lastPositionMs.present
+          ? data.lastPositionMs.value
+          : this.lastPositionMs,
     );
   }
 
@@ -3519,7 +3656,9 @@ class Zone extends DataClass implements Insertable<Zone> {
           ..write('outputDeviceId: $outputDeviceId, ')
           ..write('volume: $volume, ')
           ..write('groupId: $groupId, ')
-          ..write('syncDelayMs: $syncDelayMs')
+          ..write('syncDelayMs: $syncDelayMs, ')
+          ..write('wasPlaying: $wasPlaying, ')
+          ..write('lastPositionMs: $lastPositionMs')
           ..write(')'))
         .toString();
   }
@@ -3533,6 +3672,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     volume,
     groupId,
     syncDelayMs,
+    wasPlaying,
+    lastPositionMs,
   );
   @override
   bool operator ==(Object other) =>
@@ -3544,7 +3685,9 @@ class Zone extends DataClass implements Insertable<Zone> {
           other.outputDeviceId == this.outputDeviceId &&
           other.volume == this.volume &&
           other.groupId == this.groupId &&
-          other.syncDelayMs == this.syncDelayMs);
+          other.syncDelayMs == this.syncDelayMs &&
+          other.wasPlaying == this.wasPlaying &&
+          other.lastPositionMs == this.lastPositionMs);
 }
 
 class ZonesCompanion extends UpdateCompanion<Zone> {
@@ -3555,6 +3698,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
   final Value<double> volume;
   final Value<String?> groupId;
   final Value<int> syncDelayMs;
+  final Value<bool> wasPlaying;
+  final Value<int> lastPositionMs;
   const ZonesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -3563,6 +3708,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     this.volume = const Value.absent(),
     this.groupId = const Value.absent(),
     this.syncDelayMs = const Value.absent(),
+    this.wasPlaying = const Value.absent(),
+    this.lastPositionMs = const Value.absent(),
   });
   ZonesCompanion.insert({
     this.id = const Value.absent(),
@@ -3572,6 +3719,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     this.volume = const Value.absent(),
     this.groupId = const Value.absent(),
     this.syncDelayMs = const Value.absent(),
+    this.wasPlaying = const Value.absent(),
+    this.lastPositionMs = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Zone> custom({
     Expression<int>? id,
@@ -3581,6 +3730,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     Expression<double>? volume,
     Expression<String>? groupId,
     Expression<int>? syncDelayMs,
+    Expression<bool>? wasPlaying,
+    Expression<int>? lastPositionMs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3590,6 +3741,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
       if (volume != null) 'volume': volume,
       if (groupId != null) 'group_id': groupId,
       if (syncDelayMs != null) 'sync_delay_ms': syncDelayMs,
+      if (wasPlaying != null) 'was_playing': wasPlaying,
+      if (lastPositionMs != null) 'last_position_ms': lastPositionMs,
     });
   }
 
@@ -3601,6 +3754,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     Value<double>? volume,
     Value<String?>? groupId,
     Value<int>? syncDelayMs,
+    Value<bool>? wasPlaying,
+    Value<int>? lastPositionMs,
   }) {
     return ZonesCompanion(
       id: id ?? this.id,
@@ -3610,6 +3765,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
       volume: volume ?? this.volume,
       groupId: groupId ?? this.groupId,
       syncDelayMs: syncDelayMs ?? this.syncDelayMs,
+      wasPlaying: wasPlaying ?? this.wasPlaying,
+      lastPositionMs: lastPositionMs ?? this.lastPositionMs,
     );
   }
 
@@ -3637,6 +3794,12 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     if (syncDelayMs.present) {
       map['sync_delay_ms'] = Variable<int>(syncDelayMs.value);
     }
+    if (wasPlaying.present) {
+      map['was_playing'] = Variable<bool>(wasPlaying.value);
+    }
+    if (lastPositionMs.present) {
+      map['last_position_ms'] = Variable<int>(lastPositionMs.value);
+    }
     return map;
   }
 
@@ -3649,7 +3812,9 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
           ..write('outputDeviceId: $outputDeviceId, ')
           ..write('volume: $volume, ')
           ..write('groupId: $groupId, ')
-          ..write('syncDelayMs: $syncDelayMs')
+          ..write('syncDelayMs: $syncDelayMs, ')
+          ..write('wasPlaying: $wasPlaying, ')
+          ..write('lastPositionMs: $lastPositionMs')
           ..write(')'))
         .toString();
   }
@@ -6801,6 +6966,7 @@ typedef $$ArtistsTableCreateCompanionBuilder =
       Value<String?> discogsId,
       Value<String?> bio,
       Value<String?> imagePath,
+      Value<String?> imageSource,
     });
 typedef $$ArtistsTableUpdateCompanionBuilder =
     ArtistsCompanion Function({
@@ -6811,6 +6977,7 @@ typedef $$ArtistsTableUpdateCompanionBuilder =
       Value<String?> discogsId,
       Value<String?> bio,
       Value<String?> imagePath,
+      Value<String?> imageSource,
     });
 
 final class $$ArtistsTableReferences
@@ -6897,6 +7064,11 @@ class $$ArtistsTableFilterComposer
 
   ColumnFilters<String> get imagePath => $composableBuilder(
     column: $table.imagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageSource => $composableBuilder(
+    column: $table.imageSource,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6994,6 +7166,11 @@ class $$ArtistsTableOrderingComposer
     column: $table.imagePath,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get imageSource => $composableBuilder(
+    column: $table.imageSource,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ArtistsTableAnnotationComposer
@@ -7027,6 +7204,11 @@ class $$ArtistsTableAnnotationComposer
 
   GeneratedColumn<String> get imagePath =>
       $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<String> get imageSource => $composableBuilder(
+    column: $table.imageSource,
+    builder: (column) => column,
+  );
 
   Expression<T> albumsRefs<T extends Object>(
     Expression<T> Function($$AlbumsTableAnnotationComposer a) f,
@@ -7114,6 +7296,7 @@ class $$ArtistsTableTableManager
                 Value<String?> discogsId = const Value.absent(),
                 Value<String?> bio = const Value.absent(),
                 Value<String?> imagePath = const Value.absent(),
+                Value<String?> imageSource = const Value.absent(),
               }) => ArtistsCompanion(
                 id: id,
                 name: name,
@@ -7122,6 +7305,7 @@ class $$ArtistsTableTableManager
                 discogsId: discogsId,
                 bio: bio,
                 imagePath: imagePath,
+                imageSource: imageSource,
               ),
           createCompanionCallback:
               ({
@@ -7132,6 +7316,7 @@ class $$ArtistsTableTableManager
                 Value<String?> discogsId = const Value.absent(),
                 Value<String?> bio = const Value.absent(),
                 Value<String?> imagePath = const Value.absent(),
+                Value<String?> imageSource = const Value.absent(),
               }) => ArtistsCompanion.insert(
                 id: id,
                 name: name,
@@ -7140,6 +7325,7 @@ class $$ArtistsTableTableManager
                 discogsId: discogsId,
                 bio: bio,
                 imagePath: imagePath,
+                imageSource: imageSource,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -9322,6 +9508,8 @@ typedef $$ZonesTableCreateCompanionBuilder =
       Value<double> volume,
       Value<String?> groupId,
       Value<int> syncDelayMs,
+      Value<bool> wasPlaying,
+      Value<int> lastPositionMs,
     });
 typedef $$ZonesTableUpdateCompanionBuilder =
     ZonesCompanion Function({
@@ -9332,6 +9520,8 @@ typedef $$ZonesTableUpdateCompanionBuilder =
       Value<double> volume,
       Value<String?> groupId,
       Value<int> syncDelayMs,
+      Value<bool> wasPlaying,
+      Value<int> lastPositionMs,
     });
 
 final class $$ZonesTableReferences
@@ -9397,6 +9587,16 @@ class $$ZonesTableFilterComposer extends Composer<_$TuneDatabase, $ZonesTable> {
 
   ColumnFilters<int> get syncDelayMs => $composableBuilder(
     column: $table.syncDelayMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get wasPlaying => $composableBuilder(
+    column: $table.wasPlaying,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastPositionMs => $composableBuilder(
+    column: $table.lastPositionMs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9469,6 +9669,16 @@ class $$ZonesTableOrderingComposer
     column: $table.syncDelayMs,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get wasPlaying => $composableBuilder(
+    column: $table.wasPlaying,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastPositionMs => $composableBuilder(
+    column: $table.lastPositionMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ZonesTableAnnotationComposer
@@ -9504,6 +9714,16 @@ class $$ZonesTableAnnotationComposer
 
   GeneratedColumn<int> get syncDelayMs => $composableBuilder(
     column: $table.syncDelayMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get wasPlaying => $composableBuilder(
+    column: $table.wasPlaying,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastPositionMs => $composableBuilder(
+    column: $table.lastPositionMs,
     builder: (column) => column,
   );
 
@@ -9568,6 +9788,8 @@ class $$ZonesTableTableManager
                 Value<double> volume = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
                 Value<int> syncDelayMs = const Value.absent(),
+                Value<bool> wasPlaying = const Value.absent(),
+                Value<int> lastPositionMs = const Value.absent(),
               }) => ZonesCompanion(
                 id: id,
                 name: name,
@@ -9576,6 +9798,8 @@ class $$ZonesTableTableManager
                 volume: volume,
                 groupId: groupId,
                 syncDelayMs: syncDelayMs,
+                wasPlaying: wasPlaying,
+                lastPositionMs: lastPositionMs,
               ),
           createCompanionCallback:
               ({
@@ -9586,6 +9810,8 @@ class $$ZonesTableTableManager
                 Value<double> volume = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
                 Value<int> syncDelayMs = const Value.absent(),
+                Value<bool> wasPlaying = const Value.absent(),
+                Value<int> lastPositionMs = const Value.absent(),
               }) => ZonesCompanion.insert(
                 id: id,
                 name: name,
@@ -9594,6 +9820,8 @@ class $$ZonesTableTableManager
                 volume: volume,
                 groupId: groupId,
                 syncDelayMs: syncDelayMs,
+                wasPlaying: wasPlaying,
+                lastPositionMs: lastPositionMs,
               ),
           withReferenceMapper: (p0) => p0
               .map(
