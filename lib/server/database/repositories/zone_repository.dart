@@ -53,6 +53,20 @@ class ZoneRepository {
         .write(ZonesCompanion(volume: Value(volume)));
   }
 
+  /// Sauvegarde l'état de lecture pour auto-resume après restart.
+  Future<void> savePlaybackState(int zoneId, bool wasPlaying, int positionMs) async {
+    await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))
+        .write(ZonesCompanion(
+          wasPlaying: Value(wasPlaying),
+          lastPositionMs: Value(positionMs),
+        ));
+  }
+
+  /// Retourne les zones qui étaient en lecture au dernier arrêt.
+  Future<List<Zone>> zonesForAutoResume() async {
+    return (_db.select(_db.zones)..where((z) => z.wasPlaying.equals(true))).get();
+  }
+
   /// Met à jour l'output (type + deviceId) d'une zone.
   Future<void> setOutput(
       int zoneId, String? outputType, String? outputDeviceId) async {

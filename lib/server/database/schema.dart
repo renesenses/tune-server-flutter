@@ -119,7 +119,8 @@ class Zones extends Table {
   RealColumn get volume => real().withDefault(const Constant(0.5))();
   TextColumn get groupId => text().nullable()();
   IntColumn get syncDelayMs => integer().withDefault(const Constant(0))();
-  // state, currentTrack, positionMs, queueLength → runtime only, non persistés
+  BoolColumn get wasPlaying => boolean().withDefault(const Constant(false))();
+  IntColumn get lastPositionMs => integer().withDefault(const Constant(0))();
 }
 
 // ---------------------------------------------------------------------------

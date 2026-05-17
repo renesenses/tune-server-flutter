@@ -171,8 +171,46 @@ class ServerEngine {
     // 6. Health monitor
     HealthMonitor.instance.start();
 
+    // 7. Auto-resume playback after restart
+    _autoResume();
+
+    // 8. Save playback state on events
+    _setupPlaybackStatePersistence();
+
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));
+  }
+
+  void _setupPlaybackStatePersistence() {
+    EventBus.instance.on<PlaybackStartedEvent>((e) async {
+      final zone = zoneManager.zoneById(e.zoneId);
+      if (zone != null) {
+        await zoneManager.zoneRepo.savePlaybackState(e.zoneId, true, zone.player.positionMs);
+      }
+    });
+    EventBus.instance.on<PlaybackStoppedEvent>((e) async {
+      await zoneManager.zoneRepo.savePlaybackState(e.zoneId, false, 0);
+    });
+  }
+
+  Future<void> _autoResume() async {
+    await Future.delayed(const Duration(seconds: 5));
+    if (!_running) return;
+    try {
+      final zones = await zoneManager.zoneRepo.zonesForAutoResume();
+      for (final zone in zones) {
+        final instance = zoneManager.zoneById(zone.id);
+        if (instance != null) {
+          debugPrint('[AutoResume] Resuming zone ${zone.name} at ${zone.lastPositionMs}ms');
+          await instance.player.play();
+          if (zone.lastPositionMs > 0) {
+            await instance.player.seek(zone.lastPositionMs);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[AutoResume] Failed: $e');
+    }
   }
 
   Future<void> stop() async {
