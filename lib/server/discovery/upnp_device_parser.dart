@@ -17,17 +17,35 @@ class UPnPCapabilities {
   final String? avTransportControlUrl;
   final String? renderingControlUrl;
 
+  // OpenHome service URLs
+  final String? openHomeProductUrl;
+  final String? openHomeVolumeUrl;
+  final String? openHomeTransportUrl;
+  final String? openHomePlaylistUrl;
+  final String? openHomeInfoUrl;
+  final String? openHomeTimeUrl;
+
   const UPnPCapabilities({
     this.contentDirectoryControlUrl,
     this.avTransportControlUrl,
     this.renderingControlUrl,
+    this.openHomeProductUrl,
+    this.openHomeVolumeUrl,
+    this.openHomeTransportUrl,
+    this.openHomePlaylistUrl,
+    this.openHomeInfoUrl,
+    this.openHomeTimeUrl,
   });
 
   bool get hasContentDirectory => contentDirectoryControlUrl != null;
   bool get hasAvTransport => avTransportControlUrl != null;
+  bool get hasOpenHome =>
+      openHomeProductUrl != null ||
+      openHomeTransportUrl != null ||
+      openHomePlaylistUrl != null;
 
-  /// Renderer DLNA = AVTransport présent.
-  bool get isRenderer => hasAvTransport;
+  /// Renderer DLNA = AVTransport présent, or OpenHome renderer.
+  bool get isRenderer => hasAvTransport || hasOpenHome;
 
   /// Serveur UPnP = ContentDirectory présent.
   bool get isServer => hasContentDirectory;
@@ -39,6 +57,12 @@ class UPnPCapabilities {
           'avTransport': avTransportControlUrl,
         if (renderingControlUrl != null)
           'renderingControl': renderingControlUrl,
+        if (openHomeProductUrl != null) 'ohProduct': openHomeProductUrl,
+        if (openHomeVolumeUrl != null) 'ohVolume': openHomeVolumeUrl,
+        if (openHomeTransportUrl != null) 'ohTransport': openHomeTransportUrl,
+        if (openHomePlaylistUrl != null) 'ohPlaylist': openHomePlaylistUrl,
+        if (openHomeInfoUrl != null) 'ohInfo': openHomeInfoUrl,
+        if (openHomeTimeUrl != null) 'ohTime': openHomeTimeUrl,
       };
 
   factory UPnPCapabilities.fromJson(Map<String, dynamic> json) =>
@@ -46,6 +70,12 @@ class UPnPCapabilities {
         contentDirectoryControlUrl: json['contentDirectory'] as String?,
         avTransportControlUrl: json['avTransport'] as String?,
         renderingControlUrl: json['renderingControl'] as String?,
+        openHomeProductUrl: json['ohProduct'] as String?,
+        openHomeVolumeUrl: json['ohVolume'] as String?,
+        openHomeTransportUrl: json['ohTransport'] as String?,
+        openHomePlaylistUrl: json['ohPlaylist'] as String?,
+        openHomeInfoUrl: json['ohInfo'] as String?,
+        openHomeTimeUrl: json['ohTime'] as String?,
       );
 }
 
@@ -168,6 +198,8 @@ class UPnPDeviceParser {
 
   static UPnPCapabilities _parseServices(XmlElement device, String baseUrl) {
     String? cdUrl, avtUrl, rcUrl;
+    String? ohProductUrl, ohVolumeUrl, ohTransportUrl;
+    String? ohPlaylistUrl, ohInfoUrl, ohTimeUrl;
 
     final serviceList = _find(device, 'serviceList');
     if (serviceList == null) return const UPnPCapabilities();
@@ -179,6 +211,7 @@ class UPnPDeviceParser {
 
       final resolved = _resolveUrl(controlUrl, baseUrl);
 
+      // UPnP/DLNA services
       if (type.contains('ContentDirectory')) {
         cdUrl = resolved;
       } else if (type.contains('AVTransport')) {
@@ -186,12 +219,27 @@ class UPnPDeviceParser {
       } else if (type.contains('RenderingControl')) {
         rcUrl = resolved;
       }
+      // OpenHome services (urn:av-openhome-org:service:*)
+      else if (type.contains('av-openhome-org')) {
+        if (type.contains('Product')) ohProductUrl = resolved;
+        if (type.contains('Volume')) ohVolumeUrl = resolved;
+        if (type.contains('Transport')) ohTransportUrl = resolved;
+        if (type.contains('Playlist')) ohPlaylistUrl = resolved;
+        if (type.contains('Info')) ohInfoUrl = resolved;
+        if (type.contains('Time')) ohTimeUrl = resolved;
+      }
     }
 
     return UPnPCapabilities(
       contentDirectoryControlUrl: cdUrl,
       avTransportControlUrl: avtUrl,
       renderingControlUrl: rcUrl,
+      openHomeProductUrl: ohProductUrl,
+      openHomeVolumeUrl: ohVolumeUrl,
+      openHomeTransportUrl: ohTransportUrl,
+      openHomePlaylistUrl: ohPlaylistUrl,
+      openHomeInfoUrl: ohInfoUrl,
+      openHomeTimeUrl: ohTimeUrl,
     );
   }
 
@@ -200,6 +248,12 @@ class UPnPDeviceParser {
     var cdUrl = base.contentDirectoryControlUrl;
     var avtUrl = base.avTransportControlUrl;
     var rcUrl = base.renderingControlUrl;
+    var ohProductUrl = base.openHomeProductUrl;
+    var ohVolumeUrl = base.openHomeVolumeUrl;
+    var ohTransportUrl = base.openHomeTransportUrl;
+    var ohPlaylistUrl = base.openHomePlaylistUrl;
+    var ohInfoUrl = base.openHomeInfoUrl;
+    var ohTimeUrl = base.openHomeTimeUrl;
 
     final deviceList = _find(root, 'deviceList');
     if (deviceList == null) {
@@ -211,12 +265,24 @@ class UPnPDeviceParser {
       cdUrl ??= caps.contentDirectoryControlUrl;
       avtUrl ??= caps.avTransportControlUrl;
       rcUrl ??= caps.renderingControlUrl;
+      ohProductUrl ??= caps.openHomeProductUrl;
+      ohVolumeUrl ??= caps.openHomeVolumeUrl;
+      ohTransportUrl ??= caps.openHomeTransportUrl;
+      ohPlaylistUrl ??= caps.openHomePlaylistUrl;
+      ohInfoUrl ??= caps.openHomeInfoUrl;
+      ohTimeUrl ??= caps.openHomeTimeUrl;
     }
 
     return UPnPCapabilities(
       contentDirectoryControlUrl: cdUrl,
       avTransportControlUrl: avtUrl,
       renderingControlUrl: rcUrl,
+      openHomeProductUrl: ohProductUrl,
+      openHomeVolumeUrl: ohVolumeUrl,
+      openHomeTransportUrl: ohTransportUrl,
+      openHomePlaylistUrl: ohPlaylistUrl,
+      openHomeInfoUrl: ohInfoUrl,
+      openHomeTimeUrl: ohTimeUrl,
     );
   }
 

@@ -14,6 +14,7 @@ import 'outputs/http_audio_streamer.dart';
 import 'streaming/radio_metadata_service.dart';
 import 'streaming/streaming_manager.dart';
 import 'streaming/streaming_service.dart';
+import 'utils/health_monitor.dart';
 import 'utils/network_utils.dart';
 import 'zones/zone_manager.dart';
 
@@ -167,12 +168,16 @@ class ServerEngine {
     // 5. Streaming services (restaure les tokens)
     await streamingManager.bootstrap();
 
+    // 6. Health monitor
+    HealthMonitor.instance.start();
+
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));
   }
 
   Future<void> stop() async {
     if (!_running) return;
+    HealthMonitor.instance.stop();
     RadioMetadataService.instance.stopAll();
     discoveryManager.stop();
     bluosDiscovery.stop();

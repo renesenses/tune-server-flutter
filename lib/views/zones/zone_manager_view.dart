@@ -554,6 +554,11 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                   // 3. PROFILS
                   // ============================================================
                   _buildProfilesSection(),
+
+                  // ============================================================
+                  // 4. PINS
+                  // ============================================================
+                  _buildPinsSection(),
                 ],
               ),
             ),
@@ -952,6 +957,190 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                   tooltip: 'Supprimer',
                   onPressed: () => _deleteProfile(profileId),
                 ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. Pins section
+  // ---------------------------------------------------------------------------
+
+  Widget _buildPinsSection() {
+    // Only show pins if zones are available
+    final zones = (_overview?['zones'] as List<dynamic>?) ?? [];
+    if (zones.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeader('Pins'),
+        ...zones.map<Widget>((zone) {
+          final zoneId = zone['id'] as int? ?? 0;
+          final zoneName = zone['name'] as String? ?? 'Zone $zoneId';
+          return _PinsCard(
+            zoneId: zoneId,
+            zoneName: zoneName,
+            api: _api,
+            onMessage: (msg, {bool isError = false}) =>
+                _showSnackBar(msg, isError: isError),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pins card widget — shows pins for a zone and allows invoking them
+// ---------------------------------------------------------------------------
+
+class _PinsCard extends StatefulWidget {
+  final int zoneId;
+  final String zoneName;
+  final TuneApiClient? api;
+  final void Function(String, {bool isError}) onMessage;
+
+  const _PinsCard({
+    required this.zoneId,
+    required this.zoneName,
+    required this.api,
+    required this.onMessage,
+  });
+
+  @override
+  State<_PinsCard> createState() => _PinsCardState();
+}
+
+class _PinsCardState extends State<_PinsCard> {
+  List<dynamic>? _pins;
+  bool _loading = false;
+  bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> _loadPins() async {
+    final api = widget.api;
+    if (api == null) return;
+    setState(() => _loading = true);
+    try {
+      final pins = await api.getZonePins(widget.zoneId);
+      if (mounted) setState(() => _pins = pins);
+    } catch (e) {
+      debugPrint('[Pins] Load error for zone ${widget.zoneId}: $e');
+      if (mounted) setState(() => _pins = []);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _invokePin(int index) async {
+    final api = widget.api;
+    if (api == null) return;
+    try {
+      await api.invokeZonePin(widget.zoneId, index);
+      widget.onMessage('Pin ${index + 1} invoked', isError: false);
+    } catch (e) {
+      widget.onMessage('Pin invoke error: $e', isError: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: TuneColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // Header
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              setState(() => _expanded = !_expanded);
+              if (_expanded && _pins == null) _loadPins();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.push_pin_rounded,
+                      size: 20, color: TuneColors.accent),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(widget.zoneName,
+                        style: TuneFonts.subheadline
+                            .copyWith(color: TuneColors.textPrimary)),
+                  ),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: TuneColors.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Pins list
+          if (_expanded) ...[
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: TuneColors.accent),
+                  ),
+                ),
+              )
+            else if (_pins != null && _pins!.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('No pins configured',
+                    style: TuneFonts.caption
+                        .copyWith(color: TuneColors.textTertiary)),
+              )
+            else if (_pins != null)
+              ..._pins!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final pin = entry.value as Map<String, dynamic>?;
+                if (pin == null) return const SizedBox.shrink();
+                final name = pin['name'] as String? ?? 'Pin ${index + 1}';
+                final source = pin['source'] as String? ?? '';
+                return ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: TuneColors.accent.withOpacity(0.15),
+                    child: Text('${index + 1}',
+                        style: TuneFonts.caption
+                            .copyWith(color: TuneColors.accent)),
+                  ),
+                  title: Text(name,
+                      style:
+                          TuneFonts.body.copyWith(color: TuneColors.textPrimary)),
+                  subtitle: source.isNotEmpty
+                      ? Text(source,
+                          style: TuneFonts.caption
+                              .copyWith(color: TuneColors.textTertiary))
+                      : null,
+                  trailing: IconButton(
+                    icon: const Icon(Icons.play_circle_outline_rounded,
+                        color: TuneColors.accent, size: 24),
+                    tooltip: 'Play',
+                    onPressed: () => _invokePin(index),
+                  ),
+                );
+              }),
+          ],
         ],
       ),
     );

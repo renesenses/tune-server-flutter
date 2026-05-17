@@ -9,6 +9,7 @@ import 'airplay_output.dart';
 import 'bluos_output.dart';
 import 'chromecast_output.dart';
 import 'dlna_output.dart';
+import 'openhome_output.dart';
 import 'output_target.dart';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +38,22 @@ class OutputFactory {
         if (device == null) {
           debugPrint('[output_factory] DLNA requested but no device — fallback to Local');
           return LocalAudioOutput(displayName: 'Local (fallback)');
+        }
+        // Prefer OpenHome output if the device has OpenHome services
+        if (device.capabilities.hasOpenHome) {
+          debugPrint('[output_factory] Using OpenHome output for ${device.name}');
+          return OpenHomeOutput(
+            id: device.id,
+            displayName: device.name,
+            host: device.host,
+            port: device.port,
+            productUrl: device.capabilities.openHomeProductUrl,
+            volumeUrl: device.capabilities.openHomeVolumeUrl,
+            transportUrl: device.capabilities.openHomeTransportUrl,
+            playlistUrl: device.capabilities.openHomePlaylistUrl,
+            infoUrl: device.capabilities.openHomeInfoUrl,
+            timeUrl: device.capabilities.openHomeTimeUrl,
+          );
         }
         final avUrl = device.capabilities.avTransportControlUrl;
         if (avUrl == null) {

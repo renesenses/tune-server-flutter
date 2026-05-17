@@ -18,6 +18,7 @@ const _ssdpPort = 1900;
 const ssdpTargets = [
   'urn:schemas-upnp-org:device:MediaRenderer:1',
   'urn:schemas-upnp-org:device:MediaServer:1',
+  'urn:av-openhome-org:service:Product:1',
   'ssdp:all',
 ];
 

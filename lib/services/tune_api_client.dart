@@ -959,4 +959,24 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> updateGenreTree(Map<String, dynamic> tree) async =>
       await _put('/api/v1/library/genre-tree', body: tree) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // -- Pins --
+  // ---------------------------------------------------------------------------
+
+  /// Get all pins for a zone.
+  Future<List<dynamic>> getZonePins(int zoneId) async =>
+      await _get('/zones/$zoneId/pins') as List<dynamic>;
+
+  /// Create or update a pin at a specific index.
+  Future<Map<String, dynamic>> setZonePin(int zoneId, Map<String, dynamic> body) async =>
+      await _post('/zones/$zoneId/pins', body: body) as Map<String, dynamic>;
+
+  /// Invoke (play) a pin at a given index.
+  Future<Map<String, dynamic>> invokeZonePin(int zoneId, int index) async =>
+      await _post('/zones/$zoneId/pins/$index/invoke') as Map<String, dynamic>;
+
+  /// Delete a pin at a given index.
+  Future<void> deleteZonePin(int zoneId, int index) async =>
+      await _delete('/zones/$zoneId/pins/$index');
 }
