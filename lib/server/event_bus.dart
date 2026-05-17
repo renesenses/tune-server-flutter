@@ -90,6 +90,33 @@ class RadioMetadataEvent extends AppEvent {
   const RadioMetadataEvent(this.stationName, {this.title, this.artist});
 }
 
+// --- Peer discovery (Tune servers on LAN) ---
+
+class PeerDiscoveredEvent extends AppEvent {
+  final String name;
+  final String host;
+  final int port;
+  final String version;
+  final int trackCount;
+  final int zoneCount;
+  final String serverId;
+  const PeerDiscoveredEvent({
+    required this.name,
+    required this.host,
+    required this.port,
+    this.version = '',
+    this.trackCount = 0,
+    this.zoneCount = 0,
+    this.serverId = '',
+  });
+}
+
+class PeerLostEvent extends AppEvent {
+  final String name;
+  final String host;
+  const PeerLostEvent({required this.name, required this.host});
+}
+
 // --- Zones ---
 
 class ZoneCreatedEvent extends AppEvent {

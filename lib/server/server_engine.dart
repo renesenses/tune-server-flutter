@@ -5,9 +5,11 @@ import 'configuration.dart';
 import 'database/database.dart';
 import 'discovery/bluos_discovery.dart';
 import 'discovery/discovery_manager.dart';
+import 'discovery/tune_discovery.dart';
 import 'discovery/upnp_indexer.dart';
 import 'event_bus.dart';
 import 'library/apple_music_library.dart';
+import 'library/artist_enrichment_service.dart';
 import 'library/artwork_manager.dart';
 import 'library/library_scanner.dart';
 import 'outputs/http_audio_streamer.dart';
@@ -79,6 +81,7 @@ class ServerEngine {
   final StreamingManager streamingManager;
   final LibraryScanner libraryScanner;
   final HttpAudioStreamer httpStreamer;
+  final ArtistEnrichmentService artistEnrichment;
 
   String? _localIp;
   bool _running = false;
@@ -93,6 +96,7 @@ class ServerEngine {
     required this.streamingManager,
     required this.libraryScanner,
     required this.httpStreamer,
+    required this.artistEnrichment,
   });
 
   /// Crée et initialise le ServerEngine.
@@ -115,6 +119,7 @@ class ServerEngine {
     );
     final httpStreamer = HttpAudioStreamer(preferredPort: config.httpStreamerPort, db: db);
     final libraryScanner = LibraryScanner(db);
+    final artistEnrichment = ArtistEnrichmentService(db);
 
     await ArtworkManager.instance.initialize();
 
@@ -128,6 +133,7 @@ class ServerEngine {
       streamingManager: streamingManager,
       libraryScanner: libraryScanner,
       httpStreamer: httpStreamer,
+      artistEnrichment: artistEnrichment,
     );
   }
 
@@ -177,6 +183,12 @@ class ServerEngine {
     // 8. Save playback state on events
     _setupPlaybackStatePersistence();
 
+    // 9. Update Tune peer TXT record after library scans
+    _setupTuneDiscoveryUpdates();
+
+    // 10. Artist image enrichment (community cache + iTunes)
+    artistEnrichment.start();
+
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));
   }
@@ -190,6 +202,21 @@ class ServerEngine {
     });
     EventBus.instance.on<PlaybackStoppedEvent>((e) async {
       await zoneManager.zoneRepo.savePlaybackState(e.zoneId, false, 0);
+    });
+  }
+
+  void _setupTuneDiscoveryUpdates() {
+    EventBus.instance.subscribe<LibraryScanCompletedEvent>((_) async {
+      try {
+        final trackCount = await db.trackRepo.count();
+        final zoneCount = zoneManager.allZones().length;
+        await discoveryManager.updateTuneProperties(
+          trackCount: trackCount,
+          zoneCount: zoneCount,
+        );
+      } catch (e) {
+        debugPrint('[TuneDiscovery] TXT update after scan failed: $e');
+      }
     });
   }
 
@@ -215,6 +242,7 @@ class ServerEngine {
 
   Future<void> stop() async {
     if (!_running) return;
+    artistEnrichment.stop();
     HealthMonitor.instance.stop();
     RadioMetadataService.instance.stopAll();
     discoveryManager.stop();
@@ -320,6 +348,9 @@ class ServerEngine {
   List<DiscoveredDevice> upnpServers() => discoveryManager.servers();
   List<DiscoveredDevice> dlnaRenderers() => discoveryManager.renderers();
   List<DiscoveredDevice> bluosDevices() => bluosDiscovery.devices;
+
+  /// Discovered Tune Server peers on the LAN (DNS-SD).
+  List<TunePeer> get tunePeers => discoveryManager.tunePeers;
 
   Future<void> forgetDevice(String id) => discoveryManager.forgetDevice(id);
 

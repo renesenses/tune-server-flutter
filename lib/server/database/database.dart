@@ -46,7 +46,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +88,9 @@ class TuneDatabase extends _$TuneDatabase {
             await customStatement(
                 'CREATE INDEX IF NOT EXISTS idx_sync_snapshots_link '
                 'ON sync_link_snapshots(playlist_link_id, side)');
+          }
+          if (from < 10) {
+            await m.addColumn(artists, artists.imageSource);
           }
         },
         beforeOpen: (details) async {

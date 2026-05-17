@@ -21,6 +21,8 @@ class Artists extends Table {
   TextColumn get discogsId => text().nullable()();
   TextColumn get bio => text().nullable()();
   TextColumn get imagePath => text().nullable()();
+  /// Source of the artist image: user, discogs, community, musicbrainz, wikipedia
+  TextColumn get imageSource => text().nullable()();
 }
 
 // ---------------------------------------------------------------------------

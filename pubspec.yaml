@@ -52,6 +52,9 @@ dependencies:
   file_picker: ^8.1.2
   permission_handler: ^11.3.1
 
+  # --- mDNS / DNS-SD (Tune peer discovery) ---
+  bonsoir: ^5.1.0
+
   # --- Update check (UpdateChecker, SettingsView banner) ---
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0

@@ -10,6 +10,7 @@ import '../database/database.dart';
 import '../utils/network_utils.dart';
 import 'chromecast_discovery.dart';
 import 'ssdp_discovery.dart';
+import 'tune_discovery.dart';
 import 'upnp_device_parser.dart';
 
 // ---------------------------------------------------------------------------
@@ -86,17 +87,24 @@ class DiscoveryManager {
   final _seen = <String>{};                     // LOCATION URLs déjà traitées
   StreamSubscription<SSDPResponse>? _ssdpSub;
   ChromecastDiscovery? _chromecastDiscovery;
+  TuneDiscovery? _tuneDiscovery;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  Future<void> start() async {
+  Future<void> start({int trackCount = 0, int zoneCount = 0}) async {
     await _loadSavedDevices();
     _ssdpSub = SSDPDiscovery.instance.responses.listen(_onSSDPResponse);
     await SSDPDiscovery.instance.start();
     _chromecastDiscovery = ChromecastDiscovery(client: _http);
     unawaited(_chromecastDiscovery!.start());
+    // Tune peer discovery via DNS-SD
+    _tuneDiscovery = TuneDiscovery();
+    unawaited(_tuneDiscovery!.start(
+      trackCount: trackCount,
+      zoneCount: zoneCount,
+    ));
     // Fallback: probe direct après un délai (laisse SSDP une chance)
     Future.delayed(const Duration(seconds: 3), () => _subnetProbe());
   }
@@ -107,6 +115,8 @@ class DiscoveryManager {
     SSDPDiscovery.instance.stop();
     _chromecastDiscovery?.stop();
     _chromecastDiscovery = null;
+    _tuneDiscovery?.stop();
+    _tuneDiscovery = null;
   }
 
   Future<void> refresh() async {
@@ -186,6 +196,18 @@ class DiscoveryManager {
   DiscoveredDevice? deviceById(String id) => _cache[id];
 
   List<DiscoveredDevice> get chromecastDevices => _chromecastDiscovery?.devices ?? [];
+
+  /// Discovered Tune Server peers on the LAN.
+  List<TunePeer> get tunePeers =>
+      _tuneDiscovery?.peers.values.toList() ?? [];
+
+  /// Update advertised Tune peer TXT record (e.g. after scan/zone change).
+  Future<void> updateTuneProperties({int? trackCount, int? zoneCount}) async {
+    await _tuneDiscovery?.updateProperties(
+      trackCount: trackCount,
+      zoneCount: zoneCount,
+    );
+  }
 
   /// Probe manuel d'un hôte (port 49152 par défaut UPnP).
   Future<DiscoveredDevice?> probeHost(String host,
