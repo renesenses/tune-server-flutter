@@ -1001,4 +1001,95 @@ class TuneApiClient {
   /// Delete a pin at a given index.
   Future<void> deleteZonePin(int zoneId, int index) async =>
       await _delete('/zones/$zoneId/pins/$index');
+
+  // ---------------------------------------------------------------------------
+  // ── Admin Dashboard ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getAdminHealth() async =>
+      await _get('/api/v1/admin/health') as Map<String, dynamic>;
+
+  Future<List<dynamic>> getAdminZones() async =>
+      await _get('/admin/zones') as List<dynamic>;
+
+  Future<List<dynamic>> getAdminErrors({int limit = 50}) async =>
+      await _get('/admin/errors?limit=$limit') as List<dynamic>;
+
+  Future<List<dynamic>> getAdminDiscovery() async =>
+      await _get('/admin/discovery') as List<dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── M3U Import / Export ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> importM3U(String filePath) async {
+    final uri = Uri.parse('$baseUrl/playlists/import/m3u');
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    final streamed = await request.send();
+    final body = await streamed.stream.bytesToString();
+    if (streamed.statusCode != 200 && streamed.statusCode != 201) {
+      throw Exception('M3U import failed (${streamed.statusCode}): $body');
+    }
+    return jsonDecode(body) as Map<String, dynamic>;
+  }
+
+  Future<String> exportM3U(int playlistId) async {
+    final resp = await _client.get(
+      Uri.parse('$baseUrl/playlists/$playlistId/export/m3u'),
+    ).timeout(const Duration(seconds: 60));
+    if (resp.statusCode != 200) {
+      throw Exception('M3U export failed: ${resp.statusCode}');
+    }
+    return resp.body;
+  }
+
+  // ---------------------------------------------------------------------------
+  // ── Alarm Enhanced (snooze) ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> snoozeAlarm(int alarmId, {int minutes = 5}) async =>
+      await _post('/alarm/$alarmId/snooze', body: {'minutes': minutes})
+          as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Tags ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getTags() async =>
+      await _get('/api/v1/tags') as List<dynamic>;
+
+  Future<Map<String, dynamic>> createTag(String name, {String? color}) async =>
+      await _post('/api/v1/tags', body: {
+        'name': name,
+        if (color != null) 'color': color,
+      }) as Map<String, dynamic>;
+
+  Future<void> deleteTag(int tagId) async =>
+      await _delete('/api/v1/tags/$tagId');
+
+  Future<List<dynamic>> getItemTags(String itemType, int itemId) async =>
+      await _get('/api/v1/tags/items/$itemType/$itemId') as List<dynamic>;
+
+  Future<Map<String, dynamic>> addTagToItem(int tagId, String itemType, int itemId) async =>
+      await _post('/api/v1/tags/$tagId/items', body: {
+        'item_type': itemType,
+        'item_id': itemId,
+      }) as Map<String, dynamic>;
+
+  Future<void> removeTagFromItem(int tagId, String itemType, int itemId) async =>
+      await _delete('/api/v1/tags/$tagId/items/$itemType/$itemId');
+
+  // ---------------------------------------------------------------------------
+  // ── SMB Browser (network discovery) ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> discoverSMBShares() async =>
+      await _get('/network/smb/discover') as List<dynamic>;
+
+  Future<Map<String, dynamic>> mountSMBShare(Map<String, dynamic> body) async =>
+      await _post('/network/smb/mount', body: body) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> saveSMBCredentials(Map<String, dynamic> body) async =>
+      await _post('/network/smb/credentials', body: body) as Map<String, dynamic>;
 }

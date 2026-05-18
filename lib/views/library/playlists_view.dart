@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -77,10 +81,24 @@ class _PlaylistsViewState extends State<PlaylistsView> {
     return Scaffold(
       backgroundColor: TuneColors.background,
       floatingActionButton: _selectedSource == 'local'
-          ? FloatingActionButton(
-              backgroundColor: TuneColors.accent,
-              child: const Icon(Icons.add_rounded),
-              onPressed: () => _createPlaylist(context, app),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (app.apiClient != null)
+                  FloatingActionButton.small(
+                    heroTag: 'import_m3u',
+                    backgroundColor: TuneColors.surfaceVariant,
+                    onPressed: () => _importM3U(context, app),
+                    child: const Icon(Icons.file_upload_rounded, size: 20),
+                  ),
+                if (app.apiClient != null) const SizedBox(height: 8),
+                FloatingActionButton(
+                  heroTag: 'create_playlist',
+                  backgroundColor: TuneColors.accent,
+                  child: const Icon(Icons.add_rounded),
+                  onPressed: () => _createPlaylist(context, app),
+                ),
+              ],
             )
           : null,
       body: Column(
@@ -181,6 +199,30 @@ class _PlaylistsViewState extends State<PlaylistsView> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Export CSV réussi'), duration: Duration(seconds: 2)),
               );
+            }
+          }
+        case 'export_m3u':
+          if (app.apiClient != null) {
+            try {
+              final m3uContent = await app.apiClient!.exportM3U(playlist.id);
+              final dir = await getApplicationDocumentsDirectory();
+              final safeName = playlist.name.replaceAll(RegExp(r'[^\w\-.]'), '_');
+              final file = File('${dir.path}/$safeName.m3u');
+              await file.writeAsString(m3uContent);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('M3U exporte: ${file.path}'),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erreur export M3U: $e'), duration: const Duration(seconds: 3)),
+                );
+              }
             }
           }
         case 'delete':
@@ -305,6 +347,41 @@ class _PlaylistsViewState extends State<PlaylistsView> {
     final name = await _askName(context);
     if (name == null || name.isEmpty) return;
     await app.createPlaylist(name);
+  }
+
+  Future<void> _importM3U(BuildContext context, AppState app) async {
+    final api = app.apiClient;
+    if (api == null) return;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['m3u', 'm3u8'],
+      );
+      if (result == null || result.files.isEmpty) return;
+      final filePath = result.files.single.path;
+      if (filePath == null) return;
+
+      final data = await api.importM3U(filePath);
+      if (mounted) {
+        final name = data['name'] ?? 'Playlist';
+        final count = data['track_count'] ?? data['tracks_added'] ?? 0;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Importe: $name ($count pistes)'),
+            backgroundColor: TuneColors.success,
+          ),
+        );
+        // Refresh playlists
+        app.refreshPlaylists();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur import M3U: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
   }
 
   Future<String?> _askName(BuildContext context) => showDialog<String>(
@@ -435,6 +512,11 @@ class _PlaylistTile extends StatelessWidget {
           PopupMenuItem(value: 'export_csv', child: ListTile(
             leading: Icon(Icons.table_chart_rounded, size: 20),
             title: Text('Exporter CSV', style: TextStyle(fontSize: 14)),
+            dense: true, contentPadding: EdgeInsets.zero,
+          )),
+          PopupMenuItem(value: 'export_m3u', child: ListTile(
+            leading: Icon(Icons.playlist_play_rounded, size: 20),
+            title: Text('Exporter M3U', style: TextStyle(fontSize: 14)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
           PopupMenuItem(value: 'delete', child: ListTile(

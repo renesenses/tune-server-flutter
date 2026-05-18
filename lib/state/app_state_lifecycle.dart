@@ -94,6 +94,13 @@ extension AppStateLifecycle on AppState {
       await _webSocket!.connect();
       _wsSubscription = _webSocket!.eventStream.listen(_handleRemoteEvent);
 
+      // Start track change notification service
+      _trackNotificationService?.dispose();
+      _trackNotificationService = TrackNotificationService(
+        onTrackChanged: (info) => onTrackChangeNotification?.call(info),
+      );
+      _trackNotificationService!.listen(_webSocket!);
+
       _serverStarted = true;
       _errorMessage = null;
 
@@ -122,6 +129,8 @@ extension AppStateLifecycle on AppState {
   Future<void> disconnectRemote() async {
     _remotePollingTimer?.cancel();
     _remotePollingTimer = null;
+    _trackNotificationService?.dispose();
+    _trackNotificationService = null;
     _wsSubscription?.cancel();
     _wsSubscription = null;
     _webSocket?.dispose();

@@ -17,6 +17,7 @@ import '../server/event_bus.dart';
 import '../server/server_engine.dart';
 import '../server/streaming/radio_metadata_service.dart';
 import '../server/streaming/streaming_service.dart';
+import '../services/track_notification_service.dart';
 import '../services/tune_api_client.dart';
 import '../services/tune_websocket.dart';
 import '../services/update_checker.dart';
@@ -63,6 +64,15 @@ class AppState extends ChangeNotifier {
   TuneWebSocket? _webSocket;
   StreamSubscription? _wsSubscription;
   Timer? _remotePollingTimer;
+
+  // Track change notifications
+  TrackNotificationService? _trackNotificationService;
+
+  /// Callback for track change notifications. Set this from the UI layer
+  /// (e.g. main.dart) to show OS-level or in-app notifications.
+  void Function(TrackChangeInfo info)? onTrackChangeNotification;
+
+  TrackNotificationService? get trackNotificationService => _trackNotificationService;
 
   // Update check — populated on app launch and every 30 min by
   // _refreshUpdateInfo. Drives a banner in SettingsView when a newer

@@ -16,6 +16,7 @@ import '../collections/smart_collections_view.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
+import '../admin/admin_dashboard_view.dart';
 import '../alarms/alarms_view.dart';
 import '../diagnostics/diagnostics_view.dart';
 import '../library/genre_tree_view.dart';
@@ -107,6 +108,8 @@ class _MoreView extends StatelessWidget {
         (icon: Icons.account_tree_rounded, label: 'Genre Tree',        page: const GenreTreeView()),
       if (isRemote)
         (icon: Icons.monitor_heart_rounded, label: 'Diagnostics',      page: const DiagnosticsView()),
+      if (isRemote)
+        (icon: Icons.dashboard_rounded,     label: 'Admin',            page: const AdminDashboardView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
     ];
 

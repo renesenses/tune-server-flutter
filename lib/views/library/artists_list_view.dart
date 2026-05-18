@@ -10,6 +10,7 @@ import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../tags/tag_chips_widget.dart';
 import 'albums_grid_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
 
@@ -217,6 +218,15 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
                   artist: artist,
                   metadata: _metadata,
                 )),
+
+                // --- Tags ---
+                if (context.read<AppState>().apiClient != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: TagChipsWidget(itemType: 'artist', itemId: artist.id),
+                    ),
+                  ),
 
                 // --- Enrichment status ---
                 if (_metadataLoading)

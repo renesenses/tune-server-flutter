@@ -95,6 +95,28 @@ class _AlarmsViewState extends State<AlarmsView> {
     }
   }
 
+  Future<void> _snoozeAlarm(int id) async {
+    final api = _api;
+    if (api == null) return;
+    try {
+      await api.snoozeAlarm(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Alarme reportee de 5 min'),
+            backgroundColor: TuneColors.accent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
+  }
+
   void _openEditor({Map<String, dynamic>? existing}) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -179,6 +201,7 @@ class _AlarmsViewState extends State<AlarmsView> {
           onToggle: () => _toggleEnabled(_alarms[i]),
           onTap: () => _openEditor(existing: _alarms[i]),
           onDelete: () => _deleteAlarm(_alarms[i]['id'] as int),
+          onSnooze: _snoozeAlarm,
         ),
       ),
     );
@@ -194,12 +217,14 @@ class _AlarmTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final Future<void> Function(int id)? onSnooze;
 
   const _AlarmTile({
     required this.alarm,
     required this.onToggle,
     required this.onTap,
     required this.onDelete,
+    this.onSnooze,
   });
 
   @override
@@ -210,6 +235,9 @@ class _AlarmTile extends StatelessWidget {
     final daysStr = alarm['days'] as String? ?? '';
     final sourceName = alarm['source_name'] as String? ?? '';
     final skipHolidays = alarm['skip_holidays'] == 1 || alarm['skip_holidays'] == true;
+    final fadeIn = alarm['fade_in_seconds'] as num?;
+    final zoneName = alarm['zone_name'] as String?;
+    final zoneId = alarm['zone_id'];
 
     return Dismissible(
       key: ValueKey(alarm['id']),
@@ -253,45 +281,84 @@ class _AlarmTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  Text(
-                    _formatDays(daysStr),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: enabled ? TuneColors.textSecondary : TuneColors.textTertiary,
-                    ),
+                  // Day-of-week chips
+                  _DayChips(daysStr: daysStr, enabled: enabled),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      if (sourceName.isNotEmpty) ...[
+                        Icon(Icons.music_note_rounded, size: 12,
+                            color: enabled ? TuneColors.textSecondary : TuneColors.textTertiary),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            sourceName,
+                            style: TuneFonts.caption.copyWith(
+                              color: enabled ? TuneColors.textSecondary : TuneColors.textTertiary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                      if (fadeIn != null && fadeIn > 0) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.trending_up_rounded, size: 12,
+                            color: enabled ? TuneColors.textTertiary : TuneColors.textTertiary),
+                        const SizedBox(width: 2),
+                        Text('${fadeIn.toInt()}s',
+                            style: TuneFonts.caption),
+                      ],
+                      if (zoneName != null || zoneId != null) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.speaker_rounded, size: 12,
+                            color: enabled ? TuneColors.textTertiary : TuneColors.textTertiary),
+                        const SizedBox(width: 2),
+                        Text(zoneName ?? 'Zone $zoneId',
+                            style: TuneFonts.caption),
+                      ],
+                    ],
                   ),
-                  if (sourceName.isNotEmpty)
-                    Text(
-                      sourceName + (skipHolidays ? '  (hors jours feries)' : ''),
-                      style: TuneFonts.caption,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  if (skipHolidays)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text('Hors jours feries', style: TuneFonts.caption),
                     ),
                 ],
               ),
             ),
           ],
         ),
-        trailing: Switch.adaptive(
-          value: enabled,
-          activeTrackColor: TuneColors.accent,
-          onChanged: (_) => onToggle(),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Switch.adaptive(
+              value: enabled,
+              activeTrackColor: TuneColors.accent,
+              onChanged: (_) => onToggle(),
+            ),
+            if (enabled && onSnooze != null)
+              GestureDetector(
+                onTap: () => onSnooze!(alarm['id'] as int),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: TuneColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('Snooze',
+                      style: TuneFonts.caption.copyWith(
+                        color: TuneColors.accent,
+                        fontWeight: FontWeight.w600,
+                      )),
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  static String _formatDays(String days) {
-    if (days.isEmpty) return 'Aucun jour';
-    final nums = days.split(',').map((s) => int.tryParse(s.trim())).whereType<int>().toList();
-    if (nums.isEmpty) return days;
-    // ISO: 1=Mon..7=Sun
-    const labels = ['', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-    if (nums.length == 7) return 'Tous les jours';
-    if (nums.length == 5 && nums.every((d) => d >= 1 && d <= 5)) return 'Lun - Ven';
-    if (nums.length == 2 && nums.contains(6) && nums.contains(7)) return 'Sam - Dim';
-    return nums.map((n) => n >= 1 && n <= 7 ? labels[n] : '?').join(', ');
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -326,6 +393,8 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
   late double _volume;
   late double _fadeIn;
   late bool _enabled;
+  late int? _zoneId;
+  List<dynamic> _availableZones = [];
 
   bool _saving = false;
 
@@ -361,6 +430,15 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
     _volume = (e?['volume'] as num?)?.toDouble() ?? 50;
     _fadeIn = (e?['fade_in_seconds'] as num?)?.toDouble() ?? 30;
     _enabled = e?['enabled'] == 1 || e?['enabled'] == true || e == null;
+    _zoneId = e?['zone_id'] as int?;
+    _loadZones();
+  }
+
+  Future<void> _loadZones() async {
+    try {
+      final zones = await widget.api.getZones();
+      if (mounted) setState(() => _availableZones = zones);
+    } catch (_) {}
   }
 
   @override
@@ -386,6 +464,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
         'volume': _volume.round(),
         'fade_in_seconds': _fadeIn.round(),
         'enabled': _enabled,
+        if (_zoneId != null) 'zone_id': _zoneId,
       };
 
   Future<void> _save() async {
@@ -573,6 +652,30 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
 
           const SizedBox(height: 20),
 
+          // ---- Zone ----
+          if (_availableZones.isNotEmpty) ...[
+            _SectionHeader('Zone'),
+            DropdownButtonFormField<int?>(
+              value: _zoneId,
+              dropdownColor: TuneColors.surface,
+              style: TuneFonts.body,
+              decoration: const InputDecoration(
+                labelText: 'Zone de lecture',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                const DropdownMenuItem<int?>(value: null, child: Text('Defaut')),
+                ..._availableZones.map((z) {
+                  final id = z is Map ? z['id'] as int : z as int;
+                  final name = z is Map ? (z['name'] as String? ?? 'Zone $id') : 'Zone $id';
+                  return DropdownMenuItem<int?>(value: id, child: Text(name));
+                }),
+              ],
+              onChanged: (v) => setState(() => _zoneId = v),
+            ),
+            const SizedBox(height: 20),
+          ],
+
           // ---- Volume ----
           _SectionHeader('Volume : ${_volume.round()}%'),
           Slider(
@@ -727,6 +830,67 @@ class _SwitchRow extends StatelessWidget {
         value: value,
         activeTrackColor: TuneColors.accent,
         onChanged: onChanged,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _DayChips — compact day-of-week indicator for alarm list tile
+// ---------------------------------------------------------------------------
+
+class _DayChips extends StatelessWidget {
+  final String daysStr;
+  final bool enabled;
+
+  const _DayChips({required this.daysStr, required this.enabled});
+
+  static const _labels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+  @override
+  Widget build(BuildContext context) {
+    final nums = daysStr
+        .split(',')
+        .map((s) => int.tryParse(s.trim()))
+        .whereType<int>()
+        .toSet();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(7, (i) {
+          final day = i + 1;
+          final active = nums.contains(day);
+          return Container(
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.only(right: 3),
+            decoration: BoxDecoration(
+              color: active
+                  ? (enabled ? TuneColors.accent : TuneColors.textTertiary)
+                  : Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: active
+                    ? Colors.transparent
+                    : (enabled ? TuneColors.divider : TuneColors.surfaceHigh),
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _labels[i],
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: active
+                    ? Colors.white
+                    : (enabled ? TuneColors.textTertiary : TuneColors.surfaceHigh),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

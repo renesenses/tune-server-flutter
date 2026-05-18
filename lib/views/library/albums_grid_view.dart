@@ -10,6 +10,7 @@ import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../tags/tag_chips_widget.dart';
 import 'add_to_playlist_sheet.dart';
 import 'edit_album_sheet.dart';
 import 'package:tune_server/services/tune_api_client.dart';
@@ -696,6 +697,15 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
               ),
             ),
           ),
+
+          // Tags
+          if (app.apiClient != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: TagChipsWidget(itemType: 'album', itemId: album.id),
+              ),
+            ),
 
           // Boutons lecture
           SliverToBoxAdapter(

@@ -16,6 +16,7 @@ import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
+import '../admin/admin_dashboard_view.dart';
 import '../alarms/alarms_view.dart';
 import '../diagnostics/diagnostics_view.dart';
 import '../library/genre_tree_view.dart';
@@ -63,6 +64,7 @@ class _iPadContentViewState extends State<iPadContentView> {
       if (isRemote) _NavEntry(Icons.alarm_outlined, Icons.alarm_rounded, 'Alarmes', const AlarmsView()),
       if (isRemote) _NavEntry(Icons.account_tree_outlined, Icons.account_tree_rounded, 'Genre Tree', const GenreTreeView()),
       if (isRemote) _NavEntry(Icons.monitor_heart_outlined, Icons.monitor_heart_rounded, 'Diagnostics', const DiagnosticsView()),
+      if (isRemote) _NavEntry(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Admin', const AdminDashboardView()),
       _NavEntry(Icons.settings_outlined, Icons.settings_rounded, l.navSettings, const SettingsView()),
     ];
 

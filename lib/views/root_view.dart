@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../services/track_notification_service.dart';
 import '../state/app_state.dart';
 import '../state/settings_state.dart';
 import 'helpers/tune_colors.dart';
@@ -58,14 +59,16 @@ class _RootViewState extends State<RootView> {
     if (!setupCompleted) return const LibrarySetupView();
 
     // Routing iPhone vs iPad selon la largeur disponible
-    return _PlaybackErrorListener(
-      child: LayoutBuilder(
-        builder: (_, constraints) {
-          if (constraints.maxWidth >= 768) {
-            return const iPadContentView();
-          }
-          return const iPhoneContentView();
-        },
+    return _TrackNotificationListener(
+      child: _PlaybackErrorListener(
+        child: LayoutBuilder(
+          builder: (_, constraints) {
+            if (constraints.maxWidth >= 768) {
+              return const iPadContentView();
+            }
+            return const iPhoneContentView();
+          },
+        ),
       ),
     );
   }
@@ -122,6 +125,87 @@ class _PlaybackErrorListenerState extends State<_PlaybackErrorListener> {
         content: Text(msg),
         duration: const Duration(seconds: 3),
         backgroundColor: TuneColors.error,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+// ---------------------------------------------------------------------------
+// _TrackNotificationListener — show in-app notification on track change
+// Uses WebSocket events via TrackNotificationService in AppState.
+// ---------------------------------------------------------------------------
+
+class _TrackNotificationListener extends StatefulWidget {
+  final Widget child;
+  const _TrackNotificationListener({required this.child});
+
+  @override
+  State<_TrackNotificationListener> createState() =>
+      _TrackNotificationListenerState();
+}
+
+class _TrackNotificationListenerState
+    extends State<_TrackNotificationListener> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.read<AppState>();
+    app.onTrackChangeNotification = _showTrackNotification;
+  }
+
+  void _showTrackNotification(TrackChangeInfo info) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    final subtitle = [
+      if (info.artist != null) info.artist!,
+      if (info.album != null) info.album!,
+    ].join(' - ');
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.music_note_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    info.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 3),
+        backgroundColor: TuneColors.accent,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

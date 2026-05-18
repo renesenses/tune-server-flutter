@@ -7,6 +7,7 @@ import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../tags/tag_chips_widget.dart';
 
 // ---------------------------------------------------------------------------
 // T12.7 — EditTrackSheet
@@ -76,7 +77,14 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
           ),
           const SizedBox(height: 16),
           Text(l.libraryEditTrack, style: TuneFonts.title3),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
+          // Tags
+          if (context.read<AppState>().apiClient != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TagChipsWidget(itemType: 'track', itemId: widget.track.id),
+            ),
+          const SizedBox(height: 8),
           _Field(label: 'Titre', controller: _titleCtrl),
           const SizedBox(height: 12),
           _Field(label: 'Artiste', controller: _artistCtrl),

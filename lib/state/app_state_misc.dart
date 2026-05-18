@@ -12,6 +12,10 @@ extension AppStateMisc on AppState {
   // Playlists
   // ---------------------------------------------------------------------------
 
+  /// Public wrapper for [_refreshPlaylists] — allows views (e.g. M3U import)
+  /// to trigger a playlist list refresh from outside AppState.
+  Future<void> refreshPlaylists() => _refreshPlaylists();
+
   Future<void> createPlaylist(String name) async {
     await engine.db.playlistRepo.insert(
       PlaylistsCompanion.insert(name: name),
