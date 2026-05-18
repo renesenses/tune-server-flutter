@@ -143,6 +143,7 @@ class ChromecastOutput implements OutputTarget {
     String? artist,
     String? album,
     String? albumArtUrl,
+    int? durationMs,
   }) async {
     try {
       // 1. Launch the Default Media Receiver if not already running
@@ -158,6 +159,7 @@ class ChromecastOutput implements OutputTarget {
           'images': [
             {'url': albumArtUrl}
           ],
+        if (durationMs != null) 'duration': durationMs / 1000.0,
       };
 
       final loadPayload = <String, dynamic>{
