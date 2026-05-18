@@ -15,7 +15,7 @@ extension TrackExtensions on Track {
   /// Identifiant stable cross-source.
   String get stableId {
     if (source == 'local') return 'local-$id';
-    if (sourceId != null) return '${source}-$sourceId';
+    if (sourceId != null) return '$source-$sourceId';
     return '$title-${artistName ?? ''}-${albumTitle ?? ''}';
   }
 
@@ -78,11 +78,11 @@ extension TrackExtensions on Track {
 extension AlbumExtensions on Album {
   String get stableId {
     if (source == 'local') return 'local-$id';
-    if (sourceId != null) return '${source}-$sourceId';
+    if (sourceId != null) return '$source-$sourceId';
     return '$title-${artistName ?? ''}';
   }
 
-  Source? get sourceEnum => source != null ? Source.fromRawValue(source!) : null;
+  Source? get sourceEnum => Source.fromRawValue(source);
 
   /// Formatted year display:
   /// - originalYear differs from year: "1975 (rééd. 2010)"

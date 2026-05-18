@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 import 'package:drift/drift.dart';
 
 import '../database/database.dart';
@@ -19,25 +17,6 @@ import 'discovery_manager.dart';
 //   1. Main isolate : coordination, écriture DB, émission d'événements
 //   2. Worker isolate (Isolate.run) : parsing DIDL-Lite → DIDLItem[]
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Entrée du worker isolate (doit être top-level ou static)
-// ---------------------------------------------------------------------------
-
-/// Données passées à l'isolate de parsing.
-class _ParseTask {
-  final String didlXml;
-  final String controlUrl;
-  const _ParseTask(this.didlXml, this.controlUrl);
-}
-
-/// Résultat de l'isolate de parsing.
-class _ParseResult {
-  final List<DIDLItem> items;
-  final List<DIDLContainer> containers;
-  final int totalMatches;
-  const _ParseResult(this.items, this.containers, this.totalMatches);
-}
 
 // ---------------------------------------------------------------------------
 // UPnPIndexer
@@ -338,14 +317,3 @@ class UPnPIndexer {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Worker isolate top-level (pour Isolate.run si parsing extrait ultérieurement)
-// ---------------------------------------------------------------------------
-
-/// Utilisé si on veut isoler le parsing DIDL-Lite hors du client.
-/// Signature compatible avec Isolate.run(() => _parseDIDLIsolate(task)).
-Future<_ParseResult> _parseDIDLIsolate(_ParseTask task) async {
-  // Ce stub est prévu pour une extraction future du parsing hors du client.
-  // Actuellement le parsing est intégré à ContentDirectoryClient.browseChildren.
-  return const _ParseResult([], [], 0);
-}

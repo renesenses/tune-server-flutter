@@ -27,7 +27,6 @@ class _EqualizerViewState extends State<EqualizerView> {
 
   List<double> _gains = List.filled(10, 0.0);
   bool _loading = true;
-  bool _enabled = true;
   String? _error;
 
   @override
@@ -51,7 +50,6 @@ class _EqualizerViewState extends State<EqualizerView> {
           if (bands is List && bands.length == 10) {
             _gains = bands.map((b) => (b as num).toDouble()).toList();
           }
-          _enabled = data['enabled'] as bool? ?? true;
           _loading = false;
         });
       }

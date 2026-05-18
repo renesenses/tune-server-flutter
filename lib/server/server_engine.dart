@@ -416,11 +416,8 @@ class ServerEngine {
   Future<void> _indexAppleMusicLibrary() async {
     try {
       final lib = AppleMusicLibrary();
-      int added = 0;
-      await for (final meta in lib.allTracks()) {
-        // Upsert dans la DB — délégué au scanner
-        await libraryScanner.scan([]); // Trigger interne
-        added++;
+      await for (final _ in lib.allTracks()) {
+        await libraryScanner.scan([]);
       }
     } catch (_) {}
   }

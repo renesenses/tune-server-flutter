@@ -10,7 +10,6 @@ import '../helpers/tune_colors.dart';
 import '../library/library_view.dart';
 import '../party/party_view.dart';
 import '../podcasts/podcasts_view.dart';
-import '../playlists/playlist_manager_view.dart';
 import '../radios/radio_favorites_view.dart';
 import '../radios/radios_view.dart';
 import '../settings/settings_view.dart';
@@ -210,32 +209,3 @@ class _Sidebar extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Placeholder (remplacé en phases 11-16)
-// ---------------------------------------------------------------------------
-
-class _PlaceholderDetail extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _PlaceholderDetail({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: TuneColors.background,
-      appBar: AppBar(title: Text(label)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: TuneColors.textTertiary),
-            const SizedBox(height: 12),
-            Text(label,
-                style: const TextStyle(color: TuneColors.textTertiary)),
-          ],
-        ),
-      ),
-    );
-  }
-}

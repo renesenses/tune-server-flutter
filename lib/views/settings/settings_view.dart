@@ -67,9 +67,9 @@ class _SettingsList extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.12),
+              color: Colors.blue.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.withOpacity(0.4)),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [
@@ -1218,8 +1218,6 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
   bool _scanning = true;
   List<DiscoveredServer> _servers = [];
   String _statusText = 'Scan du réseau en cours...';
-  int _scanned = 0;
-  int _total = 0;
 
   @override
   void initState() {
@@ -1239,8 +1237,6 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
         onProgress: (scanned, total) {
           if (mounted) {
             setState(() {
-              _scanned = scanned;
-              _total = total;
               _statusText = 'Vérification $scanned/$total...';
             });
           }
@@ -1498,7 +1494,7 @@ class _AudiophileToggleState extends State<_AudiophileToggle> {
       trailing: Switch(
         value: _enabled,
         onChanged: _loaded ? _toggle : null,
-        activeColor: TuneColors.accent,
+        activeThumbColor: TuneColors.accent,
       ),
     );
   }

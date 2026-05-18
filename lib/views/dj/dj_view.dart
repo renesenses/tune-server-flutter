@@ -443,7 +443,7 @@ class _DJViewState extends State<DJView> {
                                   Text('Auto-crossfade', style: TuneFonts.body),
                                   Switch(
                                     value: _autoCrossfade,
-                                    activeColor: TuneColors.accent,
+                                    activeThumbColor: TuneColors.accent,
                                     onChanged: _toggleAutoCrossfade,
                                   ),
                                 ],
@@ -639,7 +639,7 @@ class _DeckCard extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: TuneColors.accent.withOpacity(0.15),
+                  color: TuneColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text('${bpm!.round()} BPM',

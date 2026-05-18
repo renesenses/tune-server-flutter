@@ -837,27 +837,16 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
 
   void _toggleCredits() async {
     setState(() => _showCredits = !_showCredits);
-    if (_showCredits && _credits == null && widget.track.id != null) {
+    if (_showCredits && _credits == null) {
       final app = Provider.of<AppState>(context, listen: false);
       if (app.apiClient != null) {
         try {
-          final result = await app.apiClient!.getTrackCredits(widget.track.id!);
+          final result = await app.apiClient!.getTrackCredits(widget.track.id);
           if (mounted) setState(() => _credits = result.cast<Map<String, dynamic>>());
         } catch (_) {
           if (mounted) setState(() => _credits = []);
         }
       }
-    }
-  }
-
-  String _localizeRole(String role) {
-    switch (role) {
-      case 'performer': return 'Musicien';
-      case 'composer': return 'Compositeur';
-      case 'conductor': return "Chef d'orch.";
-      case 'lyricist': return 'Parolier';
-      case 'producer': return 'Producteur';
-      default: return role[0].toUpperCase() + role.substring(1);
     }
   }
 
@@ -915,7 +904,6 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
               children: _credits!.map((c) {
                 final name = c['artist_name'] ?? '';
                 final instrument = c['instrument'];
-                final role = c['role'] ?? 'performer';
                 return Chip(
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -923,7 +911,7 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
                     instrument != null ? '$name ($instrument)' : name,
                     style: const TextStyle(fontSize: 11),
                   ),
-                  backgroundColor: TuneColors.accent.withOpacity(0.08),
+                  backgroundColor: TuneColors.accent.withValues(alpha: 0.08),
                   side: BorderSide.none,
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 );

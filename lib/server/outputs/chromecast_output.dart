@@ -661,7 +661,7 @@ class ChromecastOutput implements OutputTarget {
     );
 
     // Wait for RECEIVER_STATUS with the app session
-    final response = await completer.future.timeout(
+    await completer.future.timeout(
       const Duration(seconds: 15),
       onTimeout: () => <String, dynamic>{},
     );

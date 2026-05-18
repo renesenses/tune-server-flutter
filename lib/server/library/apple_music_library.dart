@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-import '../database/database.dart';
 import 'metadata_reader.dart';
 
 // ---------------------------------------------------------------------------

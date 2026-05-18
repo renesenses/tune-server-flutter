@@ -51,7 +51,6 @@ class OutputFactory {
             volumeUrl: device.capabilities.openHomeVolumeUrl,
             transportUrl: device.capabilities.openHomeTransportUrl,
             playlistUrl: device.capabilities.openHomePlaylistUrl,
-            infoUrl: device.capabilities.openHomeInfoUrl,
             timeUrl: device.capabilities.openHomeTimeUrl,
           );
         }

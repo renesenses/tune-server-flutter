@@ -704,7 +704,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
           Switch(
             value: enabled,
             onChanged: (v) => _toggleService(name, v),
-            activeColor: TuneColors.accent,
+            activeThumbColor: TuneColors.accent,
           ),
         ],
       ),

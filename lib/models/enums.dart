@@ -1,4 +1,4 @@
-/// Enums de base — miroir de Enums.swift (iOS)
+// Enums de base — miroir de Enums.swift (iOS)
 
 enum Source {
   local,

@@ -150,32 +150,3 @@ class _MoreView extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Placeholder (remplacé en phases 11-16)
-// ---------------------------------------------------------------------------
-
-class _PlaceholderPage extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _PlaceholderPage({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: TuneColors.background,
-      appBar: AppBar(title: Text(label)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: TuneColors.textTertiary),
-            const SizedBox(height: 12),
-            Text(label,
-                style: const TextStyle(color: TuneColors.textTertiary)),
-          ],
-        ),
-      ),
-    );
-  }
-}

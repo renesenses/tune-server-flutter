@@ -656,7 +656,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           if (_availableZones.isNotEmpty) ...[
             _SectionHeader('Zone'),
             DropdownButtonFormField<int?>(
-              value: _zoneId,
+              initialValue: _zoneId,
               dropdownColor: TuneColors.surface,
               style: TuneFonts.body,
               decoration: const InputDecoration(

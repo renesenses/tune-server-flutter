@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../state/app_state.dart';
-import 'package:tune_server/services/tune_api_client.dart';
 
 /// Spotify Connect receiver settings — drives /api/v1/spotify-connect/*.
 /// Only meaningful when remote-connected to a Tune Server that bundles
@@ -88,7 +87,7 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
             const Center(child: CircularProgressIndicator())
           else if (s['binary_available'] != true)
             Card(
-              color: Colors.orange.withOpacity(0.1),
+              color: Colors.orange.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -109,7 +108,7 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
           else ...[
             DropdownButtonFormField<int?>(
               decoration: const InputDecoration(labelText: 'Zone cible'),
-              value: _zoneId,
+              initialValue: _zoneId,
               items: [
                 const DropdownMenuItem<int?>(value: null, child: Text('—')),
                 ...zones.map((z) => DropdownMenuItem<int?>(

@@ -237,8 +237,6 @@ class SmbMusicClient {
   // Implémentation SMB2 bas niveau
   // =========================================================================
 
-  static const int _smb2Magic = 0x424D53FE; // 0xFE S M B (little-endian read)
-
   int _nextMessageId() => _messageId++;
 
   // -------------------------------------------------------------------------
@@ -821,26 +819,3 @@ class SmbMusicClient {
   }
 }
 
-// Extension pour ByteData — getUint64 / setUint64 (Dart ne les a pas nativement)
-extension _ByteDataUint64 on ByteData {
-  int getUint64(int byteOffset, [Endian endian = Endian.little]) {
-    final lo = getUint32(byteOffset, endian);
-    final hi = getUint32(byteOffset + 4, endian);
-    if (endian == Endian.little) {
-      return lo + hi * 0x100000000;
-    }
-    return hi + lo * 0x100000000;
-  }
-
-  void setUint64(int byteOffset, int value, [Endian endian = Endian.little]) {
-    final lo = value & 0xFFFFFFFF;
-    final hi = (value ~/ 0x100000000) & 0xFFFFFFFF;
-    if (endian == Endian.little) {
-      setUint32(byteOffset, lo, endian);
-      setUint32(byteOffset + 4, hi, endian);
-    } else {
-      setUint32(byteOffset, hi, endian);
-      setUint32(byteOffset + 4, lo, endian);
-    }
-  }
-}

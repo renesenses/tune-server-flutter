@@ -8,7 +8,6 @@ import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
-import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // SmartCollectionsView — v0.8.0
@@ -494,7 +493,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
           }).toList()),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _matchMode,
+            initialValue: _matchMode,
             decoration: const InputDecoration(labelText: 'Combinaison', border: OutlineInputBorder()),
             items: const [
               DropdownMenuItem(value: 'all', child: Text('Toutes les règles (ET)')),
@@ -519,7 +518,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _previewError != null ? Colors.red.withOpacity(0.1) : TuneColors.surface,
+              color: _previewError != null ? Colors.red.withValues(alpha: 0.1) : TuneColors.surface,
               borderRadius: BorderRadius.circular(8),
             ),
             child: _previewError != null

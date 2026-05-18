@@ -73,7 +73,7 @@ class _SMBSetupViewState extends State<SMBSetupView> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: TuneColors.error.withOpacity(0.12),
+                  color: TuneColors.error.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(

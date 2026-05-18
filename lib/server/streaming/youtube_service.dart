@@ -18,8 +18,6 @@ import 'streaming_service.dart';
 class YouTubeService implements StreamingService {
   static const _pipedBase = 'https://pipedapi.kavin.rocks';
   static const _googleAuthBase = 'https://oauth2.googleapis.com';
-  static const _googleApiBase = 'https://www.googleapis.com/youtube/v3';
-  // clientId public Google TV (Device Code flow)
   static const _clientId =
       '861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com';
   static const _clientSecret = 'SboVhoG9s0rNafixCSGGKXAT';

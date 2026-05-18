@@ -13,7 +13,6 @@ import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'zone_manager_view.dart';
-import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
 // StereoPair — lightweight model for a stereo pair (remote API)
@@ -1225,21 +1224,26 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
                 style: TuneFonts.subheadline,
               ),
               const SizedBox(height: 8),
-              ...zones
-                  .where((z) => _selectedIds.contains(z.id))
-                  .map((zone) => RadioListTile<int>(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: TuneColors.accent,
-                        value: zone.id,
-                        groupValue: _leaderId,
-                        title: Text(
-                          zone.name,
-                          style: const TextStyle(
-                              color: TuneColors.textPrimary),
-                        ),
-                        onChanged: (id) => setState(() => _leaderId = id),
-                      )),
+              RadioGroup<int>(
+                groupValue: _leaderId ?? -1,
+                onChanged: (id) => setState(() => _leaderId = id),
+                child: Column(
+                  children: zones
+                      .where((z) => _selectedIds.contains(z.id))
+                      .map((zone) => RadioListTile<int>(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            activeColor: TuneColors.accent,
+                            value: zone.id,
+                            title: Text(
+                              zone.name,
+                              style: const TextStyle(
+                                  color: TuneColors.textPrimary),
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
             ],
           ],
         ),
@@ -1596,7 +1600,7 @@ class _CreateStereoPairDialogState extends State<_CreateStereoPairDialog> {
             Text(l.stereoPairLeft, style: TuneFonts.subheadline),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              value: _leftDeviceId,
+              initialValue: _leftDeviceId,
               dropdownColor: TuneColors.surfaceVariant,
               style: TuneFonts.body,
               decoration: InputDecoration(
@@ -1618,7 +1622,7 @@ class _CreateStereoPairDialogState extends State<_CreateStereoPairDialog> {
             Text(l.stereoPairRight, style: TuneFonts.subheadline),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              value: _rightDeviceId,
+              initialValue: _rightDeviceId,
               dropdownColor: TuneColors.surfaceVariant,
               style: TuneFonts.body,
               decoration: InputDecoration(

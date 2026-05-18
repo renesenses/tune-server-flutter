@@ -283,7 +283,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                     const Text('Leader', style: TuneFonts.subheadline),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<int>(
-                      value: leaderId,
+                      initialValue: leaderId,
                       dropdownColor: TuneColors.surfaceVariant,
                       style: const TextStyle(color: TuneColors.textPrimary),
                       decoration: const InputDecoration(
@@ -1119,7 +1119,7 @@ class _PinsCardState extends State<_PinsCard> {
                   dense: true,
                   leading: CircleAvatar(
                     radius: 14,
-                    backgroundColor: TuneColors.accent.withOpacity(0.15),
+                    backgroundColor: TuneColors.accent.withValues(alpha: 0.15),
                     child: Text('${index + 1}',
                         style: TuneFonts.caption
                             .copyWith(color: TuneColors.accent)),

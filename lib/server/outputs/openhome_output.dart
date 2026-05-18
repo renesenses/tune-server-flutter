@@ -38,7 +38,6 @@ class OpenHomeOutput implements OutputTarget {
   String? _volumeUrl;
   String? _transportUrl;
   String? _playlistUrl;
-  String? _infoUrl;
   String? _timeUrl;
 
   OutputReadyState _readyState = OutputReadyState.idle;
@@ -54,14 +53,12 @@ class OpenHomeOutput implements OutputTarget {
     String? volumeUrl,
     String? transportUrl,
     String? playlistUrl,
-    String? infoUrl,
     String? timeUrl,
     http.Client? client,
   })  : _productUrl = productUrl,
         _volumeUrl = volumeUrl,
         _transportUrl = transportUrl,
         _playlistUrl = playlistUrl,
-        _infoUrl = infoUrl,
         _timeUrl = timeUrl,
         _http = client ?? http.Client();
 
@@ -661,7 +658,6 @@ class OpenHomeOutput implements OutputTarget {
       if (type.contains('Volume')) _volumeUrl = fullUrl;
       if (type.contains('Transport')) _transportUrl = fullUrl;
       if (type.contains('Playlist')) _playlistUrl = fullUrl;
-      if (type.contains('Info')) _infoUrl = fullUrl;
       if (type.contains('Time')) _timeUrl = fullUrl;
     }
   }

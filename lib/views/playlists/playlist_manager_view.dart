@@ -402,7 +402,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _compareSourceService.isEmpty ? null : _compareSourceService,
+                  initialValue: _compareSourceService.isEmpty ? null : _compareSourceService,
                   decoration: InputDecoration(
                     labelText: 'Service',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -420,7 +420,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
-                  value: _compareSourceId.isEmpty ? null : _compareSourceId,
+                  initialValue: _compareSourceId.isEmpty ? null : _compareSourceId,
                   decoration: InputDecoration(
                     labelText: 'Playlist',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -442,7 +442,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _compareTargetService.isEmpty ? null : _compareTargetService,
+                  initialValue: _compareTargetService.isEmpty ? null : _compareTargetService,
                   decoration: InputDecoration(
                     labelText: 'Service',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -460,7 +460,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
-                  value: _compareTargetId.isEmpty ? null : _compareTargetId,
+                  initialValue: _compareTargetId.isEmpty ? null : _compareTargetId,
                   decoration: InputDecoration(
                     labelText: 'Playlist',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -770,7 +770,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _batchSource.isEmpty ? null : _batchSource,
+                  initialValue: _batchSource.isEmpty ? null : _batchSource,
                   decoration: InputDecoration(
                     labelText: 'Source',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -1317,7 +1317,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                         Switch(
                           value: _mergeDedup,
                           onChanged: (v) => setState(() => _mergeDedup = v),
-                          activeColor: TuneColors.accent,
+                          activeThumbColor: TuneColors.accent,
                         ),
                         const Text('Dédup.', style: TuneFonts.footnote),
                       ]),
