@@ -5,6 +5,13 @@ import 'package:http/http.dart' as http;
 
 import 'streaming_service.dart';
 
+/// Converts an external Qobuz CDN URL to a local proxy URL to avoid
+/// CORS issues and CDN rate limits in the browser.
+String? _proxyCover(String? url) {
+  if (url == null || !url.startsWith('http')) return url;
+  return '/api/v1/library/artwork/proxy?url=${Uri.encodeComponent(url)}';
+}
+
 // ---------------------------------------------------------------------------
 // T6.2 — QobuzService
 // Auth email/password avec MD5 (= CryptoKit.Insecure.MD5 iOS).
@@ -168,7 +175,7 @@ class QobuzService implements StreamingService {
         final id = ar['id']?.toString();
         final name = ar['name'] as String?;
         if (id == null || name == null) continue;
-        final img = ar['image']?['large'] as String? ?? ar['image']?['small'] as String?;
+        final img = _proxyCover(ar['image']?['large'] as String? ?? ar['image']?['small'] as String?);
         results.add(StreamingSearchResult(
           id: id, title: name, coverUrl: img,
           serviceId: serviceId, type: 'artist',
@@ -298,7 +305,7 @@ class QobuzService implements StreamingService {
         final id = p['id']?.toString();
         final name = p['name'] as String? ?? '';
         final count = p['tracks_count'] as int? ?? 0;
-        final cover = p['images300']?.first as String?;
+        final cover = _proxyCover(p['images300']?.first as String?);
         return StreamingSearchResult(
           id: id ?? '',
           title: name,
@@ -318,7 +325,7 @@ class QobuzService implements StreamingService {
     final title = a['title'] as String?;
     if (id == null || title == null) return null;
     final artist = a['artist']?['name'] as String?;
-    final cover = a['image']?['large'] as String? ?? a['image']?['small'] as String?;
+    final cover = _proxyCover(a['image']?['large'] as String? ?? a['image']?['small'] as String?);
     return StreamingSearchResult(
       id: id,
       title: title,
@@ -386,8 +393,8 @@ class QobuzService implements StreamingService {
         t['album']?['artist']?['name'] as String?;
     final album = t['album']?['title'] as String?;
     final duration = t['duration'] as int?;
-    final cover = t['album']?['image']?['large'] as String? ??
-        t['album']?['image']?['small'] as String?;
+    final cover = _proxyCover(t['album']?['image']?['large'] as String? ??
+        t['album']?['image']?['small'] as String?);
 
     return StreamingSearchResult(
       id: id,
