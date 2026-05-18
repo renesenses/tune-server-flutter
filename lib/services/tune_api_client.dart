@@ -111,8 +111,22 @@ class TuneApiClient {
   Future<dynamic> setRepeat(int zoneId, String mode) =>
       _post('/zones/$zoneId/repeat', body: {'mode': mode});
 
-  Future<dynamic> shuffleAll(int zoneId) =>
-      _post('/playback/shuffle-all?zone_id=$zoneId');
+  Future<dynamic> shuffleAll(int zoneId, {
+    String? searchQuery,
+    int? albumId,
+    int? artistId,
+    String? genre,
+  }) {
+    final params = <String, String>{'zone_id': '$zoneId'};
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      params['search_query'] = searchQuery;
+    }
+    if (albumId != null) params['album_id'] = '$albumId';
+    if (artistId != null) params['artist_id'] = '$artistId';
+    if (genre != null && genre.isNotEmpty) params['genre'] = genre;
+    final qs = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    return _post('/playback/shuffle-all?$qs');
+  }
 
   // ---------------------------------------------------------------------------
   // Queue

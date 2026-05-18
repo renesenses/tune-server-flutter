@@ -736,9 +736,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
                     onPressed: _tracks == null || _tracks!.isEmpty
                         ? null
                         : () async {
-                            await app.setShuffle(enabled: true);
-                            final shuffled = List.of(_tracks!)..shuffle();
-                            await app.playTracks(shuffled);
+                            await app.shuffleAll(albumId: widget.album.id);
                           },
                   ),
                 ],

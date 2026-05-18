@@ -180,9 +180,16 @@ extension AppStatePlayback on AppState {
   // ---------------------------------------------------------------------------
 
   /// Shuffle-play the entire local library (up to 5000 tracks).
-  /// Remote mode: calls POST /playback/shuffle-all?zone_id=N.
+  /// Remote mode: calls POST /playback/shuffle-all?zone_id=N with optional
+  /// context filters (search_query, album_id, artist_id, genre).
   /// Local mode: fetches random tracks from DB, shuffles, plays.
-  Future<void> shuffleAll({int? zoneId}) async {
+  Future<void> shuffleAll({
+    int? zoneId,
+    String? searchQuery,
+    int? albumId,
+    int? artistId,
+    String? genre,
+  }) async {
     var id = zoneId ?? zoneState.currentZoneId;
     if (id == null && zoneState.zones.isNotEmpty) {
       id = zoneState.zones.first.id;
@@ -196,7 +203,13 @@ extension AppStatePlayback on AppState {
 
     if (isRemoteMode && _apiClient != null) {
       try {
-        await _apiClient!.shuffleAll(id);
+        await _apiClient!.shuffleAll(
+          id,
+          searchQuery: searchQuery,
+          albumId: albumId,
+          artistId: artistId,
+          genre: genre,
+        );
         await refreshZonesRemote();
       } catch (e) {
         _lastPlaybackError = 'shuffle_all_failed';
