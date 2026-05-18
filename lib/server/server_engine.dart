@@ -194,10 +194,8 @@ class ServerEngine {
 
   void _setupPlaybackStatePersistence() {
     EventBus.instance.subscribe<PlaybackStartedEvent>((e) async {
-      final zone = zoneManager.zone(e.zoneId);
-      if (zone != null) {
-        await db.zoneRepo.savePlaybackState(e.zoneId, true, zone.player.position.inMilliseconds);
-      }
+      final posMs = e.positionMs ?? zoneManager.zone(e.zoneId)?.player.position.inMilliseconds ?? 0;
+      await db.zoneRepo.savePlaybackState(e.zoneId, true, posMs);
     });
     EventBus.instance.subscribe<PlaybackStoppedEvent>((e) async {
       await db.zoneRepo.savePlaybackState(e.zoneId, false, 0);

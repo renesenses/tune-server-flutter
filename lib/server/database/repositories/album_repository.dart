@@ -30,14 +30,29 @@ class AlbumRepository {
   Future<int> delete(int id) =>
       (_db.delete(_db.albums)..where((a) => a.id.equals(id))).go();
 
-  Future<Album?> findByTitleAndArtist(String title, int artistId) =>
-      (_db.select(_db.albums)
-            ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
+  Future<Album?> findByTitleAndArtist(String title, int artistId, {int? year}) async {
+    if (year != null) {
+      final exact = await (_db.select(_db.albums)
+            ..where((a) => a.title.equals(title) & a.artistId.equals(artistId) & a.year.equals(year)))
           .getSingleOrNull();
+      if (exact != null) return exact;
+    }
+    return (_db.select(_db.albums)
+          ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
+        .getSingleOrNull();
+  }
 
   /// Title-only lookup — used for compilations and albums without artist.
   /// Returns the first match (oldest id) if multiple albums share the same title.
-  Future<Album?> findByTitle(String title) async {
+  /// When [year] is provided, prefers an exact year match before falling back.
+  Future<Album?> findByTitle(String title, {int? year}) async {
+    if (year != null) {
+      final exact = await (_db.select(_db.albums)
+            ..where((a) => a.title.equals(title) & a.year.equals(year))
+            ..limit(1))
+          .get();
+      if (exact.isNotEmpty) return exact.first;
+    }
     final results = await (_db.select(_db.albums)
           ..where((a) => a.title.equals(title))
           ..limit(1))

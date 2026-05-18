@@ -348,27 +348,27 @@ class LibraryScanner {
         (albumArtist != null &&
             _compilationArtists.contains(albumArtist.toLowerCase()));
 
+    // Year used as discriminant to prevent remaster merges
+    final trackYear = year ?? originalYear;
+
     // Fallback lookup when MBID didn't match
     if (existing == null) {
       if (isCompilation) {
         // Compilation → title-only lookup to avoid splitting by track artist
-        existing = await _db.albumRepo.findByTitle(title);
+        existing = await _db.albumRepo.findByTitle(title, year: trackYear);
       } else if (artistId != null) {
         // Normal album with known artist → title+artist lookup
-        existing = await (_db.select(_db.albums)
-              ..where((a) =>
-                  a.title.equals(title) & a.artistId.equals(artistId)))
-            .getSingleOrNull();
+        existing = await _db.albumRepo.findByTitleAndArtist(title, artistId, year: trackYear);
         // Fallback: same title under a different artist → compilation merge
         if (existing == null) {
-          final byTitle = await _db.albumRepo.findByTitle(title);
+          final byTitle = await _db.albumRepo.findByTitle(title, year: trackYear);
           if (byTitle != null && byTitle.artistId != artistId) {
             existing = byTitle;
           }
         }
       } else {
         // No artist → title-only lookup
-        existing = await _db.albumRepo.findByTitle(title);
+        existing = await _db.albumRepo.findByTitle(title, year: trackYear);
       }
       // Don't merge into an album that belongs to a different release
       if (existing != null &&

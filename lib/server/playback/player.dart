@@ -193,12 +193,26 @@ class Player {
     await _output?.stop();
     _position = Duration.zero;
     _setState(PlaybackState.stopped);
+    final zid = int.tryParse(zoneId);
+    if (zid != null) {
+      EventBus.instance.emit(PlaybackStoppedEvent(zid));
+    }
   }
 
   Future<void> seek(Duration position) async {
     await _output?.seek(position);
     _position = position;
     EventBus.instance.emit(PlaybackPositionEvent(zoneId, position.inMilliseconds));
+    if (isPlaying) {
+      final zid = int.tryParse(zoneId);
+      if (zid != null) {
+        EventBus.instance.emit(PlaybackStartedEvent(
+          zid,
+          positionMs: position.inMilliseconds,
+          durationMs: queue.currentTrack?.durationMs,
+        ));
+      }
+    }
   }
 
   /// Passe à la piste suivante.
@@ -427,6 +441,14 @@ class Player {
 
     _setState(PlaybackState.playing);
     EventBus.instance.emit(TrackChangedEvent(zoneId, track));
+    final zid = int.tryParse(zoneId);
+    if (zid != null) {
+      EventBus.instance.emit(PlaybackStartedEvent(
+        zid,
+        positionMs: startAt?.inMilliseconds ?? 0,
+        durationMs: track.durationMs,
+      ));
+    }
 
     // Gapless: pre-load next track on DLNA renderers via SetNextAVTransportURI.
     // Works for all track types (local files + streaming URLs).

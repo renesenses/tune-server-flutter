@@ -185,13 +185,18 @@ class DiscoveryManager {
   // Accès aux devices
   // ---------------------------------------------------------------------------
 
-  List<DiscoveredDevice> allDevices() => List.unmodifiable(_cache.values);
+  static bool _isOwnServer(DiscoveredDevice d) =>
+      d.manufacturer != null &&
+      d.manufacturer!.toLowerCase() == 'mozaik labs';
+
+  List<DiscoveredDevice> allDevices() =>
+      _cache.values.where((d) => !_isOwnServer(d)).toList();
 
   List<DiscoveredDevice> renderers() =>
-      _cache.values.where((d) => d.type == 'renderer').toList();
+      _cache.values.where((d) => d.type == 'renderer' && !_isOwnServer(d)).toList();
 
   List<DiscoveredDevice> servers() =>
-      _cache.values.where((d) => d.type == 'server').toList();
+      _cache.values.where((d) => d.type == 'server' && !_isOwnServer(d)).toList();
 
   DiscoveredDevice? deviceById(String id) => _cache[id];
 

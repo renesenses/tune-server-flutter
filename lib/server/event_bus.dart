@@ -150,7 +150,9 @@ class ZoneUngroupedEvent extends AppEvent {
 
 class PlaybackStartedEvent extends AppEvent {
   final int zoneId;
-  const PlaybackStartedEvent(this.zoneId);
+  final int? positionMs;
+  final int? durationMs;
+  const PlaybackStartedEvent(this.zoneId, {this.positionMs, this.durationMs});
 }
 
 class PlaybackStoppedEvent extends AppEvent {
