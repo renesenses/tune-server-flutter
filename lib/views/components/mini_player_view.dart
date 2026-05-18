@@ -81,7 +81,7 @@ class _MiniPlayerContent extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Titre + artiste
+            // Titre + artiste + quality badge
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,11 +95,21 @@ class _MiniPlayerContent extends StatelessWidget {
                   ),
                   if (track?.artistName != null) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      track!.artistName!,
-                      style: TuneFonts.miniArtist,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            track!.artistName!,
+                            style: TuneFonts.miniArtist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_hasAudioInfo(track)) ...[
+                          const SizedBox(width: 6),
+                          _MiniAudioBadge(track: track),
+                        ],
+                      ],
                     ),
                   ],
                 ],
@@ -201,6 +211,65 @@ class _ProgressBar extends StatelessWidget {
       backgroundColor: TuneColors.divider,
       valueColor:
           const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Audio quality badge helpers (shared between MiniPlayer and iPad bar)
+// ---------------------------------------------------------------------------
+
+bool _hasAudioInfo(Track? track) {
+  if (track == null) return false;
+  return (track.format != null && track.format!.isNotEmpty) ||
+      (track.sampleRate != null && track.sampleRate! > 0) ||
+      (track.bitDepth != null && track.bitDepth! > 0);
+}
+
+String _formatShortBadge(Track track) {
+  final format = track.format;
+  final sampleRate = track.sampleRate;
+  final bitDepth = track.bitDepth;
+
+  // Short badge: "FLAC 96/24" or "FLAC" or "96/24"
+  final parts = <String>[];
+  if (format != null && format.isNotEmpty) {
+    parts.add(format.toUpperCase());
+  }
+  if (sampleRate != null && sampleRate > 0 && bitDepth != null && bitDepth > 0) {
+    final kHz = sampleRate / 1000.0;
+    final kHzStr = kHz == kHz.truncateToDouble()
+        ? '${kHz.toInt()}'
+        : kHz.toStringAsFixed(1);
+    parts.add('$kHzStr/$bitDepth');
+  }
+  return parts.join(' ');
+}
+
+class _MiniAudioBadge extends StatelessWidget {
+  final Track track;
+  const _MiniAudioBadge({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = _formatShortBadge(track);
+    if (badge.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: TuneColors.accent.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        badge,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: TuneColors.accent,
+          letterSpacing: 0.2,
+        ),
+      ),
     );
   }
 }

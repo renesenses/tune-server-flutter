@@ -72,8 +72,15 @@ class NowPlayingView extends StatelessWidget {
                         _LargeArtwork(track: track),
                         const SizedBox(height: 28),
 
+                        // Audio quality badge
+                        if (track != null) _AudioQualityBadge(track: track),
+
                         // Titre + artiste + bouton options
                         _TrackInfo(track: track),
+
+                        // Credits (performer/composer)
+                        if (track != null && track.id != 0)
+                          _NowPlayingCredits(trackId: track.id),
                         const SizedBox(height: 20),
 
                         // Seek bar
@@ -1295,6 +1302,306 @@ class _TransportControls extends StatelessWidget {
           onPressed: () => app.next(),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Audio Quality Badge — FLAC / 96 kHz / 24-bit
+// ---------------------------------------------------------------------------
+
+class _AudioQualityBadge extends StatelessWidget {
+  final Track track;
+  const _AudioQualityBadge({required this.track});
+
+  String _formatBadge() {
+    final parts = <String>[];
+    final format = track.format;
+    final sampleRate = track.sampleRate;
+    final bitDepth = track.bitDepth;
+
+    if (format != null && format.isNotEmpty) {
+      parts.add(format.toUpperCase());
+    }
+    if (sampleRate != null && sampleRate > 0) {
+      final kHz = sampleRate / 1000.0;
+      parts.add(kHz == kHz.truncateToDouble()
+          ? '${kHz.toInt()} kHz'
+          : '${kHz.toStringAsFixed(1)} kHz');
+    }
+    if (bitDepth != null && bitDepth > 0) {
+      parts.add('$bitDepth-bit');
+    }
+    return parts.join(' / ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = _formatBadge();
+    if (badge.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: TuneColors.accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: TuneColors.accent.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Text(
+          badge,
+          style: TuneFonts.caption.copyWith(
+            color: TuneColors.accent,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Now Playing Credits — performer/composer credits below artist name
+// ---------------------------------------------------------------------------
+
+class _NowPlayingCredits extends StatefulWidget {
+  final int trackId;
+  const _NowPlayingCredits({required this.trackId});
+
+  @override
+  State<_NowPlayingCredits> createState() => _NowPlayingCreditsState();
+}
+
+class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
+  List<Map<String, dynamic>> _credits = [];
+  bool _expanded = false;
+  bool _enriching = false;
+  int? _loadedTrackId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCredits();
+  }
+
+  @override
+  void didUpdateWidget(_NowPlayingCredits oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.trackId != widget.trackId) {
+      _loadCredits();
+    }
+  }
+
+  Future<void> _loadCredits() async {
+    if (widget.trackId == _loadedTrackId) return;
+    _loadedTrackId = widget.trackId;
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      final data = await api.getTrackCredits(widget.trackId);
+      if (mounted) {
+        setState(() {
+          _credits = data.map((c) => c as Map<String, dynamic>).toList();
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _credits = []);
+    }
+  }
+
+  Future<void> _enrichCredits() async {
+    if (_enriching) return;
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    setState(() => _enriching = true);
+    try {
+      await api.enrichTrackCredits(widget.trackId);
+      _loadedTrackId = null;
+      await _loadCredits();
+    } catch (_) {
+      // silently fail
+    }
+    if (mounted) setState(() => _enriching = false);
+  }
+
+  static const _primaryRoles = ['performer', 'composer', 'conductor', 'arranger', 'lyricist'];
+
+  static const _roleOrder = [
+    'composer', 'lyricist', 'arranger', 'conductor',
+    'performer', 'producer', 'mixer', 'engineer',
+  ];
+
+  String _formatRole(String role) {
+    return role[0].toUpperCase() + role.substring(1);
+  }
+
+  // Dedup credits by (artist_id || artist_name, role, instrument)
+  List<Map<String, dynamic>> _dedupCredits() {
+    final seen = <String>{};
+    final out = <Map<String, dynamic>>[];
+    for (final c in _credits) {
+      final key =
+          '${c['artist_id'] ?? c['artist_name']}|${c['role']}|${c['instrument'] ?? ''}';
+      if (seen.contains(key)) continue;
+      seen.add(key);
+      out.add(c);
+    }
+    return out;
+  }
+
+  // Inline credits summary: "Composer: X, Y · Performer: Z"
+  String _inlineCredits() {
+    if (_credits.isEmpty) return '';
+    final unique = _dedupCredits();
+    final primary = unique.where((c) =>
+        _primaryRoles.contains(c['role'])).toList();
+    final credits = primary.isNotEmpty ? primary : unique.take(6).toList();
+
+    final groups = <String, List<Map<String, dynamic>>>{};
+    for (final c in credits) {
+      final role = c['role'] as String? ?? 'performer';
+      groups.putIfAbsent(role, () => []).add(c);
+    }
+
+    final parts = <String>[];
+    for (final entry in groups.entries) {
+      final names = entry.value.take(3).map((m) {
+        var name = m['artist_name'] as String? ?? '';
+        final inst = m['instrument'] as String?;
+        if (inst != null && inst.isNotEmpty) name += ' ($inst)';
+        return name;
+      }).toList();
+      if (entry.value.length > 3) names.add('...');
+      parts.add('${_formatRole(entry.key)}: ${names.join(', ')}');
+    }
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_credits.isEmpty) return const SizedBox.shrink();
+
+    final inline = _inlineCredits();
+    if (inline.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+        // Inline credits summary
+        GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Text(
+            inline,
+            style: TuneFonts.caption.copyWith(
+              color: TuneColors.textTertiary,
+              fontStyle: FontStyle.italic,
+            ),
+            maxLines: _expanded ? 10 : 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+
+        // Expanded credits view
+        if (_expanded) ...[
+          const SizedBox(height: 8),
+          _buildExpandedCredits(),
+          const SizedBox(height: 4),
+          // Enrich button
+          GestureDetector(
+            onTap: _enrichCredits,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_enriching)
+                  const SizedBox(
+                    width: 12, height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5, color: TuneColors.accent),
+                  )
+                else
+                  const Icon(Icons.auto_fix_high_rounded,
+                      size: 14, color: TuneColors.accent),
+                const SizedBox(width: 6),
+                Text(
+                  _enriching ? 'Enrichissement...' : 'Enrichir via MusicBrainz',
+                  style: TuneFonts.caption.copyWith(color: TuneColors.accent),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildExpandedCredits() {
+    final unique = _dedupCredits();
+    final groups = <String, List<Map<String, dynamic>>>{};
+    for (final c in unique) {
+      final role = c['role'] as String? ?? 'performer';
+      groups.putIfAbsent(role, () => []).add(c);
+    }
+
+    // Sort by role order
+    final sortedEntries = groups.entries.toList()
+      ..sort((a, b) {
+        final ai = _roleOrder.indexOf(a.key);
+        final bi = _roleOrder.indexOf(b.key);
+        if (ai != -1 && bi != -1) return ai.compareTo(bi);
+        if (ai != -1) return -1;
+        if (bi != -1) return 1;
+        return a.key.compareTo(b.key);
+      });
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in sortedEntries) ...[
+            Text(
+              _formatRole(entry.key),
+              style: TuneFonts.caption.copyWith(
+                color: TuneColors.accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            for (final credit in entry.value) ...[
+              Row(
+                children: [
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      () {
+                        final name = credit['artist_name'] as String? ?? '';
+                        final inst = credit['instrument'] as String?;
+                        if (inst != null && inst.isNotEmpty) {
+                          return '$name ($inst)';
+                        }
+                        return name;
+                      }(),
+                      style: TuneFonts.caption.copyWith(
+                        color: TuneColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 6),
+          ],
+        ],
+      ),
     );
   }
 }

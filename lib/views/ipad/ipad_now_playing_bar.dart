@@ -105,11 +105,21 @@ class _TrackRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (track?.artistName != null)
-                    Text(
-                      track!.artistName!,
-                      style: TuneFonts.miniArtist,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            track!.artistName!,
+                            style: TuneFonts.miniArtist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_hasAudioInfo(track)) ...[
+                          const SizedBox(width: 6),
+                          _iPadAudioBadge(track: track),
+                        ],
+                      ],
                     ),
                 ],
               ),
@@ -245,6 +255,61 @@ class _SeekInlineState extends State<_SeekInline> {
                   .seek(Duration(milliseconds: (v * durMs).round()));
             }
           },
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Audio quality badge helpers
+// ---------------------------------------------------------------------------
+
+bool _hasAudioInfo(Track? track) {
+  if (track == null) return false;
+  return (track.format != null && track.format!.isNotEmpty) ||
+      (track.sampleRate != null && track.sampleRate! > 0) ||
+      (track.bitDepth != null && track.bitDepth! > 0);
+}
+
+String _formatShortBadge(Track track) {
+  final parts = <String>[];
+  if (track.format != null && track.format!.isNotEmpty) {
+    parts.add(track.format!.toUpperCase());
+  }
+  if (track.sampleRate != null && track.sampleRate! > 0 &&
+      track.bitDepth != null && track.bitDepth! > 0) {
+    final kHz = track.sampleRate! / 1000.0;
+    final kHzStr = kHz == kHz.truncateToDouble()
+        ? '${kHz.toInt()}'
+        : kHz.toStringAsFixed(1);
+    parts.add('$kHzStr/${track.bitDepth}');
+  }
+  return parts.join(' ');
+}
+
+class _iPadAudioBadge extends StatelessWidget {
+  final Track track;
+  const _iPadAudioBadge({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = _formatShortBadge(track);
+    if (badge.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: TuneColors.accent.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        badge,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: TuneColors.accent,
+          letterSpacing: 0.2,
         ),
       ),
     );

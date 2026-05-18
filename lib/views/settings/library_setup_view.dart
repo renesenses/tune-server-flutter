@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../server/discovery/discovery_manager.dart';
+import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/settings_state.dart';
 import '../../state/zone_state.dart';
@@ -40,7 +43,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
   }
 
   void _goNext() {
-    if (_page < 4) {
+    if (_page < 6) {
       _pageCtrl.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -73,7 +76,7 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
               padding: const EdgeInsets.only(top: 20, bottom: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
+                children: List.generate(7, (i) {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -97,8 +100,10 @@ class _LibrarySetupViewState extends State<LibrarySetupView> {
                 children: [
                   _WelcomePage(onNext: _goNext),
                   _ConfigPage(onNext: _goNext),
+                  _StreamingAuthPage(onNext: _goNext),
                   _ZonePage(onNext: _goNext),
                   _AudioCheckPage(onNext: _goNext),
+                  _ScanPage(onNext: _goNext),
                   _DonePage(onDone: _complete),
                 ],
               ),
@@ -467,7 +472,248 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
 }
 
 // ---------------------------------------------------------------------------
-// Page 3 — Zone (discovered devices)
+// Page 3 — Streaming Services Auth
+// ---------------------------------------------------------------------------
+
+class _StreamingAuthPage extends StatefulWidget {
+  final VoidCallback onNext;
+  const _StreamingAuthPage({required this.onNext});
+
+  @override
+  State<_StreamingAuthPage> createState() => _StreamingAuthPageState();
+}
+
+class _StreamingAuthPageState extends State<_StreamingAuthPage> {
+  Map<String, dynamic> _services = {};
+  bool _loading = true;
+
+  static const _serviceNames = ['qobuz', 'tidal', 'spotify', 'deezer', 'youtube'];
+  static const _serviceColors = {
+    'qobuz': Color(0xFFE91E63),
+    'tidal': Color(0xFF000000),
+    'spotify': Color(0xFF1DB954),
+    'deezer': Color(0xFFA238FF),
+    'youtube': Color(0xFFFF0000),
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServices();
+  }
+
+  Future<void> _loadServices() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    try {
+      final data = await api.getStreamingServices();
+      if (mounted) {
+        setState(() {
+          _services = data;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleService(String name, bool enable) async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) return;
+    try {
+      if (enable) {
+        await api.enableStreamingService(name);
+      } else {
+        await api.disableStreamingService(name);
+      }
+      await _loadServices();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
+  int get _enabledCount =>
+      _services.entries.where((e) {
+        final v = e.value;
+        return v is Map && v['enabled'] == true;
+      }).length;
+
+  int get _authenticatedCount =>
+      _services.entries.where((e) {
+        final v = e.value;
+        return v is Map && v['authenticated'] == true;
+      }).length;
+
+  @override
+  Widget build(BuildContext context) {
+    final isRemote = context.watch<SettingsState>().isRemoteMode;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 24),
+            const Icon(Icons.cloud_rounded, size: 64, color: TuneColors.accent),
+            const SizedBox(height: 24),
+            const Text('Services de streaming', style: TuneFonts.title1),
+            const SizedBox(height: 12),
+            Text(
+              'Activez les services de streaming que vous souhaitez utiliser avec Tune.',
+              style: TuneFonts.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            if (!isRemote)
+              Container(
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline_rounded, size: 16, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'En mode autonome, les services de streaming ne sont pas disponibles. Passez en mode serveur distant pour les activer.',
+                        style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(color: TuneColors.accent),
+              )
+            else if (_services.isEmpty && isRemote)
+              Text(
+                'Aucun service disponible. Verifiez la connexion au serveur.',
+                style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
+                textAlign: TextAlign.center,
+              )
+            else ...[
+              // Service list
+              Container(
+                decoration: BoxDecoration(
+                  color: TuneColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _serviceNames.length; i++) ...[
+                      if (i > 0)
+                        const Divider(height: 1, indent: 56, color: TuneColors.divider),
+                      _buildServiceRow(_serviceNames[i]),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              // Summary
+              if (_enabledCount > 0)
+                Text(
+                  '$_enabledCount service${_enabledCount > 1 ? "s" : ""} active${_enabledCount > 1 ? "s" : ""}'
+                  '${_authenticatedCount > 0 ? ", $_authenticatedCount connecte${_authenticatedCount > 1 ? "s" : ""}" : ""}',
+                  style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
+                ),
+            ],
+
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: widget.onNext,
+                style: FilledButton.styleFrom(
+                  backgroundColor: TuneColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceRow(String name) {
+    final serviceData = _services[name];
+    final enabled = serviceData is Map ? serviceData['enabled'] == true : false;
+    final authenticated = serviceData is Map ? serviceData['authenticated'] == true : false;
+    final color = _serviceColors[name] ?? TuneColors.accent;
+
+    return ListTile(
+      leading: Container(
+        width: 36, height: 36,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Container(
+            width: 14, height: 14,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        name[0].toUpperCase() + name.substring(1),
+        style: TuneFonts.body.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: enabled
+          ? Text(
+              authenticated ? 'Connecte' : 'Active, non connecte',
+              style: TuneFonts.caption.copyWith(
+                color: authenticated ? TuneColors.success : TuneColors.textTertiary,
+              ),
+            )
+          : null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (authenticated)
+            Container(
+              width: 8, height: 8,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: const BoxDecoration(
+                color: TuneColors.success,
+                shape: BoxShape.circle,
+              ),
+            ),
+          Switch(
+            value: enabled,
+            onChanged: (v) => _toggleService(name, v),
+            activeColor: TuneColors.accent,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page 4 — Zone (discovered devices)
 // ---------------------------------------------------------------------------
 
 class _ZonePage extends StatefulWidget {
@@ -858,7 +1104,261 @@ class _WarningCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Page 5 — Terminé
+// Page 6 — Scan Library
+// ---------------------------------------------------------------------------
+
+class _ScanPage extends StatefulWidget {
+  final VoidCallback onNext;
+  const _ScanPage({required this.onNext});
+
+  @override
+  State<_ScanPage> createState() => _ScanPageState();
+}
+
+class _ScanPageState extends State<_ScanPage> {
+  bool _scanning = false;
+  bool _scanComplete = false;
+  String? _scanError;
+  int _scannedCount = 0;
+  int _addedCount = 0;
+  int _updatedCount = 0;
+  Timer? _pollTimer;
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startScan() async {
+    final app = context.read<AppState>();
+    setState(() {
+      _scanning = true;
+      _scanComplete = false;
+      _scanError = null;
+      _scannedCount = 0;
+      _addedCount = 0;
+      _updatedCount = 0;
+    });
+
+    // For embedded server mode, trigger local scan
+    if (!app.settingsState.isRemoteMode) {
+      try {
+        await app.engine.scanLibrary();
+        if (mounted) {
+          setState(() {
+            _scanning = false;
+            _scanComplete = true;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _scanning = false;
+            _scanError = '$e';
+          });
+        }
+      }
+      return;
+    }
+
+    // Remote mode: trigger scan via API and poll for progress
+    final api = app.apiClient;
+    if (api == null) {
+      setState(() { _scanning = false; _scanError = 'Non connecte'; });
+      return;
+    }
+
+    try {
+      await api.triggerScan();
+    } catch (e) {
+      // 409 = already scanning, just poll
+      if (!e.toString().contains('409') && !e.toString().contains('already')) {
+        if (mounted) {
+          setState(() { _scanning = false; _scanError = '$e'; });
+        }
+        return;
+      }
+    }
+
+    // Start polling for scan status
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      try {
+        final status = await api.getScanStatus();
+        if (mounted) {
+          setState(() {
+            _scannedCount = status['scanned'] as int? ?? _scannedCount;
+            _addedCount = status['added'] as int? ?? _addedCount;
+            _updatedCount = status['updated'] as int? ?? _updatedCount;
+            if (status['running'] == false || status['status'] == 'completed') {
+              _scanning = false;
+              _scanComplete = true;
+              _pollTimer?.cancel();
+            }
+          });
+        }
+      } catch (_) {
+        // silently continue polling
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 36),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!_scanning && !_scanComplete) ...[
+            // Pre-scan state
+            const Icon(Icons.library_music_rounded, size: 64, color: TuneColors.accent),
+            const SizedBox(height: 24),
+            const Text('Analyser la bibliotheque', style: TuneFonts.title1),
+            const SizedBox(height: 12),
+            Text(
+              'Lancez une analyse pour indexer vos fichiers musicaux et recuperer les metadonnees.',
+              style: TuneFonts.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _startScan,
+                icon: const Icon(Icons.search_rounded, size: 18),
+                label: const Text('Lancer l\'analyse', style: TextStyle(fontSize: 16)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: TuneColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: widget.onNext,
+              child: Text('Passer', style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary)),
+            ),
+          ] else if (_scanning) ...[
+            // Scanning in progress
+            const SizedBox(
+              width: 48, height: 48,
+              child: CircularProgressIndicator(strokeWidth: 3, color: TuneColors.accent),
+            ),
+            const SizedBox(height: 24),
+            const Text('Analyse en cours...', style: TuneFonts.title2),
+            const SizedBox(height: 24),
+            // Progress stats
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _ScanStat(label: 'Analyses', value: _scannedCount),
+                _ScanStat(label: 'Ajoutees', value: _addedCount),
+                if (_updatedCount > 0)
+                  _ScanStat(label: 'Mises a jour', value: _updatedCount),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Indeterminate progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: const LinearProgressIndicator(
+                minHeight: 6,
+                color: TuneColors.accent,
+                backgroundColor: TuneColors.surfaceHigh,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Cela peut prendre quelques minutes...',
+              style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
+            ),
+          ] else if (_scanComplete) ...[
+            // Scan complete
+            const Icon(Icons.check_circle_outline_rounded,
+                size: 72, color: TuneColors.success),
+            const SizedBox(height: 24),
+            const Text('Analyse terminee !', style: TuneFonts.title1),
+            const SizedBox(height: 16),
+            // Final stats
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: TuneColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _ScanStat(label: 'Ajoutees', value: _addedCount, color: TuneColors.success),
+                  if (_updatedCount > 0)
+                    _ScanStat(label: 'Mises a jour', value: _updatedCount, color: TuneColors.success),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: widget.onNext,
+                style: FilledButton.styleFrom(
+                  backgroundColor: TuneColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
+
+          if (_scanError != null) ...[
+            const SizedBox(height: 16),
+            _WarningCard(text: _scanError!),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: widget.onNext,
+              child: const Text('Passer'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ScanStat extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color? color;
+
+  const _ScanStat({required this.label, required this.value, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          '$value',
+          style: TextStyle(
+            fontSize: 28, fontWeight: FontWeight.w700,
+            color: color ?? TuneColors.accent,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label.toUpperCase(),
+          style: TuneFonts.caption.copyWith(
+            color: TuneColors.textTertiary,
+            letterSpacing: 0.5,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Page 7 — Terminé
 // ---------------------------------------------------------------------------
 
 class _DonePage extends StatelessWidget {

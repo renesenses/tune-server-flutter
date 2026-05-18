@@ -633,6 +633,28 @@ class TuneApiClient {
   Future<Map<String, dynamic>> setPluginEnabled(String pluginId, bool enabled) async =>
       await _post('/system/plugins/$pluginId', body: {'enabled': enabled}) as Map<String, dynamic>;
 
+  // ── Plugin Store (merged catalog + local) ──
+
+  Future<List<dynamic>> getMergedPlugins() async =>
+      await _get('/plugins') as List<dynamic>;
+
+  Future<dynamic> installPlugin(String slug) async =>
+      await _post('/plugins/${Uri.encodeComponent(slug)}/install');
+
+  Future<dynamic> uninstallPlugin(String slug) async {
+    await _delete('/plugins/${Uri.encodeComponent(slug)}');
+    return {'success': true};
+  }
+
+  Future<dynamic> updatePlugin(String slug) async =>
+      await _post('/plugins/${Uri.encodeComponent(slug)}/update');
+
+  Future<dynamic> enablePlugin(String slug) async =>
+      await _post('/system/plugins/${Uri.encodeComponent(slug)}/enable');
+
+  Future<dynamic> disablePlugin(String slug) async =>
+      await _post('/system/plugins/${Uri.encodeComponent(slug)}/disable');
+
   // ---------------------------------------------------------------------------
   // ── Share ──
   // ---------------------------------------------------------------------------

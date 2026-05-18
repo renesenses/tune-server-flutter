@@ -31,6 +31,9 @@ extension TuneApiClientLibrary on TuneApiClient {
   Future<List<dynamic>> getTrackCredits(int trackId) =>
       _get('/library/tracks/$trackId/credits').then((d) => d as List);
 
+  Future<dynamic> enrichTrackCredits(int trackId) =>
+      _post('/library/tracks/$trackId/credits/enrich');
+
   Future<List<dynamic>> getAlbumTracks(int albumId) =>
       _get('/library/albums/$albumId/tracks').then((d) => d as List);
 
@@ -45,4 +48,17 @@ extension TuneApiClientLibrary on TuneApiClient {
     final filename = path.split('/').last;
     return '$baseUrl/library/artwork/$filename';
   }
+
+  // ---------------------------------------------------------------------------
+  // Library Scan
+  // ---------------------------------------------------------------------------
+
+  Future<dynamic> triggerScan({bool full = false}) =>
+      _post('/library/scan', body: {'full': full});
+
+  Future<Map<String, dynamic>> getScanStatus() =>
+      _get('/library/scan/status').then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> getLibraryStats() =>
+      _get('/library/stats').then((d) => d as Map<String, dynamic>);
 }
