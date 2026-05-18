@@ -1,6 +1,5 @@
-import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 
-import '../models/enums.dart';
 import 'configuration.dart';
 import 'database/database.dart';
 import 'discovery/bluos_discovery.dart';
@@ -194,14 +193,14 @@ class ServerEngine {
   }
 
   void _setupPlaybackStatePersistence() {
-    EventBus.instance.on<PlaybackStartedEvent>((e) async {
-      final zone = zoneManager.zoneById(e.zoneId);
+    EventBus.instance.subscribe<PlaybackStartedEvent>((e) async {
+      final zone = zoneManager.zone(e.zoneId);
       if (zone != null) {
-        await zoneManager.zoneRepo.savePlaybackState(e.zoneId, true, zone.player.positionMs);
+        await db.zoneRepo.savePlaybackState(e.zoneId, true, zone.player.position.inMilliseconds);
       }
     });
-    EventBus.instance.on<PlaybackStoppedEvent>((e) async {
-      await zoneManager.zoneRepo.savePlaybackState(e.zoneId, false, 0);
+    EventBus.instance.subscribe<PlaybackStoppedEvent>((e) async {
+      await db.zoneRepo.savePlaybackState(e.zoneId, false, 0);
     });
   }
 
@@ -224,14 +223,14 @@ class ServerEngine {
     await Future.delayed(const Duration(seconds: 5));
     if (!_running) return;
     try {
-      final zones = await zoneManager.zoneRepo.zonesForAutoResume();
+      final zones = await db.zoneRepo.zonesForAutoResume();
       for (final zone in zones) {
-        final instance = zoneManager.zoneById(zone.id);
+        final instance = zoneManager.zone(zone.id);
         if (instance != null) {
           debugPrint('[AutoResume] Resuming zone ${zone.name} at ${zone.lastPositionMs}ms');
           await instance.player.play();
           if (zone.lastPositionMs > 0) {
-            await instance.player.seek(zone.lastPositionMs);
+            await instance.player.seek(Duration(milliseconds: zone.lastPositionMs));
           }
         }
       }

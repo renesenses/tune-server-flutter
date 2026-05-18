@@ -146,6 +146,18 @@ class ZoneUngroupedEvent extends AppEvent {
   const ZoneUngroupedEvent(this.groupId);
 }
 
+// --- Playback lifecycle (used by ServerEngine for state persistence) ---
+
+class PlaybackStartedEvent extends AppEvent {
+  final int zoneId;
+  const PlaybackStartedEvent(this.zoneId);
+}
+
+class PlaybackStoppedEvent extends AppEvent {
+  final int zoneId;
+  const PlaybackStoppedEvent(this.zoneId);
+}
+
 // --- Server lifecycle ---
 
 class ServerStartedEvent extends AppEvent {
