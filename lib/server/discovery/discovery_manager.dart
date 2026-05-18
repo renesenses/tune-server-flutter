@@ -43,6 +43,11 @@ class DiscoveredDevice {
   /// MAC address of the device (from AirPlay TXT records or UPnP).
   final String? macAddress;
 
+  /// Alternative protocol representations of the same physical device.
+  /// Populated by [DiscoveryManager.allDevicesDeduped] when multiple protocols
+  /// discover the same host (e.g. DLNA + Chromecast + BluOS).
+  final List<Map<String, String>>? alternatives;
+
   const DiscoveredDevice({
     required this.id,
     required this.name,
@@ -57,9 +62,13 @@ class DiscoveredDevice {
     this.isDsdCapable = false,
     this.airplayVersion,
     this.macAddress,
+    this.alternatives,
   });
 
-  DiscoveredDevice copyWith({bool? available}) => DiscoveredDevice(
+  DiscoveredDevice copyWith({
+    bool? available,
+    List<Map<String, String>>? alternatives,
+  }) => DiscoveredDevice(
         id: id,
         name: name,
         type: type,
@@ -73,6 +82,7 @@ class DiscoveredDevice {
         isDsdCapable: isDsdCapable,
         airplayVersion: airplayVersion,
         macAddress: macAddress,
+        alternatives: alternatives ?? this.alternatives,
       );
 }
 
@@ -197,6 +207,65 @@ class DiscoveryManager {
 
   List<DiscoveredDevice> servers() =>
       _cache.values.where((d) => d.type == 'server' && !_isOwnServer(d)).toList();
+
+  // Priority: OpenHome > BluOS > DLNA > Cast > AirPlay
+  // OpenHome devices have type 'renderer' but capabilities.hasOpenHome == true.
+  static const _typePriority = <String, int>{
+    'openhome': 7,
+    'bluos': 6,
+    'renderer': 4, // DLNA
+    'chromecast': 3,
+    'airplay': 2,
+    'local': 1,
+  };
+
+  /// Effective priority key for a device. OpenHome renderers get the higher
+  /// 'openhome' priority; plain DLNA renderers keep 'renderer'.
+  static int _devicePriority(DiscoveredDevice d) {
+    if (d.type == 'renderer' && d.capabilities.hasOpenHome) {
+      return _typePriority['openhome']!;
+    }
+    return _typePriority[d.type] ?? 0;
+  }
+
+  /// Deduplicated device list for UI display.
+  ///
+  /// When the same IP is discovered via multiple protocols, the primary
+  /// device (highest priority) is returned with an [alternatives] list
+  /// so the UI can offer protocol selection.
+  /// Priority: OpenHome > BluOS > DLNA > Cast > AirPlay.
+  /// [extraDevices] allows passing in devices from other discovery sources
+  /// (e.g. BluOS, Chromecast) that live outside this manager.
+  List<DiscoveredDevice> allDevicesDeduped({
+    List<DiscoveredDevice> extraDevices = const [],
+  }) {
+    final all = <DiscoveredDevice>[
+      ...allDevices(),
+      ...extraDevices.where((d) => !_isOwnServer(d)),
+    ];
+
+    final byHost = <String, List<DiscoveredDevice>>{};
+    for (final dev in all) {
+      byHost.putIfAbsent(dev.host, () => []).add(dev);
+    }
+
+    final result = <DiscoveredDevice>[];
+    for (final devs in byHost.values) {
+      devs.sort((a, b) => _devicePriority(b).compareTo(_devicePriority(a)));
+      final primary = devs.first;
+      if (devs.length > 1) {
+        final alts = devs.skip(1).map((d) => <String, String>{
+          'id': d.id,
+          'type': d.type,
+          'name': d.name,
+        }).toList();
+        result.add(primary.copyWith(alternatives: alts));
+      } else {
+        result.add(primary);
+      }
+    }
+    return result;
+  }
 
   DiscoveredDevice? deviceById(String id) => _cache[id];
 
