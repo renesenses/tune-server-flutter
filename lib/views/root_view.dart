@@ -250,14 +250,47 @@ class _SplashView extends StatelessWidget {
 // Error
 // ---------------------------------------------------------------------------
 
-class _ErrorView extends StatelessWidget {
+class _ErrorView extends StatefulWidget {
   final String message;
   final VoidCallback onRetry;
 
   const _ErrorView({required this.message, required this.onRetry});
 
   @override
+  State<_ErrorView> createState() => _ErrorViewState();
+}
+
+class _ErrorViewState extends State<_ErrorView> {
+  final _hostController = TextEditingController();
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = context.read<SettingsState>();
+    _hostController.text = settings.remoteHost;
+  }
+
+  @override
+  void dispose() {
+    _hostController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveAndRetry() async {
+    final host = _hostController.text.trim();
+    if (host.isEmpty) return;
+    setState(() => _connecting = true);
+    final app = context.read<AppState>();
+    await app.settingsState.setRemoteHost(host);
+    widget.onRetry();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isRemote = context.read<AppState>().isRemoteMode;
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: TuneColors.background,
       body: Center(
@@ -269,16 +302,52 @@ class _ErrorView extends StatelessWidget {
               const Icon(Icons.error_outline_rounded,
                   size: 48, color: TuneColors.error),
               const SizedBox(height: 16),
-              Text(AppLocalizations.of(context).rootStartError, style: TuneFonts.title3),
+              Text(l.rootStartError, style: TuneFonts.title3),
               const SizedBox(height: 8),
-              Text(message,
+              Text(widget.message,
                   style: TuneFonts.footnote,
                   textAlign: TextAlign.center),
+              if (isRemote) ...[
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: 280,
+                  child: TextField(
+                    controller: _hostController,
+                    style: TuneFonts.body,
+                    decoration: InputDecoration(
+                      hintText: '192.168.1.100',
+                      hintStyle: TuneFonts.footnote,
+                      labelText: 'Adresse du serveur',
+                      labelStyle: TuneFonts.footnote,
+                      prefixIcon: const Icon(Icons.dns_outlined, size: 20),
+                      filled: true,
+                      fillColor: TuneColors.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.go,
+                    onSubmitted: (_) => _saveAndRetry(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text('port 8888 par défaut',
+                    style: TuneFonts.caption),
+              ],
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: onRetry,
-                child: Text(AppLocalizations.of(context).btnRetry),
-              ),
+              _connecting
+                  ? const SizedBox(
+                      width: 24, height: 24,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: TuneColors.accent))
+                  : FilledButton(
+                      onPressed: isRemote ? _saveAndRetry : widget.onRetry,
+                      child: Text(isRemote ? 'Connexion' : l.btnRetry),
+                    ),
             ],
           ),
         ),
