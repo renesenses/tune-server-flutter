@@ -149,6 +149,11 @@ bool detectDsdFromDeviceInfo(String name, String? model, String? manufacturer) {
 class UPnPDeviceParser {
   UPnPDeviceParser._();
 
+  static final _uuidPattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
   /// Parse le XML de description d'un device UPnP.
   /// [xmlString] : contenu du document XML récupéré à la LOCATION SSDP.
   /// [baseUrl]   : URL de base pour résoudre les controlURL relatives.
@@ -162,10 +167,14 @@ class UPnPDeviceParser {
       if (deviceEl == null) return null;
 
       final udn = _text(deviceEl, 'UDN') ?? '';
-      final friendlyName = _text(deviceEl, 'friendlyName') ?? 'Unknown Device';
+      var friendlyName = _text(deviceEl, 'friendlyName') ?? 'Unknown Device';
       final deviceType = _text(deviceEl, 'deviceType') ?? '';
       final manufacturer = _text(deviceEl, 'manufacturer');
       final modelName = _text(deviceEl, 'modelName');
+
+      if (_uuidPattern.hasMatch(friendlyName)) {
+        friendlyName = modelName ?? deviceType.split(':').lastOrNull ?? friendlyName;
+      }
 
       // Icône (premier icon de la liste)
       final iconUrl = _parseIconUrl(deviceEl, baseUrl);

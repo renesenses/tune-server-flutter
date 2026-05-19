@@ -440,6 +440,9 @@ class OpenHomeOutput implements OutputTarget {
   @override
   bool get isPlaying => _playing;
 
+  @override
+  bool get hasPendingStream => _playing;
+
   // ---------------------------------------------------------------------------
   // Product — standby & source selection
   // ---------------------------------------------------------------------------

@@ -48,7 +48,7 @@ class ArtistRepository {
             ]))
           .get();
 
-  /// Recherche FTS5 sur le nom d'artiste.
+  /// Recherche FTS5 sur le nom d'artiste, with LIKE fallback for accented queries.
   Future<List<Artist>> search(String query, {int limit = 100}) async {
     final q = _sanitizeFts(query);
     if (q.isEmpty) return [];
@@ -64,7 +64,26 @@ class ArtistRepository {
           readsFrom: {_db.artists},
         )
         .get();
-    return Future.wait(rows.map((row) => _db.artists.mapFromRow(row)));
+    if (rows.isNotEmpty) {
+      return Future.wait(rows.map((row) => _db.artists.mapFromRow(row)));
+    }
+
+    final folded = foldAccents(query.trim());
+    final likePattern = '%$folded%';
+    final likeRows = await _db
+        .customSelect(
+          'SELECT * FROM artists '
+          'WHERE name LIKE ? COLLATE NOCASE '
+          'LIMIT ?',
+          variables: [Variable(likePattern), Variable(limit)],
+          readsFrom: {_db.artists},
+        )
+        .get();
+    final artists = await Future.wait(likeRows.map((row) => _db.artists.mapFromRow(row)));
+    final foldedLower = folded.toLowerCase();
+    return artists.where((a) =>
+        foldAccents(a.name).toLowerCase().contains(foldedLower)
+    ).toList();
   }
 
   Future<int> count() async {
@@ -78,8 +97,13 @@ class ArtistRepository {
   // Helpers
   // ---------------------------------------------------------------------------
 
+  static final _ftsBoolean = RegExp(r'\b(?:AND|OR|NOT|NEAR)\b', caseSensitive: false);
+
   String _sanitizeFts(String input) {
-    final trimmed = input.trim().replaceAll('"', '');
+    var trimmed = input.trim().replaceAll('"', '');
+    trimmed = trimmed.replaceAll(RegExp(r'[(){}:+\-^]'), '');
+    trimmed = trimmed.replaceAll(_ftsBoolean, '');
+    trimmed = trimmed.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (trimmed.isEmpty) return '';
     return '"$trimmed"*';
   }

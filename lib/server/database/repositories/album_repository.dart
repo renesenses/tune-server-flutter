@@ -37,9 +37,13 @@ class AlbumRepository {
           .getSingleOrNull();
       if (exact != null) return exact;
     }
-    return (_db.select(_db.albums)
+    final fallback = await (_db.select(_db.albums)
           ..where((a) => a.title.equals(title) & a.artistId.equals(artistId)))
         .getSingleOrNull();
+    if (fallback != null && year != null && fallback.year != null && fallback.year != year) {
+      return null;
+    }
+    return fallback;
   }
 
   /// Title-only lookup — used for compilations and albums without artist.
@@ -135,7 +139,7 @@ class AlbumRepository {
             ]))
           .get();
 
-  /// Recherche FTS5 sur title et artist_name.
+  /// Recherche FTS5 sur title et artist_name, with LIKE fallback for accented queries.
   Future<List<Album>> search(String query, {int limit = 100}) async {
     final q = _sanitizeFts(query);
     if (q.isEmpty) return [];
@@ -151,7 +155,28 @@ class AlbumRepository {
           readsFrom: {_db.albums},
         )
         .get();
-    return Future.wait(rows.map((row) => _db.albums.mapFromRow(row)));
+    if (rows.isNotEmpty) {
+      return Future.wait(rows.map((row) => _db.albums.mapFromRow(row)));
+    }
+
+    final folded = foldAccents(query.trim());
+    final likePattern = '%$folded%';
+    final likeRows = await _db
+        .customSelect(
+          'SELECT * FROM albums '
+          'WHERE title LIKE ? COLLATE NOCASE '
+          'OR artist_name LIKE ? COLLATE NOCASE '
+          'LIMIT ?',
+          variables: [Variable(likePattern), Variable(likePattern), Variable(limit)],
+          readsFrom: {_db.albums},
+        )
+        .get();
+    final albums = await Future.wait(likeRows.map((row) => _db.albums.mapFromRow(row)));
+    final foldedLower = folded.toLowerCase();
+    return albums.where((a) =>
+        foldAccents(a.title).toLowerCase().contains(foldedLower) ||
+        (a.artistName != null && foldAccents(a.artistName!).toLowerCase().contains(foldedLower))
+    ).toList();
   }
 
   Future<int> count() async {
@@ -205,8 +230,13 @@ class AlbumRepository {
   // Helpers
   // ---------------------------------------------------------------------------
 
+  static final _ftsBoolean = RegExp(r'\b(?:AND|OR|NOT|NEAR)\b', caseSensitive: false);
+
   String _sanitizeFts(String input) {
-    final trimmed = input.trim().replaceAll('"', '');
+    var trimmed = input.trim().replaceAll('"', '');
+    trimmed = trimmed.replaceAll(RegExp(r'[(){}:+\-^]'), '');
+    trimmed = trimmed.replaceAll(_ftsBoolean, '');
+    trimmed = trimmed.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (trimmed.isEmpty) return '';
     return '"$trimmed"*';
   }

@@ -97,4 +97,16 @@ class ZoneRepository {
   /// Retourne toutes les zones appartenant à un groupe donné.
   Future<List<Zone>> getZonesByGroup(String groupId) =>
       (_db.select(_db.zones)..where((z) => z.groupId.equals(groupId))).get();
+
+  // ---------------------------------------------------------------------------
+  // Normalization
+  // ---------------------------------------------------------------------------
+
+  Future<void> setNormalization(int zoneId, bool enabled, double targetLufs) async {
+    await (_db.update(_db.zones)..where((z) => z.id.equals(zoneId)))
+        .write(ZonesCompanion(
+          normalizationEnabled: Value(enabled),
+          normalizationTargetLufs: Value(targetLufs),
+        ));
+  }
 }

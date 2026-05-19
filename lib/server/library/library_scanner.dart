@@ -60,9 +60,12 @@ class LibraryScanner {
         await _db.trackRepo.resetAllMtimes();
       }
 
+      // 0.5 Deduplicate overlapping directories
+      final dedupedPaths = _deduplicatePaths(folderPaths);
+
       // 1. Collecte tous les fichiers audio
       final allFiles = <String>[];
-      for (final folder in folderPaths) {
+      for (final folder in dedupedPaths) {
         allFiles.addAll(await _collectAudioFiles(folder));
       }
 
@@ -197,6 +200,23 @@ class LibraryScanner {
     });
 
     return (added, updated);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Path deduplication — removes directories that are subdirectories of another
+  // ---------------------------------------------------------------------------
+
+  List<String> _deduplicatePaths(List<String> paths) {
+    final sorted = paths.map((p) => p.endsWith('/') ? p : '$p/').toList()
+      ..sort((a, b) => a.length.compareTo(b.length));
+    final result = <String>[];
+    for (final path in sorted) {
+      final isChild = result.any((parent) => path.startsWith(parent));
+      if (!isChild) {
+        result.add(path);
+      }
+    }
+    return result.map((p) => p.endsWith('/') ? p.substring(0, p.length - 1) : p).toList();
   }
 
   // ---------------------------------------------------------------------------

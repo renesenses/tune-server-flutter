@@ -3365,6 +3365,32 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _normalizationEnabledMeta =
+      const VerificationMeta('normalizationEnabled');
+  @override
+  late final GeneratedColumn<bool> normalizationEnabled = GeneratedColumn<bool>(
+    'normalization_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("normalization_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _normalizationTargetLufsMeta =
+      const VerificationMeta('normalizationTargetLufs');
+  @override
+  late final GeneratedColumn<double> normalizationTargetLufs =
+      GeneratedColumn<double>(
+        'normalization_target_lufs',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(-14.0),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3376,6 +3402,8 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
     syncDelayMs,
     wasPlaying,
     lastPositionMs,
+    normalizationEnabled,
+    normalizationTargetLufs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3451,6 +3479,24 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
         ),
       );
     }
+    if (data.containsKey('normalization_enabled')) {
+      context.handle(
+        _normalizationEnabledMeta,
+        normalizationEnabled.isAcceptableOrUnknown(
+          data['normalization_enabled']!,
+          _normalizationEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('normalization_target_lufs')) {
+      context.handle(
+        _normalizationTargetLufsMeta,
+        normalizationTargetLufs.isAcceptableOrUnknown(
+          data['normalization_target_lufs']!,
+          _normalizationTargetLufsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3496,6 +3542,14 @@ class $ZonesTable extends Zones with TableInfo<$ZonesTable, Zone> {
         DriftSqlType.int,
         data['${effectivePrefix}last_position_ms'],
       )!,
+      normalizationEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}normalization_enabled'],
+      )!,
+      normalizationTargetLufs: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}normalization_target_lufs'],
+      )!,
     );
   }
 
@@ -3515,6 +3569,8 @@ class Zone extends DataClass implements Insertable<Zone> {
   final int syncDelayMs;
   final bool wasPlaying;
   final int lastPositionMs;
+  final bool normalizationEnabled;
+  final double normalizationTargetLufs;
   const Zone({
     required this.id,
     required this.name,
@@ -3525,6 +3581,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     required this.syncDelayMs,
     required this.wasPlaying,
     required this.lastPositionMs,
+    required this.normalizationEnabled,
+    required this.normalizationTargetLufs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3544,6 +3602,10 @@ class Zone extends DataClass implements Insertable<Zone> {
     map['sync_delay_ms'] = Variable<int>(syncDelayMs);
     map['was_playing'] = Variable<bool>(wasPlaying);
     map['last_position_ms'] = Variable<int>(lastPositionMs);
+    map['normalization_enabled'] = Variable<bool>(normalizationEnabled);
+    map['normalization_target_lufs'] = Variable<double>(
+      normalizationTargetLufs,
+    );
     return map;
   }
 
@@ -3564,6 +3626,8 @@ class Zone extends DataClass implements Insertable<Zone> {
       syncDelayMs: Value(syncDelayMs),
       wasPlaying: Value(wasPlaying),
       lastPositionMs: Value(lastPositionMs),
+      normalizationEnabled: Value(normalizationEnabled),
+      normalizationTargetLufs: Value(normalizationTargetLufs),
     );
   }
 
@@ -3582,6 +3646,12 @@ class Zone extends DataClass implements Insertable<Zone> {
       syncDelayMs: serializer.fromJson<int>(json['syncDelayMs']),
       wasPlaying: serializer.fromJson<bool>(json['wasPlaying']),
       lastPositionMs: serializer.fromJson<int>(json['lastPositionMs']),
+      normalizationEnabled: serializer.fromJson<bool>(
+        json['normalizationEnabled'],
+      ),
+      normalizationTargetLufs: serializer.fromJson<double>(
+        json['normalizationTargetLufs'],
+      ),
     );
   }
   @override
@@ -3597,6 +3667,10 @@ class Zone extends DataClass implements Insertable<Zone> {
       'syncDelayMs': serializer.toJson<int>(syncDelayMs),
       'wasPlaying': serializer.toJson<bool>(wasPlaying),
       'lastPositionMs': serializer.toJson<int>(lastPositionMs),
+      'normalizationEnabled': serializer.toJson<bool>(normalizationEnabled),
+      'normalizationTargetLufs': serializer.toJson<double>(
+        normalizationTargetLufs,
+      ),
     };
   }
 
@@ -3610,6 +3684,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     int? syncDelayMs,
     bool? wasPlaying,
     int? lastPositionMs,
+    bool? normalizationEnabled,
+    double? normalizationTargetLufs,
   }) => Zone(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -3622,6 +3698,9 @@ class Zone extends DataClass implements Insertable<Zone> {
     syncDelayMs: syncDelayMs ?? this.syncDelayMs,
     wasPlaying: wasPlaying ?? this.wasPlaying,
     lastPositionMs: lastPositionMs ?? this.lastPositionMs,
+    normalizationEnabled: normalizationEnabled ?? this.normalizationEnabled,
+    normalizationTargetLufs:
+        normalizationTargetLufs ?? this.normalizationTargetLufs,
   );
   Zone copyWithCompanion(ZonesCompanion data) {
     return Zone(
@@ -3644,6 +3723,12 @@ class Zone extends DataClass implements Insertable<Zone> {
       lastPositionMs: data.lastPositionMs.present
           ? data.lastPositionMs.value
           : this.lastPositionMs,
+      normalizationEnabled: data.normalizationEnabled.present
+          ? data.normalizationEnabled.value
+          : this.normalizationEnabled,
+      normalizationTargetLufs: data.normalizationTargetLufs.present
+          ? data.normalizationTargetLufs.value
+          : this.normalizationTargetLufs,
     );
   }
 
@@ -3658,7 +3743,9 @@ class Zone extends DataClass implements Insertable<Zone> {
           ..write('groupId: $groupId, ')
           ..write('syncDelayMs: $syncDelayMs, ')
           ..write('wasPlaying: $wasPlaying, ')
-          ..write('lastPositionMs: $lastPositionMs')
+          ..write('lastPositionMs: $lastPositionMs, ')
+          ..write('normalizationEnabled: $normalizationEnabled, ')
+          ..write('normalizationTargetLufs: $normalizationTargetLufs')
           ..write(')'))
         .toString();
   }
@@ -3674,6 +3761,8 @@ class Zone extends DataClass implements Insertable<Zone> {
     syncDelayMs,
     wasPlaying,
     lastPositionMs,
+    normalizationEnabled,
+    normalizationTargetLufs,
   );
   @override
   bool operator ==(Object other) =>
@@ -3687,7 +3776,9 @@ class Zone extends DataClass implements Insertable<Zone> {
           other.groupId == this.groupId &&
           other.syncDelayMs == this.syncDelayMs &&
           other.wasPlaying == this.wasPlaying &&
-          other.lastPositionMs == this.lastPositionMs);
+          other.lastPositionMs == this.lastPositionMs &&
+          other.normalizationEnabled == this.normalizationEnabled &&
+          other.normalizationTargetLufs == this.normalizationTargetLufs);
 }
 
 class ZonesCompanion extends UpdateCompanion<Zone> {
@@ -3700,6 +3791,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
   final Value<int> syncDelayMs;
   final Value<bool> wasPlaying;
   final Value<int> lastPositionMs;
+  final Value<bool> normalizationEnabled;
+  final Value<double> normalizationTargetLufs;
   const ZonesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -3710,6 +3803,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     this.syncDelayMs = const Value.absent(),
     this.wasPlaying = const Value.absent(),
     this.lastPositionMs = const Value.absent(),
+    this.normalizationEnabled = const Value.absent(),
+    this.normalizationTargetLufs = const Value.absent(),
   });
   ZonesCompanion.insert({
     this.id = const Value.absent(),
@@ -3721,6 +3816,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     this.syncDelayMs = const Value.absent(),
     this.wasPlaying = const Value.absent(),
     this.lastPositionMs = const Value.absent(),
+    this.normalizationEnabled = const Value.absent(),
+    this.normalizationTargetLufs = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Zone> custom({
     Expression<int>? id,
@@ -3732,6 +3829,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     Expression<int>? syncDelayMs,
     Expression<bool>? wasPlaying,
     Expression<int>? lastPositionMs,
+    Expression<bool>? normalizationEnabled,
+    Expression<double>? normalizationTargetLufs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3743,6 +3842,10 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
       if (syncDelayMs != null) 'sync_delay_ms': syncDelayMs,
       if (wasPlaying != null) 'was_playing': wasPlaying,
       if (lastPositionMs != null) 'last_position_ms': lastPositionMs,
+      if (normalizationEnabled != null)
+        'normalization_enabled': normalizationEnabled,
+      if (normalizationTargetLufs != null)
+        'normalization_target_lufs': normalizationTargetLufs,
     });
   }
 
@@ -3756,6 +3859,8 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     Value<int>? syncDelayMs,
     Value<bool>? wasPlaying,
     Value<int>? lastPositionMs,
+    Value<bool>? normalizationEnabled,
+    Value<double>? normalizationTargetLufs,
   }) {
     return ZonesCompanion(
       id: id ?? this.id,
@@ -3767,6 +3872,9 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
       syncDelayMs: syncDelayMs ?? this.syncDelayMs,
       wasPlaying: wasPlaying ?? this.wasPlaying,
       lastPositionMs: lastPositionMs ?? this.lastPositionMs,
+      normalizationEnabled: normalizationEnabled ?? this.normalizationEnabled,
+      normalizationTargetLufs:
+          normalizationTargetLufs ?? this.normalizationTargetLufs,
     );
   }
 
@@ -3800,6 +3908,14 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
     if (lastPositionMs.present) {
       map['last_position_ms'] = Variable<int>(lastPositionMs.value);
     }
+    if (normalizationEnabled.present) {
+      map['normalization_enabled'] = Variable<bool>(normalizationEnabled.value);
+    }
+    if (normalizationTargetLufs.present) {
+      map['normalization_target_lufs'] = Variable<double>(
+        normalizationTargetLufs.value,
+      );
+    }
     return map;
   }
 
@@ -3814,7 +3930,9 @@ class ZonesCompanion extends UpdateCompanion<Zone> {
           ..write('groupId: $groupId, ')
           ..write('syncDelayMs: $syncDelayMs, ')
           ..write('wasPlaying: $wasPlaying, ')
-          ..write('lastPositionMs: $lastPositionMs')
+          ..write('lastPositionMs: $lastPositionMs, ')
+          ..write('normalizationEnabled: $normalizationEnabled, ')
+          ..write('normalizationTargetLufs: $normalizationTargetLufs')
           ..write(')'))
         .toString();
   }
@@ -9510,6 +9628,8 @@ typedef $$ZonesTableCreateCompanionBuilder =
       Value<int> syncDelayMs,
       Value<bool> wasPlaying,
       Value<int> lastPositionMs,
+      Value<bool> normalizationEnabled,
+      Value<double> normalizationTargetLufs,
     });
 typedef $$ZonesTableUpdateCompanionBuilder =
     ZonesCompanion Function({
@@ -9522,6 +9642,8 @@ typedef $$ZonesTableUpdateCompanionBuilder =
       Value<int> syncDelayMs,
       Value<bool> wasPlaying,
       Value<int> lastPositionMs,
+      Value<bool> normalizationEnabled,
+      Value<double> normalizationTargetLufs,
     });
 
 final class $$ZonesTableReferences
@@ -9597,6 +9719,16 @@ class $$ZonesTableFilterComposer extends Composer<_$TuneDatabase, $ZonesTable> {
 
   ColumnFilters<int> get lastPositionMs => $composableBuilder(
     column: $table.lastPositionMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get normalizationEnabled => $composableBuilder(
+    column: $table.normalizationEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get normalizationTargetLufs => $composableBuilder(
+    column: $table.normalizationTargetLufs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9679,6 +9811,16 @@ class $$ZonesTableOrderingComposer
     column: $table.lastPositionMs,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get normalizationEnabled => $composableBuilder(
+    column: $table.normalizationEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get normalizationTargetLufs => $composableBuilder(
+    column: $table.normalizationTargetLufs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ZonesTableAnnotationComposer
@@ -9724,6 +9866,16 @@ class $$ZonesTableAnnotationComposer
 
   GeneratedColumn<int> get lastPositionMs => $composableBuilder(
     column: $table.lastPositionMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get normalizationEnabled => $composableBuilder(
+    column: $table.normalizationEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get normalizationTargetLufs => $composableBuilder(
+    column: $table.normalizationTargetLufs,
     builder: (column) => column,
   );
 
@@ -9790,6 +9942,8 @@ class $$ZonesTableTableManager
                 Value<int> syncDelayMs = const Value.absent(),
                 Value<bool> wasPlaying = const Value.absent(),
                 Value<int> lastPositionMs = const Value.absent(),
+                Value<bool> normalizationEnabled = const Value.absent(),
+                Value<double> normalizationTargetLufs = const Value.absent(),
               }) => ZonesCompanion(
                 id: id,
                 name: name,
@@ -9800,6 +9954,8 @@ class $$ZonesTableTableManager
                 syncDelayMs: syncDelayMs,
                 wasPlaying: wasPlaying,
                 lastPositionMs: lastPositionMs,
+                normalizationEnabled: normalizationEnabled,
+                normalizationTargetLufs: normalizationTargetLufs,
               ),
           createCompanionCallback:
               ({
@@ -9812,6 +9968,8 @@ class $$ZonesTableTableManager
                 Value<int> syncDelayMs = const Value.absent(),
                 Value<bool> wasPlaying = const Value.absent(),
                 Value<int> lastPositionMs = const Value.absent(),
+                Value<bool> normalizationEnabled = const Value.absent(),
+                Value<double> normalizationTargetLufs = const Value.absent(),
               }) => ZonesCompanion.insert(
                 id: id,
                 name: name,
@@ -9822,6 +9980,8 @@ class $$ZonesTableTableManager
                 syncDelayMs: syncDelayMs,
                 wasPlaying: wasPlaying,
                 lastPositionMs: lastPositionMs,
+                normalizationEnabled: normalizationEnabled,
+                normalizationTargetLufs: normalizationTargetLufs,
               ),
           withReferenceMapper: (p0) => p0
               .map(

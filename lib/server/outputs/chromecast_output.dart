@@ -46,6 +46,7 @@ class ChromecastOutput implements OutputTarget {
   OutputReadyState _readyState = OutputReadyState.idle;
   double _volume = 1.0;
   bool _playing = false;
+  String? _streamId;
 
   // Cast V2 connection state
   SecureSocket? _socket;
@@ -178,6 +179,7 @@ class ChromecastOutput implements OutputTarget {
       if (response != null) {
         _updatePositionFromStatus(response);
         _playing = true;
+        _streamId = url;
         debugPrint('[Chromecast] Playing: ${title ?? url} on $displayName');
         return const OutputSuccess();
       }
@@ -231,6 +233,7 @@ class ChromecastOutput implements OutputTarget {
         'mediaSessionId': _mediaSessionId,
       }, reqId);
       _playing = false;
+      _streamId = null;
       _lastKnownPosition = Duration.zero;
       _lastPositionTimestamp = null;
       return const OutputSuccess();
@@ -334,6 +337,9 @@ class ChromecastOutput implements OutputTarget {
 
   @override
   bool get isPlaying => _playing;
+
+  @override
+  bool get hasPendingStream => _streamId != null;
 
   // ---------------------------------------------------------------------------
   // Cast V2 Protocol — TLS connection

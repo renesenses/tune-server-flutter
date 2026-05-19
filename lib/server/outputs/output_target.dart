@@ -104,4 +104,8 @@ abstract interface class OutputTarget {
 
   /// Indique si l'output est actuellement en train de lire.
   bool get isPlaying;
+
+  /// True when a stream session is active (e.g. DLNA/BluOS/Chromecast streaming).
+  /// Used to prevent premature track advancement while the renderer is still consuming.
+  bool get hasPendingStream;
 }

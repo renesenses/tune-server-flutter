@@ -7,6 +7,55 @@ import 'repositories/repositories.dart';
 
 part 'database.g.dart';
 
+/// Strips diacritics from a string for accent-insensitive search.
+String foldAccents(String input) {
+  const map = {
+    'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
+    'Æ': 'AE',
+    'Ç': 'C',
+    'È': 'E', 'É': 'E', 'Ê': 'E', 'Ë': 'E',
+    'Ì': 'I', 'Í': 'I', 'Î': 'I', 'Ï': 'I',
+    'Ð': 'D',
+    'Ñ': 'N',
+    'Ò': 'O', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O', 'Ø': 'O',
+    'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U',
+    'Ý': 'Y',
+    'ß': 'ss',
+    'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
+    'æ': 'ae',
+    'ç': 'c',
+    'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+    'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+    'ð': 'd',
+    'ñ': 'n',
+    'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o',
+    'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u',
+    'ý': 'y', 'ÿ': 'y',
+    'Ā': 'A', 'ā': 'a', 'Ă': 'A', 'ă': 'a',
+    'Ą': 'A', 'ą': 'a',
+    'Ć': 'C', 'ć': 'c', 'Č': 'C', 'č': 'c',
+    'Ď': 'D', 'ď': 'd', 'Đ': 'D', 'đ': 'd',
+    'Ē': 'E', 'ē': 'e', 'Ę': 'E', 'ę': 'e', 'Ě': 'E', 'ě': 'e',
+    'Ğ': 'G', 'ğ': 'g',
+    'İ': 'I', 'ı': 'i',
+    'Ł': 'L', 'ł': 'l',
+    'Ń': 'N', 'ń': 'n', 'Ň': 'N', 'ň': 'n',
+    'Ő': 'O', 'ő': 'o', 'Œ': 'OE', 'œ': 'oe',
+    'Ř': 'R', 'ř': 'r',
+    'Ś': 'S', 'ś': 's', 'Ş': 'S', 'ş': 's', 'Š': 'S', 'š': 's',
+    'Ţ': 'T', 'ţ': 't', 'Ť': 'T', 'ť': 't',
+    'Ů': 'U', 'ů': 'u', 'Ű': 'U', 'ű': 'u',
+    'Ÿ': 'Y', 'Ź': 'Z', 'ź': 'z', 'Ż': 'Z', 'ż': 'z',
+    'Ž': 'Z', 'ž': 'z',
+  };
+  final buf = StringBuffer();
+  for (var i = 0; i < input.length; i++) {
+    final c = input[i];
+    buf.write(map[c] ?? c);
+  }
+  return buf.toString();
+}
+
 // ---------------------------------------------------------------------------
 // T1.2 — TuneDatabase : orchestrateur drift avec migrations + WAL
 //        Miroir de Database.swift (GRDB)
@@ -44,7 +93,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,6 +138,10 @@ class TuneDatabase extends _$TuneDatabase {
           }
           if (from < 10) {
             await m.addColumn(artists, artists.imageSource);
+          }
+          if (from < 11) {
+            await m.addColumn(zones, zones.normalizationEnabled);
+            await m.addColumn(zones, zones.normalizationTargetLufs);
           }
         },
         beforeOpen: (details) async {

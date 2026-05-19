@@ -393,6 +393,9 @@ class Player {
   // ---------------------------------------------------------------------------
 
   Future<void> _onTrackCompleted() async {
+    if (_output != null && _output!.hasPendingStream) {
+      return;
+    }
     final next = queue.next();
     if (next != null) {
       await _playTrack(next);

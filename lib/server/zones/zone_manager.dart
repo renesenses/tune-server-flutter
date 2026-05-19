@@ -42,6 +42,41 @@ class ZoneManager {
     for (final zone in zones) {
       await _instantiate(zone);
     }
+
+    // Listen for device discovery to reconcile zone device IDs
+    EventBus.instance.subscribe<DeviceDiscoveredEvent>(_onDeviceDiscovered);
+  }
+
+  void _onDeviceDiscovered(DeviceDiscoveredEvent event) {
+    final device = event.device;
+    if (device is! DiscoveredDevice) return;
+    final discovered = device;
+
+    // Check if any zone already tracks this device ID
+    final hasExactMatch = _instances.values.any(
+      (z) => z.zone.outputDeviceId == discovered.id,
+    );
+    if (hasExactMatch) return;
+
+    // Fallback: match by host + name when the device ID changed
+    for (final instance in _instances.values) {
+      final zone = instance.zone;
+      if (zone.outputDeviceId == null) continue;
+      if (zone.outputDeviceId == discovered.id) continue;
+
+      // Look up the old device in the cache (may have stale info)
+      final oldDevice = _discovery.deviceById(zone.outputDeviceId!);
+      if (oldDevice == null) continue;
+
+      if (oldDevice.host == discovered.host &&
+          oldDevice.name == discovered.name) {
+        _db.zoneRepo.setOutput(zone.id, zone.outputType, discovered.id);
+        instance.zone = zone.copyWith(outputDeviceId: Value(discovered.id));
+        debugPrint('[zone_manager] Updated device ID for zone "${zone.name}": '
+            '${zone.outputDeviceId} -> ${discovered.id}');
+        break;
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -183,6 +218,19 @@ class ZoneManager {
       }
     }
     EventBus.instance.emit(ZoneUngroupedEvent(groupId));
+  }
+
+  /// Met à jour la normalisation d'une zone (DB + mémoire).
+  Future<void> setNormalization(int zoneId, bool enabled, {double targetLufs = -14.0}) async {
+    await _db.zoneRepo.setNormalization(zoneId, enabled, targetLufs);
+    final instance = _instances[zoneId];
+    if (instance != null) {
+      instance.zone = instance.zone.copyWith(
+        normalizationEnabled: enabled,
+        normalizationTargetLufs: targetLufs,
+      );
+    }
+    EventBus.instance.emit(ZoneUpdatedEvent(zoneId));
   }
 
   /// Met à jour le délai de synchronisation d'une zone (DB + mémoire).

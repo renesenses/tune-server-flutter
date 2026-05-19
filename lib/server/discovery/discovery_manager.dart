@@ -104,6 +104,7 @@ class DiscoveryManager {
   // ---------------------------------------------------------------------------
 
   Future<void> start({int trackCount = 0, int zoneCount = 0}) async {
+    _localIp = await NetworkUtils.localIpAddress();
     await _loadSavedDevices();
     _ssdpSub = SSDPDiscovery.instance.responses.listen(_onSSDPResponse);
     await SSDPDiscovery.instance.start();
@@ -195,9 +196,15 @@ class DiscoveryManager {
   // Accès aux devices
   // ---------------------------------------------------------------------------
 
-  static bool _isOwnServer(DiscoveredDevice d) =>
+  String? _localIp;
+
+  static bool _isOwnServerByManufacturer(DiscoveredDevice d) =>
       d.manufacturer != null &&
       d.manufacturer!.toLowerCase() == 'mozaik labs';
+
+  bool _isOwnServer(DiscoveredDevice d) =>
+      _isOwnServerByManufacturer(d) ||
+      (_localIp != null && d.host == _localIp);
 
   List<DiscoveredDevice> allDevices() =>
       _cache.values.where((d) => !_isOwnServer(d)).toList();

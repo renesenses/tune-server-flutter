@@ -30,6 +30,7 @@ class DLNAOutput implements OutputTarget {
   OutputReadyState _readyState = OutputReadyState.idle;
   double _volume = 0.5;
   bool _playing = false;
+  String? _streamId;
 
   DLNAOutput({
     required this.id,
@@ -118,6 +119,7 @@ class DLNAOutput implements OutputTarget {
     );
     if (playResult) {
       _playing = true;
+      _streamId = url;
       return const OutputSuccess();
     }
     return const OutputFailure('DLNA Play failed');
@@ -155,7 +157,10 @@ class DLNAOutput implements OutputTarget {
       action: 'Stop',
       args: {'InstanceID': '0'},
     );
-    if (ok) _playing = false;
+    if (ok) {
+      _playing = false;
+      _streamId = null;
+    }
     return ok ? const OutputSuccess() : const OutputFailure('DLNA Stop failed');
   }
 
@@ -271,6 +276,9 @@ class DLNAOutput implements OutputTarget {
 
   @override
   bool get isPlaying => _playing;
+
+  @override
+  bool get hasPendingStream => _streamId != null;
 
   // ---------------------------------------------------------------------------
   // Gapless — SetNextAVTransportURI

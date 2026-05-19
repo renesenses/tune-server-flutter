@@ -67,13 +67,12 @@ class TrackRepository {
             ]))
           .get();
 
-  /// Recherche FTS5 full-text sur title, artist_name, album_title.
-  /// Utilise un prefix match (`query*`) — correspondance iOS FTS5().
+  /// Recherche FTS5 full-text sur title, artist_name, album_title,
+  /// with LIKE fallback for accented queries.
   Future<List<Track>> search(String query, {int limit = 100}) async {
     final q = _sanitizeFts(query);
     if (q.isEmpty) return [];
 
-    // Récupère les rowids triés par rank FTS5 puis mappe vers Track
     final rows = await _db
         .customSelect(
           'SELECT t.* FROM tracks t '
@@ -85,7 +84,30 @@ class TrackRepository {
           readsFrom: {_db.tracks},
         )
         .get();
-    return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
+    if (rows.isNotEmpty) {
+      return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
+    }
+
+    final folded = foldAccents(query.trim());
+    final likePattern = '%$folded%';
+    final likeRows = await _db
+        .customSelect(
+          'SELECT * FROM tracks '
+          'WHERE title LIKE ? COLLATE NOCASE '
+          'OR artist_name LIKE ? COLLATE NOCASE '
+          'OR album_title LIKE ? COLLATE NOCASE '
+          'LIMIT ?',
+          variables: [Variable(likePattern), Variable(likePattern), Variable(likePattern), Variable(limit)],
+          readsFrom: {_db.tracks},
+        )
+        .get();
+    final tracks = await Future.wait(likeRows.map((row) => _db.tracks.mapFromRow(row)));
+    final foldedLower = folded.toLowerCase();
+    return tracks.where((t) =>
+        foldAccents(t.title).toLowerCase().contains(foldedLower) ||
+        (t.artistName != null && foldAccents(t.artistName!).toLowerCase().contains(foldedLower)) ||
+        (t.albumTitle != null && foldAccents(t.albumTitle!).toLowerCase().contains(foldedLower))
+    ).toList();
   }
 
   Future<int> count() async {
@@ -154,9 +176,13 @@ class TrackRepository {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /// Échappe les guillemets et ajoute un wildcard de préfixe pour FTS5.
+  static final _ftsBoolean = RegExp(r'\b(?:AND|OR|NOT|NEAR)\b', caseSensitive: false);
+
   String _sanitizeFts(String input) {
-    final trimmed = input.trim().replaceAll('"', '');
+    var trimmed = input.trim().replaceAll('"', '');
+    trimmed = trimmed.replaceAll(RegExp(r'[(){}:+\-^]'), '');
+    trimmed = trimmed.replaceAll(_ftsBoolean, '');
+    trimmed = trimmed.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (trimmed.isEmpty) return '';
     return '"$trimmed"*';
   }

@@ -29,6 +29,7 @@ class BluOSOutput implements OutputTarget {
   OutputReadyState _readyState = OutputReadyState.idle;
   double _volume = 1.0;
   bool _playing = false;
+  String? _streamId;
 
   BluOSOutput({
     required this.id,
@@ -92,6 +93,7 @@ class BluOSOutput implements OutputTarget {
 
       await _apiGet('Play', params: params);
       _playing = true;
+      _streamId = url;
       debugPrint('[BluOS] Playing: ${title ?? url} on $displayName');
       return const OutputSuccess();
     } catch (e) {
@@ -126,6 +128,7 @@ class BluOSOutput implements OutputTarget {
     try {
       await _apiGet('Stop');
       _playing = false;
+      _streamId = null;
       return const OutputSuccess();
     } catch (e) {
       return OutputFailure('BluOS Stop failed: $e');
@@ -240,6 +243,9 @@ class BluOSOutput implements OutputTarget {
 
   @override
   bool get isPlaying => _playing;
+
+  @override
+  bool get hasPendingStream => _streamId != null;
 
   // ---------------------------------------------------------------------------
   // HTTP REST helpers

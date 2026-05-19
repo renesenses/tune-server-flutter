@@ -190,6 +190,9 @@ class LocalAudioOutput implements OutputTarget {
   @override
   bool get isPlaying => _player.playing;
 
+  @override
+  bool get hasPendingStream => false;
+
   /// Stream des changements d'état just_audio (pour le Player en Phase 5).
   Stream<PlayerState> get playerStateStream => _player.playerStateStream;
 

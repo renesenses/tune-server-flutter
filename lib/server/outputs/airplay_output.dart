@@ -185,6 +185,9 @@ class AirPlayOutput implements OutputTarget {
   @override
   bool get isPlaying => _playing;
 
+  @override
+  bool get hasPendingStream => false;
+
   /// Affiche le sélecteur de route AirPlay (AVRoutePickerView).
   Future<void> showRoutePicker() async {
     try {

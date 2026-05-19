@@ -123,6 +123,8 @@ class Zones extends Table {
   IntColumn get syncDelayMs => integer().withDefault(const Constant(0))();
   BoolColumn get wasPlaying => boolean().withDefault(const Constant(false))();
   IntColumn get lastPositionMs => integer().withDefault(const Constant(0))();
+  BoolColumn get normalizationEnabled => boolean().withDefault(const Constant(false))();
+  RealColumn get normalizationTargetLufs => real().withDefault(const Constant(-14.0))();
 }
 
 // ---------------------------------------------------------------------------
