@@ -69,6 +69,18 @@ class LibraryScanErrorEvent extends AppEvent {
   const LibraryScanErrorEvent(this.message);
 }
 
+class LibraryEnrichProgressEvent extends AppEvent {
+  final int processed;
+  final int total;
+  const LibraryEnrichProgressEvent(this.processed, this.total);
+}
+
+class LibraryEnrichCompletedEvent extends AppEvent {
+  final int processed;
+  final int total;
+  const LibraryEnrichCompletedEvent(this.processed, this.total);
+}
+
 // --- Discovery ---
 
 class DeviceDiscoveredEvent extends AppEvent {
