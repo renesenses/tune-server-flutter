@@ -12,97 +12,96 @@ part of 'tune_api_client.dart';
 extension TuneApiClientMetadata on TuneApiClient {
 
   // Completeness stats
+  // NOTE: metadata endpoints may return 404 on Rust alpha server.
 
-  Future<Map<String, dynamic>> getCompletenessStats() =>
-      _get('/library/stats/completeness').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> getCompletenessStats() async =>
+      await _getOptional('/library/stats/completeness') as Map<String, dynamic>? ?? {};
 
   // Fix missing years
 
-  Future<Map<String, dynamic>> fixYearsTidal() =>
-      _post('/metadata/fix-years-tidal').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> fixYearsTidal() async =>
+      await _postOptional('/metadata/fix-years-tidal') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> fixYearsMusicBrainz() =>
-      _post('/metadata/fix-years-musicbrainz').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> fixYearsMusicBrainz() async =>
+      await _postOptional('/metadata/fix-years-musicbrainz') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> fixYearsDiscogs() =>
-      _post('/metadata/fix-years-discogs').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> fixYearsDiscogs() async =>
+      await _postOptional('/metadata/fix-years-discogs') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> fixYearsTags() =>
-      _post('/metadata/fix-years-tags').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> fixYearsTags() async =>
+      await _postOptional('/metadata/fix-years-tags') as Map<String, dynamic>? ?? {};
 
   // Fix missing genres
 
-  Future<Map<String, dynamic>> fixGenres() =>
-      _post('/metadata/fix-genres').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> fixGenres() async =>
+      await _postOptional('/metadata/fix-genres') as Map<String, dynamic>? ?? {};
 
   // Auto-fix
 
-  Future<Map<String, dynamic>> startAutoFix() =>
-      _post('/metadata/auto-fix').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> startAutoFix() async =>
+      await _postOptional('/metadata/auto-fix') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> getAutoFixStatus() =>
-      _get('/metadata/auto-fix/status').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> getAutoFixStatus() async =>
+      await _getOptional('/metadata/auto-fix/status') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> autoFixAlbums() =>
-      _post('/metadata/auto-fix-albums').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> autoFixAlbums() async =>
+      await _postOptional('/metadata/auto-fix-albums') as Map<String, dynamic>? ?? {};
 
   // Duplicates
 
-  Future<Map<String, dynamic>> scanDuplicates({int limit = 5000}) =>
-      _post('/metadata/duplicates/scan', body: {'limit': limit}).then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> scanDuplicates({int limit = 5000}) async =>
+      await _postOptional('/metadata/duplicates/scan', body: {'limit': limit}) as Map<String, dynamic>? ?? {};
 
-  Future<List<dynamic>> listDuplicates() =>
-      _get('/metadata/duplicates').then((d) => d as List);
+  Future<List<dynamic>> listDuplicates() async =>
+      await _getOptional('/metadata/duplicates') as List? ?? [];
 
   // Suggestions
 
-  Future<List<dynamic>> getMetadataSuggestions({String status = 'pending', int limit = 100}) =>
-      _get('/metadata/suggestions?status=$status&limit=$limit').then((d) => d as List);
+  Future<List<dynamic>> getMetadataSuggestions({String status = 'pending', int limit = 100}) async =>
+      await _getOptional('/metadata/suggestions?status=$status&limit=$limit') as List? ?? [];
 
-  Future<Map<String, dynamic>> acceptSuggestion(int id) =>
-      _post('/metadata/suggestions/$id/accept').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> acceptSuggestion(int id) async =>
+      await _postOptional('/metadata/suggestions/$id/accept') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> rejectSuggestion(int id) =>
-      _post('/metadata/suggestions/$id/reject').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> rejectSuggestion(int id) async =>
+      await _postOptional('/metadata/suggestions/$id/reject') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> acceptAllSuggestions({double minConfidence = 0.9}) =>
-      _post('/metadata/suggestions/accept-all?min_confidence=$minConfidence').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> acceptAllSuggestions({double minConfidence = 0.9}) async =>
+      await _postOptional('/metadata/suggestions/accept-all?min_confidence=$minConfidence') as Map<String, dynamic>? ?? {};
 
   // Enrichment
 
-  Future<Map<String, dynamic>> enrichTrack(int trackId) =>
-      _post('/metadata/enrich/$trackId').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> enrichTrack(int trackId) async =>
+      await _postOptional('/metadata/enrich/$trackId') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> enrichAlbum(int albumId) =>
-      _post('/metadata/enrich-album/$albumId').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> enrichAlbum(int albumId) async =>
+      await _postOptional('/metadata/enrich-album/$albumId') as Map<String, dynamic>? ?? {};
 
   // Track/Album metadata update
 
-  Future<Map<String, dynamic>> updateTrackMetadata(int trackId, Map<String, dynamic> updates) =>
-      _patch('/metadata/tracks/$trackId', body: updates).then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> updateTrackMetadata(int trackId, Map<String, dynamic> updates) async =>
+      await _patch('/metadata/tracks/$trackId', body: updates) as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> updateAlbumMetadata(int albumId, Map<String, dynamic> updates) =>
-      _patch('/metadata/albums/$albumId', body: updates).then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> updateAlbumMetadata(int albumId, Map<String, dynamic> updates) async =>
+      await _patch('/metadata/albums/$albumId', body: updates) as Map<String, dynamic>? ?? {};
 
   // Merge
 
-  Future<Map<String, dynamic>> mergeAlbumDuplicates() =>
-      _post('/library/albums/merge-duplicates').then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> mergeAlbumDuplicates() async =>
+      await _postOptional('/library/albums/merge-duplicates') as Map<String, dynamic>? ?? {};
 
-  Future<Map<String, dynamic>> mergeAlbums(List<int> albumIds) =>
-      _post('/metadata/albums/merge', body: {'album_ids': albumIds})
-          .then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> mergeAlbums(List<int> albumIds) async =>
+      await _postOptional('/metadata/albums/merge', body: {'album_ids': albumIds}) as Map<String, dynamic>? ?? {};
 
   // Write tags
 
-  Future<Map<String, dynamic>> writeAlbumTags(int albumId) =>
-      _post('/metadata/albums/$albumId/write-tags')
-          .then((d) => d as Map<String, dynamic>);
+  Future<Map<String, dynamic>> writeAlbumTags(int albumId) async =>
+      await _postOptional('/metadata/albums/$albumId/write-tags') as Map<String, dynamic>? ?? {};
 
   // Doubtful albums
 
-  Future<List<dynamic>> getDoubtfulAlbums() =>
-      _get('/metadata/doubtful').then((d) => d as List);
+  Future<List<dynamic>> getDoubtfulAlbums() async =>
+      await _getOptional('/metadata/doubtful') as List? ?? [];
 
   // Upload album artwork (multipart) — bypasse _client volontairement
   // (MultipartRequest n'utilise pas le client http injectable).

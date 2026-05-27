@@ -651,7 +651,7 @@ class _SettingsList extends StatelessWidget {
           controller: ctrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Port (défaut: 8888)'),
+          decoration: const InputDecoration(labelText: 'Port (défaut: 8085)'),
         ),
         actions: [
           TextButton(

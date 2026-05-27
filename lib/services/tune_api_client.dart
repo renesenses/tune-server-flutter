@@ -6,6 +6,17 @@ part 'tune_api_client.metadata.dart';
 part 'tune_api_client.library.dart';
 part 'tune_api_client.streaming.dart';
 
+/// HTTP error with status code — allows callers to distinguish 404
+/// (endpoint missing on Rust alpha) from other failures.
+class TuneHttpException implements Exception {
+  final String message;
+  final int statusCode;
+  const TuneHttpException(this.message, this.statusCode);
+  bool get isNotFound => statusCode == 404;
+  @override
+  String toString() => message;
+}
+
 /// REST client for connecting to a remote Tune server.
 /// Mirrors TuneAPIClient.swift (iOS).
 class TuneApiClient {
@@ -27,7 +38,20 @@ class TuneApiClient {
     final resp = await _client.get(Uri.parse('$baseUrl$path'))
         .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
-      throw Exception('GET $path failed: ${resp.statusCode}');
+      throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
+    }
+    return jsonDecode(resp.body);
+  }
+
+  /// Like [_get] but returns `null` on 404 instead of throwing.
+  /// Use for endpoints that may not exist on all server implementations
+  /// (e.g. Rust alpha server lacks plugins, metadata endpoints).
+  Future<dynamic> _getOptional(String path) async {
+    final resp = await _client.get(Uri.parse('$baseUrl$path'))
+        .timeout(const Duration(seconds: 60));
+    if (resp.statusCode == 404) return null;
+    if (resp.statusCode != 200) {
+      throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
     }
     return jsonDecode(resp.body);
   }
@@ -39,7 +63,21 @@ class TuneApiClient {
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception('POST $path failed: ${resp.statusCode}');
+      throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
+    }
+    return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
+  }
+
+  /// Like [_post] but returns `null` on 404.
+  Future<dynamic> _postOptional(String path, {Map<String, dynamic>? body}) async {
+    final resp = await _client.post(
+      Uri.parse('$baseUrl$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: body != null ? jsonEncode(body) : null,
+    ).timeout(const Duration(seconds: 60));
+    if (resp.statusCode == 404) return null;
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
     }
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
@@ -51,7 +89,7 @@ class TuneApiClient {
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
-      throw Exception('PATCH $path failed: ${resp.statusCode}');
+      throw TuneHttpException('PATCH $path failed: ${resp.statusCode}', resp.statusCode);
     }
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
@@ -63,7 +101,7 @@ class TuneApiClient {
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
-      throw Exception('PUT $path failed: ${resp.statusCode}');
+      throw TuneHttpException('PUT $path failed: ${resp.statusCode}', resp.statusCode);
     }
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
@@ -72,7 +110,7 @@ class TuneApiClient {
     final resp = await _client.delete(Uri.parse('$baseUrl$path'))
         .timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200 && resp.statusCode != 204) {
-      throw Exception('DELETE $path failed: ${resp.statusCode}');
+      throw TuneHttpException('DELETE $path failed: ${resp.statusCode}', resp.statusCode);
     }
   }
 
@@ -625,7 +663,7 @@ class TuneApiClient {
   // ---------------------------------------------------------------------------
 
   Future<Map<String, dynamic>> getNetworkDiagnostics() async =>
-      await _get('/system/diagnostics/network') as Map<String, dynamic>;
+      await _getOptional('/system/diagnostics/network') as Map<String, dynamic>? ?? {};
 
   // ---------------------------------------------------------------------------
   // ── Config Export/Import ──
@@ -642,15 +680,15 @@ class TuneApiClient {
   // ---------------------------------------------------------------------------
 
   Future<List<dynamic>> getPlugins() async =>
-      await _get('/system/plugins') as List<dynamic>;
+      await _getOptional('/system/plugins') as List<dynamic>? ?? [];
 
   Future<Map<String, dynamic>> setPluginEnabled(String pluginId, bool enabled) async =>
-      await _post('/system/plugins/$pluginId', body: {'enabled': enabled}) as Map<String, dynamic>;
+      await _postOptional('/system/plugins/$pluginId', body: {'enabled': enabled}) as Map<String, dynamic>? ?? {};
 
   // ── Plugin Store (merged catalog + local) ──
 
   Future<List<dynamic>> getMergedPlugins() async =>
-      await _get('/plugins') as List<dynamic>;
+      await _getOptional('/plugins') as List<dynamic>? ?? [];
 
   Future<dynamic> installPlugin(String slug) async =>
       await _post('/plugins/${Uri.encodeComponent(slug)}/install');
@@ -850,7 +888,7 @@ class TuneApiClient {
   // Tune Server. The embedded Flutter server does not implement it.
 
   Future<Map<String, dynamic>> getSpotifyConnectStatus() async =>
-      await _get('/spotify-connect/status') as Map<String, dynamic>;
+      await _getOptional('/spotify-connect/status') as Map<String, dynamic>? ?? {};
 
   Future<Map<String, dynamic>> enableSpotifyConnect({
     required int zoneId,
@@ -946,13 +984,13 @@ class TuneApiClient {
   // ---------------------------------------------------------------------------
 
   Future<Map<String, dynamic>> getDiagnostics() async =>
-      await _get('/api/v1/system/diagnostics') as Map<String, dynamic>;
+      await _getOptional('/api/v1/system/diagnostics') as Map<String, dynamic>? ?? {};
 
   Future<dynamic> getSystemLogs({int limit = 200}) async =>
-      await _get('/api/v1/system/logs?limit=$limit');
+      await _getOptional('/api/v1/system/logs?limit=$limit') ?? [];
 
   Future<Map<String, dynamic>> audioCheck() async =>
-      await _get('/system/audio-check') as Map<String, dynamic>;
+      await _getOptional('/system/audio-check') as Map<String, dynamic>? ?? {};
 
   // ---------------------------------------------------------------------------
   // ── Profiles ──

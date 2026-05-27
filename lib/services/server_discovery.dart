@@ -6,7 +6,7 @@ import '../server/utils/network_utils.dart';
 
 // ---------------------------------------------------------------------------
 // ServerDiscovery — scan the local subnet for Tune servers.
-// Tries GET /api/v1/system/health on port 8888 for each reachable host.
+// Tries GET /api/v1/system/health on known Tune ports for each reachable host.
 // Mirrors the Linux remote mode discovery + Swift NetworkScanner.
 // ---------------------------------------------------------------------------
 
@@ -36,19 +36,22 @@ class DiscoveredServer {
 class ServerDiscovery {
   ServerDiscovery._();
 
-  /// Default Tune server port.
-  static const int defaultPort = 8888;
+  /// Default Tune server port (Rust alpha).
+  static const int defaultPort = 8085;
+
+  /// All known Tune server ports to scan (Rust 8085/8086, legacy Python 8888).
+  static const List<int> knownPorts = [8085, 8086, 8888];
 
   /// Scan the local /24 subnet for Tune servers.
   ///
   /// 1. Detect local IP
-  /// 2. TCP-probe port [port] on all 254 hosts (fast parallel scan)
+  /// 2. TCP-probe known ports on all 254 hosts (fast parallel scan)
   /// 3. For each reachable host, try GET /api/v1/system/health
   /// 4. Return list of responding servers with version info
   ///
   /// [onProgress] is called with (scanned, total) counts.
   static Future<List<DiscoveredServer>> scan({
-    int port = defaultPort,
+    int? port,
     void Function(int scanned, int total)? onProgress,
   }) async {
     final localIp = await NetworkUtils.localIpAddress();
@@ -63,36 +66,44 @@ class ServerDiscovery {
       return [];
     }
 
-    debugPrint('[Discovery] Scanning $prefix.0/24 on port $port...');
+    final portsToScan = port != null ? [port] : knownPorts;
+    debugPrint('[Discovery] Scanning $prefix.0/24 on ports $portsToScan...');
 
-    // Phase 1: TCP probe to find reachable hosts
-    final reachable = await NetworkUtils.scanSubnet(
-      prefix,
-      port: port,
-      timeout: const Duration(milliseconds: 500),
-      concurrency: 50,
-    );
-
-    debugPrint('[Discovery] ${reachable.length} hosts reachable on port $port');
-
-    if (reachable.isEmpty) return [];
-
-    // Phase 2: HTTP health check on each reachable host
     final servers = <DiscoveredServer>[];
-    final client = http.Client();
-    try {
-      final total = reachable.length;
-      var scanned = 0;
-      final futures = reachable.map((host) async {
-        final server = await _checkHealth(client, host, port);
-        scanned++;
-        onProgress?.call(scanned, total);
-        return server;
-      });
-      final results = await Future.wait(futures);
-      servers.addAll(results.whereType<DiscoveredServer>());
-    } finally {
-      client.close();
+    final seenHostPort = <String>{};
+
+    for (final scanPort in portsToScan) {
+      // Phase 1: TCP probe to find reachable hosts
+      final reachable = await NetworkUtils.scanSubnet(
+        prefix,
+        port: scanPort,
+        timeout: const Duration(milliseconds: 500),
+        concurrency: 50,
+      );
+
+      debugPrint('[Discovery] ${reachable.length} hosts reachable on port $scanPort');
+
+      if (reachable.isEmpty) continue;
+
+      // Phase 2: HTTP health check on each reachable host
+      final client = http.Client();
+      try {
+        final total = reachable.length;
+        var scanned = 0;
+        final futures = reachable.map((host) async {
+          final server = await _checkHealth(client, host, scanPort);
+          scanned++;
+          onProgress?.call(scanned, total);
+          return server;
+        });
+        final results = await Future.wait(futures);
+        for (final s in results.whereType<DiscoveredServer>()) {
+          final key = '${s.host}:${s.port}';
+          if (seenHostPort.add(key)) servers.add(s);
+        }
+      } finally {
+        client.close();
+      }
     }
 
     debugPrint('[Discovery] Found ${servers.length} Tune server(s)');

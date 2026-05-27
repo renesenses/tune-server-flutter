@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart' show ProcessingState, PlayerState;
 
 import '../../models/enums.dart';
 import '../audio/local_audio_output.dart';
+import '../configuration.dart';
 import '../database/database.dart';
 import '../event_bus.dart';
 import '../outputs/dlna_output.dart';
@@ -54,7 +55,8 @@ class Player {
     if (coverPath == null || coverPath.isEmpty) return null;
     if (coverPath.startsWith('http')) return coverPath;
     final filename = coverPath.split('/').last;
-    return 'http://localhost:8888/api/v1/library/artwork/$filename';
+    final port = ServerConfiguration.instance.port;
+    return 'http://localhost:$port/api/v1/library/artwork/$filename';
   }
 
   // ---------------------------------------------------------------------------
