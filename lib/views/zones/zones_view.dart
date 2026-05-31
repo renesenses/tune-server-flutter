@@ -427,6 +427,12 @@ class _ActiveZoneBanner extends StatelessWidget {
         return Icons.speaker_rounded;
       case OutputType.chromecast:
         return Icons.cast_connected_rounded;
+      case OutputType.openhome:
+        return Icons.cast_rounded;
+      case OutputType.squeezebox:
+        return Icons.speaker_group_rounded;
+      case OutputType.oaat:
+        return Icons.surround_sound_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -445,6 +451,12 @@ class _ActiveZoneBanner extends StatelessWidget {
         return 'BluOS';
       case OutputType.chromecast:
         return 'Chromecast';
+      case OutputType.openhome:
+        return 'OpenHome';
+      case OutputType.squeezebox:
+        return 'Squeezebox';
+      case OutputType.oaat:
+        return 'OAAT';
       default:
         return l.zonesOutputLocal;
     }
@@ -704,6 +716,12 @@ class _ZoneTile extends StatelessWidget {
         return Icons.speaker_rounded;
       case OutputType.chromecast:
         return Icons.cast_connected_rounded;
+      case OutputType.openhome:
+        return Icons.cast_rounded;
+      case OutputType.squeezebox:
+        return Icons.speaker_group_rounded;
+      case OutputType.oaat:
+        return Icons.surround_sound_rounded;
       default:
         return Icons.speaker_phone_rounded;
     }
@@ -722,6 +740,12 @@ class _ZoneTile extends StatelessWidget {
         return 'BluOS';
       case OutputType.chromecast:
         return 'Chromecast';
+      case OutputType.openhome:
+        return 'OpenHome';
+      case OutputType.squeezebox:
+        return 'Squeezebox';
+      case OutputType.oaat:
+        return 'OAAT';
       default:
         return l.zonesOutputLocal;
     }

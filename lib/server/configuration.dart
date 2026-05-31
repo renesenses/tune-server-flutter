@@ -128,7 +128,7 @@ class ServerConfiguration {
   Future<void> setRemotePort(int value) => _p.setInt(_kRemotePort, value);
 
   String get remoteBaseUrl => 'http://$remoteHost:$remotePort/api/v1';
-  String get remoteWsUrl => 'ws://$remoteHost:$remotePort/api/v1/ws';
+  String get remoteWsUrl => 'ws://$remoteHost:$remotePort/ws';
 
   // ---------------------------------------------------------------------------
   // Crossfade

@@ -99,6 +99,31 @@ class OutputFactory {
           host: device.host,
           port: device.port,
         );
+
+      case OutputType.openhome:
+        if (device == null) {
+          debugPrint('[output_factory] OpenHome requested but no device — fallback to Local');
+          return LocalAudioOutput(displayName: 'Local (fallback)');
+        }
+        return OpenHomeOutput(
+          id: device.id,
+          displayName: device.name,
+          host: device.host,
+          port: device.port,
+          productUrl: device.capabilities.openHomeProductUrl,
+          volumeUrl: device.capabilities.openHomeVolumeUrl,
+          transportUrl: device.capabilities.openHomeTransportUrl,
+          playlistUrl: device.capabilities.openHomePlaylistUrl,
+          timeUrl: device.capabilities.openHomeTimeUrl,
+        );
+
+      case OutputType.squeezebox:
+        // Squeezebox/LMS — handled by Rust server, Flutter acts as remote
+        return LocalAudioOutput(displayName: 'Squeezebox');
+
+      case OutputType.oaat:
+        // OAAT — handled by Rust server, Flutter acts as remote
+        return LocalAudioOutput(displayName: 'OAAT');
     }
   }
 

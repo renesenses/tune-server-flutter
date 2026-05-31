@@ -194,6 +194,16 @@ class _ZoneRow extends StatelessWidget {
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
+      case OutputType.bluos:
+        return Icons.speaker_rounded;
+      case OutputType.chromecast:
+        return Icons.cast_connected_rounded;
+      case OutputType.openhome:
+        return Icons.cast_rounded;
+      case OutputType.squeezebox:
+        return Icons.speaker_group_rounded;
+      case OutputType.oaat:
+        return Icons.surround_sound_rounded;
       default:
         return Icons.phone_android_rounded;
     }
@@ -208,6 +218,16 @@ class _ZoneRow extends StatelessWidget {
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;
+      case OutputType.bluos:
+        return 'BluOS';
+      case OutputType.chromecast:
+        return 'Chromecast';
+      case OutputType.openhome:
+        return 'OpenHome';
+      case OutputType.squeezebox:
+        return 'Squeezebox';
+      case OutputType.oaat:
+        return 'OAAT';
       default:
         return l.zonesOutputLocal;
     }

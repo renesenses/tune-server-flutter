@@ -98,7 +98,10 @@ enum OutputType {
   airplay,
   bluetooth,
   bluos,
-  chromecast;
+  chromecast,
+  openhome,
+  squeezebox,
+  oaat;
 
   String get rawValue => name;
 
