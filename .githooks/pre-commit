@@ -11,6 +11,17 @@ MATCHES=$(git diff --cached --name-only -z | xargs -0 grep -rlE "$FORBIDDEN" 2>/
   fi
 done | grep -v '.githooks/' | grep -v 'CLAUDE.md' | grep -v '/metadata/')
 
+# ── Drift codegen check ──
+# If schema.dart was modified, verify database.g.dart is also staged
+if git diff --cached --name-only | grep -q 'schema.dart'; then
+    if ! git diff --cached --name-only | grep -q 'database.g.dart'; then
+        echo "⚠️  WARNING: schema.dart modified but database.g.dart not staged."
+        echo "   Run: dart run build_runner build --delete-conflicting-outputs"
+        echo "   Then: git add lib/server/database/database.g.dart"
+        exit 1
+    fi
+fi
+
 if [ -n "$MATCHES" ]; then
     echo "🚫 BLOCKED: Forbidden terms found in staged files!"
     echo "   Pattern: $FORBIDDEN"
