@@ -76,6 +76,18 @@ extension AppStateEvents on AppState {
       zoneState.updateZone(zone.copyWith(state: state));
       if (state == PlaybackState.stopped) {
         libraryState.flushZoneHistory(zone.name);
+        WidgetService.clearWidget();
+      } else {
+        // Update widget with current playing/paused state
+        final track = zone.currentTrack as Track?;
+        if (track != null) {
+          WidgetService.updateWidget(
+            title: track.title,
+            artist: track.artistName ?? '',
+            album: track.albumTitle,
+            isPlaying: state == PlaybackState.playing,
+          );
+        }
       }
     }
   }
@@ -87,6 +99,13 @@ extension AppStateEvents on AppState {
       zoneState.updateZone(zone.copyWith(currentTrack: track));
       if (track != null) {
         libraryState.prependHistory(track, zoneName: zone.name);
+        // Update home screen widget with new track info
+        WidgetService.updateWidget(
+          title: track.title,
+          artist: track.artistName ?? '',
+          album: track.albumTitle,
+          isPlaying: zone.state == PlaybackState.playing,
+        );
       }
     }
   }

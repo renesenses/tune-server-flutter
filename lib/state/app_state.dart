@@ -19,6 +19,7 @@ import '../server/streaming/radio_metadata_service.dart';
 import '../server/streaming/streaming_service.dart';
 import '../services/track_notification_service.dart';
 import '../services/tune_api_client.dart';
+import '../services/widget_service.dart';
 import '../services/tune_websocket.dart';
 import '../services/update_checker.dart';
 import 'library_state.dart';
