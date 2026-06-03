@@ -137,3 +137,64 @@ class AutoDJ {
     return Future.wait(rows.map((row) => _db.tracks.mapFromRow(row)));
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mood DJ — ambient mix generation
+// ---------------------------------------------------------------------------
+
+enum Mood {
+  chill,
+  party,
+  focus,
+  energetic;
+
+  (double, double) get bpmRange => switch (this) {
+    Mood.chill => (60, 100),
+    Mood.party => (110, 140),
+    Mood.focus => (80, 120),
+    Mood.energetic => (130, 180),
+  };
+
+  List<String> get genres => switch (this) {
+    Mood.chill => ['jazz', 'ambient', 'classical', 'folk', 'bossa', 'soul', 'downtempo'],
+    Mood.party => ['electronic', 'dance', 'pop', 'hip-hop', 'house', 'techno', 'disco', 'funk'],
+    Mood.focus => ['classical', 'ambient', 'instrumental', 'minimal', 'piano', 'soundtrack'],
+    Mood.energetic => ['rock', 'metal', 'punk', 'electronic', 'drum and bass', 'hardcore'],
+  };
+}
+
+extension AutoDJMood on AutoDJ {
+  Future<List<Map<String, dynamic>>> generateMoodQueue(Mood mood, {int limit = 20}) async {
+    final (bpmMin, bpmMax) = mood.bpmRange;
+    final genreClauses = mood.genres.map((g) => "t.genre LIKE '%$g%'").join(' OR ');
+
+    final rows = await _db.customSelect(
+      '''SELECT t.id, t.title, ar.name as artist_name, al.title as album_title,
+         t.duration_ms, t.genre, al.year
+         FROM tracks t
+         LEFT JOIN artists ar ON t.artist_id = ar.id
+         LEFT JOIN albums al ON t.album_id = al.id
+         WHERE ($genreClauses)
+         AND (t.bpm IS NULL OR t.bpm BETWEEN ? AND ?)
+         ORDER BY RANDOM() LIMIT ?''',
+      variables: [Variable(bpmMin), Variable(bpmMax), Variable(limit)],
+      readsFrom: {_db.tracks, _db.albums, _db.artists},
+    ).get();
+
+    if (rows.isEmpty) {
+      final fallback = await _db.customSelect(
+        '''SELECT t.id, t.title, ar.name as artist_name, al.title as album_title,
+           t.duration_ms, t.genre, al.year
+           FROM tracks t
+           LEFT JOIN artists ar ON t.artist_id = ar.id
+           LEFT JOIN albums al ON t.album_id = al.id
+           ORDER BY RANDOM() LIMIT ?''',
+        variables: [Variable(limit)],
+        readsFrom: {_db.tracks, _db.albums, _db.artists},
+      ).get();
+      return fallback.map((r) => r.data).toList();
+    }
+
+    return rows.map((r) => r.data).toList();
+  }
+}
