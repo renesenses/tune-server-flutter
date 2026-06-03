@@ -30,7 +30,6 @@ import 'metadata/listenbrainz_scrobbler.dart';
 import 'metadata/auto_fix.dart';
 import 'outputs/dlna_buffer_stats.dart';
 import 'streaming/stream_cache.dart';
-import 'plugins/plugin_sdk.dart';
 
 // ---------------------------------------------------------------------------
 // T9.1 — ServerEngine
@@ -98,13 +97,8 @@ class ServerEngine {
   // Tier 1-3 services
   final ApiAnalytics apiAnalytics;
   final CredentialsVault credentialsVault;
-  final PartyMode partyMode;
-  final CollaborativeMode collaborativeMode;
-  final DLNABufferStatsManager dlnaBufferStats;
-  final StreamCache<String> streamCache;
   final ListenBrainzScrobbler listenBrainz;
   final AutoFix autoFix;
-  final PluginManager pluginManager;
   final ScanScheduler scanScheduler;
 
   String? _localIp;
@@ -123,13 +117,8 @@ class ServerEngine {
     required this.artistEnrichment,
     required this.apiAnalytics,
     required this.credentialsVault,
-    required this.partyMode,
-    required this.collaborativeMode,
-    required this.dlnaBufferStats,
-    required this.streamCache,
-    required this.listenBrainz,
+        required this.listenBrainz,
     required this.autoFix,
-    required this.pluginManager,
     required this.scanScheduler,
   });
 
@@ -175,13 +164,8 @@ class ServerEngine {
       artistEnrichment: artistEnrichment,
       apiAnalytics: ApiAnalytics.instance,
       credentialsVault: credentialsVault,
-      partyMode: PartyMode(zoneId: 'default'),
-      collaborativeMode: CollaborativeMode(zoneId: 'default'),
-      dlnaBufferStats: DLNABufferStatsManager(),
-      streamCache: StreamCache<String>(),
       listenBrainz: ListenBrainzScrobbler(),
       autoFix: AutoFix(db),
-      pluginManager: PluginManager.instance,
       scanScheduler: scanScheduler,
     );
   }
