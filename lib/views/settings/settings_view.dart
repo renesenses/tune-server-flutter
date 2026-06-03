@@ -10,10 +10,12 @@ import '../../state/settings_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'auto_fix_view.dart';
 import 'config_export_view.dart';
 import 'database_view.dart';
 import 'equalizer_view.dart';
 import 'lastfm_view.dart';
+import 'listenbrainz_view.dart';
 import 'network_diagnostics_view.dart';
 import 'plugins_view.dart';
 import 'smb_browser_view.dart';
@@ -470,6 +472,28 @@ class _SettingsList extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LastfmView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: 'ListenBrainz',
+                subtitle: 'Scrobble to ListenBrainz',
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ListenBrainzView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: 'Auto Fix Metadata',
+                subtitle: 'Fix missing genre, year, MBID via MusicBrainz',
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AutoFixView()),
                 ),
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),

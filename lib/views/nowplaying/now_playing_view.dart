@@ -19,6 +19,7 @@ import '../library/albums_grid_view.dart';
 import '../library/artists_list_view.dart';
 import 'queue_view.dart';
 import 'seek_bar_view.dart';
+import 'sleep_timer_sheet.dart';
 import 'volume_control_view.dart';
 import 'zone_management_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
@@ -499,14 +500,7 @@ class _ExtraActions extends StatelessWidget {
   }
 
   void _showSleepTimerSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: TuneColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => const _SleepTimerSheet(),
-    );
+    showSleepTimerSheet(context);
   }
 
   void _showDSPSheet(BuildContext context) {
@@ -886,104 +880,7 @@ class _EQSheetState extends State<_EQSheet> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Sleep Timer bottom sheet
-// ---------------------------------------------------------------------------
-
-class _SleepTimerSheet extends StatelessWidget {
-  const _SleepTimerSheet();
-
-  static const _options = [
-    (label: '15 min', minutes: 15),
-    (label: '30 min', minutes: 30),
-    (label: '45 min', minutes: 45),
-    (label: '1h', minutes: 60),
-    (label: '1h30', minutes: 90),
-    (label: '2h', minutes: 120),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(
-                color: TuneColors.textTertiary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text('Sleep Timer', style: TuneFonts.title3),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ..._options.map((opt) => ActionChip(
-                label: Text(opt.label),
-                backgroundColor: TuneColors.surfaceVariant,
-                labelStyle: const TextStyle(color: TuneColors.textPrimary),
-                side: BorderSide.none,
-                onPressed: () async {
-                  final app = context.read<AppState>();
-                  final zoneId = context.read<ZoneState>().currentZoneId;
-                  Navigator.pop(context);
-                  if (app.apiClient != null && zoneId != null) {
-                    try {
-                      await app.apiClient!.setSleepTimer(zoneId, opt.minutes);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Sleep timer: ${opt.label}')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Sleep timer error: $e')),
-                        );
-                      }
-                    }
-                  }
-                },
-              )),
-              // Cancel timer
-              ActionChip(
-                avatar: const Icon(Icons.timer_off_rounded, size: 16, color: TuneColors.error),
-                label: const Text('Off'),
-                backgroundColor: TuneColors.surfaceVariant,
-                labelStyle: const TextStyle(color: TuneColors.textSecondary),
-                side: BorderSide.none,
-                onPressed: () async {
-                  final app = context.read<AppState>();
-                  final zoneId = context.read<ZoneState>().currentZoneId;
-                  Navigator.pop(context);
-                  if (app.apiClient != null && zoneId != null) {
-                    try {
-                      await app.apiClient!.setSleepTimer(zoneId, 0);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sleep timer cancelled')),
-                        );
-                      }
-                    } catch (_) {}
-                  }
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-}
+// Sleep Timer: now uses SleepTimerSheet from sleep_timer_sheet.dart
 
 // ---------------------------------------------------------------------------
 // DSP Crossfeed bottom sheet
