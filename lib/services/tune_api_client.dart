@@ -388,6 +388,10 @@ class TuneApiClient {
 
   Future<dynamic> getSystemInfo() => _get('/system/info');
 
+  /// Bug report as markdown (may return String or Map with 'report' key).
+  /// Returns null if the endpoint doesn't exist on this server version.
+  Future<dynamic> getBugReportMarkdown() => _getOptional('/api/v1/system/bug-report/markdown');
+
   /// Quick connectivity test
   Future<bool> testConnection() async {
     try {

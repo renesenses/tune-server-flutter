@@ -24,6 +24,8 @@ import 'library_setup_view.dart';
 import 'metadata_view.dart';
 import 'smb_setup_view.dart';
 import 'sources_view.dart';
+import '../help/bug_report_view.dart';
+import '../help/troubleshooting_view.dart';
 
 // ---------------------------------------------------------------------------
 // T16.1 — SettingsView
@@ -567,6 +569,35 @@ class _SettingsList extends StatelessWidget {
             ),
           ),
         ],
+
+        // ---- Aide ----
+        const _SectionHeader('AIDE'),
+        Container(
+          color: TuneColors.surface,
+          child: Column(
+            children: [
+              _SettingsTile(
+                title: 'Depannage',
+                subtitle: 'Questions frequentes et solutions',
+                trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TroubleshootingView()),
+                ),
+              ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: 'Envoyer un rapport de bug',
+                subtitle: 'Generer et copier un rapport technique',
+                trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BugReportView()),
+                ),
+              ),
+            ],
+          ),
+        ),
 
         // ---- À propos ----
         _SectionHeader(l.settingsSectionAbout),
