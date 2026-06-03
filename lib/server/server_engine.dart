@@ -17,7 +17,20 @@ import 'streaming/streaming_manager.dart';
 import 'streaming/streaming_service.dart';
 import 'utils/health_monitor.dart';
 import 'utils/network_utils.dart';
+import 'utils/api_analytics.dart';
+import 'utils/credentials_vault.dart';
 import 'zones/zone_manager.dart';
+import 'playback/auto_dj.dart';
+import 'playback/sleep_timer.dart';
+import 'playback/party_mode.dart';
+import 'playback/collaborative_mode.dart';
+// file_system_watcher available but not wired yet (needs music dir discovery)
+import 'library/scan_scheduler.dart';
+import 'metadata/listenbrainz_scrobbler.dart';
+import 'metadata/auto_fix.dart';
+import 'outputs/dlna_buffer_stats.dart';
+import 'streaming/stream_cache.dart';
+import 'plugins/plugin_sdk.dart';
 
 // ---------------------------------------------------------------------------
 // T9.1 — ServerEngine
@@ -82,6 +95,18 @@ class ServerEngine {
   final HttpAudioStreamer httpStreamer;
   final ArtistEnrichmentService artistEnrichment;
 
+  // Tier 1-3 services
+  final ApiAnalytics apiAnalytics;
+  final CredentialsVault credentialsVault;
+  final PartyMode partyMode;
+  final CollaborativeMode collaborativeMode;
+  final DLNABufferStatsManager dlnaBufferStats;
+  final StreamCache<String> streamCache;
+  final ListenBrainzScrobbler listenBrainz;
+  final AutoFix autoFix;
+  final PluginManager pluginManager;
+  final ScanScheduler scanScheduler;
+
   String? _localIp;
   bool _running = false;
 
@@ -96,6 +121,16 @@ class ServerEngine {
     required this.libraryScanner,
     required this.httpStreamer,
     required this.artistEnrichment,
+    required this.apiAnalytics,
+    required this.credentialsVault,
+    required this.partyMode,
+    required this.collaborativeMode,
+    required this.dlnaBufferStats,
+    required this.streamCache,
+    required this.listenBrainz,
+    required this.autoFix,
+    required this.pluginManager,
+    required this.scanScheduler,
   });
 
   /// Crée et initialise le ServerEngine.
@@ -122,6 +157,11 @@ class ServerEngine {
 
     await ArtworkManager.instance.initialize();
 
+    final credentialsVault = CredentialsVault(db);
+    final scanScheduler = ScanScheduler(
+      triggerScan: ({bool full = false}) async => libraryScanner.scan([], full: full),
+    );
+
     return ServerEngine._(
       db: db,
       config: config,
@@ -133,6 +173,16 @@ class ServerEngine {
       libraryScanner: libraryScanner,
       httpStreamer: httpStreamer,
       artistEnrichment: artistEnrichment,
+      apiAnalytics: ApiAnalytics.instance,
+      credentialsVault: credentialsVault,
+      partyMode: PartyMode(zoneId: 'default'),
+      collaborativeMode: CollaborativeMode(zoneId: 'default'),
+      dlnaBufferStats: DLNABufferStatsManager(),
+      streamCache: StreamCache<String>(),
+      listenBrainz: ListenBrainzScrobbler(),
+      autoFix: AutoFix(db),
+      pluginManager: PluginManager.instance,
+      scanScheduler: scanScheduler,
     );
   }
 
@@ -187,6 +237,9 @@ class ServerEngine {
 
     // 10. Artist image enrichment (community cache + iTunes)
     artistEnrichment.start();
+
+    // 11. Scan scheduler
+    scanScheduler.start();
 
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));

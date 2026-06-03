@@ -239,3 +239,85 @@ class SyncLinkSnapshots extends Table {
   TextColumn get tracksJson => text()();
   TextColumn get createdAt => text()();
 }
+
+// ---------------------------------------------------------------------------
+// AlbumRatings (migration v12)
+// ---------------------------------------------------------------------------
+
+class AlbumRatings extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get albumId => integer().references(Albums, #id, onDelete: KeyAction.cascade)();
+  TextColumn get profileId => text()();
+  IntColumn get rating => integer()();   // 1-5 stars
+  TextColumn get note => text().nullable()();
+  TextColumn get createdAt => text()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [{albumId, profileId}];
+}
+
+// ---------------------------------------------------------------------------
+// ListenHistory (migration v12)
+// ---------------------------------------------------------------------------
+
+class ListenHistory extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get trackId => integer()();
+  TextColumn get title => text()();
+  TextColumn get artistName => text().nullable()();
+  TextColumn get albumTitle => text().nullable()();
+  TextColumn get source => text().withDefault(const Constant('local'))();
+  IntColumn get durationMs => integer().nullable()();
+  TextColumn get listenedAt => text()();
+  TextColumn get zoneId => text().nullable()();
+}
+
+// ---------------------------------------------------------------------------
+// Settings (migration v12) — key-value store
+// ---------------------------------------------------------------------------
+
+class Settings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
+// ---------------------------------------------------------------------------
+// Tags + ItemTags (migration v12)
+// ---------------------------------------------------------------------------
+
+class Tags extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+  TextColumn get color => text().nullable()();
+}
+
+class ItemTags extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get tagId => integer().references(Tags, #id, onDelete: KeyAction.cascade)();
+  TextColumn get itemType => text()();   // 'album' | 'track' | 'artist'
+  TextColumn get itemId => text()();     // string ID for flexibility
+
+  @override
+  List<Set<Column>> get uniqueKeys => [{tagId, itemType, itemId}];
+}
+
+// ---------------------------------------------------------------------------
+// TrackSourceLinks (migration v12)
+// ---------------------------------------------------------------------------
+
+class TrackSourceLinks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get trackId => integer().references(Tracks, #id, onDelete: KeyAction.cascade)();
+  TextColumn get service => text()();    // 'tidal' | 'qobuz' | 'deezer' | ...
+  TextColumn get serviceTrackId => text()();
+  RealColumn get confidence => real().withDefault(const Constant(1.0))();
+  TextColumn get matchMethod => text().nullable()(); // 'isrc' | 'fingerprint' | 'metadata'
+  TextColumn get linkedAt => text()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [{trackId, service}];
+}
