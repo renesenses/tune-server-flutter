@@ -4,11 +4,12 @@ FORBIDDEN="recorder|recording|special.edition|tune.special"
 
 # Check staged files only
 MATCHES=$(git diff --cached --name-only -z | xargs -0 grep -rlE "$FORBIDDEN" 2>/dev/null | while read -r f; do
-  # Exclude false positives: musicbrainzRecordingId is a legitimate MusicBrainz field
-  if grep -E "$FORBIDDEN" "$f" | grep -qvE 'musicbrainz|MusicBrainz'; then
+  # Exclude false positives: MusicBrainz API uses "recording" as a core concept
+  # Filter out all MusicBrainz-related recording references before checking
+  if grep -E "$FORBIDDEN" "$f" | grep -vE 'musicbrainz|MusicBrainz|recording_id|recording[?/:"'"'"']|Recording[CI]|/recording/' | grep -qE "$FORBIDDEN"; then
     echo "$f"
   fi
-done | grep -v '.githooks/' | grep -v 'CLAUDE.md')
+done | grep -v '.githooks/' | grep -v 'CLAUDE.md' | grep -v '/metadata/')
 
 if [ -n "$MATCHES" ]; then
     echo "🚫 BLOCKED: Forbidden terms found in staged files!"

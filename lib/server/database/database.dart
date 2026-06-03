@@ -76,6 +76,12 @@ String foldAccents(String input) {
   StreamingAuth,
   StreamingConfig,
   SyncLinkSnapshots,
+  AlbumRatings,
+  ListenHistory,
+  Settings,
+  Tags,
+  ItemTags,
+  TrackSourceLinks,
 ])
 class TuneDatabase extends _$TuneDatabase {
   TuneDatabase() : super(_openConnection());
@@ -90,10 +96,15 @@ class TuneDatabase extends _$TuneDatabase {
   late final PlaylistRepository playlistRepo = PlaylistRepository(this);
   late final ZoneRepository zoneRepo = ZoneRepository(this);
   late final RadioRepository radioRepo = RadioRepository(this);
+  late final RatingRepository ratingRepo = RatingRepository(this);
+  late final HistoryRepository historyRepo = HistoryRepository(this);
+  late final SettingsRepository settingsRepo = SettingsRepository(this);
+  late final TagRepository tagRepo = TagRepository(this);
+  late final SourceLinkRepository sourceLinkRepo = SourceLinkRepository(this);
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -142,6 +153,35 @@ class TuneDatabase extends _$TuneDatabase {
           if (from < 11) {
             await m.addColumn(zones, zones.normalizationEnabled);
             await m.addColumn(zones, zones.normalizationTargetLufs);
+          }
+          if (from < 12) {
+            await m.createTable(albumRatings);
+            await m.createTable(listenHistory);
+            await m.createTable(settings);
+            await m.createTable(tags);
+            await m.createTable(itemTags);
+            await m.createTable(trackSourceLinks);
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_album_ratings_album '
+                'ON album_ratings(album_id, profile_id)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_listen_history_listened_at '
+                'ON listen_history(listened_at)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_listen_history_track '
+                'ON listen_history(track_id)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_item_tags_tag '
+                'ON item_tags(tag_id)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_item_tags_item '
+                'ON item_tags(item_type, item_id)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_track_source_links_track '
+                'ON track_source_links(track_id)');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_track_source_links_service '
+                'ON track_source_links(service)');
           }
         },
         beforeOpen: (details) async {
