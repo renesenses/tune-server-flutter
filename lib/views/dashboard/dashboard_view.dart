@@ -58,7 +58,7 @@ class _DashboardViewState extends State<DashboardView> {
 
       // Remote mode: use API client
       if (app.isRemoteMode && app.apiClient != null) {
-        final data = await app.apiClient!.get('/api/v1/history/dashboard');
+        final data = await app.apiClient!.getHistoryDashboard();
         if (!mounted) return;
         setState(() { _data = data; _loading = false; });
         return;
