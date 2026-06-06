@@ -80,6 +80,17 @@ extension AppStateLifecycle on AppState {
     try {
       _apiClient = TuneApiClient(settingsState.remoteBaseUrl);
 
+      // Inject auth token if available
+      if (_authToken != null) {
+        _apiClient!.authToken = _authToken;
+      }
+      // Wire 401 handler
+      _apiClient!.onUnauthorized = () {
+        _authToken = null;
+        // Notify listeners so UI can react (show login screen)
+        notify();
+      };
+
       // Test connection
       final ok = await _apiClient!.testConnection();
       if (!ok) {

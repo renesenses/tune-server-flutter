@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'l10n/app_localizations.dart';
+import 'services/auth_service.dart';
 import 'state/app_state.dart';
 import 'state/library_state.dart';
 import 'state/settings_state.dart';
@@ -31,6 +32,7 @@ class _BootstrapApp extends StatefulWidget {
 
 class _BootstrapAppState extends State<_BootstrapApp> {
   AppState? _appState;
+  final AuthService _authService = AuthService();
   String? _error;
 
   @override
@@ -47,6 +49,7 @@ class _BootstrapAppState extends State<_BootstrapApp> {
 
   Future<void> _initServer() async {
     try {
+      await _authService.init();
       final appState = await AppState.create();
       if (mounted) setState(() => _appState = appState);
     } catch (e, stack) {
@@ -101,6 +104,7 @@ class _BootstrapAppState extends State<_BootstrapApp> {
             value: _appState!.libraryState),
         ChangeNotifierProvider<SettingsState>.value(
             value: _appState!.settingsState),
+        ChangeNotifierProvider<AuthService>.value(value: _authService),
       ],
       child: const TuneServerApp(),
     );

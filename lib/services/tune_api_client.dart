@@ -17,11 +17,21 @@ class TuneHttpException implements Exception {
   String toString() => message;
 }
 
+/// Callback invoked on 401 Unauthorized — lets the app clear auth state.
+typedef OnUnauthorized = void Function();
+
 /// REST client for connecting to a remote Tune server.
 /// Mirrors TuneAPIClient.swift (iOS).
 class TuneApiClient {
   final String baseUrl;
   final http.Client _client;
+
+  /// Auth token injected by AuthService — added to all requests.
+  String? authToken;
+
+  /// Called when a 401 response is received — app should clear token and
+  /// redirect to login.
+  OnUnauthorized? onUnauthorized;
 
   /// Production : utilise le client http par défaut.
   TuneApiClient(this.baseUrl) : _client = http.Client();
@@ -34,9 +44,27 @@ class TuneApiClient {
   // Generic helpers
   // ---------------------------------------------------------------------------
 
+  /// Build request headers with optional auth token.
+  Map<String, String> _headers({bool json = false}) {
+    final h = <String, String>{};
+    if (json) h['Content-Type'] = 'application/json';
+    if (authToken != null && authToken!.isNotEmpty) {
+      h['Authorization'] = 'Bearer $authToken';
+    }
+    return h;
+  }
+
+  /// Check for 401 and fire callback.
+  void _check401(int statusCode) {
+    if (statusCode == 401) onUnauthorized?.call();
+  }
+
   Future<dynamic> _get(String path) async {
-    final resp = await _client.get(Uri.parse('$baseUrl$path'))
-        .timeout(const Duration(seconds: 60));
+    final resp = await _client.get(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers(),
+    ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
     }
@@ -47,8 +75,11 @@ class TuneApiClient {
   /// Use for endpoints that may not exist on all server implementations
   /// (e.g. Rust alpha server lacks plugins, metadata endpoints).
   Future<dynamic> _getOptional(String path) async {
-    final resp = await _client.get(Uri.parse('$baseUrl$path'))
-        .timeout(const Duration(seconds: 60));
+    final resp = await _client.get(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers(),
+    ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) {
       throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
@@ -59,9 +90,10 @@ class TuneApiClient {
   Future<dynamic> _post(String path, {Map<String, dynamic>? body}) async {
     final resp = await _client.post(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
     }
@@ -72,9 +104,10 @@ class TuneApiClient {
   Future<dynamic> _postOptional(String path, {Map<String, dynamic>? body}) async {
     final resp = await _client.post(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
@@ -85,9 +118,10 @@ class TuneApiClient {
   Future<dynamic> _patch(String path, {Map<String, dynamic>? body}) async {
     final resp = await _client.patch(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('PATCH $path failed: ${resp.statusCode}', resp.statusCode);
     }
@@ -97,9 +131,10 @@ class TuneApiClient {
   Future<dynamic> _put(String path, {Map<String, dynamic>? body}) async {
     final resp = await _client.put(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
     ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('PUT $path failed: ${resp.statusCode}', resp.statusCode);
     }
@@ -107,8 +142,11 @@ class TuneApiClient {
   }
 
   Future<void> _delete(String path) async {
-    final resp = await _client.delete(Uri.parse('$baseUrl$path'))
-        .timeout(const Duration(seconds: 60));
+    final resp = await _client.delete(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers(),
+    ).timeout(const Duration(seconds: 60));
+    _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 204) {
       throw TuneHttpException('DELETE $path failed: ${resp.statusCode}', resp.statusCode);
     }
@@ -1148,4 +1186,18 @@ class TuneApiClient {
 
   Future<Map<String, dynamic>> saveSMBCredentials(Map<String, dynamic> body) async =>
       await _post('/network/smb/credentials', body: body) as Map<String, dynamic>;
+
+  // ---------------------------------------------------------------------------
+  // ── Cloud Telemetry ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getCloudTelemetryStatus() async =>
+      await _getOptional('/api/v1/cloud/telemetry/status') as Map<String, dynamic>? ??
+          {'enabled': false};
+
+  Future<void> enableCloudTelemetry() async =>
+      await _postOptional('/api/v1/cloud/telemetry/enable');
+
+  Future<void> disableCloudTelemetry() async =>
+      await _postOptional('/api/v1/cloud/telemetry/disable');
 }

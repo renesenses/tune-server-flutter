@@ -66,6 +66,17 @@ class AppState extends ChangeNotifier {
   StreamSubscription? _wsSubscription;
   Timer? _remotePollingTimer;
 
+  // Auth token — synced from AuthService, injected into API client
+  String? _authToken;
+
+  /// Update the auth token used for API requests. Called by AuthService
+  /// when login/logout occurs.
+  void setAuthToken(String? token) {
+    _authToken = token;
+    _apiClient?.authToken = token;
+    notifyListeners();
+  }
+
   // Track change notifications
   TrackNotificationService? _trackNotificationService;
 

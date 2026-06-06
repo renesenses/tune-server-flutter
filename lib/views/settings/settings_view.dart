@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/auth_service.dart';
 import '../../services/server_discovery.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
@@ -568,6 +569,12 @@ class _SettingsList extends StatelessWidget {
               ],
             ),
           ),
+        ],
+
+        // ---- Cloud ----
+        if (app.apiClient != null) ...[
+          const _SectionHeader('CLOUD'),
+          _CloudSection(api: app.apiClient!),
         ],
 
         // ---- Aide ----
@@ -1634,6 +1641,139 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
           child: Text(q.$2),
         )).toList(),
         onChanged: _loaded ? _setQuality : null,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cloud section — SSO status + telemetry toggle
+// GET/POST /api/v1/cloud/telemetry/status, /enable, /disable
+// ---------------------------------------------------------------------------
+
+class _CloudSection extends StatefulWidget {
+  final TuneApiClient api;
+  const _CloudSection({required this.api});
+
+  @override
+  State<_CloudSection> createState() => _CloudSectionState();
+}
+
+class _CloudSectionState extends State<_CloudSection> {
+  bool _telemetryEnabled = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    setState(() => _loading = true);
+    try {
+      final data = await widget.api.getCloudTelemetryStatus();
+      if (mounted) {
+        setState(() {
+          _telemetryEnabled = data['enabled'] == true;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleTelemetry(bool value) async {
+    final prev = _telemetryEnabled;
+    setState(() => _telemetryEnabled = value);
+    try {
+      if (value) {
+        await widget.api.enableCloudTelemetry();
+      } else {
+        await widget.api.disableCloudTelemetry();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _telemetryEnabled = prev);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: TuneColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final isConnected = auth.isLoggedIn;
+
+    return Container(
+      color: TuneColors.surface,
+      child: Column(
+        children: [
+          // SSO Status
+          ListTile(
+            tileColor: TuneColors.surface,
+            leading: Icon(
+              isConnected
+                  ? Icons.cloud_done_rounded
+                  : Icons.cloud_off_rounded,
+              color: isConnected ? TuneColors.success : TuneColors.textTertiary,
+              size: 22,
+            ),
+            title: Text('Compte cloud', style: TuneFonts.body),
+            subtitle: Text(
+              isConnected
+                  ? 'Connecte${auth.email != null ? " (${auth.email})" : ""}'
+                  : 'Non connecte',
+              style: TuneFonts.footnote.copyWith(
+                color: isConnected ? TuneColors.success : TuneColors.textTertiary,
+              ),
+            ),
+            trailing: isConnected
+                ? TextButton(
+                    onPressed: () async {
+                      await auth.logout();
+                      if (context.mounted) {
+                        context.read<AppState>().setAuthToken(null);
+                      }
+                    },
+                    child: Text(
+                      'Deconnecter',
+                      style: TuneFonts.caption.copyWith(color: TuneColors.error),
+                    ),
+                  )
+                : null,
+          ),
+          const Divider(height: 1, indent: 16, color: TuneColors.divider),
+          // Telemetry toggle
+          ListTile(
+            tileColor: TuneColors.surface,
+            title: Text('Telemetrie', style: TuneFonts.body),
+            subtitle: Text(
+              'Envoyer des statistiques d\'utilisation anonymes',
+              style: TuneFonts.footnote,
+            ),
+            trailing: _loading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: TuneColors.accent,
+                    ),
+                  )
+                : Switch(
+                    value: _telemetryEnabled,
+                    onChanged: _toggleTelemetry,
+                    activeThumbColor: TuneColors.accent,
+                  ),
+          ),
+        ],
       ),
     );
   }
