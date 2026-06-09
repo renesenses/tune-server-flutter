@@ -210,7 +210,7 @@ class _SettingsList extends StatelessWidget {
                     settings.remotePort.toString(),
                     style: const TextStyle(color: TuneColors.textSecondary),
                   ),
-                  onTap: app.isRemoteConnected ? null : () => _editRemotePort(context, settings),
+                  onTap: () => _editRemotePort(context, settings),
                 ),
                 if (!app.isRemoteConnected) ...[
                   const Divider(height: 1, indent: 16, color: TuneColors.divider),
@@ -713,7 +713,7 @@ class _SettingsList extends StatelessWidget {
           controller: ctrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Port (défaut: 8085)'),
+          decoration: const InputDecoration(labelText: 'Port (défaut: 8888)'),
         ),
         actions: [
           TextButton(

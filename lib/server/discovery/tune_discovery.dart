@@ -19,7 +19,7 @@ import '../utils/network_utils.dart';
 // ---------------------------------------------------------------------------
 
 const _tuneServiceType = '_tune-server._tcp';
-const _defaultPort = 8085;
+const _defaultPort = 8888;
 
 /// A discovered Tune Server on the network.
 class TunePeer {

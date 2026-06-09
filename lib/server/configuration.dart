@@ -123,7 +123,7 @@ class ServerConfiguration {
 
   Future<void> setRemoteHost(String value) => _p.setString(_kRemoteHost, value);
 
-  int get remotePort => _p.getInt(_kRemotePort) ?? 8085;
+  int get remotePort => _p.getInt(_kRemotePort) ?? 8888;
 
   Future<void> setRemotePort(int value) => _p.setInt(_kRemotePort, value);
 

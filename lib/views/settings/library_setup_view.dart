@@ -428,7 +428,7 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
             filled: true,
             fillColor: TuneColors.surface,
             labelText: 'Port',
-            hintText: '8085',
+            hintText: '8888',
             border: OutlineInputBorder(),
           ),
         ),

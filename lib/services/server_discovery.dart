@@ -36,11 +36,11 @@ class DiscoveredServer {
 class ServerDiscovery {
   ServerDiscovery._();
 
-  /// Default Tune server port (Rust alpha).
-  static const int defaultPort = 8085;
+  /// Default Tune server port.
+  static const int defaultPort = 8888;
 
-  /// All known Tune server ports to scan (Rust 8085/8086, legacy Python 8888).
-  static const List<int> knownPorts = [8085, 8086, 8888];
+  /// All known Tune server ports to scan.
+  static const List<int> knownPorts = [8888, 8085, 8086];
 
   /// Scan the local /24 subnet for Tune servers.
   ///

@@ -335,7 +335,7 @@ class _ErrorViewState extends State<_ErrorView> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('port 8085 par défaut',
+                Text('port 8888 par défaut',
                     style: TuneFonts.caption),
               ],
               const SizedBox(height: 24),

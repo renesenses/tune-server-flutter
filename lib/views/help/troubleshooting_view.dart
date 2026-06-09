@@ -31,7 +31,7 @@ class TroubleshootingView extends StatelessWidget {
               'Assurez-vous que votre appareil est connecte au meme reseau Wi-Fi que le serveur.',
               'Si vous utilisez un VPN, desactivez-le ou activez la decouverte LAN (ex: nordvpn set lan-discovery on).',
               'Essayez de scanner le reseau depuis Reglages > Mode > Scanner le reseau.',
-              'Verifiez que le port du serveur (par defaut 8085) n\'est pas bloque par un pare-feu.',
+              'Verifiez que le port du serveur (par defaut 8888) n\'est pas bloque par un pare-feu.',
               'Redemarrez le serveur et l\'application.',
             ],
           ),
