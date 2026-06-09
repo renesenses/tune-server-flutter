@@ -262,6 +262,7 @@ class _ErrorView extends StatefulWidget {
 
 class _ErrorViewState extends State<_ErrorView> {
   final _hostController = TextEditingController();
+  final _portController = TextEditingController();
   bool _connecting = false;
 
   @override
@@ -269,11 +270,13 @@ class _ErrorViewState extends State<_ErrorView> {
     super.initState();
     final settings = context.read<SettingsState>();
     _hostController.text = settings.remoteHost;
+    _portController.text = settings.remotePort.toString();
   }
 
   @override
   void dispose() {
     _hostController.dispose();
+    _portController.dispose();
     super.dispose();
   }
 
@@ -283,6 +286,8 @@ class _ErrorViewState extends State<_ErrorView> {
     setState(() => _connecting = true);
     final app = context.read<AppState>();
     await app.settingsState.setRemoteHost(host);
+    final port = int.tryParse(_portController.text.trim());
+    if (port != null) await app.settingsState.setRemotePort(port);
     widget.onRetry();
   }
 
@@ -330,13 +335,35 @@ class _ErrorViewState extends State<_ErrorView> {
                           horizontal: 16, vertical: 14),
                     ),
                     keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 280,
+                  child: TextField(
+                    controller: _portController,
+                    style: TuneFonts.body,
+                    decoration: InputDecoration(
+                      hintText: '8888',
+                      hintStyle: TuneFonts.footnote,
+                      labelText: 'Port',
+                      labelStyle: TuneFonts.footnote,
+                      prefixIcon: const Icon(Icons.numbers_outlined, size: 20),
+                      filled: true,
+                      fillColor: TuneColors.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
+                    keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.go,
                     onSubmitted: (_) => _saveAndRetry(),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text('port 8888 par défaut',
-                    style: TuneFonts.caption),
               ],
               const SizedBox(height: 24),
               _connecting
