@@ -275,11 +275,12 @@ extension AppStateLifecycle on AppState {
   Future<void> _refreshLibraryRemote() async {
     if (_apiClient == null) return;
     try {
-      final albumsJson = await _apiClient!.getAlbums();
+      // Use getAllAlbums/getAllArtists to auto-paginate large libraries
+      final albumsJson = await _apiClient!.getAllAlbums();
       final albums = albumsJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setAlbums(albums);
 
-      final artistsJson = await _apiClient!.getArtists();
+      final artistsJson = await _apiClient!.getAllArtists();
       final artists = artistsJson.map((a) => artistFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setArtists(artists);
 

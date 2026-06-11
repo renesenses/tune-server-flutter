@@ -8,14 +8,72 @@ part of 'tune_api_client.dart';
 
 extension TuneApiClientLibrary on TuneApiClient {
 
-  Future<List<dynamic>> getAlbums({int limit = 500, int offset = 0}) =>
-      _get('/library/albums?limit=$limit&offset=$offset').then((d) => d as List);
+  /// Parse a paginated response: the Rust server returns
+  /// `{"items": [...], "total": N, "limit": N, "offset": N}`.
+  /// Older Python servers returned a bare `[...]`.
+  /// This helper handles both formats.
+  List<dynamic> _unwrapItems(dynamic d) {
+    if (d is List) return d;
+    if (d is Map<String, dynamic>) {
+      return d['items'] as List? ?? [];
+    }
+    return [];
+  }
 
-  Future<List<dynamic>> getArtists({int limit = 500}) =>
-      _get('/library/artists?limit=$limit').then((d) => d as List);
+  /// Extract total count from a paginated response.
+  int _unwrapTotal(dynamic d) {
+    if (d is Map<String, dynamic>) {
+      return d['total'] as int? ?? 0;
+    }
+    return 0;
+  }
+
+  Future<List<dynamic>> getAlbums({int limit = 500, int offset = 0}) =>
+      _get('/library/albums?limit=$limit&offset=$offset').then(_unwrapItems);
+
+  /// Fetch ALL albums by paginating automatically. The server default page
+  /// size is 50; we use 500 per page to minimise round-trips.
+  Future<List<dynamic>> getAllAlbums() async {
+    const pageSize = 500;
+    final first = await _get('/library/albums?limit=$pageSize&offset=0');
+    final items = _unwrapItems(first);
+    final total = _unwrapTotal(first);
+    if (total <= pageSize) return items;
+    // Fetch remaining pages in parallel
+    final pages = <Future<dynamic>>[];
+    for (int offset = pageSize; offset < total; offset += pageSize) {
+      pages.add(_get('/library/albums?limit=$pageSize&offset=$offset'));
+    }
+    final results = await Future.wait(pages);
+    for (final page in results) {
+      items.addAll(_unwrapItems(page));
+    }
+    return items;
+  }
+
+  Future<List<dynamic>> getArtists({int limit = 500, int offset = 0}) =>
+      _get('/library/artists?limit=$limit&offset=$offset').then(_unwrapItems);
+
+  /// Fetch ALL artists by paginating automatically.
+  Future<List<dynamic>> getAllArtists() async {
+    const pageSize = 500;
+    final first = await _get('/library/artists?limit=$pageSize&offset=0');
+    final items = _unwrapItems(first);
+    final total = _unwrapTotal(first);
+    if (total <= pageSize) return items;
+    final pages = <Future<dynamic>>[];
+    for (int offset = pageSize; offset < total; offset += pageSize) {
+      pages.add(_get('/library/artists?limit=$pageSize&offset=$offset'));
+    }
+    final results = await Future.wait(pages);
+    for (final page in results) {
+      items.addAll(_unwrapItems(page));
+    }
+    return items;
+  }
 
   Future<List<dynamic>> getTracks({int limit = 500, int offset = 0}) =>
-      _get('/library/tracks?limit=$limit&offset=$offset').then((d) => d as List);
+      _get('/library/tracks?limit=$limit&offset=$offset').then(_unwrapItems);
 
   Future<List<dynamic>> getArtistAlbums(int artistId) =>
       _get('/library/artists/$artistId/albums').then((d) => d as List);
@@ -40,8 +98,15 @@ extension TuneApiClientLibrary on TuneApiClient {
   Future<dynamic> searchLibrary(String query, {int limit = 30}) =>
       _get('/library/search?q=${Uri.encodeComponent(query)}&limit=$limit');
 
+  /// Fetch recent albums via the dedicated /albums/recent endpoint
+  /// (returns a bare JSON array, not paginated).
   Future<List<dynamic>> getRecentAlbums({int limit = 30}) =>
-      _get('/library/albums?limit=$limit&sort=recent').then((d) => d as List);
+      _get('/library/albums/recent?limit=$limit').then((d) {
+        if (d is List) return d;
+        // Fallback: paginated format
+        if (d is Map<String, dynamic>) return d['items'] as List? ?? [];
+        return <dynamic>[];
+      });
 
   String artworkUrl(String path) {
     if (path.startsWith('http')) return path;

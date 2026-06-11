@@ -65,6 +65,73 @@ void main() {
     });
   });
 
+  group('Library', () {
+    test('getAlbums unwraps paginated {items: [...]} response', () async {
+      final api = mockClient(
+        verify: (req) {
+          expect(req.method, 'GET');
+          expect(req.url.path, '/api/v1/library/albums');
+        },
+        responseBody: {
+          'items': [
+            {'id': 1, 'title': 'Album A', 'artist_name': 'Artist 1'},
+            {'id': 2, 'title': 'Album B', 'artist_name': 'Artist 2'},
+          ],
+          'total': 2,
+          'limit': 500,
+          'offset': 0,
+        },
+      );
+      final albums = await api.getAlbums();
+      expect(albums.length, 2);
+      expect(albums[0]['title'], 'Album A');
+    });
+
+    test('getArtists unwraps paginated {items: [...]} response', () async {
+      final api = mockClient(
+        verify: (req) {
+          expect(req.url.path, '/api/v1/library/artists');
+        },
+        responseBody: {
+          'items': [
+            {'id': 1, 'name': 'Artist 1'},
+          ],
+          'total': 1,
+          'limit': 500,
+          'offset': 0,
+        },
+      );
+      final artists = await api.getArtists();
+      expect(artists.length, 1);
+      expect(artists[0]['name'], 'Artist 1');
+    });
+
+    test('getAlbums handles legacy bare array response', () async {
+      final api = mockClient(
+        verify: (_) {},
+        responseBody: [
+          {'id': 1, 'title': 'Album A'},
+        ],
+      );
+      final albums = await api.getAlbums();
+      expect(albums.length, 1);
+    });
+
+    test('getRecentAlbums uses /albums/recent endpoint', () async {
+      final api = mockClient(
+        verify: (req) {
+          expect(req.url.path, '/api/v1/library/albums/recent');
+        },
+        responseBody: [
+          {'id': 1, 'title': 'Recent Album'},
+        ],
+      );
+      final recent = await api.getRecentAlbums();
+      expect(recent.length, 1);
+      expect(recent[0]['title'], 'Recent Album');
+    });
+  });
+
   group('Playback', () {
     test('pause POSTs /zones/<id>/pause with no body', () async {
       final api = mockClient(

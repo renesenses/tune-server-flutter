@@ -120,8 +120,6 @@ extension TuneApiClientMetadata on TuneApiClient {
     return resp.body.isNotEmpty ? jsonDecode(resp.body) as Map<String, dynamic> : {};
   }
 
-  // Get all albums (large limit for metadata views)
-
-  Future<List<dynamic>> getAllAlbums() =>
-      _get('/library/albums?limit=10000').then((d) => d as List);
+  // getAllAlbums() — moved to TuneApiClientLibrary extension
+  // (properly handles paginated server response)
 }
