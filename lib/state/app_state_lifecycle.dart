@@ -284,6 +284,10 @@ extension AppStateLifecycle on AppState {
       final artists = artistsJson.map((a) => artistFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setArtists(artists);
 
+      final tracksJson = await _apiClient!.getAllTracks();
+      final tracks = tracksJson.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
+      libraryState.setTracks(tracks);
+
       // Recent albums for Home view
       try {
         final recentJson = await _apiClient!.getRecentAlbums(limit: 30);

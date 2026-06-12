@@ -75,6 +75,23 @@ extension TuneApiClientLibrary on TuneApiClient {
   Future<List<dynamic>> getTracks({int limit = 500, int offset = 0}) =>
       _get('/library/tracks?limit=$limit&offset=$offset').then(_unwrapItems);
 
+  Future<List<dynamic>> getAllTracks() async {
+    const pageSize = 500;
+    final first = await _get('/library/tracks?limit=$pageSize&offset=0');
+    final items = _unwrapItems(first);
+    final total = _unwrapTotal(first);
+    if (total <= pageSize) return items;
+    final pages = <Future<dynamic>>[];
+    for (int offset = pageSize; offset < total; offset += pageSize) {
+      pages.add(_get('/library/tracks?limit=$pageSize&offset=$offset'));
+    }
+    final results = await Future.wait(pages);
+    for (final page in results) {
+      items.addAll(_unwrapItems(page));
+    }
+    return items;
+  }
+
   Future<List<dynamic>> getArtistAlbums(int artistId) =>
       _get('/library/artists/$artistId/albums').then((d) => d as List);
 
