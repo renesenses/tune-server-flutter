@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
+import '../../models/enums.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
@@ -32,14 +33,14 @@ class _HomeViewState extends State<HomeView> {
   List<dynamic>? _topTracks;
   List<dynamic>? _topArtists;
   List<dynamic>? _recommendations;
-  List<dynamic>? _nowListening;
+  List<dynamic>? _continueListening;
 
   @override
   void initState() {
     super.initState();
-    _loadNowListening();
     _loadTopContent();
     _loadRecommendations();
+    _loadContinueListening();
   }
 
   Future<void> _loadTopContent() async {
@@ -55,12 +56,12 @@ class _HomeViewState extends State<HomeView> {
     } catch (_) {}
   }
 
-  Future<void> _loadNowListening() async {
+  Future<void> _loadContinueListening() async {
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
     try {
-      final data = await app.apiClient!.getNowListening();
-      if (mounted) setState(() => _nowListening = data);
+      final data = await app.apiClient!.getContinueListening();
+      if (mounted) setState(() => _continueListening = data);
     } catch (_) {}
   }
 
@@ -80,13 +81,37 @@ class _HomeViewState extends State<HomeView> {
     final lib = context.watch<LibraryState>();
     final zones = context.watch<ZoneState>();
 
+    // Derive "now listening" reactively from ZoneState — updates in real-time
+    // when tracks change via WebSocket/polling (mirrors web client behaviour).
+    final nowListening = zones.zones
+        .where((z) => z.state == PlaybackState.playing && z.currentTrack != null)
+        .map((z) {
+          final track = z.currentTrack as Track?;
+          return <String, dynamic>{
+            'zone_id': z.id,
+            'zone_name': z.name,
+            'track_title': track?.title ?? '',
+            'artist_name': track?.artistName ?? '',
+            'cover_path': track?.coverPath,
+            'album_id': track?.albumId,
+          };
+        })
+        .toList();
+
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
-        // ---- En cours d'ecoute ----
-        if (_nowListening != null && _nowListening!.isNotEmpty) ...[
-          _SectionTitle(title: "En cours d'ecoute"),
-          _NowListeningList(items: _nowListening!),
+        // ---- En cours d'écoute (reactive from ZoneState) ----
+        if (nowListening.isNotEmpty) ...[
+          _SectionTitle(title: "En cours d'écoute"),
+          _NowListeningList(items: nowListening, zones: zones),
+          const SizedBox(height: 16),
+        ],
+
+        // ---- Continue Listening (click to play) ----
+        if (_continueListening != null && _continueListening!.isNotEmpty) ...[
+          _SectionTitle(title: "Continuer l'écoute"),
+          _ContinueListeningList(items: _continueListening!),
           const SizedBox(height: 16),
         ],
 
@@ -244,8 +269,9 @@ class _RecentsList extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _NowListeningList extends StatelessWidget {
-  final List<dynamic> items;
-  const _NowListeningList({required this.items});
+  final List<Map<String, dynamic>> items;
+  final ZoneState zones;
+  const _NowListeningList({required this.items, required this.zones});
 
   @override
   Widget build(BuildContext context) {
@@ -256,50 +282,142 @@ class _NowListeningList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
         itemBuilder: (_, i) {
-          final item = items[i] as Map<String, dynamic>;
+          final item = items[i];
+          final zoneId = item['zone_id'] as int;
           final zoneName = item['zone_name'] as String? ?? 'Zone';
-          final trackTitle = item['track_title'] as String? ?? item['title'] as String? ?? '';
+          final trackTitle = item['track_title'] as String? ?? '';
           final artistName = item['artist_name'] as String? ?? '';
           final coverPath = item['cover_path'] as String?;
 
-          return Container(
-            width: 200,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(
-              color: TuneColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: TuneColors.divider),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: ArtworkView(filePath: coverPath, size: 48),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(zoneName,
-                          style: TuneFonts.caption.copyWith(color: TuneColors.accent),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      Text(trackTitle,
-                          style: TuneFonts.footnote,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      if (artistName.isNotEmpty)
-                        Text(artistName,
-                            style: TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+          return GestureDetector(
+            onTap: () {
+              // Switch to this zone
+              zones.setCurrentZoneId(zoneId);
+            },
+            child: Container(
+              width: 200,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: TuneColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: TuneColors.divider),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: ArtworkView(filePath: coverPath, size: 48),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(zoneName,
+                            style: TuneFonts.caption.copyWith(color: TuneColors.accent),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
-                    ],
+                        Text(trackTitle,
+                            style: TuneFonts.footnote,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                        if (artistName.isNotEmpty)
+                          Text(artistName,
+                              style: TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
                   ),
+                  // Animated EQ bars indicator
+                  const Icon(Icons.equalizer_rounded,
+                      size: 16, color: TuneColors.accent),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Continue Listening — horizontal cards, tap to play
+// ---------------------------------------------------------------------------
+
+class _ContinueListeningList extends StatelessWidget {
+  final List<dynamic> items;
+  const _ContinueListeningList({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final displayItems = items.take(20).toList();
+
+    return SizedBox(
+      height: 180,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: displayItems.length,
+        itemBuilder: (_, i) {
+          final item = displayItems[i] as Map<String, dynamic>;
+          final title = item['title'] as String? ?? item['album_title'] as String? ?? '';
+          final artist = item['artist_name'] as String? ?? '';
+          final coverPath = item['cover_path'] as String?;
+          final albumId = item['album_id'] as int? ?? item['id'] as int?;
+          final progressPercent = item['progress_percent'] as num?;
+
+          return GestureDetector(
+            onTap: () {
+              // Click-to-play: start playback of this album
+              if (albumId != null && app.apiClient != null) {
+                app.apiClient!.getAlbumTracks(albumId).then((data) {
+                  final tracks = data
+                      .map((t) => trackFromJson(t as Map<String, dynamic>))
+                      .toList();
+                  if (tracks.isNotEmpty) app.playTracks(tracks);
+                }).catchError((_) {});
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: SizedBox(
+                width: 130,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ArtworkView(filePath: coverPath, size: 130, cornerRadius: 8),
+                    const SizedBox(height: 4),
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 12, color: TuneColors.textPrimary)),
+                    Text(artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 11, color: TuneColors.textSecondary)),
+                    if (progressPercent != null) ...[
+                      const SizedBox(height: 3),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: (progressPercent / 100).clamp(0.0, 1.0).toDouble(),
+                          minHeight: 3,
+                          backgroundColor: TuneColors.divider,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              TuneColors.accent),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -362,6 +480,83 @@ class _TopTracksList extends StatelessWidget {
   final List<dynamic> tracks;
   const _TopTracksList({required this.tracks});
 
+  /// Play a top track using track_id (local) or streaming search (tidal/qobuz/etc).
+  /// Mirrors web client's playTopTrack logic.
+  Future<void> _playTopTrack(AppState app, Map<String, dynamic> item) async {
+    final trackId = item['track_id'] as int?;
+    final source = item['source'] as String?;
+    final title = item['title'] as String? ?? '';
+    final artistName = item['artist_name'] as String? ?? '';
+
+    // Local track with track_id — play directly
+    if (trackId != null && trackId > 0 && (source == null || source == 'local')) {
+      final track = Track(
+        id: trackId,
+        title: title,
+        artistName: artistName,
+        coverPath: item['cover_path'] as String?,
+        albumTitle: item['album_title'] as String?,
+        source: 'local',
+        favorite: false,
+      );
+      await app.playTracks([track]);
+      return;
+    }
+
+    // Streaming source — search the streaming service
+    if (source != null && source != 'local' && app.apiClient != null) {
+      try {
+        final results = await app.apiClient!.searchStreaming(
+          source,
+          '$title $artistName',
+          limit: 5,
+        );
+        final searchTracks = (results is Map) ? (results['tracks'] as List? ?? []) : [];
+        for (final t in searchTracks) {
+          final m = t as Map<String, dynamic>;
+          if (m['title'] == title && m['source_id'] != null) {
+            final track = Track(
+              id: 0,
+              title: m['title'] as String? ?? title,
+              artistName: m['artist_name'] as String? ?? artistName,
+              source: source,
+              sourceId: m['source_id'] as String?,
+              coverPath: m['cover_path'] as String?,
+              favorite: false,
+            );
+            await app.play(track: track);
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Fallback: search local library
+    if (app.apiClient != null) {
+      try {
+        final results = await app.apiClient!.searchLibrary(
+          '$title $artistName',
+          limit: 5,
+        );
+        final searchTracks = (results is Map) ? (results['tracks'] as List? ?? []) : [];
+        for (final t in searchTracks) {
+          final m = t as Map<String, dynamic>;
+          if (m['title'] == title && m['id'] != null) {
+            final track = trackFromJson(m);
+            await app.playTracks([track]);
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Last resort: build a Track from the available data and try
+    if (trackId != null && trackId > 0) {
+      final track = trackFromJson(item);
+      await app.playTracks([track]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
@@ -378,10 +573,7 @@ class _TopTracksList extends StatelessWidget {
           final title = item['title'] as String? ?? '';
           final coverPath = item['cover_path'] as String?;
           return GestureDetector(
-            onTap: () {
-              final track = trackFromJson(item);
-              app.playTracks([track]);
-            },
+            onTap: () => _playTopTrack(app, item),
             child: Container(
               width: 90,
               margin: const EdgeInsets.symmetric(horizontal: 4),

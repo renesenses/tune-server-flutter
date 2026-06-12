@@ -1200,4 +1200,11 @@ class TuneApiClient {
 
   Future<void> disableCloudTelemetry() async =>
       await _postOptional('/api/v1/cloud/telemetry/disable');
+
+  // ---------------------------------------------------------------------------
+  // ── Home Dashboard (continue listening, top mixes) ──
+  // ---------------------------------------------------------------------------
+
+  Future<List<dynamic>> getContinueListening() async =>
+      await _getOptional('/api/v1/home/continue-listening') as List<dynamic>? ?? [];
 }
