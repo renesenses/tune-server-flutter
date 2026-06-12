@@ -92,6 +92,9 @@ extension AppStateZones on AppState {
     if (oldId == newZoneId) return;
 
     if (isRemoteMode) {
+      // Stop the old timer, switch zone, let refreshZonesRemote restart it
+      // with the new zone's state/position.
+      zoneState.stopSeekTimer();
       zoneState.setCurrentZoneId(newZoneId);
       await refreshZonesRemote();
       return;

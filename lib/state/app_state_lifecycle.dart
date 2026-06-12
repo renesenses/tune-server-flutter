@@ -148,6 +148,7 @@ extension AppStateLifecycle on AppState {
     _webSocket = null;
     _apiClient = null;
     _serverStarted = false;
+    zoneState.stopSeekTimer();
     zoneState.reset();
     notify();
   }
@@ -208,8 +209,57 @@ extension AppStateLifecycle on AppState {
           ));
         }
       }
+      // Reset position to 0 (new track) and restart interpolation timer
+      // immediately so the seek bar begins moving right away.
+      if (zoneId != null) {
+        final posMs = data['position_ms'] as int? ?? 0;
+        zoneState.updatePosition(zoneId, posMs);
+        if (zoneId == zoneState.currentZoneId) {
+          // Stop + start to reset the timer cycle (may already be running
+          // from a previous track).
+          zoneState.stopSeekTimer();
+          zoneState.startSeekTimer();
+        }
+      }
       // Still fetch full zone state from API for complete data
       refreshZonesRemote();
+    } else if (type == 'playback.paused' || type == 'playback.stopped') {
+      // Stop interpolation timer and sync position from event data
+      final zoneId = data['zone_id'] as int?;
+      if (zoneId != null && zoneId == zoneState.currentZoneId) {
+        zoneState.stopSeekTimer();
+        final posMs = data['position_ms'] as int?;
+        if (posMs != null) {
+          zoneState.updatePosition(zoneId, posMs);
+        }
+      }
+      refreshZonesRemote();
+    } else if (type == 'playback.resumed') {
+      // Resume: start interpolation timer, sync position
+      final zoneId = data['zone_id'] as int?;
+      if (zoneId != null && zoneId == zoneState.currentZoneId) {
+        final posMs = data['position_ms'] as int?;
+        if (posMs != null) {
+          zoneState.updatePosition(zoneId, posMs);
+        }
+        zoneState.startSeekTimer();
+      }
+      refreshZonesRemote();
+    } else if (type == 'playback.seek') {
+      // Seek confirmed by server — jump to new position immediately
+      final zoneId = data['zone_id'] as int?;
+      final posMs = data['position_ms'] as int?;
+      if (zoneId != null && posMs != null && zoneId == zoneState.currentZoneId) {
+        zoneState.updatePosition(zoneId, posMs);
+        zoneState.startSeekTimer();
+      }
+    } else if (type == 'playback.position') {
+      // Server-side position update — apply drift filter
+      final zoneId = data['zone_id'] as int?;
+      final posMs = data['position_ms'] as int?;
+      if (zoneId != null && posMs != null && zoneId == zoneState.currentZoneId) {
+        zoneState.syncPositionFromServer(zoneId, posMs);
+      }
     } else if (type.startsWith('playback.') || type.startsWith('zone.')) {
       // Refresh zones from API
       refreshZonesRemote();
@@ -221,7 +271,51 @@ extension AppStateLifecycle on AppState {
     try {
       final zonesJson = await _apiClient!.getZones();
       final zones = zonesJson.map((z) => ZoneWithState.fromJson(z as Map<String, dynamic>)).toList();
+
+      // Before overwriting zones, capture the server-reported position for
+      // the current zone so we can apply drift filtering below.
+      final curId = zoneState.currentZoneId;
+      int? serverPositionMs;
+      PlaybackState? serverState;
+      for (final z in zones) {
+        if (z.id == curId) {
+          serverPositionMs = z.positionMs;
+          serverState = z.state;
+          break;
+        }
+      }
+
+      // setZones replaces the full list including positionMs.  For the
+      // current zone, if we're interpolating locally and the server
+      // position is close, we want to keep our interpolated value to avoid
+      // visible jumps.  We do this by patching the incoming zone data to
+      // preserve the local position when drift is small.
+      if (curId != null && serverPositionMs != null && serverState == PlaybackState.playing) {
+        final localPos = zoneState.currentZone?.positionMs ?? 0;
+        final drift = (localPos - serverPositionMs).abs();
+        if (drift <= 2000) {
+          // Patch the incoming zone to keep local interpolated position
+          final idx = zones.indexWhere((z) => z.id == curId);
+          if (idx >= 0) {
+            zones[idx] = zones[idx].copyWith(positionMs: localPos);
+          }
+        }
+      }
+
       zoneState.setZones(zones);
+
+      // Manage seek timer based on current zone playback state
+      if (curId != null && serverState != null) {
+        if (serverState == PlaybackState.playing) {
+          zoneState.startSeekTimer();
+        } else {
+          zoneState.stopSeekTimer();
+          // When not playing, use exact server position
+          if (serverPositionMs != null) {
+            zoneState.updatePosition(curId, serverPositionMs);
+          }
+        }
+      }
 
       // Load queue for current zone
       final zoneId = zoneState.currentZoneId;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/domain_models.dart';
@@ -221,5 +223,66 @@ class ZoneState extends ChangeNotifier {
       ..[idx] = _zones[idx].copyWith(positionMs: positionMs);
     // Notification uniquement pour la zone courante (évite rebuild inutile)
     if (zoneId == _currentZoneId) notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Seek interpolation timer (remote mode)
+  //
+  // In remote mode there is no local player emitting position events.
+  // The server is polled every 3s but the seek bar would jump in steps.
+  // This timer ticks every 200ms and increments positionMs locally,
+  // giving a smooth progress bar — identical to the web client behaviour.
+  // ---------------------------------------------------------------------------
+
+  Timer? _seekTimer;
+  static const _seekTickMs = 200;
+
+  /// Start the client-side interpolation timer.
+  /// Safe to call multiple times — only one timer runs at a time.
+  void startSeekTimer() {
+    if (_seekTimer != null) return;
+    _seekTimer = Timer.periodic(
+      const Duration(milliseconds: _seekTickMs),
+      (_) {
+        final zone = currentZone;
+        if (zone == null) {
+          stopSeekTimer();
+          return;
+        }
+        final newPos = zone.positionMs + _seekTickMs;
+        final duration = (zone.currentTrack as Track?)?.durationMs ?? 0;
+        // Don't exceed track duration
+        if (duration > 0 && newPos > duration) {
+          stopSeekTimer();
+          return;
+        }
+        updatePosition(zone.id, newPos);
+      },
+    );
+  }
+
+  /// Stop the interpolation timer.
+  void stopSeekTimer() {
+    _seekTimer?.cancel();
+    _seekTimer = null;
+  }
+
+  /// Sync position from server with drift filtering.
+  /// Only corrects when the drift exceeds [thresholdMs] (default 2000ms).
+  /// This avoids jittery jumps from small server/client timing differences.
+  void syncPositionFromServer(int zoneId, int serverPositionMs, {int thresholdMs = 2000}) {
+    final idx = _zones.indexWhere((z) => z.id == zoneId);
+    if (idx < 0) return;
+    final currentPos = _zones[idx].positionMs;
+    final drift = (currentPos - serverPositionMs).abs();
+    if (drift > thresholdMs) {
+      updatePosition(zoneId, serverPositionMs);
+    }
+  }
+
+  @override
+  void dispose() {
+    stopSeekTimer();
+    super.dispose();
   }
 }
