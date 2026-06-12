@@ -193,9 +193,9 @@ class _DashboardViewState extends State<DashboardView> {
           const SizedBox(height: 8),
           _TopList(
             items: topArtists,
-            titleKey: 'artist_name',
+            titleKey: 'name',
             subtitleKey: null,
-            countKey: 'play_count',
+            countKey: 'plays',
             icon: Icons.person_rounded,
           ),
         ],

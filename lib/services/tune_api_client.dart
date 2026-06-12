@@ -1205,6 +1205,6 @@ class TuneApiClient {
   // ── Home Dashboard (continue listening, top mixes) ──
   // ---------------------------------------------------------------------------
 
-  Future<List<dynamic>> getContinueListening() async =>
-      await _getOptional('/api/v1/home/continue-listening') as List<dynamic>? ?? [];
+  Future<List<dynamic>> getContinueListening({int limit = 20}) async =>
+      await _getOptional('/api/v1/home/continue-listening?limit=$limit') as List<dynamic>? ?? [];
 }

@@ -12,6 +12,7 @@ import '../browse/browse_view.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../library/artists_list_view.dart';
 import 'history_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
 
@@ -60,7 +61,7 @@ class _HomeViewState extends State<HomeView> {
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
     try {
-      final data = await app.apiClient!.getContinueListening();
+      final data = await app.apiClient!.getContinueListening(limit: 20);
       if (mounted) setState(() => _continueListening = data);
     } catch (_) {}
   }
@@ -352,13 +353,37 @@ class _ContinueListeningList extends StatelessWidget {
   final List<dynamic> items;
   const _ContinueListeningList({required this.items});
 
+  void _playAlbum(AppState app, int? albumId) {
+    if (albumId != null && app.apiClient != null) {
+      app.apiClient!.getAlbumTracks(albumId).then((data) {
+        final tracks = data
+            .map((t) => trackFromJson(t as Map<String, dynamic>))
+            .toList();
+        if (tracks.isNotEmpty) app.playTracks(tracks);
+      }).catchError((_) {});
+    }
+  }
+
+  void _navigateToArtist(BuildContext context, String artistName) {
+    final app = context.read<AppState>();
+    final artists = app.libraryState.artists;
+    final artist = artists.cast<Artist?>().where(
+      (a) => a?.name == artistName,
+    ).firstOrNull;
+    if (artist != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ArtistDetailView(artist: artist),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
     final displayItems = items.take(20).toList();
 
     return SizedBox(
-      height: 180,
+      height: 210,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
@@ -371,52 +396,79 @@ class _ContinueListeningList extends StatelessWidget {
           final albumId = item['album_id'] as int? ?? item['id'] as int?;
           final progressPercent = item['progress_percent'] as num?;
 
-          return GestureDetector(
-            onTap: () {
-              // Click-to-play: start playback of this album
-              if (albumId != null && app.apiClient != null) {
-                app.apiClient!.getAlbumTracks(albumId).then((data) {
-                  final tracks = data
-                      .map((t) => trackFromJson(t as Map<String, dynamic>))
-                      .toList();
-                  if (tracks.isNotEmpty) app.playTracks(tracks);
-                }).catchError((_) {});
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: SizedBox(
-                width: 130,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ArtworkView(filePath: coverPath, size: 130, cornerRadius: 8),
-                    const SizedBox(height: 4),
-                    Text(title,
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: SizedBox(
+              width: 150,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Cover art with play overlay — tap to play
+                  GestureDetector(
+                    onTap: () => _playAlbum(app, albumId),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: ArtworkView(filePath: coverPath, size: 150),
+                        ),
+                        // Play overlay
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: TuneColors.accent.withValues(alpha: 0.9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.play_arrow_rounded,
+                                size: 22, color: Colors.white),
+                          ),
+                        ),
+                        // Progress bar overlay at the bottom
+                        if (progressPercent != null)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(10)),
+                              child: LinearProgressIndicator(
+                                value: (progressPercent / 100).clamp(0.0, 1.0).toDouble(),
+                                minHeight: 3,
+                                backgroundColor: Colors.black26,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    TuneColors.accent),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Title — tap to play
+                  GestureDetector(
+                    onTap: () => _playAlbum(app, albumId),
+                    child: Text(title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                             fontSize: 12, color: TuneColors.textPrimary)),
-                    Text(artist,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 11, color: TuneColors.textSecondary)),
-                    if (progressPercent != null) ...[
-                      const SizedBox(height: 3),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          value: (progressPercent / 100).clamp(0.0, 1.0).toDouble(),
-                          minHeight: 3,
-                          backgroundColor: TuneColors.divider,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              TuneColors.accent),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                  // Artist — tap to navigate to artist page
+                  if (artist.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => _navigateToArtist(context, artist),
+                      child: Text(artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 11, color: TuneColors.textSecondary)),
+                    ),
+                ],
               ),
             ),
           );
@@ -557,13 +609,27 @@ class _TopTracksList extends StatelessWidget {
     }
   }
 
+  /// Navigate to the artist page by matching the artist name in the library.
+  void _navigateToArtist(BuildContext context, String artistName) {
+    final app = context.read<AppState>();
+    final artists = app.libraryState.artists;
+    final artist = artists.cast<Artist?>().where(
+      (a) => a?.name == artistName,
+    ).firstOrNull;
+    if (artist != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ArtistDetailView(artist: artist),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
     final items = tracks.take(20).toList();
 
     return SizedBox(
-      height: 110,
+      height: 130,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
@@ -571,28 +637,49 @@ class _TopTracksList extends StatelessWidget {
         itemBuilder: (_, i) {
           final item = items[i] as Map<String, dynamic>;
           final title = item['title'] as String? ?? '';
+          final artistName = item['artist_name'] as String? ?? '';
           final coverPath = item['cover_path'] as String?;
-          return GestureDetector(
-            onTap: () => _playTopTrack(app, item),
-            child: Container(
-              width: 90,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                children: [
-                  ClipRRect(
+          return Container(
+            width: 90,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              children: [
+                // Cover — tap to play
+                GestureDetector(
+                  onTap: () => _playTopTrack(app, item),
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: ArtworkView(filePath: coverPath, size: 80),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
+                ),
+                const SizedBox(height: 4),
+                // Title — tap to play
+                GestureDetector(
+                  onTap: () => _playTopTrack(app, item),
+                  child: Text(
                     title,
                     style: TuneFonts.caption,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+                // Artist — tap to navigate to artist page
+                if (artistName.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => _navigateToArtist(context, artistName),
+                    child: Text(
+                      artistName,
+                      style: TuneFonts.caption.copyWith(
+                        color: TuneColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+              ],
             ),
           );
         },
