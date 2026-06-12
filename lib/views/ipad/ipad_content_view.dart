@@ -18,6 +18,7 @@ import '../streaming/streaming_view.dart';
 import '../admin/admin_dashboard_view.dart';
 import '../ai/ai_chat_screen.dart';
 import '../alarms/alarms_view.dart';
+import '../browse/browse_library_view.dart';
 import '../dashboard/dashboard_view.dart';
 import '../diagnostics/diagnostics_view.dart';
 import '../library/duplicates_view.dart';
@@ -51,6 +52,7 @@ class _iPadContentViewState extends State<iPadContentView> {
     // Party/DJ keeps nav and pages aligned without manual index math.
     final entries = <_NavEntry>[
       _NavEntry(Icons.library_music_outlined, Icons.library_music_rounded, l.navLibrary, const LibraryView()),
+      if (isRemote) _NavEntry(Icons.folder_outlined, Icons.folder_rounded, 'Repertoires', const BrowseLibraryView()),
       _NavEntry(Icons.cloud_outlined, Icons.cloud_rounded, l.navStreaming, const StreamingView()),
       _NavEntry(Icons.speaker_group_outlined, Icons.speaker_group_rounded, l.navZones, const ZonesView()),
       _NavEntry(Icons.radio_outlined, Icons.radio_rounded, l.navRadios, const RadiosView()),

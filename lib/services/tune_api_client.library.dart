@@ -143,4 +143,16 @@ extension TuneApiClientLibrary on TuneApiClient {
 
   Future<Map<String, dynamic>> getLibraryStats() =>
       _get('/library/stats').then((d) => d as Map<String, dynamic>);
+
+  // ---------------------------------------------------------------------------
+  // Library Browse (directory browsing)
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getBrowseRoots() async {
+    return await _get('/library/browse') as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> browseDirectory(String path) async {
+    return await _get('/library/browse/dir?path=${Uri.encodeComponent(path)}') as Map<String, dynamic>;
+  }
 }

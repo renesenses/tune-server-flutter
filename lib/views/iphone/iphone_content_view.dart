@@ -19,6 +19,7 @@ import '../streaming/streaming_view.dart';
 import '../admin/admin_dashboard_view.dart';
 import '../ai/ai_chat_screen.dart';
 import '../alarms/alarms_view.dart';
+import '../browse/browse_library_view.dart';
 import '../dashboard/dashboard_view.dart';
 import '../diagnostics/diagnostics_view.dart';
 import '../library/duplicates_view.dart';
@@ -98,6 +99,8 @@ class _MoreView extends StatelessWidget {
     final items = [
       if (isRemote)
         (icon: Icons.auto_awesome_rounded,     label: 'Assistant IA',      page: const AIChatScreen()),
+      if (isRemote)
+        (icon: Icons.folder_rounded,           label: 'Repertoires',       page: const BrowseLibraryView()),
       (icon: Icons.collections_bookmark_rounded, label: 'Collections',  page: const CollectionsView()),
       (icon: Icons.auto_awesome_motion_rounded, label: 'Smart Collections', page: const SmartCollectionsView()),
       // Party + DJ require routes only the remote Python server provides.
