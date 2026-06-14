@@ -22,6 +22,7 @@ import 'plugins_view.dart';
 import 'smb_browser_view.dart';
 import 'spotify_connect_view.dart';
 import 'library_setup_view.dart';
+import 'metadata_fields_view.dart';
 import 'metadata_view.dart';
 import 'smb_setup_view.dart';
 import 'sources_view.dart';
@@ -432,6 +433,19 @@ class _SettingsList extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const MetadataView()),
                 ),
               ),
+              if (app.apiClient != null) ...[
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                _SettingsTile(
+                  title: 'Champs de metadonnees',
+                  subtitle: 'Configurer les champs etendus (compositeur, chef...)',
+                  trailing: const Icon(Icons.chevron_right_rounded,
+                      color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MetadataFieldsView()),
+                  ),
+                ),
+              ],
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
                 title: l.settingsSmb,

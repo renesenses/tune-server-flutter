@@ -122,4 +122,36 @@ extension TuneApiClientMetadata on TuneApiClient {
 
   // getAllAlbums() — moved to TuneApiClientLibrary extension
   // (properly handles paginated server response)
+
+  // ---------------------------------------------------------------------------
+  // Extended metadata fields (configurable per-track key-value store)
+  // ---------------------------------------------------------------------------
+
+  /// Fetch the user's metadata-fields configuration (which extended fields are
+  /// visible). Returns `{ "categories": [...] }` where each category has
+  /// `name`, and `fields` list of `{ key, label, enabled }`.
+  Future<Map<String, dynamic>> getMetadataFieldSettings() async =>
+      await _getOptional('/system/settings/metadata-fields') as Map<String, dynamic>? ??
+          {'categories': <dynamic>[]};
+
+  /// Save the list of enabled field keys.
+  /// Body: `{ "fields": ["composer", "conductor", ...] }`
+  Future<void> updateMetadataFieldSettings(List<String> fields) async =>
+      await _put('/system/settings/metadata-fields', body: {'fields': fields});
+
+  /// Get all extended metadata key-value pairs for a track.
+  /// Returns `{ "composer": "Bach", "conductor": "Karajan", ... }`.
+  Future<Map<String, String>> getTrackExtendedMetadata(int trackId) async {
+    final raw = await _getOptional('/library/tracks/$trackId/metadata');
+    if (raw == null) return {};
+    if (raw is Map<String, dynamic>) {
+      return raw.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+    }
+    return {};
+  }
+
+  /// Batch-set extended metadata fields on a track.
+  /// Body: `{ "composer": "Bach", "conductor": "Karajan", ... }`.
+  Future<void> updateTrackExtendedMetadata(int trackId, Map<String, String> fields) async =>
+      await _put('/library/tracks/$trackId/metadata', body: fields);
 }
