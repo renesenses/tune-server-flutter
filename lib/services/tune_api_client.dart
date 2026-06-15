@@ -160,6 +160,21 @@ class TuneApiClient {
 
   Future<dynamic> getZone(int zoneId) => _get('/zones/$zoneId');
 
+  Future<Map<String, dynamic>> createZoneRemote(String name, {String? outputType, String? outputDeviceId}) =>
+      _post('/zones', body: {
+        'name': name,
+        if (outputType != null) 'output_type': outputType,
+        if (outputDeviceId != null) 'output_device_id': outputDeviceId,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<void> deleteZoneRemote(int zoneId) => _delete('/zones/$zoneId');
+
+  Future<void> renameZoneRemote(int zoneId, String name) =>
+      _put('/zones/$zoneId/name', body: {'name': name});
+
+  Future<List<dynamic>> getDiscoveredDevices() =>
+      _get('/devices').then((d) => d as List);
+
   // ---------------------------------------------------------------------------
   // Playback
   // ---------------------------------------------------------------------------
@@ -213,6 +228,22 @@ class TuneApiClient {
   Future<dynamic> addToQueue(int zoneId, Map<String, dynamic> body) =>
       _post('/zones/$zoneId/queue/add', body: body);
 
+  Future<void> removeFromQueue(int zoneId, int position) =>
+      _delete('/zones/$zoneId/queue/$position');
+
+  Future<dynamic> jumpToQueuePosition(int zoneId, int position) =>
+      _post('/zones/$zoneId/queue/jump', body: {'position': position});
+
+  Future<void> moveQueueItem(int zoneId, int fromPosition, int toPosition) async {
+    await _post('/zones/$zoneId/queue/move', body: {
+      'from_position': fromPosition,
+      'to_position': toPosition,
+    });
+  }
+
+  Future<void> clearQueue(int zoneId) =>
+      _delete('/zones/$zoneId/queue');
+
   // ---------------------------------------------------------------------------
   // Playlists
   // ---------------------------------------------------------------------------
@@ -231,6 +262,19 @@ class TuneApiClient {
 
   Future<void> deletePlaylist(int playlistId) =>
       _delete('/playlists/$playlistId');
+
+  /// Add tracks to an existing playlist.
+  /// [trackIds] — local track IDs to add.
+  /// [position] — optional insertion position (null = append).
+  Future<Map<String, dynamic>> addPlaylistTracks(
+    int playlistId,
+    List<int> trackIds, {
+    int? position,
+  }) =>
+      _post('/playlists/$playlistId/tracks', body: {
+        'track_ids': trackIds,
+        if (position != null) 'position': position,
+      }).then((d) => d as Map<String, dynamic>);
 
   Future<Map<String, dynamic>> diffPlaylists({
     required String sourceService,
@@ -1207,4 +1251,40 @@ class TuneApiClient {
 
   Future<List<dynamic>> getContinueListening({int limit = 20}) async =>
       await _getOptional('/api/v1/home/continue-listening?limit=$limit') as List<dynamic>? ?? [];
+
+  // ---------------------------------------------------------------------------
+  // ── Server Configuration (music dirs, config, restart) ──
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> getSystemConfig() async =>
+      await _get('/system/config') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> updateSystemConfig(Map<String, dynamic> fields) async =>
+      await _patch('/system/config', body: fields) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> getMusicDirs() async =>
+      await _get('/system/music-dirs') as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> addMusicDir(String path) async =>
+      await _post('/system/music-dirs', body: {'path': path}) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> removeMusicDir(String path) async =>
+      await _post('/system/music-dirs/remove', body: {'path': path}) as Map<String, dynamic>;
+
+  Future<Map<String, dynamic>> browseDirs({String? path}) async {
+    final q = path != null ? '?path=${Uri.encodeQueryComponent(path)}' : '';
+    return await _get('/system/browse-dirs$q') as Map<String, dynamic>;
+  }
+
+  Future<void> restartServer() async =>
+      await _post('/system/restart');
+
+  Future<void> triggerScan({String? path, bool full = false}) async {
+    final params = <String, String>{};
+    if (path != null) params['path'] = path;
+    if (full) params['full'] = 'true';
+    final qs = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final url = qs.isNotEmpty ? '/system/scan?$qs' : '/system/scan';
+    await _post(url);
+  }
 }

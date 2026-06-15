@@ -39,19 +39,35 @@ extension AppStateLibrary on AppState {
     libraryState.setSearching(true);
     try {
       if (isRemoteMode && _apiClient != null) {
-        final data = await _apiClient!.searchLibrary(query);
+        final data = await _apiClient!.federatedSearch(query);
         final results = <SearchResult>[];
-        if (data is Map<String, dynamic>) {
-          for (final t in (data['tracks'] as List? ?? [])) {
-            results.add(TrackSearchResult(trackFromJson(t as Map<String, dynamic>)));
-          }
-          for (final a in (data['albums'] as List? ?? [])) {
-            results.add(AlbumSearchResult(albumFromJson(a as Map<String, dynamic>)));
-          }
-          for (final a in (data['artists'] as List? ?? [])) {
+
+        // Parse local results
+        final local = data['local'] as Map<String, dynamic>?;
+        if (local != null) {
+          for (final a in (local['artists'] as List? ?? [])) {
             results.add(ArtistSearchResult(artistFromJson(a as Map<String, dynamic>)));
           }
+          for (final a in (local['albums'] as List? ?? [])) {
+            results.add(AlbumSearchResult(albumFromJson(a as Map<String, dynamic>)));
+          }
+          for (final t in (local['tracks'] as List? ?? [])) {
+            results.add(TrackSearchResult(trackFromJson(t as Map<String, dynamic>)));
+          }
         }
+
+        // Parse streaming service results
+        final services = data['services'] as Map<String, dynamic>?;
+        if (services != null) {
+          for (final entry in services.entries) {
+            final serviceId = entry.key;
+            final svcData = entry.value as Map<String, dynamic>? ?? {};
+            for (final item in _parseStreamingResults(serviceId, svcData)) {
+              results.add(StreamingResult(item));
+            }
+          }
+        }
+
         libraryState.setSearchResults(query, results);
         return results;
       }
@@ -62,6 +78,49 @@ extension AppStateLibrary on AppState {
       libraryState.setSearching(false);
       return [];
     }
+  }
+
+  /// Parse streaming search results from the federated search API response.
+  List<StreamingSearchResult> _parseStreamingResults(
+    String serviceId,
+    Map<String, dynamic> data,
+  ) {
+    final results = <StreamingSearchResult>[];
+    for (final t in (data['tracks'] as List? ?? [])) {
+      final m = t as Map<String, dynamic>;
+      results.add(StreamingSearchResult(
+        id: '${m['id'] ?? m['source_id'] ?? ''}',
+        title: m['title'] as String? ?? '',
+        artist: m['artist_name'] as String? ?? m['artist'] as String?,
+        album: m['album_title'] as String? ?? m['album'] as String?,
+        durationMs: m['duration_ms'] as int?,
+        coverUrl: m['cover_path'] as String? ?? m['cover_url'] as String?,
+        serviceId: serviceId,
+        type: 'track',
+      ));
+    }
+    for (final a in (data['albums'] as List? ?? [])) {
+      final m = a as Map<String, dynamic>;
+      results.add(StreamingSearchResult(
+        id: '${m['id'] ?? m['source_id'] ?? ''}',
+        title: m['title'] as String? ?? '',
+        artist: m['artist_name'] as String? ?? m['artist'] as String?,
+        coverUrl: m['cover_path'] as String? ?? m['cover_url'] as String?,
+        serviceId: serviceId,
+        type: 'album',
+      ));
+    }
+    for (final a in (data['artists'] as List? ?? [])) {
+      final m = a as Map<String, dynamic>;
+      results.add(StreamingSearchResult(
+        id: '${m['id'] ?? m['source_id'] ?? ''}',
+        title: m['name'] as String? ?? m['title'] as String? ?? '',
+        coverUrl: m['image_path'] as String? ?? m['cover_url'] as String?,
+        serviceId: serviceId,
+        type: 'artist',
+      ));
+    }
+    return results;
   }
 
   void clearSearch() => libraryState.clearSearch();

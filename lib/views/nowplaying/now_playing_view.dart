@@ -17,6 +17,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../library/albums_grid_view.dart';
 import '../library/artists_list_view.dart';
+import '../library/add_to_playlist_sheet.dart';
 import 'queue_view.dart';
 import 'seek_bar_view.dart';
 import 'sleep_timer_sheet.dart';
@@ -428,6 +429,14 @@ class _ExtraActions extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
+        // Add to playlist
+        IconButton(
+          icon: const Icon(Icons.playlist_add_rounded, color: TuneColors.textSecondary),
+          tooltip: AppLocalizations.of(context).playlistAddTo,
+          onPressed: track?.id != null && track!.id != 0
+              ? () => _showAddToPlaylist(context, track!)
+              : null,
+        ),
         // Lyrics
         IconButton(
           icon: const Icon(Icons.lyrics_rounded, color: TuneColors.textSecondary),
@@ -473,6 +482,15 @@ class _ExtraActions extends StatelessWidget {
           onPressed: () => _showTransferDialog(context),
         ),
       ],
+    );
+  }
+
+  void _showAddToPlaylist(BuildContext context, Track track) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: TuneColors.surface,
+      builder: (_) => AddToPlaylistSheet(track: track),
     );
   }
 

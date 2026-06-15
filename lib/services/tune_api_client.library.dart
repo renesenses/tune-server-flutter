@@ -115,6 +115,20 @@ extension TuneApiClientLibrary on TuneApiClient {
   Future<dynamic> searchLibrary(String query, {int limit = 30}) =>
       _get('/library/search?q=${Uri.encodeComponent(query)}&limit=$limit');
 
+  /// Federated search: local library + all connected streaming services.
+  /// Returns { local: { tracks, albums, artists }, services: { tidal: {...}, ... } }
+  Future<Map<String, dynamic>> federatedSearch(String query, {
+    int limit = 20,
+    List<String>? sources,
+  }) async {
+    var path = '/api/v1/search?q=${Uri.encodeComponent(query)}&limit=$limit';
+    if (sources != null && sources.isNotEmpty) {
+      path += '&sources=${sources.join(',')}';
+    }
+    final data = await _get(path);
+    return data as Map<String, dynamic>;
+  }
+
   /// Fetch recent albums via the dedicated /albums/recent endpoint
   /// (returns a bare JSON array, not paginated).
   Future<List<dynamic>> getRecentAlbums({int limit = 30}) =>

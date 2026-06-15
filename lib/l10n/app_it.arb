@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "{count} brani aggiunti a \"{name}\"",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "Aggiungi tutto alla playlist",
   "playlistDeleteTitle": "Eliminare playlist?",
   "playlistDeleteBody": "Questa playlist verrà eliminata definitivamente.",
   "searchHint": "Cerca…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "Nessun brano",
   "queueTitle": "Coda di riproduzione",
   "queueEmpty": "Coda vuota",
+  "queueClearTitle": "Svuotare la coda?",
+  "queueClearBody": "Tutti i brani verranno rimossi dalla coda di riproduzione.",
   "zonesTitle": "Zone",
   "zonesNew": "Nuova zona",
   "zonesNewName": "Nome zona",

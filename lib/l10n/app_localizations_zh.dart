@@ -217,6 +217,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String playlistTracksAdded(int count, String name) {
+    return '已将$count首曲目添加到「$name」';
+  }
+
+  @override
+  String get playlistAddAllTracks => '全部添加到播放列表';
+
+  @override
   String get playlistDeleteTitle => '删除播放列表？';
 
   @override
@@ -284,6 +292,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get queueEmpty => '队列为空';
+
+  @override
+  String get queueClearTitle => '清空队列？';
+
+  @override
+  String get queueClearBody => '播放队列中的所有曲目将被移除。';
 
   @override
   String get zonesTitle => '区域';

@@ -217,6 +217,14 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String playlistTracksAdded(int count, String name) {
+    return '$count曲を「$name」に追加しました';
+  }
+
+  @override
+  String get playlistAddAllTracks => '全曲をプレイリストに追加';
+
+  @override
   String get playlistDeleteTitle => 'プレイリストを削除？';
 
   @override
@@ -284,6 +292,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get queueEmpty => 'キューが空';
+
+  @override
+  String get queueClearTitle => 'キューをクリアしますか？';
+
+  @override
+  String get queueClearBody => '再生キューからすべてのトラックが削除されます。';
 
   @override
   String get zonesTitle => 'ゾーン';

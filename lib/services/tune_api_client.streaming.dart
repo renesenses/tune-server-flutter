@@ -12,6 +12,47 @@ extension TuneApiClientStreaming on TuneApiClient {
   Future<dynamic> playRadio(int radioId, int zoneId) =>
       _post('/zones/$zoneId/play', body: {'radio_id': radioId});
 
+  Future<Map<String, dynamic>> createRadio({
+    required String name,
+    required String url,
+    String? logoUrl,
+    String? genre,
+    String? country,
+  }) => _post('/radios', body: {
+        'name': name,
+        'url': url,
+        if (logoUrl != null) 'logo_url': logoUrl,
+        if (genre != null) 'genre': genre,
+        if (country != null) 'country': country,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> updateRadio(int id, {
+    String? name,
+    String? url,
+    String? logoUrl,
+    String? genre,
+    String? country,
+    bool? favorite,
+  }) => _put('/radios/$id', body: {
+        if (name != null) 'name': name,
+        if (url != null) 'url': url,
+        if (logoUrl != null) 'logo_url': logoUrl,
+        if (genre != null) 'genre': genre,
+        if (country != null) 'country': country,
+        if (favorite != null) 'favorite': favorite,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<void> deleteRadio(int id) => _delete('/radios/$id');
+
+  Future<Map<String, dynamic>> toggleRadioFavorite(int id, {bool? favorite}) =>
+      _post('/radios/$id/favorite', body: {
+        if (favorite != null) 'favorite': favorite,
+      }).then((d) => d as Map<String, dynamic>);
+
+  Future<Map<String, dynamic>> importRadioStations(List<Map<String, dynamic>> stations) =>
+      _post('/radios/import', body: {'stations': stations})
+          .then((d) => d as Map<String, dynamic>);
+
   // Streaming services
 
   Future<Map<String, dynamic>> getStreamingServices() =>

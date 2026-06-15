@@ -15,6 +15,7 @@ import '../helpers/tune_fonts.dart';
 import '../library/albums_grid_view.dart';
 import '../library/artists_list_view.dart';
 import '../streaming/streaming_album_detail_view.dart';
+import '../streaming/streaming_helpers.dart';
 import 'home_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -117,7 +118,8 @@ class _SearchViewState extends State<SearchView> {
 }
 
 // ---------------------------------------------------------------------------
-// _SearchResults — résultats groupés par type
+// _SearchResults — résultats groupés : local (tracks/albums/artists)
+// puis chaque service streaming séparément
 // ---------------------------------------------------------------------------
 
 class _SearchResults extends StatelessWidget {
@@ -131,23 +133,35 @@ class _SearchResults extends StatelessWidget {
     final artists = results.whereType<ArtistSearchResult>().toList();
     final streaming = results.whereType<StreamingResult>().toList();
 
+    // Group streaming results by service
+    final byService = <String, List<StreamingResult>>{};
+    for (final r in streaming) {
+      (byService[r.item.serviceId] ??= []).add(r);
+    }
+
     final l = AppLocalizations.of(context);
+    final hasLocal = tracks.isNotEmpty || albums.isNotEmpty || artists.isNotEmpty;
     final sections = <Widget>[
-      if (tracks.isNotEmpty) ...[
-        _SectionHeader(label: l.searchSectionTracks, count: tracks.length),
-        ...tracks.map((r) => _TrackTile(result: r)),
+      // --- Local library results ---
+      if (hasLocal) ...[
+        _SourceHeader(label: l.homeLibrary, icon: Icons.library_music_rounded,
+            color: TuneColors.accent),
+        if (artists.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionArtists, count: artists.length),
+          ...artists.map((r) => _ArtistTile(result: r)),
+        ],
+        if (albums.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
+          ...albums.map((r) => _AlbumTile(result: r)),
+        ],
+        if (tracks.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionTracks, count: tracks.length),
+          ...tracks.map((r) => _TrackTile(result: r)),
+        ],
       ],
-      if (albums.isNotEmpty) ...[
-        _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
-        ...albums.map((r) => _AlbumTile(result: r)),
-      ],
-      if (artists.isNotEmpty) ...[
-        _SectionHeader(label: l.searchSectionArtists, count: artists.length),
-        ...artists.map((r) => _ArtistTile(result: r)),
-      ],
-      if (streaming.isNotEmpty) ...[
-        _SectionHeader(label: l.searchSectionStreaming, count: streaming.length),
-        ...streaming.map((r) => _StreamingTile(result: r)),
+      // --- Streaming service results, one section per service ---
+      for (final entry in byService.entries) ...[
+        _ServiceSection(serviceId: entry.key, items: entry.value),
       ],
       const SizedBox(height: 80),
     ];
@@ -160,9 +174,39 @@ class _SearchResults extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Tuiles résultats
+// Source & Section headers
 // ---------------------------------------------------------------------------
 
+/// Top-level source header (e.g. "Library", "Tidal", "Qobuz").
+class _SourceHeader extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _SourceHeader({required this.label, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: color.withValues(alpha: 0.3), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Text(label,
+              style: TuneFonts.subheadline.copyWith(
+                  color: color, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sub-section header within a source (e.g. "Tracks (5)").
 class _SectionHeader extends StatelessWidget {
   final String label;
   final int count;
@@ -171,19 +215,72 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
           Text(label,
-              style: TuneFonts.subheadline
-                  .copyWith(color: TuneColors.textPrimary)),
+              style: TuneFonts.footnote.copyWith(
+                  color: TuneColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
           const SizedBox(width: 6),
-          Text('($count)', style: TuneFonts.footnote),
+          Text('($count)',
+              style: TuneFonts.footnote.copyWith(
+                  color: TuneColors.textTertiary)),
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// _ServiceSection — streaming results grouped by service
+// ---------------------------------------------------------------------------
+
+class _ServiceSection extends StatelessWidget {
+  final String serviceId;
+  final List<StreamingResult> items;
+  const _ServiceSection({required this.serviceId, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final info = serviceInfo(serviceId);
+
+    // Sub-group by type within this service
+    final tracks = items.where((r) => r.item.type == 'track').toList();
+    final albums = items.where((r) => r.item.type == 'album').toList();
+    final artists = items.where((r) => r.item.type == 'artist').toList();
+    // Items without a recognized type go into tracks
+    final other = items.where((r) =>
+        r.item.type != 'track' && r.item.type != 'album' && r.item.type != 'artist').toList();
+
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SourceHeader(label: info.name, icon: info.icon, color: info.color),
+        if (artists.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionArtists, count: artists.length),
+          ...artists.map((r) => _StreamingTile(result: r)),
+        ],
+        if (albums.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
+          ...albums.map((r) => _StreamingTile(result: r)),
+        ],
+        if (tracks.isNotEmpty || other.isNotEmpty) ...[
+          _SectionHeader(label: l.searchSectionTracks,
+              count: tracks.length + other.length),
+          ...tracks.map((r) => _StreamingTile(result: r)),
+          ...other.map((r) => _StreamingTile(result: r)),
+        ],
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tuiles résultats
+// ---------------------------------------------------------------------------
 
 class _TrackTile extends StatelessWidget {
   final TrackSearchResult result;
@@ -290,18 +387,28 @@ class _StreamingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final item = result.item;
     final app = context.read<AppState>();
-    return ListTile(
-      onTap: () => app.playStreaming(item),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: ArtworkView(url: item.coverUrl, size: 44),
-      ),
-      title: Text(item.title,
-          style: TuneFonts.body,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis),
-      subtitle: _sub(item),
-      trailing: item.album != null
+
+    // Determine action based on type
+    VoidCallback onTap;
+    Widget? trailing;
+
+    if (item.type == 'album') {
+      onTap = () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => StreamingAlbumDetailView(track: item),
+      ));
+      trailing = const Icon(Icons.chevron_right_rounded,
+          color: TuneColors.textTertiary);
+    } else if (item.type == 'artist') {
+      // For artists, navigate to album detail as a placeholder
+      onTap = () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => StreamingAlbumDetailView(track: item),
+      ));
+      trailing = const Icon(Icons.chevron_right_rounded,
+          color: TuneColors.textTertiary);
+    } else {
+      // Track — play it
+      onTap = () => app.playStreaming(item);
+      trailing = item.album != null
           ? IconButton(
               icon: const Icon(Icons.album_rounded,
                   size: 18, color: TuneColors.textTertiary),
@@ -309,7 +416,39 @@ class _StreamingTile extends StatelessWidget {
                 builder: (_) => StreamingAlbumDetailView(track: item),
               )),
             )
-          : null,
+          : null;
+    }
+
+    // Leading widget: artwork or avatar for artists
+    Widget leading;
+    if (item.type == 'artist') {
+      leading = CircleAvatar(
+        radius: 22,
+        backgroundColor: serviceInfo(item.serviceId).color.withValues(alpha: 0.15),
+        child: Text(
+          item.title.isNotEmpty ? item.title[0].toUpperCase() : '?',
+          style: TextStyle(
+            color: serviceInfo(item.serviceId).color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else {
+      leading = ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: ArtworkView(url: item.coverUrl, size: 44),
+      );
+    }
+
+    return ListTile(
+      onTap: onTap,
+      leading: leading,
+      title: Text(item.title,
+          style: TuneFonts.body,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis),
+      subtitle: _sub(item),
+      trailing: trailing,
     );
   }
 

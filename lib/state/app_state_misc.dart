@@ -35,6 +35,24 @@ extension AppStateMisc on AppState {
     return added;
   }
 
+  /// Ajoute plusieurs pistes à une playlist.
+  /// En mode remote, utilise l'API REST ; en local, le repo SQLite.
+  /// Retourne le nombre de pistes effectivement ajoutées.
+  Future<int> addTracksToPlaylist(List<int> trackIds, int playlistId) async {
+    if (isRemoteMode && _apiClient != null) {
+      try {
+        final result = await _apiClient!.addPlaylistTracks(playlistId, trackIds);
+        await _refreshPlaylists();
+        return result['added'] as int? ?? trackIds.length;
+      } catch (_) {
+        return 0;
+      }
+    }
+    final added = await engine.db.playlistRepo.addTracks(playlistId, trackIds);
+    if (added > 0) await _refreshPlaylists();
+    return added;
+  }
+
   Future<void> removeTrackFromPlaylist(int trackId, int playlistId) async {
     await engine.db.playlistRepo.removeTrack(playlistId, trackId);
     await _refreshPlaylists();

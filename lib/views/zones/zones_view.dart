@@ -91,41 +91,49 @@ class ZonesView extends StatelessWidget {
   }
 
   void _showCreateZoneDialog(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: TuneColors.surface,
-        title: Text(l.zonesNew, style: TuneFonts.title3),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(color: TuneColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: l.zonesNewName,
-            hintStyle: const TextStyle(color: TuneColors.textTertiary),
+    final isRemote = context.read<AppState>().apiClient != null;
+    if (isRemote) {
+      showDialog(
+        context: context,
+        builder: (ctx) => const _CreateZoneRemoteDialog(),
+      );
+    } else {
+      final l = AppLocalizations.of(context);
+      final controller = TextEditingController();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: TuneColors.surface,
+          title: Text(l.zonesNew, style: TuneFonts.title3),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: TuneColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: l.zonesNewName,
+              hintStyle: const TextStyle(color: TuneColors.textTertiary),
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.btnCancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  context.read<AppState>().createZone(name);
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text(l.btnCreate),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.btnCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                context.read<AppState>().createZone(name);
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(l.btnCreate),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 }
 
@@ -1725,6 +1733,284 @@ class _CreateStereoPairDialogState extends State<_CreateStereoPairDialog> {
           ),
         );
       }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dialog de création de zone (remote mode — avec device picker)
+// ---------------------------------------------------------------------------
+
+class _CreateZoneRemoteDialog extends StatefulWidget {
+  const _CreateZoneRemoteDialog();
+
+  @override
+  State<_CreateZoneRemoteDialog> createState() =>
+      _CreateZoneRemoteDialogState();
+}
+
+class _CreateZoneRemoteDialogState extends State<_CreateZoneRemoteDialog> {
+  final _nameCtrl = TextEditingController();
+  List<Map<String, dynamic>> _devices = [];
+  bool _loadingDevices = true;
+  String? _selectedDeviceId;
+  String? _selectedDeviceType;
+  bool _creating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadDevices() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) {
+      if (mounted) setState(() => _loadingDevices = false);
+      return;
+    }
+    try {
+      final data = await api.getDiscoveredDevices();
+      if (mounted) {
+        setState(() {
+          _devices = data
+              .whereType<Map<String, dynamic>>()
+              .where((d) {
+                final type = d['type'] as String? ?? '';
+                // Only show renderer-type devices (DLNA, OpenHome, BluOS, Chromecast, OAAT, Squeezebox)
+                return type != 'server' && type != 'media_server';
+              })
+              .toList();
+          _loadingDevices = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDevices = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text(l.zonesNew, style: TuneFonts.title3),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Zone name
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              style: const TextStyle(color: TuneColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: l.zonesNewName,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            // Device picker
+            Text(l.zonesDevices, style: TuneFonts.subheadline),
+            const SizedBox(height: 8),
+            if (_loadingDevices)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: TuneColors.accent),
+                  ),
+                ),
+              )
+            else if (_devices.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l.zonesOutputLocal,
+                  style: TuneFonts.footnote
+                      .copyWith(color: TuneColors.textTertiary),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: RadioGroup<String?>(
+                  groupValue: _selectedDeviceId,
+                  onChanged: (v) {
+                    final device = _devices.where((d) => d['id'] == v).firstOrNull;
+                    setState(() {
+                      _selectedDeviceId = v;
+                      _selectedDeviceType = device != null
+                          ? (device['type'] as String? ?? 'dlna')
+                          : null;
+                      // Auto-fill name from device if name field is empty
+                      if (v != null &&
+                          _nameCtrl.text.trim().isEmpty &&
+                          device != null) {
+                        _nameCtrl.text =
+                            device['name'] as String? ?? '';
+                      }
+                    });
+                  },
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      // Local output option
+                      RadioListTile<String?>(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: TuneColors.accent,
+                        value: null,
+                        title: Text(
+                          l.zonesOutputLocal,
+                          style:
+                              const TextStyle(color: TuneColors.textPrimary),
+                        ),
+                        secondary: const Icon(Icons.speaker_phone_rounded,
+                            color: TuneColors.textSecondary, size: 20),
+                      ),
+                      // Discovered devices
+                      ..._devices.map((device) {
+                        final id = device['id'] as String? ?? '';
+                        final name = device['name'] as String? ?? id;
+                        final type = device['type'] as String? ?? 'dlna';
+                        final host = device['host'] as String? ?? '';
+                        final icon = _deviceTypeIcon(type);
+                        return RadioListTile<String?>(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: TuneColors.accent,
+                          value: id,
+                          title: Text(
+                            name,
+                            style: const TextStyle(
+                                color: TuneColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${_deviceTypeLabel(type)} - $host',
+                            style: TuneFonts.caption,
+                          ),
+                          secondary: Icon(icon,
+                              color: TuneColors.textSecondary, size: 20),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _creating ? null : () => Navigator.pop(context),
+          child: Text(l.btnCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+          onPressed: _nameCtrl.text.trim().isNotEmpty && !_creating
+              ? _onCreate
+              : null,
+          child: _creating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : Text(l.btnCreate),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onCreate() async {
+    final l = AppLocalizations.of(context);
+    setState(() => _creating = true);
+    try {
+      final appState = context.read<AppState>();
+      await appState.createZone(
+        _nameCtrl.text.trim(),
+        outputType: _selectedDeviceType,
+        outputDeviceId: _selectedDeviceId,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.zonesActivated(_nameCtrl.text.trim())),
+            duration: const Duration(seconds: 2),
+            backgroundColor: TuneColors.accent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _creating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$e'),
+            backgroundColor: TuneColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  static IconData _deviceTypeIcon(String type) {
+    switch (type) {
+      case 'dlna':
+      case 'renderer':
+      case 'openhome':
+        return Icons.cast_rounded;
+      case 'bluos':
+        return Icons.speaker_rounded;
+      case 'chromecast':
+        return Icons.cast_connected_rounded;
+      case 'squeezebox':
+        return Icons.speaker_group_rounded;
+      case 'oaat':
+        return Icons.surround_sound_rounded;
+      case 'airplay':
+        return Icons.airplay_rounded;
+      default:
+        return Icons.cast_rounded;
+    }
+  }
+
+  static String _deviceTypeLabel(String type) {
+    switch (type) {
+      case 'dlna':
+      case 'renderer':
+        return 'DLNA';
+      case 'openhome':
+        return 'OpenHome';
+      case 'bluos':
+        return 'BluOS';
+      case 'chromecast':
+        return 'Chromecast';
+      case 'squeezebox':
+        return 'Squeezebox';
+      case 'oaat':
+        return 'OAAT';
+      case 'airplay':
+        return 'AirPlay';
+      default:
+        return type.toUpperCase();
     }
   }
 }

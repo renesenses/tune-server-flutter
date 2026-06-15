@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "{count} Titel zu \"{name}\" hinzugefügt",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "Alle zur Playlist hinzufügen",
   "playlistDeleteTitle": "Playlist löschen?",
   "playlistDeleteBody": "Diese Playlist wird dauerhaft gelöscht.",
   "searchHint": "Suchen…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "Kein Titel",
   "queueTitle": "Wiedergabeliste",
   "queueEmpty": "Liste leer",
+  "queueClearTitle": "Liste leeren?",
+  "queueClearBody": "Alle Titel werden aus der Wiedergabeliste entfernt.",
   "zonesTitle": "Zonen",
   "zonesNew": "Neue Zone",
   "zonesNewName": "Zonenname",

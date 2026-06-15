@@ -218,6 +218,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String playlistTracksAdded(int count, String name) {
+    return '$count pistes ajoutées à \"$name\"';
+  }
+
+  @override
+  String get playlistAddAllTracks => 'Tout ajouter à une playlist';
+
+  @override
   String get playlistDeleteTitle => 'Supprimer la playlist ?';
 
   @override
@@ -286,6 +294,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get queueEmpty => 'File vide';
+
+  @override
+  String get queueClearTitle => 'Vider la file ?';
+
+  @override
+  String get queueClearBody =>
+      'Toutes les pistes seront supprimées de la file de lecture.';
 
   @override
   String get zonesTitle => 'Zones';

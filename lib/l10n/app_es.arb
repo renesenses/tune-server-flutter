@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "{count} pistas añadidas a \"{name}\"",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "Añadir todo a una lista",
   "playlistDeleteTitle": "¿Eliminar lista?",
   "playlistDeleteBody": "Esta lista se eliminará permanentemente.",
   "searchHint": "Buscar…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "Sin pista",
   "queueTitle": "Cola de reproducción",
   "queueEmpty": "Cola vacía",
+  "queueClearTitle": "Vaciar cola?",
+  "queueClearBody": "Se eliminarán todas las pistas de la cola de reproducción.",
   "zonesTitle": "Zonas",
   "zonesNew": "Nueva zona",
   "zonesNewName": "Nombre de zona",

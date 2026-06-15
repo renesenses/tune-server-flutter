@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "已将{count}首曲目添加到「{name}」",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "全部添加到播放列表",
   "playlistDeleteTitle": "删除播放列表？",
   "playlistDeleteBody": "此播放列表将被永久删除。",
   "searchHint": "搜索…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "没有曲目",
   "queueTitle": "播放队列",
   "queueEmpty": "队列为空",
+  "queueClearTitle": "清空队列？",
+  "queueClearBody": "播放队列中的所有曲目将被移除。",
   "zonesTitle": "区域",
   "zonesNew": "新区域",
   "zonesNewName": "区域名称",

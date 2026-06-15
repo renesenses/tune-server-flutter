@@ -54,6 +54,16 @@ extension AppStateRadio on AppState {
     String? logoUrl,
     String? genre,
   }) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.createRadio(
+        name: name,
+        url: streamUrl,
+        logoUrl: logoUrl,
+        genre: genre,
+      );
+      await _refreshRadiosRemote();
+      return;
+    }
     await engine.db.radioRepo.insert(RadiosCompanion.insert(
       name: name,
       streamUrl: streamUrl,
@@ -64,6 +74,11 @@ extension AppStateRadio on AppState {
   }
 
   Future<void> deleteRadio(int id) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.deleteRadio(id);
+      await _refreshRadiosRemote();
+      return;
+    }
     await engine.db.radioRepo.delete(id);
     await _refreshRadios();
   }
@@ -75,6 +90,16 @@ extension AppStateRadio on AppState {
     String? logoUrl,
     String? genre,
   }) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.updateRadio(id,
+        name: name,
+        url: streamUrl,
+        logoUrl: logoUrl,
+        genre: genre,
+      );
+      await _refreshRadiosRemote();
+      return;
+    }
     await (engine.db.update(engine.db.radios)
           ..where((r) => r.id.equals(id)))
         .write(RadiosCompanion(
@@ -87,12 +112,25 @@ extension AppStateRadio on AppState {
   }
 
   Future<void> toggleRadioFavorite(Radio radio) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.toggleRadioFavorite(radio.id,
+          favorite: !radio.favorite);
+      await _refreshRadiosRemote();
+      return;
+    }
     await engine.db.radioRepo.setFavorite(radio.id, favorite: !radio.favorite);
     await _refreshRadios();
   }
 
   /// Importe des stations depuis du contenu M3U (texte brut).
   Future<int> importM3UContent(String content) async {
+    if (isRemoteMode && _apiClient != null) {
+      final stations = _parseM3UToStations(content);
+      if (stations.isEmpty) return 0;
+      final result = await _apiClient!.importRadioStations(stations);
+      await _refreshRadiosRemote();
+      return result['imported'] as int? ?? 0;
+    }
     final dir = await getTemporaryDirectory();
     final tmp = File(
         '${dir.path}/import_${DateTime.now().millisecondsSinceEpoch}.m3u');
@@ -101,6 +139,28 @@ extension AppStateRadio on AppState {
     try { await tmp.delete(); } catch (_) {}
     await _refreshRadios();
     return added;
+  }
+
+  /// Parse M3U content into a list of station maps for the remote API.
+  List<Map<String, dynamic>> _parseM3UToStations(String content) {
+    final lines = content.split('\n').map((l) => l.trim()).toList();
+    final stations = <Map<String, dynamic>>[];
+    String? pendingName;
+    for (final line in lines) {
+      if (line.startsWith('#EXTINF:')) {
+        final comma = line.indexOf(',');
+        if (comma != -1) {
+          pendingName = line.substring(comma + 1).trim();
+        }
+      } else if (line.isNotEmpty && !line.startsWith('#')) {
+        stations.add({
+          'name': pendingName ?? line,
+          'url': line,
+        });
+        pendingName = null;
+      }
+    }
+    return stations;
   }
 
   /// Sauvegarde le morceau en cours dans les favoris radio.

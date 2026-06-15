@@ -11,7 +11,12 @@ extension AppStateZones on AppState {
   // Zones
   // ---------------------------------------------------------------------------
 
-  Future<void> createZone(String name) async {
+  Future<void> createZone(String name, {String? outputType, String? outputDeviceId}) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.createZoneRemote(name, outputType: outputType, outputDeviceId: outputDeviceId);
+      await refreshZonesRemote();
+      return;
+    }
     await engine.zoneManager.createZone(name);
     await _refreshZones();
   }
@@ -39,11 +44,21 @@ extension AppStateZones on AppState {
   }
 
   Future<void> deleteZone(int zoneId) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.deleteZoneRemote(zoneId);
+      await refreshZonesRemote();
+      return;
+    }
     await engine.zoneManager.deleteZone(zoneId);
     await _refreshZones();
   }
 
   Future<void> renameZone(int zoneId, String newName) async {
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.renameZoneRemote(zoneId, newName);
+      await refreshZonesRemote();
+      return;
+    }
     await engine.zoneManager.renameZone(zoneId, newName);
     await _refreshZones();
   }

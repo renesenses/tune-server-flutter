@@ -161,7 +161,15 @@ extension AppStatePlayback on AppState {
 
   Future<void> moveQueueItem(int fromIndex, int toIndex, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    final instance = engine.zoneManager.zone(id ?? -1);
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.moveQueueItem(id, fromIndex, toIndex);
+      await refreshZonesRemote();
+      return;
+    }
+
+    final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
     instance.queue.move(fromIndex, toIndex);
     zoneState.setQueueSnapshot(instance.queue.snapshot());
@@ -169,9 +177,52 @@ extension AppStatePlayback on AppState {
 
   Future<void> removeQueueItem(int index, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
-    final instance = engine.zoneManager.zone(id ?? -1);
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.removeFromQueue(id, index);
+      await refreshZonesRemote();
+      return;
+    }
+
+    final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
     instance.queue.remove(index);
+    zoneState.setQueueSnapshot(instance.queue.snapshot());
+  }
+
+  Future<void> jumpToQueuePosition(int position, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.jumpToQueuePosition(id, position);
+      await refreshZonesRemote();
+      return;
+    }
+
+    final instance = engine.zoneManager.zone(id);
+    if (instance == null) return;
+    instance.queue.jumpTo(position);
+    instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+    instance.player.crossfadeDuration = settingsState.crossfadeDuration;
+    await instance.player.play();
+  }
+
+  Future<void> clearQueue({int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      await _apiClient!.clearQueue(id);
+      await refreshZonesRemote();
+      return;
+    }
+
+    final instance = engine.zoneManager.zone(id);
+    if (instance == null) return;
+    await instance.player.stop();
+    instance.queue.clear();
     zoneState.setQueueSnapshot(instance.queue.snapshot());
   }
 

@@ -739,6 +739,22 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
                             await app.shuffleAll(albumId: widget.album.id);
                           },
                   ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.playlist_add_rounded),
+                    tooltip: AppLocalizations.of(context).playlistAddAllTracks,
+                    color: TuneColors.textSecondary,
+                    onPressed: _tracks == null || _tracks!.isEmpty
+                        ? null
+                        : () => showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: TuneColors.surface,
+                              builder: (_) => AddToPlaylistSheet(
+                                trackIds: _tracks!.map((t) => t.id).toList(),
+                              ),
+                            ),
+                  ),
                 ],
               ),
             ),

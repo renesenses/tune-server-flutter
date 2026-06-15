@@ -218,6 +218,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String playlistTracksAdded(int count, String name) {
+    return '$count tracks added to \"$name\"';
+  }
+
+  @override
+  String get playlistAddAllTracks => 'Add all to playlist';
+
+  @override
   String get playlistDeleteTitle => 'Delete playlist?';
 
   @override
@@ -285,6 +293,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueEmpty => 'Empty queue';
+
+  @override
+  String get queueClearTitle => 'Clear queue?';
+
+  @override
+  String get queueClearBody =>
+      'All tracks will be removed from the playback queue.';
 
   @override
   String get zonesTitle => 'Zones';

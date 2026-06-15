@@ -217,6 +217,14 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String playlistTracksAdded(int count, String name) {
+    return '\"$name\"에 $count곡 추가됨';
+  }
+
+  @override
+  String get playlistAddAllTracks => '전체 플레이리스트에 추가';
+
+  @override
   String get playlistDeleteTitle => '플레이리스트를 삭제하시겠습니까?';
 
   @override
@@ -284,6 +292,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get queueEmpty => '대기열 비어 있음';
+
+  @override
+  String get queueClearTitle => '대기열을 비우시겠습니까?';
+
+  @override
+  String get queueClearBody => '재생 대기열에서 모든 트랙이 제거됩니다.';
 
   @override
   String get zonesTitle => '구역';

@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "{count} tracks added to \"{name}\"",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "Add all to playlist",
   "playlistDeleteTitle": "Delete playlist?",
   "playlistDeleteBody": "This playlist will be permanently deleted.",
   "searchHint": "Search…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "No track",
   "queueTitle": "Playback queue",
   "queueEmpty": "Empty queue",
+  "queueClearTitle": "Clear queue?",
+  "queueClearBody": "All tracks will be removed from the playback queue.",
   "zonesTitle": "Zones",
   "zonesNew": "New zone",
   "zonesNewName": "Zone name",

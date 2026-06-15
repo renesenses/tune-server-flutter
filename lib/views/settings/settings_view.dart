@@ -24,6 +24,7 @@ import 'spotify_connect_view.dart';
 import 'library_setup_view.dart';
 import 'metadata_fields_view.dart';
 import 'metadata_view.dart';
+import 'server_config_view.dart';
 import 'smb_setup_view.dart';
 import 'sources_view.dart';
 import '../help/bug_report_view.dart';
@@ -541,6 +542,16 @@ class _SettingsList extends StatelessWidget {
             color: TuneColors.surface,
             child: Column(
               children: [
+                _SettingsTile(
+                  title: 'Configuration serveur',
+                  subtitle: 'Dossiers musicaux, scan, redemarrage',
+                  trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ServerConfigView()),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
                   title: 'Diagnostics reseau',
                   subtitle: 'Multicast, DNS, connectivite',

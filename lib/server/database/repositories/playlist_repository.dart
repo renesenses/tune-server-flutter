@@ -88,6 +88,17 @@ class PlaylistRepository {
     return true;
   }
 
+  /// Ajoute plusieurs pistes en fin de playlist.
+  /// Retourne le nombre de pistes effectivement ajoutées (ignore les doublons).
+  Future<int> addTracks(int playlistId, List<int> trackIds) async {
+    int added = 0;
+    for (final trackId in trackIds) {
+      final ok = await addTrack(playlistId, trackId);
+      if (ok) added++;
+    }
+    return added;
+  }
+
   /// Supprime une piste d'une playlist.
   Future<void> removeTrack(int playlistId, int trackId) async {
     await (_db.delete(_db.playlistTracks)

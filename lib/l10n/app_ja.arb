@@ -82,6 +82,14 @@
       }
     }
   },
+  "playlistTracksAdded": "{count}曲を「{name}」に追加しました",
+  "@playlistTracksAdded": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "name": { "type": "String" }
+    }
+  },
+  "playlistAddAllTracks": "全曲をプレイリストに追加",
   "playlistDeleteTitle": "プレイリストを削除？",
   "playlistDeleteBody": "このプレイリストは完全に削除されます。",
   "searchHint": "検索…",
@@ -105,6 +113,8 @@
   "nowPlayingNoTrack": "曲なし",
   "queueTitle": "再生キュー",
   "queueEmpty": "キューが空",
+  "queueClearTitle": "キューをクリアしますか？",
+  "queueClearBody": "再生キューからすべてのトラックが削除されます。",
   "zonesTitle": "ゾーン",
   "zonesNew": "新しいゾーン",
   "zonesNewName": "ゾーン名",

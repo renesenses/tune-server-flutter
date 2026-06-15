@@ -8,6 +8,7 @@ import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../library/add_to_playlist_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // T11.4 — QueueView
@@ -19,6 +20,30 @@ import '../helpers/tune_fonts.dart';
 
 class QueueView extends StatelessWidget {
   const QueueView({super.key});
+
+  void _showClearConfirm(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context).queueClearTitle),
+        content: Text(AppLocalizations.of(context).queueClearBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context).btnCancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AppState>().clearQueue();
+            },
+            child: Text(AppLocalizations.of(context).btnClear,
+                style: const TextStyle(color: TuneColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +73,12 @@ class QueueView extends StatelessWidget {
             children: [
               Text(AppLocalizations.of(context).queueTitle, style: TuneFonts.title3),
               const Spacer(),
-              if (tracks.isNotEmpty)
+              if (tracks.isNotEmpty) ...[
+                TextButton(
+                  onPressed: () => _showClearConfirm(context),
+                  child: Text(AppLocalizations.of(context).btnClear,
+                      style: const TextStyle(color: TuneColors.error)),
+                ),
                 TextButton(
                   onPressed: () => context
                       .read<AppState>()
@@ -56,6 +86,7 @@ class QueueView extends StatelessWidget {
                   child: Text(AppLocalizations.of(context).btnShuffle,
                       style: const TextStyle(color: TuneColors.accent)),
                 ),
+              ],
             ],
           ),
         ),
@@ -133,6 +164,14 @@ class _QueueItem extends StatelessWidget {
                 ? TuneColors.accent.withValues(alpha: 0.12)
                 : Colors.transparent,
             child: ListTile(
+              onTap: isCurrent
+                  ? null
+                  : () => context
+                      .read<AppState>()
+                      .jumpToQueuePosition(index),
+              onLongPress: track.id != 0
+                  ? () => _showQueueItemMenu(context, track)
+                  : null,
               leading: ArtworkView(
                 filePath: track.coverPath,
                 size: 42,
@@ -187,6 +226,37 @@ class _QueueItem extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  void _showQueueItemMenu(BuildContext context, Track track) {
+    final l = AppLocalizations.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.playlist_add_rounded,
+                  color: TuneColors.accent),
+              title: Text(l.playlistAddTo, style: TuneFonts.body),
+              onTap: () {
+                Navigator.pop(ctx);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: TuneColors.surface,
+                  builder: (_) => AddToPlaylistSheet(track: track),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
