@@ -9,6 +9,7 @@ import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../library/add_to_playlist_sheet.dart';
+import '../streaming/streaming_helpers.dart';
 
 // ---------------------------------------------------------------------------
 // T11.4 — QueueView
@@ -191,11 +192,21 @@ class _QueueItem extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: track.artistName != null
-                  ? Text(
-                      track.artistName!,
-                      style: TuneFonts.caption,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ? Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            track.artistName!,
+                            style: TuneFonts.caption,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (ServiceBadge.isStreaming(track.source)) ...[
+                          const SizedBox(width: 6),
+                          ServiceBadge(source: track.source, compact: true),
+                        ],
+                      ],
                     )
                   : null,
               trailing: isCurrent

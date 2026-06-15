@@ -457,11 +457,27 @@ class _StreamingTile extends StatelessWidget {
       if (item.artist != null) item.artist!,
       if (item.album != null) item.album!,
     ];
-    if (parts.isEmpty) return null;
-    return Text(parts.join(' · '),
-        style: TuneFonts.footnote,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis);
+    if (parts.isEmpty) {
+      // No text subtitle — show badge alone if streaming
+      if (ServiceBadge.isStreaming(item.serviceId)) {
+        return ServiceBadge(source: item.serviceId, compact: true);
+      }
+      return null;
+    }
+    return Row(
+      children: [
+        Flexible(
+          child: Text(parts.join(' · '),
+              style: TuneFonts.footnote,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+        ),
+        if (ServiceBadge.isStreaming(item.serviceId)) ...[
+          const SizedBox(width: 6),
+          ServiceBadge(source: item.serviceId, compact: true),
+        ],
+      ],
+    );
   }
 }
 

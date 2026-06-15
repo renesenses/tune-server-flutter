@@ -10,6 +10,7 @@ import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../nowplaying/now_playing_view.dart';
+import '../streaming/streaming_helpers.dart';
 
 // ---------------------------------------------------------------------------
 // T10.6 — MiniPlayerView
@@ -105,6 +106,10 @@ class _MiniPlayerContent extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (ServiceBadge.isStreaming(track.source)) ...[
+                          const SizedBox(width: 6),
+                          ServiceBadge(source: track.source, compact: true),
+                        ],
                         if (_hasAudioInfo(track)) ...[
                           const SizedBox(width: 6),
                           _MiniAudioBadge(track: track),

@@ -9,6 +9,7 @@ import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../streaming/streaming_helpers.dart';
 
 // ---------------------------------------------------------------------------
 // T15.3 — HistoryView
@@ -130,6 +131,10 @@ class _HistoryTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (ServiceBadge.isStreaming(track.source)) ...[
+            ServiceBadge(source: track.source, compact: true),
+            const SizedBox(width: 6),
+          ],
           if (badge != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),

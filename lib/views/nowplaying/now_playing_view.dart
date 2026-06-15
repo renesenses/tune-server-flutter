@@ -24,6 +24,7 @@ import 'sleep_timer_sheet.dart';
 import 'volume_control_view.dart';
 import 'zone_management_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
+import '../streaming/streaming_helpers.dart';
 
 // ---------------------------------------------------------------------------
 // T11.1 — NowPlayingView
@@ -74,8 +75,9 @@ class NowPlayingView extends StatelessWidget {
                         _LargeArtwork(track: track),
                         const SizedBox(height: 28),
 
-                        // Audio quality badge
-                        if (track != null) _AudioQualityBadge(track: track),
+                        // Service + audio quality badges
+                        if (track != null)
+                          _NowPlayingBadges(track: track),
 
                         // Titre + artiste + bouton options
                         _TrackInfo(track: track),
@@ -1222,12 +1224,47 @@ class _TransportControls extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Combined service + audio quality badges row
+// ---------------------------------------------------------------------------
+
+class _NowPlayingBadges extends StatelessWidget {
+  final Track track;
+  const _NowPlayingBadges({required this.track});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasService = ServiceBadge.isStreaming(track.source);
+    final hasQuality = _AudioQualityBadge._hasBadge(track);
+
+    if (!hasService && !hasQuality) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (hasService) ServiceBadge(source: track.source),
+          if (hasService && hasQuality) const SizedBox(width: 8),
+          if (hasQuality) _AudioQualityBadge(track: track),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Audio Quality Badge — FLAC / 96 kHz / 24-bit
 // ---------------------------------------------------------------------------
 
 class _AudioQualityBadge extends StatelessWidget {
   final Track track;
   const _AudioQualityBadge({required this.track});
+
+  static bool _hasBadge(Track track) {
+    return (track.format != null && track.format!.isNotEmpty) ||
+        (track.sampleRate != null && track.sampleRate! > 0) ||
+        (track.bitDepth != null && track.bitDepth! > 0);
+  }
 
   String _formatBadge() {
     final parts = <String>[];
@@ -1255,24 +1292,21 @@ class _AudioQualityBadge extends StatelessWidget {
     final badge = _formatBadge();
     if (badge.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: TuneColors.accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: TuneColors.accent.withValues(alpha: 0.25),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: TuneColors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: TuneColors.accent.withValues(alpha: 0.25),
         ),
-        child: Text(
-          badge,
-          style: TuneFonts.caption.copyWith(
-            color: TuneColors.accent,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
-          ),
+      ),
+      child: Text(
+        badge,
+        style: TuneFonts.caption.copyWith(
+          color: TuneColors.accent,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
         ),
       ),
     );
