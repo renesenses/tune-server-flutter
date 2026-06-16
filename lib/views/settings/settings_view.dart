@@ -382,6 +382,10 @@ class _SettingsList extends StatelessWidget {
           ),
         ),
 
+        // ---- Champs métadonnées ----
+        const _SectionHeader('CHAMPS METADONNEES'),
+        const _MetadataFieldsToggleSection(),
+
         // ---- Audiophile / Qualite / EQ ----
         if (app.apiClient != null) ...[
           const _SectionHeader('AUDIO AVANCE'),
@@ -1463,6 +1467,73 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
           child: const Text('Fermer'),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _MetadataFieldsToggleSection — toggles for metadata chips shown under tracks
+// ---------------------------------------------------------------------------
+
+class _MetadataFieldsToggleSection extends StatelessWidget {
+  const _MetadataFieldsToggleSection();
+
+  static const _allFields = [
+    ('format',      'Format (FLAC, MP3…)'),
+    ('sample_rate', 'Fréquence (96kHz)'),
+    ('bit_depth',   'Profondeur (24bit)'),
+    ('genre',       'Genre'),
+    ('year',        'Année'),
+    ('label',       'Label'),
+    ('composer',    'Compositeur'),
+    ('duration',    'Durée'),
+    ('source',      'Source (Tidal, Qobuz…)'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsState>();
+    final selected = settings.metadataDisplayFields;
+
+    return Container(
+      color: TuneColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+            child: Text(
+              'Champs affichés sous chaque piste (recherche, bibliothèque, file, historique)',
+              style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
+            ),
+          ),
+          ..._allFields.map((fieldDef) {
+            final (key, label) = fieldDef;
+            final isEnabled = selected.contains(key);
+            return Column(
+              children: [
+                const Divider(height: 1, indent: 16, color: TuneColors.divider),
+                SwitchListTile(
+                  dense: true,
+                  title: Text(label, style: TuneFonts.body),
+                  value: isEnabled,
+                  onChanged: (_) {
+                    final next = List<String>.from(selected);
+                    if (isEnabled) {
+                      next.remove(key);
+                    } else {
+                      next.add(key);
+                    }
+                    settings.setMetadataDisplayFields(next);
+                  },
+                  activeThumbColor: TuneColors.accent,
+                ),
+              ],
+            );
+          }),
+          const SizedBox(height: 4),
+        ],
+      ),
     );
   }
 }

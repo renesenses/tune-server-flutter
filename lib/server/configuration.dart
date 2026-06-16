@@ -153,6 +153,34 @@ class ServerConfiguration {
   Future<void> setExclusiveModeEnabled(bool value) => _p.setBool(_kExclusiveMode, value);
 
   // ---------------------------------------------------------------------------
+  // Metadata display fields
+  // ---------------------------------------------------------------------------
+
+  static const _kMetadataDisplayFields = 'metadata_display_fields';
+  static const List<String> defaultMetadataDisplayFields = [
+    'format',
+    'genre',
+    'year',
+  ];
+
+  List<String> get metadataDisplayFields {
+    final stored = _p.getString(_kMetadataDisplayFields);
+    if (stored == null) return defaultMetadataDisplayFields;
+    try {
+      final decoded = (stored.split(','))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      return decoded.isEmpty ? defaultMetadataDisplayFields : decoded;
+    } catch (_) {
+      return defaultMetadataDisplayFields;
+    }
+  }
+
+  Future<void> setMetadataDisplayFields(List<String> fields) =>
+      _p.setString(_kMetadataDisplayFields, fields.join(','));
+
+  // ---------------------------------------------------------------------------
   // Reset (tests / onboarding)
   // ---------------------------------------------------------------------------
 

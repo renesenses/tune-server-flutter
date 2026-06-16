@@ -9,6 +9,8 @@ import '../../server/server_engine.dart';
 import '../../server/streaming/streaming_service.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
+import '../../state/settings_state.dart';
+import '../../widgets/metadata_chips.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -290,6 +292,7 @@ class _TrackTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final track = result.track;
     final app = context.read<AppState>();
+    final metadataFields = context.watch<SettingsState>().metadataDisplayFields;
     return ListTile(
       onTap: () => app.playTracks([track]),
       leading: ClipRRect(
@@ -300,21 +303,37 @@ class _TrackTile extends StatelessWidget {
           style: TuneFonts.body,
           maxLines: 1,
           overflow: TextOverflow.ellipsis),
-      subtitle: _sub(track),
+      subtitle: _sub(track, metadataFields),
       trailing: FormatBadge(format: track.format),
     );
   }
 
-  Widget? _sub(Track track) {
+  Widget? _sub(Track track, List<String> metadataFields) {
     final parts = <String>[
       if (track.artistName != null) track.artistName!,
       if (track.albumTitle != null) track.albumTitle!,
     ];
-    if (parts.isEmpty) return null;
-    return Text(parts.join(' · '),
-        style: TuneFonts.footnote,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis);
+    final hasText = parts.isNotEmpty;
+    final hasChips = metadataFields.isNotEmpty;
+    if (!hasText && !hasChips) return null;
+    if (!hasChips) {
+      return Text(parts.join(' · '),
+          style: TuneFonts.footnote,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasText)
+          Text(parts.join(' · '),
+              style: TuneFonts.footnote,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+        MetadataChips(track: track, selectedFields: metadataFields),
+      ],
+    );
   }
 }
 

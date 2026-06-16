@@ -5,6 +5,8 @@ import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
+import '../../state/settings_state.dart';
+import '../../widgets/metadata_chips.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -119,25 +121,31 @@ class _TracksListViewState extends State<TracksListView> {
                   itemCount: filtered.length,
                   separatorBuilder: (_, __) => const Divider(
                       height: 1, indent: 72, color: TuneColors.divider),
-                  itemBuilder: (_, i) => _TrackTile(
-                    track: filtered[i],
-                    onTap: () => context
-                        .read<AppState>()
-                        .playTracks(filtered, startIndex: i),
-                    onEdit: () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: TuneColors.surface,
-                      builder: (_) => EditTrackSheet(track: filtered[i]),
-                    ),
-                    onAddToPlaylist: () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: TuneColors.surface,
-                      builder: (_) =>
-                          AddToPlaylistSheet(track: filtered[i]),
-                    ),
-                  ),
+                  itemBuilder: (_, i) {
+                    final metadataFields = context
+                        .read<SettingsState>()
+                        .metadataDisplayFields;
+                    return _TrackTile(
+                      track: filtered[i],
+                      metadataFields: metadataFields,
+                      onTap: () => context
+                          .read<AppState>()
+                          .playTracks(filtered, startIndex: i),
+                      onEdit: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: TuneColors.surface,
+                        builder: (_) => EditTrackSheet(track: filtered[i]),
+                      ),
+                      onAddToPlaylist: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: TuneColors.surface,
+                        builder: (_) =>
+                            AddToPlaylistSheet(track: filtered[i]),
+                      ),
+                    );
+                  },
                 ),
         ),
       ],
@@ -264,12 +272,14 @@ class _FilterBar extends StatelessWidget {
 
 class _TrackTile extends StatelessWidget {
   final Track track;
+  final List<String> metadataFields;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onAddToPlaylist;
 
   const _TrackTile({
     required this.track,
+    required this.metadataFields,
     required this.onTap,
     required this.onEdit,
     required this.onAddToPlaylist,
@@ -305,12 +315,30 @@ class _TrackTile extends StatelessWidget {
       if (track.artistName != null) track.artistName!,
       if (track.albumTitle != null) track.albumTitle!,
     ];
-    if (parts.isEmpty) return null;
-    return Text(
-      parts.join(' · '),
-      style: TuneFonts.footnote,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+    final hasText = parts.isNotEmpty;
+    final hasChips = metadataFields.isNotEmpty;
+    if (!hasText && !hasChips) return null;
+    if (!hasChips) {
+      return Text(
+        parts.join(' · '),
+        style: TuneFonts.footnote,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasText)
+          Text(
+            parts.join(' · '),
+            style: TuneFonts.footnote,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        MetadataChips(track: track, selectedFields: metadataFields),
+      ],
     );
   }
 

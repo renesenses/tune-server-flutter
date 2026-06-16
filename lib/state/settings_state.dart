@@ -132,4 +132,15 @@ class SettingsState extends ChangeNotifier {
     await _config.setExclusiveModeEnabled(value);
     notifyListeners();
   }
+
+  // ---------------------------------------------------------------------------
+  // Metadata display fields
+  // ---------------------------------------------------------------------------
+
+  List<String> get metadataDisplayFields => _config.metadataDisplayFields;
+
+  Future<void> setMetadataDisplayFields(List<String> fields) async {
+    await _config.setMetadataDisplayFields(fields);
+    notifyListeners();
+  }
 }

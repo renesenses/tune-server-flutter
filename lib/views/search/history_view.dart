@@ -6,6 +6,8 @@ import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
+import '../../state/settings_state.dart';
+import '../../widgets/metadata_chips.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -93,6 +95,7 @@ class _HistoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final track = entry.track as Track;
     final badge = _audioBadge(track);
+    final metadataFields = context.watch<SettingsState>().metadataDisplayFields;
 
     return ListTile(
       onTap: onTap,
@@ -113,6 +116,8 @@ class _HistoryTile extends StatelessWidget {
                 style: TuneFonts.footnote,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
+          if (metadataFields.isNotEmpty)
+            MetadataChips(track: track, selectedFields: metadataFields),
           Row(
             children: [
               Text(entry.zoneName,

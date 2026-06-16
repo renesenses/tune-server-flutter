@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
+import '../../state/settings_state.dart';
 import '../../state/zone_state.dart';
+import '../../widgets/metadata_chips.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -191,24 +193,7 @@ class _QueueItem extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              subtitle: track.artistName != null
-                  ? Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            track.artistName!,
-                            style: TuneFonts.caption,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (ServiceBadge.isStreaming(track.source)) ...[
-                          const SizedBox(width: 6),
-                          ServiceBadge(source: track.source, compact: true),
-                        ],
-                      ],
-                    )
-                  : null,
+              subtitle: _buildSubtitle(context, track),
               trailing: isCurrent
                   ? const Icon(Icons.equalizer_rounded,
                       color: TuneColors.accent, size: 18)
@@ -238,6 +223,41 @@ class _QueueItem extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+
+  Widget? _buildSubtitle(BuildContext context, Track track) {
+    final metadataFields =
+        context.read<SettingsState>().metadataDisplayFields;
+    final hasArtist = track.artistName != null;
+    final hasBadge = ServiceBadge.isStreaming(track.source);
+    final hasChips = metadataFields.isNotEmpty;
+    if (!hasArtist && !hasBadge && !hasChips) return null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasArtist || hasBadge)
+          Row(
+            children: [
+              if (hasArtist)
+                Flexible(
+                  child: Text(
+                    track.artistName!,
+                    style: TuneFonts.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              if (hasBadge) ...[
+                const SizedBox(width: 6),
+                ServiceBadge(source: track.source, compact: true),
+              ],
+            ],
+          ),
+        if (hasChips)
+          MetadataChips(track: track, selectedFields: metadataFields),
+      ],
     );
   }
 
