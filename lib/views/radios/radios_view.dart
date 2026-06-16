@@ -12,6 +12,7 @@ import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../search/global_search_overlay.dart';
 import 'radio_favorites_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -53,6 +54,14 @@ class _RadiosViewState extends State<RadiosView>
         backgroundColor: TuneColors.surface,
         title: Text(l.radiosTitle, style: TuneFonts.title3),
         actions: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.search_rounded,
+                  color: TuneColors.textSecondary),
+              tooltip: l.navSearch,
+              onPressed: () => showGlobalSearch(ctx),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.bookmark_rounded,
                 size: 22, color: TuneColors.textSecondary),

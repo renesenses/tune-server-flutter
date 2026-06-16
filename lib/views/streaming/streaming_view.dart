@@ -10,6 +10,7 @@ import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../search/global_search_overlay.dart';
 import 'streaming_helpers.dart';
 import 'streaming_service_detail_view.dart';
 
@@ -35,6 +36,16 @@ class StreamingView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
         title: const Text('Streaming', style: TuneFonts.title2),
+        actions: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.search_rounded,
+                  color: TuneColors.textSecondary),
+              tooltip: AppLocalizations.of(ctx).navSearch,
+              onPressed: () => showGlobalSearch(ctx),
+            ),
+          ),
+        ],
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),

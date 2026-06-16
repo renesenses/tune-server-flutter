@@ -12,6 +12,7 @@ import '../party/party_view.dart';
 import '../podcasts/podcasts_view.dart';
 import '../radios/radio_favorites_view.dart';
 import '../radios/radios_view.dart';
+import '../search/global_search_overlay.dart';
 import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
@@ -146,21 +147,36 @@ class _Sidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // En-tête application
-          const SafeArea(
+          SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.fromLTRB(16, 20, 8, 20),
               child: Row(
                 children: [
-                  Icon(Icons.wifi_tethering_rounded,
+                  const Icon(Icons.wifi_tethering_rounded,
                       color: TuneColors.accent, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    'Tune Server',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: TuneColors.textPrimary,
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Tune Server',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: TuneColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Builder(
+                    builder: (ctx) => IconButton(
+                      icon: const Icon(Icons.search_rounded,
+                          color: TuneColors.textSecondary, size: 20),
+                      tooltip: 'Search',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      onPressed: () => showGlobalSearch(ctx),
                     ),
                   ),
                 ],

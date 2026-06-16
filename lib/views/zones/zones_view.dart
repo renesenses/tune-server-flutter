@@ -12,6 +12,7 @@ import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../search/global_search_overlay.dart';
 import 'zone_manager_view.dart';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +69,14 @@ class ZonesView extends StatelessWidget {
         backgroundColor: TuneColors.surface,
         title: Text(l.zonesTitle, style: TuneFonts.title3),
         actions: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.search_rounded,
+                  color: TuneColors.textSecondary),
+              tooltip: l.navSearch,
+              onPressed: () => showGlobalSearch(ctx),
+            ),
+          ),
           if (context.read<AppState>().apiClient != null)
             IconButton(
               icon: const Icon(Icons.dashboard_customize_rounded,
