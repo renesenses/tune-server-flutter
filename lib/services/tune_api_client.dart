@@ -1101,8 +1101,17 @@ class TuneApiClient {
   // ── Streaming Favorites ──
   // ---------------------------------------------------------------------------
 
-  Future<List<dynamic>> getStreamingFavorites(String service, String type) async =>
-      await _get('/api/v1/streaming/$service/favorites/$type') as List<dynamic>;
+  Future<List<dynamic>> getStreamingFavorites(String service, String type) async {
+    final raw = await _get('/api/v1/streaming/$service/favorites/$type');
+    // Server returns {"tracks": [...]} or {"albums": [...]} — unwrap the list.
+    if (raw is Map<String, dynamic>) {
+      final list = raw[type];
+      if (list is List) return list;
+      return [];
+    }
+    if (raw is List) return raw;
+    return [];
+  }
 
   Future<void> addStreamingFavorite(String service, String type, {required String itemId}) async =>
       await _post('/api/v1/streaming/$service/favorites/$type', body: {'item_id': itemId});

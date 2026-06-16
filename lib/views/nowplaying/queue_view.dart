@@ -233,6 +233,30 @@ class _QueueItem extends StatelessWidget {
     final hasBadge = ServiceBadge.isStreaming(track.source);
     final hasChips = metadataFields.isNotEmpty;
     if (!hasArtist && !hasBadge && !hasChips) return null;
+
+    // When chips are disabled, fall back to the simple single-line layout.
+    if (!hasChips) {
+      if (!hasArtist && !hasBadge) return null;
+      return Row(
+        children: [
+          if (hasArtist)
+            Flexible(
+              child: Text(
+                track.artistName!,
+                style: TuneFonts.caption,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          if (hasBadge) ...[
+            if (hasArtist) const SizedBox(width: 6),
+            ServiceBadge(source: track.source, compact: true),
+          ],
+        ],
+      );
+    }
+
+    // Chips enabled: artist + badge on first line, chips on second line.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -250,13 +274,12 @@ class _QueueItem extends StatelessWidget {
                   ),
                 ),
               if (hasBadge) ...[
-                const SizedBox(width: 6),
+                if (hasArtist) const SizedBox(width: 6),
                 ServiceBadge(source: track.source, compact: true),
               ],
             ],
           ),
-        if (hasChips)
-          MetadataChips(track: track, selectedFields: metadataFields),
+        MetadataChips(track: track, selectedFields: metadataFields),
       ],
     );
   }
