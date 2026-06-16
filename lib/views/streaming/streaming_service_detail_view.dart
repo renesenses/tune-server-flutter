@@ -111,6 +111,18 @@ class _StreamingServiceDetailViewState
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_rounded, color: TuneColors.error),
+            tooltip: 'Favorites',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => _StreamingFavoritesView(
+                  serviceId: widget.status.serviceId,
+                ),
+              ),
+            ),
+          ),
           if (widget.status.serviceId == 'youtube')
             IconButton(
               icon: const Icon(Icons.explore_rounded, color: TuneColors.accent),
@@ -493,7 +505,26 @@ class _CatalogViewState extends State<_CatalogView> {
         // Favorites section
         if (_favoriteAlbums.isNotEmpty || _favoriteTracks.isNotEmpty) ...[
           if (_favoriteAlbums.isNotEmpty) ...[
-            _SectionHeader(title: 'Favorite Albums'),
+            Row(
+              children: [
+                const Expanded(child: _SectionHeader(title: 'Favorite Albums')),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => _StreamingFavoritesView(
+                          serviceId: widget.serviceId,
+                          initialTab: 0,
+                        ),
+                      ),
+                    ),
+                    child: Text('See all',
+                        style: TuneFonts.footnote.copyWith(color: TuneColors.accent)),
+                  ),
+                ),
+              ],
+            ),
             SizedBox(
               height: 180,
               child: ListView.separated(
@@ -514,25 +545,46 @@ class _CatalogViewState extends State<_CatalogView> {
           ],
           if (_favoriteTracks.isNotEmpty) ...[
             _SectionHeader(title: 'Favorite Tracks'),
-            ..._favoriteTracks.take(10).map((fav) {
+            ..._favoriteTracks.take(5).map((fav) {
               final m = fav as Map<String, dynamic>;
-              return ListTile(
-                leading: const Icon(Icons.favorite_rounded,
-                    size: 18, color: TuneColors.error),
-                title: Text(
-                  m['title'] as String? ?? m['name'] as String? ?? '-',
-                  style: TuneFonts.body,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  m['artist'] as String? ?? m['artist_name'] as String? ?? '',
-                  style: TuneFonts.caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              final trackId = m['source_id']?.toString() ?? m['id']?.toString() ?? '';
+              final title = m['title'] as String? ?? m['name'] as String? ?? '-';
+              final artist = m['artist'] as String? ?? m['artist_name'] as String? ?? '';
+              final cover = m['cover_url'] as String? ?? m['cover_path'] as String?;
+              final album = m['album'] as String? ?? m['album_title'] as String?;
+              final durationMs = m['duration_ms'] as int?;
+              return _FavoriteTrackTile(
+                result: StreamingSearchResult(
+                  id: trackId,
+                  title: title,
+                  artist: artist,
+                  album: album,
+                  durationMs: durationMs,
+                  coverUrl: cover,
+                  serviceId: widget.serviceId,
+                  type: 'track',
+                  raw: m,
                 ),
               );
             }),
+            if (_favoriteTracks.length > 5)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _StreamingFavoritesView(
+                        serviceId: widget.serviceId,
+                        initialTab: 1,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'See all ${_favoriteTracks.length} tracks',
+                    style: TuneFonts.footnote.copyWith(color: TuneColors.accent),
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
           ],
         ],
@@ -592,35 +644,463 @@ class _FavoriteAlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = fav['title'] as String? ?? fav['name'] as String? ?? '-';
     final artist = fav['artist'] as String? ?? fav['artist_name'] as String?;
-    final cover = fav['cover_url'] as String? ?? fav['image'] as String?;
+    final cover = fav['cover_url'] as String? ?? fav['cover_path'] as String? ?? fav['image'] as String?;
+    final albumId = fav['source_id']?.toString() ?? fav['id']?.toString() ?? '';
 
-    return SizedBox(
-      width: 130,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ArtworkView(url: cover, size: 130, cornerRadius: 8),
-              const Positioned(
-                top: 4,
-                right: 4,
-                child: Icon(Icons.favorite_rounded,
-                    size: 18, color: TuneColors.error),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => StreamingAlbumDetailView(
+            track: StreamingSearchResult(
+              id: albumId,
+              title: title,
+              artist: artist,
+              album: title,
+              coverUrl: cover,
+              serviceId: serviceId,
+              type: 'album',
+              raw: {'album_id': albumId, ...fav},
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(title,
-              style: TuneFonts.caption,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          if (artist != null)
-            Text(artist,
-                style:
-                    TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+        ),
+      ),
+      child: SizedBox(
+        width: 130,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ArtworkView(url: cover, size: 130, cornerRadius: 8),
+                const Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Icon(Icons.favorite_rounded,
+                      size: 18, color: TuneColors.error),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(title,
+                style: TuneFonts.caption,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
+            if (artist != null)
+              Text(artist,
+                  style:
+                      TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _FavoriteTrackTile — single favorite track with play + cover art
+// ---------------------------------------------------------------------------
+
+class _FavoriteTrackTile extends StatelessWidget {
+  final StreamingSearchResult result;
+  const _FavoriteTrackTile({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    return ListTile(
+      onTap: () => app.playStreaming(result),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: result.coverUrl != null
+            ? ArtworkView(url: result.coverUrl, size: 44)
+            : Container(
+                width: 44,
+                height: 44,
+                color: TuneColors.surfaceVariant,
+                child: const Icon(Icons.music_note_rounded,
+                    size: 20, color: TuneColors.textTertiary),
+              ),
+      ),
+      title: Text(result.title,
+          style: TuneFonts.body,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis),
+      subtitle: result.artist != null
+          ? Text(result.artist!,
+              style: TuneFonts.footnote,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis)
+          : null,
+      trailing: const Icon(Icons.favorite_rounded,
+          size: 16, color: TuneColors.error),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _StreamingFavoritesView — full-screen favorites with tabs
+// Albums / Tracks / Artists
+// ---------------------------------------------------------------------------
+
+class _StreamingFavoritesView extends StatefulWidget {
+  final String serviceId;
+  final int initialTab;
+  const _StreamingFavoritesView({
+    required this.serviceId,
+    this.initialTab = 0,
+  });
+
+  @override
+  State<_StreamingFavoritesView> createState() =>
+      _StreamingFavoritesViewState();
+}
+
+class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabCtrl;
+  List<dynamic> _albums = [];
+  List<dynamic> _tracks = [];
+  List<dynamic> _artists = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabCtrl = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTab,
+    );
+    _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _tabCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAll() async {
+    final api = context.read<AppState>().apiClient;
+    if (api == null) {
+      if (mounted) setState(() { _loading = false; _error = 'No API client'; });
+      return;
+    }
+    try {
+      final results = await Future.wait([
+        api.getStreamingFavorites(widget.serviceId, 'albums'),
+        api.getStreamingFavorites(widget.serviceId, 'tracks'),
+        api.getStreamingFavorites(widget.serviceId, 'artists'),
+      ]);
+      if (mounted) {
+        setState(() {
+          _albums = results[0];
+          _tracks = results[1];
+          _artists = results[2];
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = serviceInfo(widget.serviceId);
+
+    return Scaffold(
+      backgroundColor: TuneColors.background,
+      appBar: AppBar(
+        backgroundColor: TuneColors.surface,
+        title: Row(
+          children: [
+            const Icon(Icons.favorite_rounded,
+                size: 20, color: TuneColors.error),
+            const SizedBox(width: 8),
+            Text('${info.name} Favorites', style: TuneFonts.title3),
+          ],
+        ),
+        bottom: TabBar(
+          controller: _tabCtrl,
+          indicatorColor: TuneColors.accent,
+          labelColor: TuneColors.accent,
+          unselectedLabelColor: TuneColors.textTertiary,
+          tabs: [
+            Tab(text: 'Albums${_albums.isNotEmpty ? ' (${_albums.length})' : ''}'),
+            Tab(text: 'Tracks${_tracks.isNotEmpty ? ' (${_tracks.length})' : ''}'),
+            Tab(text: 'Artists${_artists.isNotEmpty ? ' (${_artists.length})' : ''}'),
+          ],
+        ),
+      ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: TuneColors.accent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          size: 48, color: TuneColors.error),
+                      const SizedBox(height: 12),
+                      Text(_error!, style: TuneFonts.subheadline),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () {
+                          setState(() { _loading = true; _error = null; });
+                          _loadAll();
+                        },
+                        style: FilledButton.styleFrom(
+                            backgroundColor: TuneColors.accent),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : TabBarView(
+                  controller: _tabCtrl,
+                  children: [
+                    _FavAlbumsTab(
+                      albums: _albums,
+                      serviceId: widget.serviceId,
+                      onRefresh: _loadAll,
+                    ),
+                    _FavTracksTab(
+                      tracks: _tracks,
+                      serviceId: widget.serviceId,
+                      onRefresh: _loadAll,
+                    ),
+                    _FavArtistsTab(
+                      artists: _artists,
+                      serviceId: widget.serviceId,
+                      onRefresh: _loadAll,
+                    ),
+                  ],
+                ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Favorites tab — Albums
+// ---------------------------------------------------------------------------
+
+class _FavAlbumsTab extends StatelessWidget {
+  final List<dynamic> albums;
+  final String serviceId;
+  final Future<void> Function() onRefresh;
+  const _FavAlbumsTab({
+    required this.albums,
+    required this.serviceId,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (albums.isEmpty) {
+      return const _EmptyFavorites(
+        icon: Icons.album_rounded,
+        message: 'No favorite albums yet',
+      );
+    }
+    return RefreshIndicator(
+      color: TuneColors.accent,
+      onRefresh: onRefresh,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 180,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 12,
+          childAspectRatio: 0.72,
+        ),
+        itemCount: albums.length,
+        itemBuilder: (_, i) {
+          final fav = albums[i] as Map<String, dynamic>;
+          return _FavoriteAlbumCard(fav: fav, serviceId: serviceId);
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Favorites tab — Tracks
+// ---------------------------------------------------------------------------
+
+class _FavTracksTab extends StatelessWidget {
+  final List<dynamic> tracks;
+  final String serviceId;
+  final Future<void> Function() onRefresh;
+  const _FavTracksTab({
+    required this.tracks,
+    required this.serviceId,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (tracks.isEmpty) {
+      return const _EmptyFavorites(
+        icon: Icons.music_note_rounded,
+        message: 'No favorite tracks yet',
+      );
+    }
+    final app = context.read<AppState>();
+    return RefreshIndicator(
+      color: TuneColors.accent,
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 80),
+        itemCount: tracks.length + 1, // +1 for "Play All" header
+        itemBuilder: (_, i) {
+          if (i == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: Text('Play All (${tracks.length})'),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: TuneColors.accent),
+                      onPressed: () {
+                        final list = tracks.map((t) {
+                          final m = t as Map<String, dynamic>;
+                          return _trackFromMap(m, serviceId);
+                        }).toList();
+                        app.playStreamingList(list);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.shuffle_rounded),
+                    label: const Text('Shuffle'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: TuneColors.surfaceVariant,
+                      foregroundColor: TuneColors.textPrimary,
+                    ),
+                    onPressed: () {
+                      final list = tracks.map((t) {
+                        final m = t as Map<String, dynamic>;
+                        return _trackFromMap(m, serviceId);
+                      }).toList()
+                        ..shuffle();
+                      app.playStreamingList(list);
+                    },
+                  ),
+                ],
+              ),
+            );
+          }
+          final idx = i - 1;
+          final m = tracks[idx] as Map<String, dynamic>;
+          final result = _trackFromMap(m, serviceId);
+          return Column(
+            children: [
+              _FavoriteTrackTile(result: result),
+              const Divider(height: 1, indent: 72, color: TuneColors.divider),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Favorites tab — Artists
+// ---------------------------------------------------------------------------
+
+class _FavArtistsTab extends StatelessWidget {
+  final List<dynamic> artists;
+  final String serviceId;
+  final Future<void> Function() onRefresh;
+  const _FavArtistsTab({
+    required this.artists,
+    required this.serviceId,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (artists.isEmpty) {
+      return const _EmptyFavorites(
+        icon: Icons.person_rounded,
+        message: 'No favorite artists yet',
+      );
+    }
+    return RefreshIndicator(
+      color: TuneColors.accent,
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 80),
+        itemCount: artists.length,
+        itemBuilder: (_, i) {
+          final m = artists[i] as Map<String, dynamic>;
+          final name = m['name'] as String? ?? m['title'] as String? ?? '-';
+          final image = m['image_path'] as String? ?? m['cover_url'] as String?;
+          return ListTile(
+            leading: CircleAvatar(
+              radius: 22,
+              backgroundColor: TuneColors.surfaceVariant,
+              child: image != null
+                  ? ClipOval(child: ArtworkView(url: image, size: 44))
+                  : const Icon(Icons.person_rounded,
+                      color: TuneColors.textTertiary),
+            ),
+            title: Text(name, style: TuneFonts.body),
+            trailing: const Icon(Icons.favorite_rounded,
+                size: 16, color: TuneColors.error),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: build StreamingSearchResult from favorite track map
+// ---------------------------------------------------------------------------
+
+StreamingSearchResult _trackFromMap(Map<String, dynamic> m, String serviceId) {
+  return StreamingSearchResult(
+    id: m['source_id']?.toString() ?? m['id']?.toString() ?? '',
+    title: m['title'] as String? ?? m['name'] as String? ?? '-',
+    artist: m['artist'] as String? ?? m['artist_name'] as String?,
+    album: m['album'] as String? ?? m['album_title'] as String?,
+    durationMs: m['duration_ms'] as int?,
+    coverUrl: m['cover_url'] as String? ?? m['cover_path'] as String?,
+    serviceId: serviceId,
+    type: 'track',
+    raw: m,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Empty favorites placeholder
+// ---------------------------------------------------------------------------
+
+class _EmptyFavorites extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  const _EmptyFavorites({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 48, color: TuneColors.textTertiary),
+          const SizedBox(height: 12),
+          Text(message, style: TuneFonts.subheadline),
         ],
       ),
     );
