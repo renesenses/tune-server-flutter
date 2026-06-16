@@ -294,11 +294,22 @@ extension AppStatePlayback on AppState {
     StreamingSearchResult item, {
     int? zoneId,
   }) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+
+    // Mode remote : délègue au serveur via l'API.
+    if (isRemoteMode && _apiClient != null && id != null) {
+      await _apiClient!.play(id, {
+        'source': item.serviceId,
+        'source_id': item.id,
+      });
+      await refreshZonesRemote();
+      return;
+    }
+
     final url = await engine.streamingManager
         .resolveStreamUrl(item.serviceId, item.id);
     if (url == null) return;
 
-    final id = zoneId ?? zoneState.currentZoneId;
     final instance = engine.zoneManager.zone(id ?? -1);
     if (instance == null) return;
 
@@ -319,7 +330,12 @@ extension AppStatePlayback on AppState {
     await instance.player.play();
   }
 
-  /// Charge une liste de pistes streaming dans la queue avec résolution d'URL en parallèle.
+  /// Charge une liste de pistes streaming dans la queue et lance la lecture.
+  ///
+  /// Mode remote : joue la piste [startIndex] via l'API, puis ajoute toutes
+  /// les autres pistes dans la queue du serveur afin que next/prev fonctionnent.
+  /// Mode local : résout l'URL de la piste courante immédiatement, puis charge
+  /// la liste complète (URLs résolues à la volée) pour alimenter la queue.
   Future<void> playStreamingList(
     List<StreamingSearchResult> items, {
     int startIndex = 0,
@@ -328,6 +344,48 @@ extension AppStatePlayback on AppState {
     if (items.isEmpty) return;
 
     final id = zoneId ?? zoneState.currentZoneId;
+
+    // ------------------------------------------------------------------
+    // Mode remote : délègue au serveur Tune via l'API REST.
+    // ------------------------------------------------------------------
+    if (isRemoteMode && _apiClient != null && id != null) {
+      final clampedStart = startIndex.clamp(0, items.length - 1);
+      final first = items[clampedStart];
+
+      // 1. Vide la queue existante.
+      await _apiClient!.clearQueue(id);
+
+      // 2. Lance la piste de départ.
+      await _apiClient!.play(id, {
+        'source': first.serviceId,
+        'source_id': first.id,
+      });
+
+      // 3. Ajoute toutes les pistes de l'album dans la queue (dans l'ordre),
+      //    en sautant la piste déjà en cours de lecture.
+      for (var i = 0; i < items.length; i++) {
+        if (i == clampedStart) continue;
+        final item = items[i];
+        try {
+          await _apiClient!.addToQueue(id, {
+            'source': item.serviceId,
+            'source_id': item.id,
+            'title': item.title,
+            if (item.artist != null) 'artist': item.artist,
+            if (item.album != null) 'album': item.album,
+          });
+        } catch (e) {
+          debugPrint('[playStreamingList] addToQueue[$i] error: $e');
+        }
+      }
+
+      await refreshZonesRemote();
+      return;
+    }
+
+    // ------------------------------------------------------------------
+    // Mode local (serveur embarqué) : résolution URL à la volée.
+    // ------------------------------------------------------------------
     final instance = engine.zoneManager.zone(id ?? -1);
     if (instance == null) return;
 

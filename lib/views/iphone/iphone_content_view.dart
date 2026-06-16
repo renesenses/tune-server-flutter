@@ -43,6 +43,21 @@ class iPhoneContentView extends StatefulWidget {
 class _iPhoneContentViewState extends State<iPhoneContentView> {
   int _selectedIndex = 0;
 
+  // One Navigator key per tab so sub-page pushes stay inside the tab area
+  // and the bottom bar is never hidden.
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
+    5,
+    (_) => GlobalKey<NavigatorState>(),
+  );
+
+  static const _rootPages = [
+    LibraryView(),
+    StreamingView(),
+    ZonesView(),
+    RadiosView(),
+    _MoreView(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -54,35 +69,52 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       (icon: Icons.more_horiz_rounded,       activeIcon: Icons.more_horiz_rounded,      label: 'More'),
     ];
 
-    return Scaffold(
-      backgroundColor: TuneColors.background,
-      body: Column(
-        children: [
-          Expanded(child: _pages[_selectedIndex]),
-          const MiniPlayerView(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
-        items: tabs
-            .map((t) => BottomNavigationBarItem(
-                  icon: Icon(t.icon),
-                  activeIcon: Icon(t.activeIcon),
-                  label: t.label,
-                ))
-            .toList(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final nav = _navigatorKeys[_selectedIndex].currentState;
+        if (nav != null && nav.canPop()) {
+          nav.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: TuneColors.background,
+        body: Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: List.generate(_rootPages.length, (i) {
+                  // Keep all tab navigators alive but only show the active one.
+                  return Offstage(
+                    offstage: _selectedIndex != i,
+                    child: Navigator(
+                      key: _navigatorKeys[i],
+                      onGenerateRoute: (_) => MaterialPageRoute(
+                        builder: (_) => _rootPages[i],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            const MiniPlayerView(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (i) => setState(() => _selectedIndex = i),
+          items: tabs
+              .map((t) => BottomNavigationBarItem(
+                    icon: Icon(t.icon),
+                    activeIcon: Icon(t.activeIcon),
+                    label: t.label,
+                  ))
+              .toList(),
+        ),
       ),
     );
   }
-
-  static final _pages = [
-    const LibraryView(),
-    const StreamingView(),
-    const ZonesView(),
-    const RadiosView(),
-    const _MoreView(),
-  ];
 }
 
 // ---------------------------------------------------------------------------

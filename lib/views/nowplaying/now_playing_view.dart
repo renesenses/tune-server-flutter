@@ -40,6 +40,7 @@ void showNowPlaying(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: false,
+    useRootNavigator: true,
     builder: (_) => const NowPlayingView(),
   );
 }
