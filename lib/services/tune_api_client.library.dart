@@ -169,4 +169,24 @@ extension TuneApiClientLibrary on TuneApiClient {
   Future<Map<String, dynamic>> browseDirectory(String path) async {
     return await _get('/library/browse/dir?path=${Uri.encodeComponent(path)}') as Map<String, dynamic>;
   }
+
+  // ---------------------------------------------------------------------------
+  // Filtered tracks — used by SearchFilterView
+  // ---------------------------------------------------------------------------
+
+  /// GET /library/tracks with arbitrary query params for filter chips.
+  /// Returns `{"items": [...], "total": N}` or bare list; both handled here.
+  Future<Map<String, dynamic>> getTracksFiltered(
+      Map<String, String> params) async {
+    final qs = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+    final raw = await _getOptional('/library/tracks?$qs');
+    if (raw == null) return {'items': <dynamic>[], 'total': 0};
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is List) {
+      return {'items': raw, 'total': raw.length};
+    }
+    return {'items': <dynamic>[], 'total': 0};
+  }
 }

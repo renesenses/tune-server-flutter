@@ -14,6 +14,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../library/artists_list_view.dart';
 import 'history_view.dart';
+import 'search_filter_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
 
 // ---------------------------------------------------------------------------
@@ -102,6 +103,10 @@ class _HomeViewState extends State<HomeView> {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
+        // ---- Metadata filter chips (from Settings: metadata_display_fields) ----
+        const SearchFilterView(),
+        const SizedBox(height: 8),
+
         // ---- En cours d'écoute (reactive from ZoneState) ----
         if (nowListening.isNotEmpty) ...[
           _SectionTitle(title: "En cours d'écoute"),
