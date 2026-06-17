@@ -112,4 +112,8 @@ extension TuneApiClientStreaming on TuneApiClient {
 
   Future<List<dynamic>> getStreamingArtistAlbums(String service, String artistId) =>
       _get('/streaming/$service/artists/$artistId/albums').then((d) => d as List);
+
+  Future<List<dynamic>> getStreamingArtistAlbumsByName(String service, String artistName) =>
+      _get('/streaming/$service/artists/${Uri.encodeComponent(artistName)}/albums')
+          .then((d) => d as List);
 }

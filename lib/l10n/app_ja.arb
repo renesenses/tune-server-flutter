@@ -94,6 +94,7 @@
   "playlistDeleteBody": "このプレイリストは完全に削除されます。",
   "searchHint": "検索…",
   "searchNoResults": "結果なし",
+  "searchTopResult": "トップ結果",
   "searchSectionTracks": "曲",
   "searchSectionAlbums": "アルバム",
   "searchSectionArtists": "アーティスト",

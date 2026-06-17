@@ -94,6 +94,7 @@
   "playlistDeleteBody": "Esta lista se eliminará permanentemente.",
   "searchHint": "Buscar…",
   "searchNoResults": "Sin resultados",
+  "searchTopResult": "Mejor resultado",
   "searchSectionTracks": "Pistas",
   "searchSectionAlbums": "Álbumes",
   "searchSectionArtists": "Artistas",

@@ -98,6 +98,10 @@ class AppState extends ChangeNotifier {
   bool get isRemoteConnected => _apiClient != null;
   TuneApiClient? get apiClient => _apiClient;
 
+  /// Raw WebSocket event stream (remote mode only). Null in local server mode.
+  /// Used by widgets that need to subscribe to specific events directly.
+  Stream<Map<String, dynamic>>? get wsEventStream => _webSocket?.eventStream;
+
   final List<StreamSubscription> _subs = [];
 
   AppState({

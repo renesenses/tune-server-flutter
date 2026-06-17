@@ -5,11 +5,14 @@ import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../models/extensions.dart';
 import '../../server/database/database.dart';
+import '../../server/streaming/streaming_service.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../streaming/streaming_album_detail_view.dart';
+import '../streaming/streaming_helpers.dart';
 import '../tags/tag_chips_widget.dart';
 import 'albums_grid_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
@@ -93,6 +96,9 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
   List<Track>? _tracks;
   Map<String, dynamic>? _metadata;
   bool _metadataLoading = true;
+  // Streaming albums: serviceId → list of results
+  final Map<String, List<StreamingSearchResult>> _streamingAlbums = {};
+  bool _streamingLoading = false;
 
   @override
   void initState() {
@@ -170,6 +176,11 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
       }
     }
 
+    // Load streaming albums (remote mode only — Qobuz + Tidal)
+    if (app.isRemoteMode && app.apiClient != null) {
+      _loadStreamingAlbums(app);
+    }
+
     // Load metadata (remote mode only — needs API)
     if (app.isRemoteMode && app.apiClient != null) {
       try {
@@ -185,6 +196,46 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
     } else {
       if (mounted) setState(() => _metadataLoading = false);
     }
+  }
+
+  Future<void> _loadStreamingAlbums(AppState app) async {
+    if (mounted) setState(() => _streamingLoading = true);
+    final services = context.read<LibraryState>().streamingServices
+        .where((s) => s.authenticated && (s.serviceId == 'qobuz' || s.serviceId == 'tidal'))
+        .toList();
+    if (services.isEmpty) {
+      if (mounted) setState(() => _streamingLoading = false);
+      return;
+    }
+    for (final svc in services) {
+      try {
+        final raw = await app.apiClient!.getStreamingArtistAlbumsByName(
+            svc.serviceId, widget.artist.name);
+        final albums = raw.map((item) {
+          final m = item as Map<String, dynamic>;
+          final id = m['source_id']?.toString() ?? m['id']?.toString() ?? '';
+          final title = m['title'] as String? ?? m['name'] as String? ?? '-';
+          final artist = m['artist'] as String? ?? m['artist_name'] as String?;
+          final cover = m['cover_url'] as String? ?? m['cover_path'] as String? ?? m['image'] as String?;
+          return StreamingSearchResult(
+            id: id,
+            title: title,
+            artist: artist,
+            album: title,
+            coverUrl: cover,
+            serviceId: svc.serviceId,
+            type: 'album',
+            raw: {'album_id': id, ...m},
+          );
+        }).toList();
+        if (mounted && albums.isNotEmpty) {
+          setState(() => _streamingAlbums[svc.serviceId] = albums);
+        }
+      } catch (e) {
+        debugPrint('[Streaming] artist albums ${svc.serviceId} error: $e');
+      }
+    }
+    if (mounted) setState(() => _streamingLoading = false);
   }
 
   @override
@@ -349,6 +400,36 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
                             const SizedBox(width: 12),
                         itemBuilder: (_, i) =>
                             _AlbumCard(album: _albums![i]),
+                      ),
+                    ),
+                  ),
+                ],
+
+                // --- Streaming albums (Qobuz / Tidal) ---
+                if (_streamingLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
+                        child: SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                for (final entry in _streamingAlbums.entries) ...[
+                  _sectionHeader('Albums ${serviceInfo(entry.key).name}'),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 190,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: entry.value.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (_, i) =>
+                            _StreamingAlbumCard(album: entry.value[i]),
                       ),
                     ),
                   ),
@@ -618,6 +699,38 @@ class _AlbumCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis),
             if (album.displayYear != null)
               Text(album.displayYear!, style: TuneFonts.caption),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StreamingAlbumCard extends StatelessWidget {
+  final StreamingSearchResult album;
+  const _StreamingAlbumCard({required this.album});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => StreamingAlbumDetailView(track: album),
+        ),
+      ),
+      child: SizedBox(
+        width: 130,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ArtworkView(url: album.coverUrl, size: 130, cornerRadius: 8),
+            const SizedBox(height: 4),
+            Text(
+              album.title,
+              style: TuneFonts.footnote.copyWith(color: TuneColors.textPrimary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),

@@ -239,6 +239,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchNoResults => 'Keine Ergebnisse';
 
   @override
+  String get searchTopResult => 'Bestes Ergebnis';
+
+  @override
   String get searchSectionTracks => 'Titel';
 
   @override

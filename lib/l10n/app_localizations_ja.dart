@@ -237,6 +237,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchNoResults => '結果なし';
 
   @override
+  String get searchTopResult => 'トップ結果';
+
+  @override
   String get searchSectionTracks => '曲';
 
   @override

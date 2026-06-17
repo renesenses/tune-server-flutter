@@ -238,6 +238,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchNoResults => 'No results';
 
   @override
+  String get searchTopResult => 'Top result';
+
+  @override
   String get searchSectionTracks => 'Tracks';
 
   @override

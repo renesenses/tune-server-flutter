@@ -94,6 +94,7 @@
   "playlistDeleteBody": "此播放列表将被永久删除。",
   "searchHint": "搜索…",
   "searchNoResults": "没有结果",
+  "searchTopResult": "最佳结果",
   "searchSectionTracks": "曲目",
   "searchSectionAlbums": "专辑",
   "searchSectionArtists": "艺术家",

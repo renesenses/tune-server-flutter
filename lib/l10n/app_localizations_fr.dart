@@ -239,6 +239,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get searchNoResults => 'Aucun résultat';
 
   @override
+  String get searchTopResult => 'Meilleur résultat';
+
+  @override
   String get searchSectionTracks => 'Pistes';
 
   @override

@@ -94,6 +94,7 @@
   "playlistDeleteBody": "This playlist will be permanently deleted.",
   "searchHint": "Search…",
   "searchNoResults": "No results",
+  "searchTopResult": "Top result",
   "searchSectionTracks": "Tracks",
   "searchSectionAlbums": "Albums",
   "searchSectionArtists": "Artists",

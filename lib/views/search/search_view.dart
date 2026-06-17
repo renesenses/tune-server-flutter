@@ -114,7 +114,10 @@ class _SearchViewState extends State<SearchView> {
               ? const Center(child: CircularProgressIndicator())
               : lib.searchResults.isEmpty
                   ? const _NoResults()
-                  : _SearchResults(results: lib.searchResults),
+                  : _SearchResults(
+                      results: lib.searchResults,
+                      query: lib.lastQuery,
+                    ),
     );
   }
 }
@@ -130,9 +133,59 @@ const _kPreviewAlbums = 4;
 const _kPreviewTracks = 5;
 const _kPreviewStreaming = 5;
 
+// ---------------------------------------------------------------------------
+// Top result scoring
+// ---------------------------------------------------------------------------
+
+/// Score a result against the query. Higher = better match.
+/// 30 = exact title match, 20 = title starts-with, 10 = artist match, 0 = other.
+int _scoreResult(SearchResult r, String q) {
+  final ql = q.toLowerCase();
+  String? title;
+  String? artist;
+
+  if (r is TrackSearchResult) {
+    title = r.track.title;
+    artist = r.track.artistName;
+  } else if (r is AlbumSearchResult) {
+    title = r.album.title;
+    artist = r.album.artistName;
+  } else if (r is ArtistSearchResult) {
+    title = r.artist.name;
+  } else if (r is StreamingResult) {
+    if (r.item.type != 'track') return 0;
+    title = r.item.title;
+    artist = r.item.artist;
+  }
+
+  final tl = title?.toLowerCase() ?? '';
+  if (tl == ql) return 30;
+  if (tl.startsWith(ql)) return 20;
+  if (artist?.toLowerCase().contains(ql) == true) return 10;
+  if (tl.contains(ql)) return 5;
+  return 0;
+}
+
+/// Pick the best matching result to display as a hero card.
+SearchResult? _pickTopResult(List<SearchResult> results, String query) {
+  if (query.isEmpty || results.isEmpty) return null;
+  // Only consider tracks (local or streaming) and albums — not bare artists.
+  final candidates = results.where((r) =>
+      r is TrackSearchResult ||
+      r is AlbumSearchResult ||
+      (r is StreamingResult && r.item.type == 'track'));
+  if (candidates.isEmpty) return null;
+  final best = candidates.reduce((a, b) =>
+      _scoreResult(a, query) >= _scoreResult(b, query) ? a : b);
+  // Only show if there's a meaningful match
+  if (_scoreResult(best, query) == 0) return null;
+  return best;
+}
+
 class _SearchResults extends StatelessWidget {
   final List<SearchResult> results;
-  const _SearchResults({required this.results});
+  final String query;
+  const _SearchResults({required this.results, required this.query});
 
   @override
   Widget build(BuildContext context) {
@@ -147,9 +200,13 @@ class _SearchResults extends StatelessWidget {
       (byService[r.item.serviceId] ??= []).add(r);
     }
 
+    final topResult = _pickTopResult(results, query);
+
     final l = AppLocalizations.of(context);
     final hasLocal = tracks.isNotEmpty || albums.isNotEmpty || artists.isNotEmpty;
     final sections = <Widget>[
+      // --- Top result hero card ---
+      if (topResult != null) _TopResultCard(result: topResult),
       // --- Local library results ---
       if (hasLocal) ...[
         _SourceHeader(label: l.homeLibrary, icon: Icons.library_music_rounded,
@@ -198,6 +255,123 @@ class _SearchResults extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: sections,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _TopResultCard — hero card shown above all sections for best match
+// ---------------------------------------------------------------------------
+
+class _TopResultCard extends StatelessWidget {
+  final SearchResult result;
+  const _TopResultCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
+
+    String title = '';
+    String? subtitle;
+    String? artworkPath;
+    String? artworkUrl;
+    VoidCallback? onTap;
+    Widget? badge;
+
+    if (result is TrackSearchResult) {
+      final t = (result as TrackSearchResult).track;
+      title = t.title;
+      subtitle = [if (t.artistName != null) t.artistName!, if (t.albumTitle != null) t.albumTitle!].join(' · ');
+      artworkPath = t.coverPath;
+      onTap = () => app.playTracks([t]);
+      badge = FormatBadge(format: t.format);
+    } else if (result is AlbumSearchResult) {
+      final a = (result as AlbumSearchResult).album;
+      title = a.title;
+      subtitle = a.artistName;
+      artworkPath = a.coverPath;
+      onTap = () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => AlbumDetailView(album: a),
+      ));
+    } else if (result is StreamingResult) {
+      final item = (result as StreamingResult).item;
+      title = item.title;
+      subtitle = [if (item.artist != null) item.artist!, if (item.album != null) item.album!].join(' · ');
+      artworkUrl = item.coverUrl;
+      onTap = () => app.playStreaming(item);
+      badge = ServiceBadge(source: item.serviceId, compact: true);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.searchTopResult,
+            style: TuneFonts.footnote.copyWith(
+              color: TuneColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: TuneColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: artworkPath != null
+                          ? ArtworkView(filePath: artworkPath, size: 64)
+                          : ArtworkView(url: artworkUrl, size: 64),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TuneFonts.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (subtitle != null && subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: TuneFonts.footnote.copyWith(
+                                color: TuneColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          if (badge != null) ...[
+                            const SizedBox(height: 4),
+                            badge,
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

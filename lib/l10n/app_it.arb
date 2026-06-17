@@ -94,6 +94,7 @@
   "playlistDeleteBody": "Questa playlist verrà eliminata definitivamente.",
   "searchHint": "Cerca…",
   "searchNoResults": "Nessun risultato",
+  "searchTopResult": "Risultato principale",
   "searchSectionTracks": "Brani",
   "searchSectionAlbums": "Album",
   "searchSectionArtists": "Artisti",

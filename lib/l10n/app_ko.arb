@@ -94,6 +94,7 @@
   "playlistDeleteBody": "이 플레이리스트는 영구적으로 삭제됩니다.",
   "searchHint": "검색…",
   "searchNoResults": "결과 없음",
+  "searchTopResult": "최상위 결과",
   "searchSectionTracks": "트랙",
   "searchSectionAlbums": "앨범",
   "searchSectionArtists": "아티스트",

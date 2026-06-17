@@ -237,6 +237,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchNoResults => '결과 없음';
 
   @override
+  String get searchTopResult => '최상위 결과';
+
+  @override
   String get searchSectionTracks => '트랙';
 
   @override

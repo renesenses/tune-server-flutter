@@ -237,6 +237,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchNoResults => '没有结果';
 
   @override
+  String get searchTopResult => '最佳结果';
+
+  @override
   String get searchSectionTracks => '曲目';
 
   @override

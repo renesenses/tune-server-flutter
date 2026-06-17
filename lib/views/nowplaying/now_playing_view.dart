@@ -22,6 +22,7 @@ import 'queue_view.dart';
 import 'seek_bar_view.dart';
 import 'sleep_timer_sheet.dart';
 import 'smart_autoplay_sheet.dart';
+import 'spectrum_visualizer.dart';
 import 'volume_control_view.dart';
 import 'zone_management_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
@@ -75,7 +76,11 @@ class NowPlayingView extends StatelessWidget {
 
                         // Pochette large
                         _LargeArtwork(track: track),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 12),
+
+                        // FFT spectrum visualizer (remote mode only)
+                        const SpectrumVisualizer(),
+                        const SizedBox(height: 16),
 
                         // Service + audio quality badges
                         if (track != null)

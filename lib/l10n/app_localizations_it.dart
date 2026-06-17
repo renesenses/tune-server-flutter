@@ -239,6 +239,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get searchNoResults => 'Nessun risultato';
 
   @override
+  String get searchTopResult => 'Risultato principale';
+
+  @override
   String get searchSectionTracks => 'Brani';
 
   @override

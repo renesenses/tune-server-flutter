@@ -25,7 +25,7 @@ class TuneWebSocket {
       // Subscribe to all events
       _channel!.sink.add(jsonEncode({
         'type': 'subscribe',
-        'patterns': ['playback.*', 'zone.*', 'playlist.*', 'library.*', 'device.*', 'radio.*'],
+        'patterns': ['playback.*', 'zone.*', 'playlist.*', 'library.*', 'device.*', 'radio.*', 'audio.*'],
       }));
 
       _channel!.stream.listen(

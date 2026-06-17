@@ -554,6 +554,12 @@ abstract class AppLocalizations {
   /// **'No results'**
   String get searchNoResults;
 
+  /// No description provided for @searchTopResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Top result'**
+  String get searchTopResult;
+
   /// No description provided for @searchSectionTracks.
   ///
   /// In en, this message translates to:

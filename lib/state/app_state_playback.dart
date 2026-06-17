@@ -294,9 +294,15 @@ extension AppStatePlayback on AppState {
     StreamingSearchResult item, {
     int? zoneId,
   }) async {
-    final id = zoneId ?? zoneState.currentZoneId;
+    // Fallback si aucune zone sélectionnée : prend la première dispo.
+    var id = zoneId ?? zoneState.currentZoneId;
+    if (id == null && zoneState.zones.isNotEmpty) {
+      id = zoneState.zones.first.id;
+      zoneState.setCurrentZoneId(id);
+    }
 
-    // Mode remote : délègue au serveur via l'API.
+    // Mode remote : délègue au serveur via l'API REST.
+    // Envoie source + source_id (jamais track_id pour les pistes streaming).
     if (isRemoteMode && _apiClient != null && id != null) {
       await _apiClient!.play(id, {
         'source': item.serviceId,
@@ -306,11 +312,17 @@ extension AppStatePlayback on AppState {
       return;
     }
 
+    if (id == null) {
+      _lastPlaybackError = 'no_zone';
+      notify();
+      return;
+    }
+
     final url = await engine.streamingManager
         .resolveStreamUrl(item.serviceId, item.id);
     if (url == null) return;
 
-    final instance = engine.zoneManager.zone(id ?? -1);
+    final instance = engine.zoneManager.zone(id);
     if (instance == null) return;
 
     final track = Track(
