@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
-import '../components/mini_player_view.dart';
+import '../components/player_sheet.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -81,26 +81,30 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       },
       child: Scaffold(
         backgroundColor: TuneColors.background,
-        body: Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: List.generate(_rootPages.length, (i) {
-                  // Keep all tab navigators alive but only show the active one.
-                  return Offstage(
-                    offstage: _selectedIndex != i,
-                    child: Navigator(
-                      key: _navigatorKeys[i],
-                      onGenerateRoute: (_) => MaterialPageRoute(
-                        builder: (_) => _rootPages[i],
+        body: PlayerSheetScaffold(
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: List.generate(_rootPages.length, (i) {
+                    // Keep all tab navigators alive but only show the active one.
+                    return Offstage(
+                      offstage: _selectedIndex != i,
+                      child: Navigator(
+                        key: _navigatorKeys[i],
+                        onGenerateRoute: (_) => MaterialPageRoute(
+                          builder: (_) => _rootPages[i],
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
-            ),
-            const MiniPlayerView(),
-          ],
+              // Reserve space for the mini player at the bottom so content
+              // is not hidden behind the sheet when collapsed.
+              const SizedBox(height: 72),
+            ],
+          ),
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,

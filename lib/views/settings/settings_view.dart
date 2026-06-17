@@ -1212,6 +1212,43 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
     }
   }
 
+  Future<void> _editProfile(Map<String, dynamic> profile) async {
+    final id = profile['id'] as int? ?? 0;
+    final currentName = profile['name'] as String? ?? '';
+    final currentColor = profile['avatar_color'] as String? ?? '#6366f1';
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (ctx) => _ProfileEditDialog(
+        initialName: currentName,
+        initialColor: currentColor,
+      ),
+    );
+
+    if (result == null) return;
+    try {
+      await widget.api.updateProfile(id, {
+        'name': result['name'],
+        'avatar_color': result['color'],
+      });
+      _loadProfiles();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated'),
+            backgroundColor: TuneColors.accent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1245,6 +1282,8 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
               final p = entry.value as Map<String, dynamic>;
               final id = p['id'] as int? ?? 0;
               final name = p['name'] as String? ?? 'Profile';
+              final colorHex = p['avatar_color'] as String? ?? '#6366f1';
+              final avatarColor = _hexToColor(colorHex);
               final isActive = id == _activeProfileId;
               return Column(
                 children: [
@@ -1252,13 +1291,17 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
                     const Divider(
                         height: 1, indent: 56, color: TuneColors.divider),
                   ListTile(
-                    leading: Icon(
-                      isActive
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_off_rounded,
-                      color: isActive
-                          ? TuneColors.accent
-                          : TuneColors.textTertiary,
+                    leading: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: avatarColor,
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     title: Text(
                       name,
@@ -1270,10 +1313,29 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
                             : TuneColors.textPrimary,
                       ),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          size: 20, color: TuneColors.error),
-                      onPressed: () => _deleteProfile(id),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isActive)
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: TuneColors.accent,
+                          ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined,
+                              size: 18, color: TuneColors.textSecondary),
+                          onPressed: () => _editProfile(p),
+                          tooltip: 'Edit',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 18, color: TuneColors.error),
+                          onPressed: () => _deleteProfile(id),
+                          tooltip: 'Delete',
+                        ),
+                      ],
                     ),
                     onTap: () => _selectProfile(id),
                   ),
@@ -1289,6 +1351,219 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
           ),
         ],
       ),
+    );
+  }
+
+  static Color _hexToColor(String hex) {
+    final cleaned = hex.replaceAll('#', '');
+    try {
+      return Color(int.parse('FF$cleaned', radix: 16));
+    } catch (_) {
+      return const Color(0xFF6C63FF);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Profile Edit Dialog — name + avatar color picker
+// Mirrors the web client's ProfileSelector edit modal (ProfileSelector.svelte)
+// ---------------------------------------------------------------------------
+
+class _ProfileEditDialog extends StatefulWidget {
+  final String initialName;
+  final String initialColor;
+
+  const _ProfileEditDialog({
+    required this.initialName,
+    required this.initialColor,
+  });
+
+  @override
+  State<_ProfileEditDialog> createState() => _ProfileEditDialogState();
+}
+
+class _ProfileEditDialogState extends State<_ProfileEditDialog> {
+  late final TextEditingController _nameCtrl;
+  late String _selectedColor;
+
+  static const _avatarColors = [
+    '#6366f1', // indigo
+    '#f59e0b', // amber
+    '#10b981', // emerald
+    '#ec4899', // pink
+    '#8b5cf6', // violet
+    '#14b8a6', // teal
+    '#ef4444', // red
+    '#3b82f6', // blue
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName);
+    // Normalize: match against known colors or keep as-is
+    _selectedColor = _avatarColors.contains(widget.initialColor)
+        ? widget.initialColor
+        : _avatarColors.first;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Color _hex(String hex) {
+    final cleaned = hex.replaceAll('#', '');
+    try {
+      return Color(int.parse('FF$cleaned', radix: 16));
+    } catch (_) {
+      return const Color(0xFF6366F1);
+    }
+  }
+
+  void _save() {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) return;
+    Navigator.of(context).pop({'name': name, 'color': _selectedColor});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final previewName = _nameCtrl.text.trim();
+    final previewInitial =
+        previewName.isNotEmpty ? previewName[0].toUpperCase() : '?';
+
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: const Text('Edit profile', style: TuneFonts.title3),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Preview avatar + name
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: _hex(_selectedColor),
+                  child: Text(
+                    previewInitial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    previewName.isEmpty ? '...' : previewName,
+                    style: TuneFonts.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Name field
+            Text(
+              'Name',
+              style: TuneFonts.caption.copyWith(
+                color: TuneColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              style: TuneFonts.body,
+              textInputAction: TextInputAction.done,
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) => _save(),
+              decoration: InputDecoration(
+                hintText: 'Profile name',
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
+                filled: true,
+                fillColor: TuneColors.surfaceVariant,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: TuneColors.accent, width: 1.5),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Color picker
+            Text(
+              'Color',
+              style: TuneFonts.caption.copyWith(
+                color: TuneColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _avatarColors.map((hex) {
+                final isSelected = hex == _selectedColor;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedColor = hex),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: _hex(hex),
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: Colors.white, width: 2.5)
+                          : null,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: _hex(hex).withValues(alpha: 0.6),
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check_rounded,
+                            size: 16, color: Colors.white)
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel',
+              style: TextStyle(color: TuneColors.textSecondary)),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: TuneColors.accent,
+          ),
+          onPressed: _save,
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

@@ -54,7 +54,7 @@ class _SearchViewState extends State<SearchView> {
     }
     setState(() {}); // met à jour suffixIcon
     _debounce = Timer(
-      const Duration(milliseconds: 500),
+      const Duration(milliseconds: 300),
       () {
         if (mounted) context.read<AppState>().search(q.trim());
       },
@@ -124,6 +124,12 @@ class _SearchViewState extends State<SearchView> {
 // puis chaque service streaming séparément
 // ---------------------------------------------------------------------------
 
+// How many items to show per category before requiring "See all".
+const _kPreviewArtists = 3;
+const _kPreviewAlbums = 4;
+const _kPreviewTracks = 5;
+const _kPreviewStreaming = 5;
+
 class _SearchResults extends StatelessWidget {
   final List<SearchResult> results;
   const _SearchResults({required this.results});
@@ -149,16 +155,37 @@ class _SearchResults extends StatelessWidget {
         _SourceHeader(label: l.homeLibrary, icon: Icons.library_music_rounded,
             color: TuneColors.accent),
         if (artists.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionArtists, count: artists.length),
-          ...artists.map((r) => _ArtistTile(result: r)),
+          _SectionHeader(
+            label: l.searchSectionArtists,
+            count: artists.length,
+            seeAllPage: artists.length > _kPreviewArtists
+                ? _SeeAllPage(title: l.searchSectionArtists,
+                    children: artists.map((r) => _ArtistTile(result: r)).toList())
+                : null,
+          ),
+          ...artists.take(_kPreviewArtists).map((r) => _ArtistTile(result: r)),
         ],
         if (albums.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
-          ...albums.map((r) => _AlbumTile(result: r)),
+          _SectionHeader(
+            label: l.searchSectionAlbums,
+            count: albums.length,
+            seeAllPage: albums.length > _kPreviewAlbums
+                ? _SeeAllPage(title: l.searchSectionAlbums,
+                    children: albums.map((r) => _AlbumTile(result: r)).toList())
+                : null,
+          ),
+          ...albums.take(_kPreviewAlbums).map((r) => _AlbumTile(result: r)),
         ],
         if (tracks.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionTracks, count: tracks.length),
-          ...tracks.map((r) => _TrackTile(result: r)),
+          _SectionHeader(
+            label: l.searchSectionTracks,
+            count: tracks.length,
+            seeAllPage: tracks.length > _kPreviewTracks
+                ? _SeeAllPage(title: l.searchSectionTracks,
+                    children: tracks.map((r) => _TrackTile(result: r)).toList())
+                : null,
+          ),
+          ...tracks.take(_kPreviewTracks).map((r) => _TrackTile(result: r)),
         ],
       ],
       // --- Streaming service results, one section per service ---
@@ -171,6 +198,31 @@ class _SearchResults extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: sections,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _SeeAllPage — full-screen list pushed when user taps "See all"
+// ---------------------------------------------------------------------------
+
+class _SeeAllPage extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const _SeeAllPage({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: TuneColors.background,
+      appBar: AppBar(
+        backgroundColor: TuneColors.surface,
+        title: Text(title, style: TuneFonts.subheadline),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 80),
+        children: children,
+      ),
     );
   }
 }
@@ -212,12 +264,19 @@ class _SourceHeader extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String label;
   final int count;
-  const _SectionHeader({required this.label, required this.count});
+  /// If non-null, a "See all" button is shown that pushes this widget.
+  final Widget? seeAllPage;
+
+  const _SectionHeader({
+    required this.label,
+    required this.count,
+    this.seeAllPage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       child: Row(
         children: [
           Text(label,
@@ -229,6 +288,21 @@ class _SectionHeader extends StatelessWidget {
           Text('($count)',
               style: TuneFonts.footnote.copyWith(
                   color: TuneColors.textTertiary)),
+          const Spacer(),
+          if (seeAllPage != null)
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => seeAllPage!),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                AppLocalizations.of(context).btnSeeAll,
+                style: const TextStyle(color: TuneColors.accent, fontSize: 12),
+              ),
+            ),
         ],
       ),
     );
@@ -257,23 +331,43 @@ class _ServiceSection extends StatelessWidget {
         r.item.type != 'track' && r.item.type != 'album' && r.item.type != 'artist').toList();
 
     final l = AppLocalizations.of(context);
+    final allTracks = [...tracks, ...other];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SourceHeader(label: info.name, icon: info.icon, color: info.color),
         if (artists.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionArtists, count: artists.length),
-          ...artists.map((r) => _StreamingTile(result: r)),
+          _SectionHeader(
+            label: l.searchSectionArtists,
+            count: artists.length,
+            seeAllPage: artists.length > _kPreviewArtists
+                ? _SeeAllPage(title: '${info.name} · ${l.searchSectionArtists}',
+                    children: artists.map((r) => _StreamingTile(result: r)).toList())
+                : null,
+          ),
+          ...artists.take(_kPreviewArtists).map((r) => _StreamingTile(result: r)),
         ],
         if (albums.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionAlbums, count: albums.length),
-          ...albums.map((r) => _StreamingTile(result: r)),
+          _SectionHeader(
+            label: l.searchSectionAlbums,
+            count: albums.length,
+            seeAllPage: albums.length > _kPreviewAlbums
+                ? _SeeAllPage(title: '${info.name} · ${l.searchSectionAlbums}',
+                    children: albums.map((r) => _StreamingTile(result: r)).toList())
+                : null,
+          ),
+          ...albums.take(_kPreviewAlbums).map((r) => _StreamingTile(result: r)),
         ],
-        if (tracks.isNotEmpty || other.isNotEmpty) ...[
-          _SectionHeader(label: l.searchSectionTracks,
-              count: tracks.length + other.length),
-          ...tracks.map((r) => _StreamingTile(result: r)),
-          ...other.map((r) => _StreamingTile(result: r)),
+        if (allTracks.isNotEmpty) ...[
+          _SectionHeader(
+            label: l.searchSectionTracks,
+            count: allTracks.length,
+            seeAllPage: allTracks.length > _kPreviewStreaming
+                ? _SeeAllPage(title: '${info.name} · ${l.searchSectionTracks}',
+                    children: allTracks.map((r) => _StreamingTile(result: r)).toList())
+                : null,
+          ),
+          ...allTracks.take(_kPreviewStreaming).map((r) => _StreamingTile(result: r)),
         ],
       ],
     );
