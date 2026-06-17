@@ -12,6 +12,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../library/add_to_playlist_sheet.dart';
 import '../streaming/streaming_helpers.dart';
+import 'smart_autoplay_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // T11.4 — QueueView
@@ -76,6 +77,13 @@ class QueueView extends StatelessWidget {
             children: [
               Text(AppLocalizations.of(context).queueTitle, style: TuneFonts.title3),
               const Spacer(),
+              // Smart AutoPlay — always visible
+              IconButton(
+                icon: const Icon(Icons.auto_awesome_rounded,
+                    color: TuneColors.textSecondary, size: 22),
+                tooltip: 'Smart AutoPlay',
+                onPressed: () => showSmartAutoPlaySheet(context),
+              ),
               if (tracks.isNotEmpty) ...[
                 TextButton(
                   onPressed: () => _showClearConfirm(context),

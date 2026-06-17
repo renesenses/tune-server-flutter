@@ -1296,4 +1296,16 @@ class TuneApiClient {
     final url = qs.isNotEmpty ? '/system/scan?$qs' : '/system/scan';
     await _post(url);
   }
+
+  // ---------------------------------------------------------------------------
+  // ── Smart AutoPlay — Mood-based track suggestions ──
+  // ---------------------------------------------------------------------------
+
+  /// Call `POST /api/v1/smart-ai/mood` and return the server response.
+  /// The server returns `{"tracks": [{id, title, artist_name, ...}]}`.
+  Future<Map<String, dynamic>> getMoodTracks(String mood, {int limit = 20}) async =>
+      await _post('/api/v1/smart-ai/mood', body: {
+        'mood': mood,
+        'limit': limit,
+      }) as Map<String, dynamic>;
 }

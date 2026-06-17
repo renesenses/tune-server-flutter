@@ -21,6 +21,7 @@ import '../library/add_to_playlist_sheet.dart';
 import 'queue_view.dart';
 import 'seek_bar_view.dart';
 import 'sleep_timer_sheet.dart';
+import 'smart_autoplay_sheet.dart';
 import 'volume_control_view.dart';
 import 'zone_management_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
@@ -439,6 +440,12 @@ class _ExtraActions extends StatelessWidget {
           onPressed: track?.id != null && track!.id != 0
               ? () => _showAddToPlaylist(context, track!)
               : null,
+        ),
+        // Smart AutoPlay
+        IconButton(
+          icon: const Icon(Icons.auto_awesome_rounded, color: TuneColors.textSecondary),
+          tooltip: 'Smart AutoPlay',
+          onPressed: () => showSmartAutoPlaySheet(context),
         ),
         // Lyrics
         IconButton(
