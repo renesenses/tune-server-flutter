@@ -40,10 +40,28 @@ extension AppStateLifecycle on AppState {
         (_) => _refreshUpdateInfo(),
       );
 
+      // What's New — compare current app version to last seen version.
+      await _checkWhatsNew();
+
       notify();
     } catch (e) {
       _errorMessage = e.toString();
       notify();
+    }
+  }
+
+  Future<void> _checkWhatsNew() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final current = info.version;
+      final lastSeen = engine.config.lastSeenVersion;
+      if (lastSeen == null || lastSeen != current) {
+        _showWhatsNew = true;
+        _whatsNewVersion = current;
+        // Don't persist yet — persist when user dismisses the dialog.
+      }
+    } catch (_) {
+      // Ignore — non-critical
     }
   }
 

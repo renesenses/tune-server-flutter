@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/track_notification_service.dart';
 import '../state/app_state.dart';
+import '../state/library_state.dart';
 import '../state/settings_state.dart';
 import 'helpers/tune_colors.dart';
 import 'helpers/tune_fonts.dart';
@@ -59,15 +60,19 @@ class _RootViewState extends State<RootView> {
     if (!setupCompleted) return const LibrarySetupView();
 
     // Routing iPhone vs iPad selon la largeur disponible
-    return _TrackNotificationListener(
-      child: _PlaybackErrorListener(
-        child: LayoutBuilder(
-          builder: (_, constraints) {
-            if (constraints.maxWidth >= 768) {
-              return const iPadContentView();
-            }
-            return const iPhoneContentView();
-          },
+    return _WhatsNewDialogListener(
+      child: _TrackNotificationListener(
+        child: _PlaybackErrorListener(
+          child: _StartupStatusBanner(
+            child: LayoutBuilder(
+              builder: (_, constraints) {
+                if (constraints.maxWidth >= 768) {
+                  return const iPadContentView();
+                }
+                return const iPhoneContentView();
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -212,6 +217,265 @@ class _TrackNotificationListenerState
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+// ---------------------------------------------------------------------------
+// _StartupStatusBanner — thin animated banner for scan & streaming init
+// ---------------------------------------------------------------------------
+
+class _StartupStatusBanner extends StatefulWidget {
+  final Widget child;
+  const _StartupStatusBanner({required this.child});
+
+  @override
+  State<_StartupStatusBanner> createState() => _StartupStatusBannerState();
+}
+
+class _StartupStatusBannerState extends State<_StartupStatusBanner> {
+  // Show streaming init banner for a short window right after startup.
+  final bool _showStreamingInit = true;
+  bool _streamingDismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-hide the streaming init banner after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _streamingDismissed = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isScanning = context.select<LibraryState, bool>((l) => l.isScanning);
+    final scanProgress =
+        context.select<LibraryState, int>((l) => l.scanProgress);
+    final scanTotal =
+        context.select<LibraryState, int>((l) => l.scanTotal);
+
+    final showScan = isScanning;
+    final showStreaming = !showScan && !_streamingDismissed && _showStreamingInit;
+    final show = showScan || showStreaming;
+
+    // Once we've shown streaming init and scan is now active, mark streaming done
+    if (isScanning && !_streamingDismissed) {
+      _streamingDismissed = true;
+    }
+
+    String? label;
+    String? sub;
+    if (showScan) {
+      label = 'Synchronisation de la bibliothèque…';
+      if (scanTotal > 0) sub = '$scanProgress / $scanTotal pistes';
+    } else if (showStreaming) {
+      label = 'Connexion aux services streaming…';
+    }
+
+    return Stack(
+      children: [
+        widget.child,
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          top: show ? 0 : -64,
+          left: 0,
+          right: 0,
+          child: _StatusBannerWidget(label: label ?? '', sub: sub),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusBannerWidget extends StatelessWidget {
+  final String label;
+  final String? sub;
+  const _StatusBannerWidget({required this.label, this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: TuneColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: TuneColors.accent.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: TuneColors.accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: TuneColors.textPrimary,
+                      ),
+                    ),
+                    if (sub != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        sub!,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: TuneColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _WhatsNewDialogListener — show a What's New dialog after update
+// ---------------------------------------------------------------------------
+
+class _WhatsNewDialogListener extends StatefulWidget {
+  final Widget child;
+  const _WhatsNewDialogListener({required this.child});
+
+  @override
+  State<_WhatsNewDialogListener> createState() =>
+      _WhatsNewDialogListenerState();
+}
+
+class _WhatsNewDialogListenerState extends State<_WhatsNewDialogListener> {
+  bool _dialogShown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.read<AppState>();
+    if (app.showWhatsNew && !_dialogShown) {
+      _dialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showDialog(app));
+    }
+  }
+
+  void _showDialog(AppState app) {
+    if (!mounted) return;
+    final version = app.whatsNewVersion ?? '';
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: TuneColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.auto_awesome_rounded,
+                color: TuneColors.accent, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Nouveau dans v$version',
+                style: TuneFonts.title3,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              _WhatsNewItem(
+                icon: Icons.library_music_rounded,
+                text: 'Synchronisation de bibliothèque améliorée',
+              ),
+              _WhatsNewItem(
+                icon: Icons.speaker_group_rounded,
+                text: 'Multi-room et gestion des zones optimisés',
+              ),
+              _WhatsNewItem(
+                icon: Icons.bug_report_rounded,
+                text: 'Corrections de bugs et améliorations de stabilité',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              app.dismissWhatsNew();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Re-check in case showWhatsNew changes after initial build
+    final showWhatsNew =
+        context.select<AppState, bool>((a) => a.showWhatsNew);
+    if (showWhatsNew && !_dialogShown) {
+      _dialogShown = true;
+      final app = context.read<AppState>();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showDialog(app));
+    }
+    return widget.child;
+  }
+}
+
+class _WhatsNewItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _WhatsNewItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: TuneColors.accent, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: TuneFonts.body),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

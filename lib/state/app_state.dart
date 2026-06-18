@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../server/discovery/content_directory_client.dart';
@@ -94,6 +95,12 @@ class AppState extends ChangeNotifier {
   UpdateInfo? get updateInfo => _updateInfo;
   Timer? _updateCheckTimer;
 
+  // What's New — show a dialog on first launch after update.
+  bool _showWhatsNew = false;
+  bool get showWhatsNew => _showWhatsNew;
+  String? _whatsNewVersion;
+  String? get whatsNewVersion => _whatsNewVersion;
+
   bool get isRemoteMode => settingsState.isRemoteMode;
   bool get isRemoteConnected => _apiClient != null;
   TuneApiClient? get apiClient => _apiClient;
@@ -118,6 +125,16 @@ class AppState extends ChangeNotifier {
   /// extensions (Playback, Library, Radio…) can trigger UI rebuilds
   /// without bumping into the @protected modifier.
   void notify() => notifyListeners();
+
+  /// Dismiss the What's New dialog and persist the seen version.
+  Future<void> dismissWhatsNew() async {
+    if (_whatsNewVersion != null) {
+      await engine.config.setLastSeenVersion(_whatsNewVersion!);
+    }
+    _showWhatsNew = false;
+    _whatsNewVersion = null;
+    notifyListeners();
+  }
 
   // ---------------------------------------------------------------------------
   // Factory

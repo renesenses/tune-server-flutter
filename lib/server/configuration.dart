@@ -181,6 +181,17 @@ class ServerConfiguration {
       _p.setString(_kMetadataDisplayFields, fields.join(','));
 
   // ---------------------------------------------------------------------------
+  // Last seen version (What's New dialog)
+  // ---------------------------------------------------------------------------
+
+  static const _kLastSeenVersion = 'last_seen_version';
+
+  String? get lastSeenVersion => _p.getString(_kLastSeenVersion);
+
+  Future<void> setLastSeenVersion(String version) =>
+      _p.setString(_kLastSeenVersion, version);
+
+  // ---------------------------------------------------------------------------
   // Reset (tests / onboarding)
   // ---------------------------------------------------------------------------
 
