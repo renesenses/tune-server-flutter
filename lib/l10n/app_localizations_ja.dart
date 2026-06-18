@@ -1177,6 +1177,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get artistEnriching => 'エンリッチ中…';
 
   @override
+  String get artistGenres => 'ジャンル';
+
+  @override
   String get libraryShuffleAll => 'すべてシャッフル';
 
   @override

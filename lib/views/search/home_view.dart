@@ -358,7 +358,14 @@ class _ContinueListeningList extends StatelessWidget {
   final List<dynamic> items;
   const _ContinueListeningList({required this.items});
 
-  void _playAlbum(AppState app, int? albumId) {
+  void _play(AppState app, Map<String, dynamic> item) {
+    final source = item['source'] as String?;
+    final sourceId = item['source_id'] as String?;
+    if (source != null && source != 'local' && sourceId != null) {
+      app.playStreaming(source, sourceId);
+      return;
+    }
+    final albumId = item['album_id'] as int? ?? item['id'] as int?;
     if (albumId != null && app.apiClient != null) {
       app.apiClient!.getAlbumTracks(albumId).then((data) {
         final tracks = data
@@ -410,7 +417,7 @@ class _ContinueListeningList extends StatelessWidget {
                 children: [
                   // Cover art with play overlay — tap to play
                   GestureDetector(
-                    onTap: () => _playAlbum(app, albumId),
+                    onTap: () => _play(app, item),
                     child: Stack(
                       children: [
                         ClipRRect(
@@ -456,7 +463,7 @@ class _ContinueListeningList extends StatelessWidget {
                   const SizedBox(height: 6),
                   // Title — tap to play
                   GestureDetector(
-                    onTap: () => _playAlbum(app, albumId),
+                    onTap: () => _play(app, item),
                     child: Text(title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

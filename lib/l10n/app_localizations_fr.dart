@@ -1188,6 +1188,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get artistEnriching => 'Enrichissement en cours…';
 
   @override
+  String get artistGenres => 'Genres';
+
+  @override
   String get libraryShuffleAll => 'Lecture aléatoire de tout';
 
   @override

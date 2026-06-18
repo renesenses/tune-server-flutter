@@ -1176,6 +1176,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get artistEnriching => '보강 진행 중…';
 
   @override
+  String get artistGenres => '장르';
+
+  @override
   String get libraryShuffleAll => '전체 셔플';
 
   @override

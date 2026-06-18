@@ -2348,6 +2348,12 @@ abstract class AppLocalizations {
   /// **'Enrichment in progress…'**
   String get artistEnriching;
 
+  /// No description provided for @artistGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres'**
+  String get artistGenres;
+
   /// No description provided for @libraryShuffleAll.
   ///
   /// In en, this message translates to:

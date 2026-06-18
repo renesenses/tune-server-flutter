@@ -324,6 +324,44 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
                   ),
                 ],
 
+                // --- Genre tags from enrichment ---
+                if (_metadata != null &&
+                    _metadata!['tags'] != null &&
+                    (_metadata!['tags'] as List).isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l.artistGenres, style: TuneFonts.title3),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: (_metadata!['tags'] as List).map((tag) {
+                              final name = tag is Map
+                                  ? (tag['name'] as String? ?? tag.toString())
+                                  : tag.toString();
+                              return Chip(
+                                label: Text(name,
+                                    style: TuneFonts.caption.copyWith(
+                                        color: TuneColors.textSecondary)),
+                                backgroundColor: TuneColors.surfaceVariant,
+                                side: BorderSide.none,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // --- Anecdotes ---
                 if (_metadata != null &&
                     _metadata!['anecdotes'] != null &&

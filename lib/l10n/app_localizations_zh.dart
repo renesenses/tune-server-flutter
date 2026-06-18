@@ -1172,6 +1172,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get artistEnriching => '正在丰富信息…';
 
   @override
+  String get artistGenres => '流派';
+
+  @override
   String get libraryShuffleAll => '随机播放全部';
 
   @override
