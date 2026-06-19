@@ -411,6 +411,39 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     }
   }
 
+  Future<void> _cleanupOfflineZones() async {
+    final api = _api;
+    if (api == null) return;
+    if (_actionLoading['cleanup'] == true) return;
+    setState(() => _actionLoading['cleanup'] = true);
+    try {
+      final zones = await api.getZones();
+      final offline = zones
+          .cast<Map<String, dynamic>>()
+          .where((z) =>
+              z['online'] == false &&
+              (z['output_type'] as String? ?? 'local') != 'local')
+          .toList();
+      for (final z in offline) {
+        final id = z['id'] as int;
+        await api.deleteZoneRemote(id);
+      }
+      if (mounted) {
+        final count = offline.length;
+        _showSnackBar(
+          count == 0
+              ? 'Aucune zone hors ligne à supprimer'
+              : '$count zone${count > 1 ? 's' : ''} hors ligne supprimée${count > 1 ? 's' : ''}',
+        );
+        if (count > 0) _loadOverview();
+      }
+    } catch (e) {
+      if (mounted) _showSnackBar('Erreur nettoyage : $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _actionLoading['cleanup'] = false);
+    }
+  }
+
   Future<void> _showSaveProfileDialog() async {
     final api = _api;
     if (api == null) return;
@@ -507,6 +540,22 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
         backgroundColor: TuneColors.surface,
         title: const Text('Zone Manager', style: TuneFonts.title3),
         actions: [
+          _actionLoading['cleanup'] == true
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: TuneColors.textSecondary),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.cleaning_services_rounded,
+                      color: TuneColors.textSecondary),
+                  tooltip: 'Nettoyer les zones hors ligne',
+                  onPressed: _cleanupOfflineZones,
+                ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
