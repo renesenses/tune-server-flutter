@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
+import '../ai/ai_chat_screen.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -50,7 +51,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 5, vsync: this);
+    _tabCtrl = TabController(length: 6, vsync: this);
     _tabCtrl.addListener(() {
       if (!_tabCtrl.indexIsChanging) _loadTab();
     });
@@ -67,16 +68,16 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     if (!app.isRemoteMode || app.apiClient == null) return;
     setState(() => _loading = true);
     try {
-      if (_tabCtrl.index == 1) {
+      if (_tabCtrl.index == 2) {
         final data = await app.apiClient!.getTransferHistory();
         _history = data.cast<Map<String, dynamic>>();
-      } else if (_tabCtrl.index == 2) {
+      } else if (_tabCtrl.index == 3) {
         final data = await app.apiClient!.getPlaylistLinks();
         _links = data.cast<Map<String, dynamic>>();
-      } else if (_tabCtrl.index == 3) {
+      } else if (_tabCtrl.index == 4) {
         final data = await app.apiClient!.listPlaylistSnapshots();
         _snapshots = data.cast<Map<String, dynamic>>();
-      } else if (_tabCtrl.index == 4) {
+      } else if (_tabCtrl.index == 5) {
         await _loadAllPlaylistsForCompare();
       }
     } catch (_) {}
@@ -267,6 +268,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           unselectedLabelColor: TuneColors.textSecondary,
           tabs: const [
             Tab(text: 'Playlists'),
+            Tab(text: 'Smart AI'),
             Tab(text: 'Transferts'),
             Tab(text: 'Sync'),
             Tab(text: 'Backup'),
@@ -278,6 +280,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
         controller: _tabCtrl,
         children: [
           const _PlaylistsTab(),
+          const AIChatScreen(embedded: true),
           _buildHistoryTab(),
           _buildSyncTab(),
           _buildBackupTab(),

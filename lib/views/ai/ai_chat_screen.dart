@@ -16,7 +16,10 @@ import '../helpers/tune_fonts.dart';
 // ---------------------------------------------------------------------------
 
 class AIChatScreen extends StatefulWidget {
-  const AIChatScreen({super.key});
+  /// When true, skip the Scaffold/AppBar (used when embedded as a tab).
+  final bool embedded;
+
+  const AIChatScreen({super.key, this.embedded = false});
 
   @override
   State<AIChatScreen> createState() => _AIChatScreenState();
@@ -154,8 +157,87 @@ class _AIChatScreenState extends State<AIChatScreen> {
     });
   }
 
+  Widget _buildBody(BuildContext context) {
+    return Column(
+      children: [
+        // Messages list
+        Expanded(
+          child: _messages.isEmpty
+              ? _EmptyState()
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemCount: _messages.length + (_sending ? 1 : 0),
+                  itemBuilder: (_, i) {
+                    if (i == _messages.length && _sending) {
+                      return const _TypingIndicator();
+                    }
+                    return _MessageBubble(message: _messages[i]);
+                  },
+                ),
+        ),
+
+        // Input bar
+        Container(
+          color: TuneColors.surface,
+          padding: EdgeInsets.fromLTRB(
+            16,
+            10,
+            8,
+            10 + (widget.embedded ? 0 : MediaQuery.of(context).viewPadding.bottom),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  style: TuneFonts.body,
+                  maxLines: 4,
+                  minLines: 1,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _send(),
+                  decoration: InputDecoration(
+                    hintText: 'Posez une question...',
+                    hintStyle: TuneFonts.footnote,
+                    filled: true,
+                    fillColor: TuneColors.surfaceVariant,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: _sending ? null : _send,
+                icon: Icon(
+                  Icons.send_rounded,
+                  color: _sending ? TuneColors.textTertiary : TuneColors.accent,
+                ),
+                tooltip: 'Envoyer',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.embedded) {
+      return Container(
+        color: TuneColors.background,
+        child: _buildBody(context),
+      );
+    }
+
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -169,75 +251,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          // Messages list
-          Expanded(
-            child: _messages.isEmpty
-                ? _EmptyState()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    itemCount: _messages.length + (_sending ? 1 : 0),
-                    itemBuilder: (_, i) {
-                      if (i == _messages.length && _sending) {
-                        return const _TypingIndicator();
-                      }
-                      return _MessageBubble(message: _messages[i]);
-                    },
-                  ),
-          ),
-
-          // Input bar
-          Container(
-            color: TuneColors.surface,
-            padding: EdgeInsets.fromLTRB(
-              16,
-              10,
-              8,
-              10 + MediaQuery.of(context).viewPadding.bottom,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    style: TuneFonts.body,
-                    maxLines: 4,
-                    minLines: 1,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
-                    decoration: InputDecoration(
-                      hintText: 'Posez une question...',
-                      hintStyle: TuneFonts.footnote,
-                      filled: true,
-                      fillColor: TuneColors.surfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  onPressed: _sending ? null : _send,
-                  icon: Icon(
-                    Icons.send_rounded,
-                    color: _sending ? TuneColors.textTertiary : TuneColors.accent,
-                  ),
-                  tooltip: 'Envoyer',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: _buildBody(context),
     );
   }
 }

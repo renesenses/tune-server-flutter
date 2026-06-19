@@ -17,7 +17,6 @@ import '../settings/settings_view.dart';
 import '../smart_playlists/smart_playlists_view.dart';
 import '../streaming/streaming_view.dart';
 import '../admin/admin_dashboard_view.dart';
-import '../ai/ai_chat_screen.dart';
 import '../alarms/alarms_view.dart';
 import '../browse/browse_library_view.dart';
 import '../dashboard/dashboard_view.dart';
@@ -60,7 +59,6 @@ class _iPadContentViewState extends State<iPadContentView> {
       _NavEntry(Icons.collections_bookmark_outlined, Icons.collections_bookmark_rounded, 'Collections', const CollectionsView()),
       _NavEntry(Icons.auto_awesome_motion_outlined, Icons.auto_awesome_motion_rounded, 'Smart Collections', const SmartCollectionsView()),
       _NavEntry(Icons.favorite_outline_rounded, Icons.favorite_rounded, 'Favoris Radio', const RadioFavoritesView()),
-      if (isRemote) _NavEntry(Icons.psychology_outlined, Icons.psychology_rounded, 'Assistant IA', const AIChatScreen()),
       // Party + DJ require server-side routes only the Python (remote)
       // server provides — hidden when running standalone.
       if (isRemote) _NavEntry(Icons.album_outlined, Icons.album_rounded, 'DJ', const DJView()),
