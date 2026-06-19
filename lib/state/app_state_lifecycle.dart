@@ -387,7 +387,6 @@ extension AppStateLifecycle on AppState {
   Future<void> _refreshLibraryRemote() async {
     if (_apiClient == null) return;
     try {
-      // Use getAllAlbums/getAllArtists to auto-paginate large libraries
       final albumsJson = await _apiClient!.getAllAlbums();
       final albums = albumsJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
       libraryState.setAlbums(albums);
@@ -400,7 +399,6 @@ extension AppStateLifecycle on AppState {
       final tracks = tracksJson.map((t) => trackFromJson(t as Map<String, dynamic>)).toList();
       libraryState.setTracks(tracks);
 
-      // Recent albums for Home view
       try {
         final recentJson = await _apiClient!.getRecentAlbums(limit: 30);
         final recent = recentJson.map((a) => albumFromJson(a as Map<String, dynamic>)).toList();
@@ -408,6 +406,8 @@ extension AppStateLifecycle on AppState {
       } catch (_) {}
     } catch (e) {
       debugPrint('[Remote] refreshLibrary error: $e');
+      _errorMessage = 'Erreur chargement bibliothèque: $e';
+      notify();
     }
   }
 

@@ -42,7 +42,7 @@ class _RootViewState extends State<RootView> {
     final app = context.read<AppState>();
     try {
       if (app.settingsState.isRemoteMode) {
-        await app.connectRemote().timeout(const Duration(seconds: 10));
+        await app.connectRemote();
       } else {
         await app.startServer().timeout(const Duration(seconds: 10));
       }

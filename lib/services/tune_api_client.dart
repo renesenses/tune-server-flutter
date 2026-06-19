@@ -46,7 +46,7 @@ class TuneApiClient {
 
   /// Build request headers with optional auth token.
   Map<String, String> _headers({bool json = false}) {
-    final h = <String, String>{};
+    final h = <String, String>{'Accept': 'application/json'};
     if (json) h['Content-Type'] = 'application/json';
     if (authToken != null && authToken!.isNotEmpty) {
       h['Authorization'] = 'Bearer $authToken';
@@ -68,7 +68,11 @@ class TuneApiClient {
     if (resp.statusCode != 200) {
       throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
     }
-    return jsonDecode(resp.body);
+    final body = resp.body;
+    if (body.trimLeft().startsWith('<!') || body.trimLeft().startsWith('<html')) {
+      throw TuneHttpException('GET $path returned HTML instead of JSON', 200);
+    }
+    return jsonDecode(body);
   }
 
   /// Like [_get] but returns `null` on 404 instead of throwing.
