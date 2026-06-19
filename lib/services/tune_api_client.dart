@@ -863,6 +863,17 @@ class TuneApiClient {
   Future<void> setDSP(int zoneId, String? crossfeed) async =>
       await _post('/zones/$zoneId/dsp', body: {'crossfeed': crossfeed});
 
+  // DSP — EQ Profile (Master Profiler)
+
+  /// Fetch the current DSP EQ profile for a zone.
+  /// Returns null if the endpoint does not exist yet on this server version.
+  Future<Map<String, dynamic>?> getDspProfile(int zoneId) async =>
+      await _getOptional('/zones/$zoneId/dsp') as Map<String, dynamic>?;
+
+  /// Send a new DSP EQ profile for a zone.
+  Future<void> setDspProfile(int zoneId, EqProfile profile) async =>
+      await _post('/zones/$zoneId/dsp', body: {'eq_profile': profile.toJson()});
+
   // Save queue as playlist
 
   Future<Map<String, dynamic>> saveQueueAsPlaylist(int zoneId, String name) async =>
@@ -1308,4 +1319,87 @@ class TuneApiClient {
         'mood': mood,
         'limit': limit,
       }) as Map<String, dynamic>;
+}
+
+// ---------------------------------------------------------------------------
+// EqProfile — perceptual room correction model (Master Profiler)
+// Mirrors the Rust server EqProfile struct in zones/dsp.rs
+// ---------------------------------------------------------------------------
+
+enum ListeningMode { speakers, headphones }
+enum RoomSize { small, medium, large }
+enum SpeakerPlacement { nearWall, freeStanding }
+
+class EqProfile {
+  final bool enabled;
+  final ListeningMode listening;
+  final RoomSize roomSize;
+  final SpeakerPlacement speakerPlacement;
+  final double bassGainDb;
+  final double midGainDb;
+  final double trebleGainDb;
+
+  const EqProfile({
+    this.enabled = true,
+    this.listening = ListeningMode.speakers,
+    this.roomSize = RoomSize.medium,
+    this.speakerPlacement = SpeakerPlacement.freeStanding,
+    this.bassGainDb = 0.0,
+    this.midGainDb = 0.0,
+    this.trebleGainDb = 0.0,
+  });
+
+  factory EqProfile.fromJson(Map<String, dynamic> json) {
+    return EqProfile(
+      enabled: json['enabled'] as bool? ?? true,
+      listening: json['listening'] == 'headphones'
+          ? ListeningMode.headphones
+          : ListeningMode.speakers,
+      roomSize: switch (json['room_size'] as String?) {
+        'small' => RoomSize.small,
+        'large' => RoomSize.large,
+        _ => RoomSize.medium,
+      },
+      speakerPlacement: json['speaker_placement'] == 'near_wall'
+          ? SpeakerPlacement.nearWall
+          : SpeakerPlacement.freeStanding,
+      bassGainDb: (json['bass_gain_db'] as num?)?.toDouble() ?? 0.0,
+      midGainDb: (json['mid_gain_db'] as num?)?.toDouble() ?? 0.0,
+      trebleGainDb: (json['treble_gain_db'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'enabled': enabled,
+    'listening': listening == ListeningMode.headphones ? 'headphones' : 'speakers',
+    'room_size': switch (roomSize) {
+      RoomSize.small => 'small',
+      RoomSize.large => 'large',
+      RoomSize.medium => 'medium',
+    },
+    'speaker_placement': speakerPlacement == SpeakerPlacement.nearWall
+        ? 'near_wall'
+        : 'free_standing',
+    'bass_gain_db': bassGainDb,
+    'mid_gain_db': midGainDb,
+    'treble_gain_db': trebleGainDb,
+  };
+
+  EqProfile copyWith({
+    bool? enabled,
+    ListeningMode? listening,
+    RoomSize? roomSize,
+    SpeakerPlacement? speakerPlacement,
+    double? bassGainDb,
+    double? midGainDb,
+    double? trebleGainDb,
+  }) => EqProfile(
+    enabled: enabled ?? this.enabled,
+    listening: listening ?? this.listening,
+    roomSize: roomSize ?? this.roomSize,
+    speakerPlacement: speakerPlacement ?? this.speakerPlacement,
+    bassGainDb: bassGainDb ?? this.bassGainDb,
+    midGainDb: midGainDb ?? this.midGainDb,
+    trebleGainDb: trebleGainDb ?? this.trebleGainDb,
+  );
 }

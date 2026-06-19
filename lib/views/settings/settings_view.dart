@@ -398,8 +398,8 @@ class _SettingsList extends StatelessWidget {
                 const _StreamingQualitySelector(),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Equalizer 10 bandes',
-                  subtitle: 'Reglage fin par frequence',
+                  title: 'Equalizer',
+                  subtitle: 'Assistant de calibration + EQ 10 bandes expert',
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,

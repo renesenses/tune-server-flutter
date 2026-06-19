@@ -5,22 +5,75 @@ import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import 'tune_master_profiler_screen.dart';
 
 // ---------------------------------------------------------------------------
-// EqualizerView — 10-band parametric EQ with vertical sliders
-// Bands: 31Hz, 63Hz, 125Hz, 250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 8kHz, 16kHz
-// Each band: -12dB to +12dB
-// API: GET/POST /zones/{zoneId}/eq
+// EqualizerView — tabbed EQ screen
+//
+//   "Assistant" tab  →  TuneMasterProfilerScreen (perceptual 2-step wizard)
+//   "Expert" tab     →  10-band parametric EQ with vertical sliders
+//
+// API:
+//   GET/POST /zones/{zoneId}/eq        (10-band)
+//   GET/POST /zones/{zoneId}/dsp       (EQ profile)
 // ---------------------------------------------------------------------------
 
-class EqualizerView extends StatefulWidget {
+class EqualizerView extends StatelessWidget {
   const EqualizerView({super.key});
 
   @override
-  State<EqualizerView> createState() => _EqualizerViewState();
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: TuneColors.background,
+        appBar: AppBar(
+          backgroundColor: TuneColors.surface,
+          title: const Text('Equalizer', style: TuneFonts.title3),
+          bottom: TabBar(
+            indicatorColor: TuneColors.accent,
+            indicatorWeight: 2.5,
+            labelColor: TuneColors.accent,
+            unselectedLabelColor: TuneColors.textSecondary,
+            labelStyle:
+                const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            tabs: const [
+              Tab(
+                icon: Icon(Icons.auto_fix_high_rounded, size: 18),
+                text: 'Assistant',
+              ),
+              Tab(
+                icon: Icon(Icons.tune_rounded, size: 18),
+                text: 'Expert',
+              ),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            // ── Tab 0: Assistant (Master Profiler) ──────────────────────
+            TuneMasterProfilerScreen(embedded: true),
+            // ── Tab 1: Expert (10-band parametric EQ) ───────────────────
+            _ParametricEqTab(),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _EqualizerViewState extends State<EqualizerView> {
+// ---------------------------------------------------------------------------
+// _ParametricEqTab — 10-band parametric EQ (previously the full EqualizerView)
+// ---------------------------------------------------------------------------
+
+class _ParametricEqTab extends StatefulWidget {
+  const _ParametricEqTab();
+
+  @override
+  State<_ParametricEqTab> createState() => _ParametricEqTabState();
+}
+
+class _ParametricEqTabState extends State<_ParametricEqTab> {
   static const _bandLabels = [
     '31', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k',
   ];
@@ -80,87 +133,95 @@ class _EqualizerViewState extends State<EqualizerView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: TuneColors.background,
-      appBar: AppBar(
-        backgroundColor: TuneColors.surface,
-        title: const Text('Equalizer', style: TuneFonts.title3),
-        actions: [
-          TextButton(
-            onPressed: _resetFlat,
-            child: const Text('Flat', style: TextStyle(color: TuneColors.accent)),
+    if (_loading) {
+      return const Center(
+          child: CircularProgressIndicator(color: TuneColors.accent));
+    }
+    if (_error != null) {
+      return Center(
+          child: Text(_error!, style: const TextStyle(color: TuneColors.error)));
+    }
+    return Column(
+      children: [
+        // Flat button
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12, top: 8),
+            child: TextButton(
+              onPressed: _resetFlat,
+              child: const Text('Flat',
+                  style: TextStyle(color: TuneColors.accent)),
+            ),
           ),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: TuneColors.error)))
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                  child: Column(
-                    children: [
-                      // dB scale labels
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text('+12 dB', style: TextStyle(color: TuneColors.textTertiary, fontSize: 11)),
-                            Text('0 dB', style: TextStyle(color: TuneColors.textTertiary, fontSize: 11)),
-                            Text('-12 dB', style: TextStyle(color: TuneColors.textTertiary, fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Sliders
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(10, (i) => _BandSlider(
-                            label: _bandLabels[i],
-                            value: _gains[i],
-                            onChanged: (v) {
-                              setState(() => _gains[i] = v);
-                            },
-                            onChangeEnd: (_) => _applyGains(),
-                          )),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Presets row
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          children: [
-                            _PresetChip(label: 'Flat', onTap: _resetFlat),
-                            _PresetChip(label: 'Bass Boost', onTap: () {
-                              setState(() => _gains = [8, 6, 4, 2, 0, 0, 0, 0, 0, 0]);
-                              _applyGains();
-                            }),
-                            _PresetChip(label: 'Rock', onTap: () {
-                              setState(() => _gains = [4, 3, -1, -2, 0, 2, 4, 5, 4, 3]);
-                              _applyGains();
-                            }),
-                            _PresetChip(label: 'Jazz', onTap: () {
-                              setState(() => _gains = [2, 3, 1, 2, -1, -1, 0, 1, 2, 3]);
-                              _applyGains();
-                            }),
-                            _PresetChip(label: 'Classique', onTap: () {
-                              setState(() => _gains = [0, 0, 0, 0, 0, 0, -2, -3, -2, 0]);
-                              _applyGains();
-                            }),
-                            _PresetChip(label: 'Vocal', onTap: () {
-                              setState(() => _gains = [-2, -1, 0, 2, 4, 4, 2, 0, -1, -2]);
-                              _applyGains();
-                            }),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        ),
+        // dB scale labels
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('+12 dB',
+                  style: TextStyle(
+                      color: TuneColors.textTertiary, fontSize: 11)),
+              Text('0 dB',
+                  style: TextStyle(
+                      color: TuneColors.textTertiary, fontSize: 11)),
+              Text('-12 dB',
+                  style: TextStyle(
+                      color: TuneColors.textTertiary, fontSize: 11)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Sliders
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(
+              10,
+              (i) => _BandSlider(
+                label: _bandLabels[i],
+                value: _gains[i],
+                onChanged: (v) => setState(() => _gains[i] = v),
+                onChangeEnd: (_) => _applyGains(),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Presets row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              _PresetChip(label: 'Flat', onTap: _resetFlat),
+              _PresetChip(label: 'Bass Boost', onTap: () {
+                setState(() => _gains = [8, 6, 4, 2, 0, 0, 0, 0, 0, 0]);
+                _applyGains();
+              }),
+              _PresetChip(label: 'Rock', onTap: () {
+                setState(() => _gains = [4, 3, -1, -2, 0, 2, 4, 5, 4, 3]);
+                _applyGains();
+              }),
+              _PresetChip(label: 'Jazz', onTap: () {
+                setState(() => _gains = [2, 3, 1, 2, -1, -1, 0, 1, 2, 3]);
+                _applyGains();
+              }),
+              _PresetChip(label: 'Classique', onTap: () {
+                setState(() => _gains = [0, 0, 0, 0, 0, 0, -2, -3, -2, 0]);
+                _applyGains();
+              }),
+              _PresetChip(label: 'Vocal', onTap: () {
+                setState(() => _gains = [-2, -1, 0, 2, 4, 4, 2, 0, -1, -2]);
+                _applyGains();
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }
@@ -246,7 +307,8 @@ class _PresetChip extends StatelessWidget {
       child: ActionChip(
         label: Text(label),
         backgroundColor: TuneColors.surfaceVariant,
-        labelStyle: const TextStyle(color: TuneColors.textPrimary, fontSize: 12),
+        labelStyle:
+            const TextStyle(color: TuneColors.textPrimary, fontSize: 12),
         side: BorderSide.none,
         onPressed: onTap,
       ),
