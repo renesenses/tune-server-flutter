@@ -61,11 +61,12 @@ class _RootViewState extends State<RootView> {
     if (_starting) return const _SplashView();
     if (error != null) return _ErrorView(message: error, onRetry: _startServer);
 
+    final isRemote = context.select<SettingsState, bool>((s) => s.isRemoteMode);
     final setupCompleted =
         context.select<SettingsState, bool>((s) => s.setupCompleted);
 
-    // Premier lancement : onboarding
-    if (!setupCompleted) return const LibrarySetupView();
+    // Premier lancement : onboarding (skip en mode remote — pas de dossiers locaux)
+    if (!setupCompleted && !isRemote) return const LibrarySetupView();
 
     // Routing iPhone vs iPad selon la largeur disponible
     return _WhatsNewDialogListener(
