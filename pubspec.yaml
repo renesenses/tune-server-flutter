@@ -26,6 +26,9 @@ dependencies:
   just_audio: ^0.10.2
   audio_session: ^0.1.21         # gestion session audio iOS/Android
 
+  # --- Native FFI (Rust server bridge) ---
+  ffi: ^2.1.3
+
   # --- HTTP Server embarqué (NWListener → shelf) ---
   shelf: ^1.4.2
   shelf_router: ^1.1.4
