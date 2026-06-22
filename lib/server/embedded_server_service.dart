@@ -26,7 +26,6 @@ class EmbeddedServerService {
         channelDescription: 'Tune music server is running',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
-        iconData: null,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: false,
