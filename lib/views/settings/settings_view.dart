@@ -1934,7 +1934,9 @@ class _AudiophileToggleState extends State<_AudiophileToggle> {
 }
 
 // ---------------------------------------------------------------------------
-// Streaming Quality selector — GET/POST /zones/{zoneId}/quality
+// Streaming Quality selector — PATCH /api/v1/system/config
+// Two independent caps: max_sample_rate + max_bit_depth.
+// null = no limit (server default).
 // ---------------------------------------------------------------------------
 
 class _StreamingQualitySelector extends StatefulWidget {
@@ -1945,15 +1947,19 @@ class _StreamingQualitySelector extends StatefulWidget {
 }
 
 class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
-  String _quality = 'maximum';
+  // null means "No limit"
+  int? _maxSampleRate;
+  int? _maxBitDepth;
   bool _loaded = false;
 
-  static const _qualities = [
-    ('maximum', 'Maximum'),
-    ('hires', 'Hi-Res'),
-    ('cd', 'CD (16/44)'),
-    ('economy', 'Economique'),
-  ];
+  static const _rates = [44100, 48000, 96000, 192000];
+  static const _depths = [16, 24, 32];
+
+  String _rateLabel(int hz) {
+    final khz = hz / 1000;
+    final s = khz % 1 == 0 ? khz.toStringAsFixed(0) : khz.toStringAsFixed(1);
+    return '$s kHz';
+  }
 
   @override
   void initState() {
@@ -1963,13 +1969,13 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
 
   Future<void> _load() async {
     final api = context.read<AppState>().apiClient;
-    final zoneId = context.read<ZoneState>().currentZoneId;
-    if (api == null || zoneId == null) return;
+    if (api == null) return;
     try {
-      final data = await api.getStreamingQuality(zoneId);
+      final data = await api.getSystemConfig();
       if (mounted) {
         setState(() {
-          _quality = data['quality'] as String? ?? 'maximum';
+          _maxSampleRate = data['max_sample_rate'] as int?;
+          _maxBitDepth = data['max_bit_depth'] as int?;
           _loaded = true;
         });
       }
@@ -1978,18 +1984,13 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
     }
   }
 
-  Future<void> _setQuality(String? value) async {
-    if (value == null) return;
+  Future<void> _patch(Map<String, dynamic> fields) async {
     final api = context.read<AppState>().apiClient;
-    final zoneId = context.read<ZoneState>().currentZoneId;
-    if (api == null || zoneId == null) return;
-    final prev = _quality;
-    setState(() => _quality = value);
+    if (api == null) return;
     try {
-      await api.setStreamingQuality(zoneId, value);
+      await api.updateSystemConfig(fields);
     } catch (e) {
       if (mounted) {
-        setState(() => _quality = prev);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
         );
@@ -1997,22 +1998,73 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
     }
   }
 
+  Future<void> _setRate(int? value) async {
+    final prev = _maxSampleRate;
+    setState(() => _maxSampleRate = value);
+    try {
+      await _patch({'max_sample_rate': value});
+    } catch (_) {
+      if (mounted) setState(() => _maxSampleRate = prev);
+    }
+  }
+
+  Future<void> _setDepth(int? value) async {
+    final prev = _maxBitDepth;
+    setState(() => _maxBitDepth = value);
+    try {
+      await _patch({'max_bit_depth': value});
+    } catch (_) {
+      if (mounted) setState(() => _maxBitDepth = prev);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      tileColor: TuneColors.surface,
-      title: Text('Qualite streaming', style: TuneFonts.body),
-      trailing: DropdownButton<String>(
-        value: _quality,
-        dropdownColor: TuneColors.surfaceVariant,
-        underline: const SizedBox(),
-        style: TuneFonts.body,
-        items: _qualities.map((q) => DropdownMenuItem(
-          value: q.$1,
-          child: Text(q.$2),
-        )).toList(),
-        onChanged: _loaded ? _setQuality : null,
-      ),
+    Widget row(String label, Widget dropdown) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(child: Text(label, style: TuneFonts.body)),
+              dropdown,
+            ],
+          ),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row(
+          'Freq. max',
+          DropdownButton<int?>(
+            value: _maxSampleRate,
+            dropdownColor: TuneColors.surfaceVariant,
+            underline: const SizedBox(),
+            style: TuneFonts.body,
+            onChanged: _loaded ? _setRate : null,
+            items: [
+              const DropdownMenuItem<int?>(value: null, child: Text('Sans limite')),
+              for (final r in _rates)
+                DropdownMenuItem<int?>(value: r, child: Text(_rateLabel(r))),
+            ],
+          ),
+        ),
+        const Divider(height: 1, indent: 16, color: TuneColors.divider),
+        row(
+          'Bits max',
+          DropdownButton<int?>(
+            value: _maxBitDepth,
+            dropdownColor: TuneColors.surfaceVariant,
+            underline: const SizedBox(),
+            style: TuneFonts.body,
+            onChanged: _loaded ? _setDepth : null,
+            items: [
+              const DropdownMenuItem<int?>(value: null, child: Text('Sans limite')),
+              for (final d in _depths)
+                DropdownMenuItem<int?>(value: d, child: Text('$d-bit')),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
