@@ -2395,6 +2395,552 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Date Added'**
   String get librarySortAddedDate;
+
+  /// No description provided for @addFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get addFavorite;
+
+  /// No description provided for @addFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a folder'**
+  String get addFolder;
+
+  /// No description provided for @addThisFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this folder'**
+  String get addThisFolder;
+
+  /// No description provided for @addToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to a playlist'**
+  String get addToPlaylist;
+
+  /// No description provided for @addedToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to playlist'**
+  String get addedToPlaylist;
+
+  /// No description provided for @audioOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get audioOutput;
+
+  /// No description provided for @audioOutputDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Each server zone is one output (local ALSA, Diretta renderer…). Pick the zone to play on.'**
+  String get audioOutputDesc;
+
+  /// No description provided for @authorizeInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorize access in your browser:'**
+  String get authorizeInBrowser;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connected;
+
+  /// No description provided for @cover.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get cover;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @createPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a playlist'**
+  String get createPlaylist;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deletePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist'**
+  String get deletePlaylist;
+
+  /// No description provided for @deletePlaylistConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this playlist?'**
+  String get deletePlaylistConfirm;
+
+  /// No description provided for @disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get disabled;
+
+  /// No description provided for @disconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get disconnected;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m done'**
+  String get done;
+
+  /// No description provided for @dynamicPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic playlists'**
+  String get dynamicPlaylists;
+
+  /// No description provided for @dynamicTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic'**
+  String get dynamicTag;
+
+  /// No description provided for @errorWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {msg}'**
+  String errorWith(String msg);
+
+  /// No description provided for @favError.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite failed: {msg}'**
+  String favError(String msg);
+
+  /// No description provided for @favoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favoritesTitle;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @freqLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency limit'**
+  String get freqLimit;
+
+  /// No description provided for @gapless.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless playback'**
+  String get gapless;
+
+  /// No description provided for @gaplessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable if you hear white noise / glitches between tracks on this renderer.'**
+  String get gaplessDesc;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loading;
+
+  /// No description provided for @localLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Local library'**
+  String get localLibrary;
+
+  /// No description provided for @localLibraryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders the server scans for music'**
+  String get localLibraryDesc;
+
+  /// No description provided for @logIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get logIn;
+
+  /// No description provided for @logOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logOut;
+
+  /// No description provided for @loginTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to {service}'**
+  String loginTo(String service);
+
+  /// No description provided for @maxBitDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'Max bit depth'**
+  String get maxBitDepth;
+
+  /// No description provided for @maxFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Max frequency'**
+  String get maxFrequency;
+
+  /// No description provided for @maxTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'max {n}'**
+  String maxTracks(int n);
+
+  /// No description provided for @metadataFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata fields'**
+  String get metadataFields;
+
+  /// No description provided for @metadataFieldsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Info shown for the local library'**
+  String get metadataFieldsDesc;
+
+  /// No description provided for @metadataSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata saved'**
+  String get metadataSaved;
+
+  /// No description provided for @musicFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned folders'**
+  String get musicFolders;
+
+  /// No description provided for @navFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get navFavorites;
+
+  /// No description provided for @navPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get navPlaylists;
+
+  /// No description provided for @newPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get newPlaylist;
+
+  /// No description provided for @noFavAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite album'**
+  String get noFavAlbums;
+
+  /// No description provided for @noFavArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite artist'**
+  String get noFavArtists;
+
+  /// No description provided for @noFavTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite track'**
+  String get noFavTracks;
+
+  /// No description provided for @noFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder configured'**
+  String get noFolders;
+
+  /// No description provided for @noLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get noLimit;
+
+  /// No description provided for @noPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlist'**
+  String get noPlaylists;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
+
+  /// No description provided for @noService.
+  ///
+  /// In en, this message translates to:
+  /// **'No service'**
+  String get noService;
+
+  /// No description provided for @noTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks'**
+  String get noTracks;
+
+  /// No description provided for @noZones.
+  ///
+  /// In en, this message translates to:
+  /// **'No zone available'**
+  String get noZones;
+
+  /// No description provided for @notConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the server in Settings'**
+  String get notConnected;
+
+  /// No description provided for @nothingPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing playing'**
+  String get nothingPlaying;
+
+  /// No description provided for @openAuthPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the authorization page'**
+  String get openAuthPage;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @pickFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder'**
+  String get pickFolder;
+
+  /// No description provided for @playAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all'**
+  String get playAll;
+
+  /// No description provided for @playlistCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist created'**
+  String get playlistCreated;
+
+  /// No description provided for @playlistDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist deleted'**
+  String get playlistDeleted;
+
+  /// No description provided for @playlistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get playlistsTitle;
+
+  /// No description provided for @port.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get port;
+
+  /// No description provided for @qualityCd.
+  ///
+  /// In en, this message translates to:
+  /// **'CD (44.1 kHz / 16 bit)'**
+  String get qualityCd;
+
+  /// No description provided for @qualityHires.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res (up to 192 kHz)'**
+  String get qualityHires;
+
+  /// No description provided for @qualityMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get qualityMax;
+
+  /// No description provided for @removeFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get removeFavorite;
+
+  /// No description provided for @removeFromPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get removeFromPlaylist;
+
+  /// No description provided for @runScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan library'**
+  String get runScan;
+
+  /// No description provided for @scanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get scanning;
+
+  /// No description provided for @searchEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Qobuz · YouTube · your library'**
+  String get searchEmptySub;
+
+  /// No description provided for @searchEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a title, an album or an artist'**
+  String get searchEmptyTitle;
+
+  /// No description provided for @searchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchTitle;
+
+  /// No description provided for @sectionAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get sectionAlbums;
+
+  /// No description provided for @sectionArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get sectionArtists;
+
+  /// No description provided for @sectionPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get sectionPlaylists;
+
+  /// No description provided for @sectionTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get sectionTracks;
+
+  /// No description provided for @server.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get server;
+
+  /// No description provided for @sourceLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get sourceLibrary;
+
+  /// No description provided for @streamingQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming quality'**
+  String get streamingQuality;
+
+  /// No description provided for @streamingQualityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Caps the frequency / resolution requested from services (Qobuz, Tidal…).'**
+  String get streamingQualityDesc;
+
+  /// No description provided for @streamingServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming services'**
+  String get streamingServices;
+
+  /// No description provided for @systemLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemLanguage;
+
+  /// No description provided for @trackRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from playlist'**
+  String get trackRemoved;
+
+  /// No description provided for @tracksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} tracks'**
+  String tracksCount(int n);
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @visualizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Visualizer'**
+  String get visualizer;
 }
 
 class _AppLocalizationsDelegate

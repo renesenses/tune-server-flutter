@@ -1199,4 +1199,288 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get librarySortAddedDate => '追加日';
+
+  @override
+  String get addFavorite => 'お気に入りに追加';
+
+  @override
+  String get addFolder => 'フォルダを追加';
+
+  @override
+  String get addThisFolder => 'このフォルダを追加';
+
+  @override
+  String get addToPlaylist => 'プレイリストに追加';
+
+  @override
+  String get addedToPlaylist => 'プレイリストに追加しました';
+
+  @override
+  String get audioOutput => 'オーディオ出力';
+
+  @override
+  String get audioOutputDesc =>
+      '各サーバーゾーンが1つの出力です（ローカルALSA、Direttaレンダラー…）。再生するゾーンを選択してください。';
+
+  @override
+  String get authorizeInBrowser => 'ブラウザでアクセスを許可してください：';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get connect => '接続';
+
+  @override
+  String get connected => '接続済み';
+
+  @override
+  String get cover => 'ジャケット';
+
+  @override
+  String get create => '作成';
+
+  @override
+  String get createPlaylist => 'プレイリストを作成';
+
+  @override
+  String get delete => '削除';
+
+  @override
+  String get deletePlaylist => 'プレイリストを削除';
+
+  @override
+  String get deletePlaylistConfirm => 'このプレイリストを削除しますか？';
+
+  @override
+  String get disabled => '無効';
+
+  @override
+  String get disconnected => '未接続';
+
+  @override
+  String get done => '完了しました';
+
+  @override
+  String get dynamicPlaylists => 'ダイナミックプレイリスト';
+
+  @override
+  String get dynamicTag => 'ダイナミック';
+
+  @override
+  String errorWith(String msg) {
+    return 'エラー: $msg';
+  }
+
+  @override
+  String favError(String msg) {
+    return 'お気に入りに失敗: $msg';
+  }
+
+  @override
+  String get favoritesTitle => 'お気に入り';
+
+  @override
+  String get filterAll => 'すべて';
+
+  @override
+  String get freqLimit => '周波数の上限';
+
+  @override
+  String get gapless => 'ギャップレス再生';
+
+  @override
+  String get gaplessDesc => 'このレンダラーでトラック間にホワイトノイズ/途切れがある場合は無効にしてください。';
+
+  @override
+  String get host => 'ホスト';
+
+  @override
+  String get language => '言語';
+
+  @override
+  String get loading => '読み込み中…';
+
+  @override
+  String get localLibrary => 'ローカルライブラリ';
+
+  @override
+  String get localLibraryDesc => 'サーバーが音楽を探すフォルダ';
+
+  @override
+  String get logIn => 'ログイン';
+
+  @override
+  String get logOut => 'ログアウト';
+
+  @override
+  String loginTo(String service) {
+    return '$service にログイン';
+  }
+
+  @override
+  String get maxBitDepth => '最大ビット深度';
+
+  @override
+  String get maxFrequency => '最大周波数';
+
+  @override
+  String maxTracks(int n) {
+    return '最大 $n';
+  }
+
+  @override
+  String get metadataFields => 'メタデータ項目';
+
+  @override
+  String get metadataFieldsDesc => 'ローカルライブラリに表示される情報';
+
+  @override
+  String get metadataSaved => 'メタデータを保存しました';
+
+  @override
+  String get musicFolders => 'スキャン対象フォルダ';
+
+  @override
+  String get navFavorites => 'お気に入り';
+
+  @override
+  String get navPlaylists => 'プレイリスト';
+
+  @override
+  String get newPlaylist => '新規プレイリスト';
+
+  @override
+  String get noFavAlbums => 'お気に入りのアルバムなし';
+
+  @override
+  String get noFavArtists => 'お気に入りのアーティストなし';
+
+  @override
+  String get noFavTracks => 'お気に入りのトラックなし';
+
+  @override
+  String get noFolders => 'フォルダが未設定です';
+
+  @override
+  String get noLimit => '制限なし';
+
+  @override
+  String get noPlaylists => 'プレイリストなし';
+
+  @override
+  String get noResults => '結果なし';
+
+  @override
+  String get noService => 'サービスなし';
+
+  @override
+  String get noTracks => 'トラックなし';
+
+  @override
+  String get noZones => '利用可能なゾーンがありません';
+
+  @override
+  String get notConnected => '設定でサーバーを構成してください';
+
+  @override
+  String get nothingPlaying => '再生していません';
+
+  @override
+  String get openAuthPage => '認証ページを開く';
+
+  @override
+  String get password => 'パスワード';
+
+  @override
+  String get pickFolder => 'フォルダを選択';
+
+  @override
+  String get playAll => 'すべて再生';
+
+  @override
+  String get playlistCreated => 'プレイリストを作成しました';
+
+  @override
+  String get playlistDeleted => 'プレイリストを削除しました';
+
+  @override
+  String get playlistsTitle => 'プレイリスト';
+
+  @override
+  String get port => 'ポート';
+
+  @override
+  String get qualityCd => 'CD（44.1 kHz / 16ビット）';
+
+  @override
+  String get qualityHires => 'ハイレゾ（最大192 kHz）';
+
+  @override
+  String get qualityMax => '最高';
+
+  @override
+  String get removeFavorite => 'お気に入りから削除';
+
+  @override
+  String get removeFromPlaylist => 'プレイリストから削除';
+
+  @override
+  String get runScan => 'ライブラリをスキャン';
+
+  @override
+  String get scanning => 'スキャン中…';
+
+  @override
+  String get searchEmptySub => 'Qobuz · YouTube · ライブラリ';
+
+  @override
+  String get searchEmptyTitle => 'タイトル・アルバム・アーティストを検索';
+
+  @override
+  String get searchTitle => '検索';
+
+  @override
+  String get sectionAlbums => 'アルバム';
+
+  @override
+  String get sectionArtists => 'アーティスト';
+
+  @override
+  String get sectionPlaylists => 'プレイリスト';
+
+  @override
+  String get sectionTracks => 'トラック';
+
+  @override
+  String get server => 'サーバー';
+
+  @override
+  String get sourceLibrary => 'ライブラリ';
+
+  @override
+  String get streamingQuality => 'ストリーミング品質';
+
+  @override
+  String get streamingQualityDesc => 'サービス（Qobuz、Tidal…）に要求する周波数/解像度の上限を設定します。';
+
+  @override
+  String get streamingServices => 'ストリーミングサービス';
+
+  @override
+  String get systemLanguage => 'システム';
+
+  @override
+  String get trackRemoved => 'プレイリストから削除しました';
+
+  @override
+  String tracksCount(int n) {
+    return '$n 曲';
+  }
+
+  @override
+  String get username => 'ユーザー名';
+
+  @override
+  String get visualizer => 'ビジュアライザー';
 }

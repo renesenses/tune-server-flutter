@@ -550,16 +550,29 @@ class _ZoneTile extends StatelessWidget {
             ),
           ],
         ),
-        onTap: () {
-          context.read<AppState>().selectZone(zone.id);
-          final zoneName = zone.name;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l.zonesActivated(zoneName)),
-              duration: const Duration(seconds: 2),
-              backgroundColor: TuneColors.accent,
-            ),
-          );
+        onTap: () async {
+          try {
+            await context.read<AppState>().selectZone(zone.id);
+            if (!context.mounted) return;
+            final zoneName = zone.name;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l.zonesActivated(zoneName)),
+                duration: const Duration(seconds: 2),
+                backgroundColor: TuneColors.accent,
+              ),
+            );
+          } catch (e) {
+            debugPrint('selectZone error: $e');
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erreur changement de zone: $e'),
+                duration: const Duration(seconds: 3),
+                backgroundColor: TuneColors.error,
+              ),
+            );
+          }
         },
         onLongPress: () => _showZoneActions(context),
       ),

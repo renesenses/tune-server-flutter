@@ -87,7 +87,12 @@ class ZoneState extends ChangeNotifier {
   PlaybackState get playbackState =>
       currentZone?.state ?? PlaybackState.stopped;
 
-  Track? get currentTrack => currentZone?.currentTrack as Track?;
+  Track? get currentTrack {
+    final ct = currentZone?.currentTrack;
+    if (ct == null) return null;
+    if (ct is Track) return ct;
+    return null;
+  }
 
   int get positionMs => currentZone?.positionMs ?? 0;
 

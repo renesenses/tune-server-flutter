@@ -1210,4 +1210,291 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get librarySortAddedDate => 'Date d\'ajout';
+
+  @override
+  String get addFavorite => 'Ajouter aux favoris';
+
+  @override
+  String get addFolder => 'Ajouter un dossier';
+
+  @override
+  String get addThisFolder => 'Ajouter ce dossier';
+
+  @override
+  String get addToPlaylist => 'Ajouter à une playlist';
+
+  @override
+  String get addedToPlaylist => 'Ajouté à la playlist';
+
+  @override
+  String get audioOutput => 'Sortie audio';
+
+  @override
+  String get audioOutputDesc =>
+      'Chaque zone du serveur correspond à une sortie (ALSA local, renderer Diretta…). Choisis la zone sur laquelle jouer.';
+
+  @override
+  String get authorizeInBrowser => 'Autorise l\'accès dans ton navigateur :';
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get connect => 'Connecter';
+
+  @override
+  String get connected => 'Connecté';
+
+  @override
+  String get cover => 'Pochette';
+
+  @override
+  String get create => 'Créer';
+
+  @override
+  String get createPlaylist => 'Créer une playlist';
+
+  @override
+  String get delete => 'Supprimer';
+
+  @override
+  String get deletePlaylist => 'Supprimer la playlist';
+
+  @override
+  String get deletePlaylistConfirm => 'Supprimer cette playlist ?';
+
+  @override
+  String get disabled => 'Désactivé';
+
+  @override
+  String get disconnected => 'Non connecté';
+
+  @override
+  String get done => 'J\'ai terminé';
+
+  @override
+  String get dynamicPlaylists => 'Playlists dynamiques';
+
+  @override
+  String get dynamicTag => 'Dynamique';
+
+  @override
+  String errorWith(String msg) {
+    return 'Erreur : $msg';
+  }
+
+  @override
+  String favError(String msg) {
+    return 'Échec favori : $msg';
+  }
+
+  @override
+  String get favoritesTitle => 'Favoris';
+
+  @override
+  String get filterAll => 'Tout';
+
+  @override
+  String get freqLimit => 'Limite de fréquence';
+
+  @override
+  String get gapless => 'Lecture enchaînée (gapless)';
+
+  @override
+  String get gaplessDesc =>
+      'À désactiver si bruit blanc / glitch entre les pistes sur ce renderer.';
+
+  @override
+  String get host => 'Hôte';
+
+  @override
+  String get language => 'Langue';
+
+  @override
+  String get loading => 'Chargement…';
+
+  @override
+  String get localLibrary => 'Bibliothèque locale';
+
+  @override
+  String get localLibraryDesc => 'Dossiers où le serveur cherche la musique';
+
+  @override
+  String get logIn => 'Se connecter';
+
+  @override
+  String get logOut => 'Se déconnecter';
+
+  @override
+  String loginTo(String service) {
+    return 'Connexion $service';
+  }
+
+  @override
+  String get maxBitDepth => 'Profondeur max';
+
+  @override
+  String get maxFrequency => 'Fréquence max';
+
+  @override
+  String maxTracks(int n) {
+    return 'max $n';
+  }
+
+  @override
+  String get metadataFields => 'Champs de métadonnées';
+
+  @override
+  String get metadataFieldsDesc =>
+      'Infos affichées pour la bibliothèque locale';
+
+  @override
+  String get metadataSaved => 'Métadonnées enregistrées';
+
+  @override
+  String get musicFolders => 'Dossiers scannés';
+
+  @override
+  String get navFavorites => 'Favoris';
+
+  @override
+  String get navPlaylists => 'Playlists';
+
+  @override
+  String get newPlaylist => 'Nouvelle playlist';
+
+  @override
+  String get noFavAlbums => 'Aucun album favori';
+
+  @override
+  String get noFavArtists => 'Aucun artiste favori';
+
+  @override
+  String get noFavTracks => 'Aucun titre favori';
+
+  @override
+  String get noFolders => 'Aucun dossier configuré';
+
+  @override
+  String get noLimit => 'Sans limite';
+
+  @override
+  String get noPlaylists => 'Aucune playlist';
+
+  @override
+  String get noResults => 'Aucun résultat';
+
+  @override
+  String get noService => 'Aucun service';
+
+  @override
+  String get noTracks => 'Aucune piste';
+
+  @override
+  String get noZones => 'Aucune zone disponible';
+
+  @override
+  String get notConnected => 'Configure le serveur dans Paramètres';
+
+  @override
+  String get nothingPlaying => 'Rien en lecture';
+
+  @override
+  String get openAuthPage => 'Ouvrir la page d\'autorisation';
+
+  @override
+  String get password => 'Mot de passe';
+
+  @override
+  String get pickFolder => 'Choisir un dossier';
+
+  @override
+  String get playAll => 'Tout lire';
+
+  @override
+  String get playlistCreated => 'Playlist créée';
+
+  @override
+  String get playlistDeleted => 'Playlist supprimée';
+
+  @override
+  String get playlistsTitle => 'Playlists';
+
+  @override
+  String get port => 'Port';
+
+  @override
+  String get qualityCd => 'CD (44.1 kHz / 16 bit)';
+
+  @override
+  String get qualityHires => 'Hi-Res (jusqu\'à 192 kHz)';
+
+  @override
+  String get qualityMax => 'Maximum';
+
+  @override
+  String get removeFavorite => 'Retirer des favoris';
+
+  @override
+  String get removeFromPlaylist => 'Retirer de la playlist';
+
+  @override
+  String get runScan => 'Scanner la bibliothèque';
+
+  @override
+  String get scanning => 'Scan en cours…';
+
+  @override
+  String get searchEmptySub => 'Qobuz · YouTube · ta bibliothèque';
+
+  @override
+  String get searchEmptyTitle => 'Recherche un titre, un album ou un artiste';
+
+  @override
+  String get searchTitle => 'Recherche';
+
+  @override
+  String get sectionAlbums => 'Albums';
+
+  @override
+  String get sectionArtists => 'Artistes';
+
+  @override
+  String get sectionPlaylists => 'Playlists';
+
+  @override
+  String get sectionTracks => 'Titres';
+
+  @override
+  String get server => 'Serveur';
+
+  @override
+  String get sourceLibrary => 'Bibliothèque';
+
+  @override
+  String get streamingQuality => 'Qualité streaming';
+
+  @override
+  String get streamingQualityDesc =>
+      'Plafonne la fréquence / résolution demandée aux services (Qobuz, Tidal…).';
+
+  @override
+  String get streamingServices => 'Services de streaming';
+
+  @override
+  String get systemLanguage => 'Système';
+
+  @override
+  String get trackRemoved => 'Retiré de la playlist';
+
+  @override
+  String tracksCount(int n) {
+    return '$n pistes';
+  }
+
+  @override
+  String get username => 'Identifiant / email';
+
+  @override
+  String get visualizer => 'Visualiseur';
 }

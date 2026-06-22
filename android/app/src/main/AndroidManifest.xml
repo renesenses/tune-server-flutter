@@ -51,14 +51,7 @@
             android:foregroundServiceType="mediaPlayback"
             android:exported="false"/>
 
-        <!-- Receiver pour démarrage au boot -->
-        <receiver
-            android:name="com.pravera.flutter_foreground_task.receiver.BootReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
+        <!-- Boot receiver managed by flutter_foreground_task plugin -->
 
         <!-- Now Playing home screen widget -->
         <receiver
