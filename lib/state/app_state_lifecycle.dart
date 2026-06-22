@@ -88,6 +88,12 @@ extension AppStateLifecycle on AppState {
   // Remote mode — connect to a remote Tune server
   // ---------------------------------------------------------------------------
 
+  Future<void> connectToServer(String host, int port) async {
+    await settingsState.setRemoteHost(host);
+    await settingsState.setRemotePort(port);
+    await connectRemote();
+  }
+
   Future<void> connectRemote() async {
     final host = settingsState.remoteHost;
     if (host.isEmpty) {

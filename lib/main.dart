@@ -9,7 +9,7 @@ import 'state/library_state.dart';
 import 'state/settings_state.dart';
 import 'state/zone_state.dart';
 import 'views/helpers/app_theme.dart';
-import 'views/root_view.dart';
+import 'views/mode_selector_view.dart';
 
 // ---------------------------------------------------------------------------
 // Tune Server — point d'entrée Flutter
@@ -147,7 +147,7 @@ class TuneServerApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const RootView(),
+      home: const ModeSelectorView(),
     );
   }
 }

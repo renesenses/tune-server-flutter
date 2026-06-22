@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../server/embedded_server_service.dart';
 import '../server/tune_native_server.dart';
 import '../state/app_state.dart';
+import 'root_view.dart';
 
 /// First screen: choose between embedded server mode and remote mode.
 class ModeSelectorView extends StatefulWidget {
@@ -43,9 +44,10 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
     if (!mounted) return;
 
     if (ok) {
-      // Connect the API client to localhost
       final appState = context.read<AppState>();
-      appState.connectToServer('127.0.0.1', 8888);
+      await appState.connectToServer('127.0.0.1', 8888);
+      if (!mounted) return;
+      _navigateToApp();
     } else {
       setState(() {
         _starting = false;
@@ -58,11 +60,25 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
     showDialog(
       context: context,
       builder: (ctx) => _RemoteConnectDialog(
-        onConnect: (host, port) {
+        onConnect: (host, port) async {
           final appState = context.read<AppState>();
-          appState.connectToServer(host, port);
+          await appState.connectToServer(host, port);
+          if (!mounted) return;
+          if (appState.isRemoteConnected) {
+            _navigateToApp();
+          } else {
+            setState(() {
+              _error = appState.errorMessage ?? 'Connection failed';
+            });
+          }
         },
       ),
+    );
+  }
+
+  void _navigateToApp() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const RootView()),
     );
   }
 
