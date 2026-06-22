@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../server/embedded_server_service.dart';
 import '../server/tune_native_server.dart';
@@ -25,9 +26,27 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
   }
 
   Future<void> _checkAutoStart() async {
-    // If server was running before, auto-start
-    if (await EmbeddedServerService.wasRunning()) {
+    final prefs = await SharedPreferences.getInstance();
+    final lastMode = prefs.getString('last_mode');
+    if (lastMode == 'embedded' && await EmbeddedServerService.wasRunning()) {
       _startEmbedded();
+    } else if (lastMode == 'remote') {
+      final host = prefs.getString('last_remote_host');
+      final port = prefs.getInt('last_remote_port') ?? 8888;
+      if (host != null && host.isNotEmpty) {
+        setState(() => _starting = true);
+        final appState = context.read<AppState>();
+        await appState.connectToServer(host, port);
+        if (!mounted) return;
+        if (appState.isRemoteConnected) {
+          _navigateToApp();
+        } else {
+          setState(() {
+            _starting = false;
+            _error = appState.errorMessage;
+          });
+        }
+      }
     }
   }
 
@@ -44,6 +63,8 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
     if (!mounted) return;
 
     if (ok) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_mode', 'embedded');
       final appState = context.read<AppState>();
       await appState.connectToServer('127.0.0.1', 8888);
       if (!mounted) return;
@@ -65,6 +86,10 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
           await appState.connectToServer(host, port);
           if (!mounted) return;
           if (appState.isRemoteConnected) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('last_mode', 'remote');
+            await prefs.setString('last_remote_host', host);
+            await prefs.setInt('last_remote_port', port);
             _navigateToApp();
           } else {
             setState(() {
