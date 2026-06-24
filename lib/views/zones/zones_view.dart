@@ -668,6 +668,15 @@ class _ZoneTile extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.settings_rounded,
+                  color: TuneColors.textSecondary),
+              title: const Text('Zone settings'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showZoneSettings(context);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.delete_rounded,
                   color: TuneColors.error),
               title: Text(l.zonesDelete,
@@ -681,6 +690,17 @@ class _ZoneTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showZoneSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => _ZoneSettingsSheet(zone: zone),
     );
   }
 
@@ -2054,6 +2074,104 @@ class _SectionHeader extends StatelessWidget {
         style: TuneFonts.footnote.copyWith(
           color: TuneColors.textTertiary,
           letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+class _ZoneSettingsSheet extends StatefulWidget {
+  final ZoneWithState zone;
+  const _ZoneSettingsSheet({required this.zone});
+
+  @override
+  State<_ZoneSettingsSheet> createState() => _ZoneSettingsSheetState();
+}
+
+class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
+  late String _dsdMode;
+  late bool _gapless;
+  late bool _fixedVolume;
+
+  @override
+  void initState() {
+    super.initState();
+    _dsdMode = widget.zone.dsdMode;
+    _gapless = widget.zone.gaplessEnabled;
+    _fixedVolume = widget.zone.fixedVolume;
+  }
+
+  Future<void> _patch(Map<String, dynamic> fields) async {
+    final appState = context.read<AppState>();
+    if (appState.isRemoteMode) {
+      try {
+        await appState.apiClient?.patchZone(widget.zone.id, fields);
+        await appState.refreshZonesRemote();
+      } catch (e) {
+        debugPrint('patchZone error: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 32, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: TuneColors.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(widget.zone.name,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+            const SizedBox(height: 16),
+            const Text('DSD Mode', style: TextStyle(color: TuneColors.textSecondary, fontSize: 13)),
+            const SizedBox(height: 8),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'auto', label: Text('Auto')),
+                ButtonSegment(value: 'native', label: Text('Native')),
+                ButtonSegment(value: 'pcm', label: Text('PCM')),
+              ],
+              selected: {_dsdMode},
+              onSelectionChanged: (v) {
+                setState(() => _dsdMode = v.first);
+                _patch({'dsd_mode': v.first});
+              },
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Gapless', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Enchaînement sans coupure (DLNA)', style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+              value: _gapless,
+              onChanged: (v) {
+                setState(() => _gapless = v);
+                _patch({'gapless_enabled': v});
+              },
+              contentPadding: EdgeInsets.zero,
+            ),
+            SwitchListTile(
+              title: const Text('Volume fixe', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Désactive le contrôle de volume logiciel', style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+              value: _fixedVolume,
+              onChanged: (v) {
+                setState(() => _fixedVolume = v);
+                _patch({'fixed_volume': v});
+              },
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

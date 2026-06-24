@@ -110,6 +110,9 @@ class ZoneWithState {
   final dynamic currentTrack; // Track | null
   final int positionMs;
   final int queueLength;
+  final String dsdMode;
+  final bool gaplessEnabled;
+  final bool fixedVolume;
 
   const ZoneWithState({
     required this.id,
@@ -123,6 +126,9 @@ class ZoneWithState {
     this.currentTrack,
     this.positionMs = 0,
     this.queueLength = 0,
+    this.dsdMode = 'auto',
+    this.gaplessEnabled = true,
+    this.fixedVolume = false,
   });
 
   ZoneWithState copyWith({
@@ -137,6 +143,9 @@ class ZoneWithState {
     dynamic currentTrack,
     int? positionMs,
     int? queueLength,
+    String? dsdMode,
+    bool? gaplessEnabled,
+    bool? fixedVolume,
   }) =>
       ZoneWithState(
         id: id ?? this.id,
@@ -150,6 +159,9 @@ class ZoneWithState {
         currentTrack: currentTrack ?? this.currentTrack,
         positionMs: positionMs ?? this.positionMs,
         queueLength: queueLength ?? this.queueLength,
+        dsdMode: dsdMode ?? this.dsdMode,
+        gaplessEnabled: gaplessEnabled ?? this.gaplessEnabled,
+        fixedVolume: fixedVolume ?? this.fixedVolume,
       );
 
   factory ZoneWithState.fromJson(Map<String, dynamic> json) {
@@ -168,6 +180,9 @@ class ZoneWithState {
       currentTrack: trackJson != null ? trackFromJson(trackJson) : null,
       positionMs: json['position_ms'] as int? ?? 0,
       queueLength: json['queue_length'] as int? ?? 0,
+      dsdMode: json['dsd_mode'] as String? ?? 'auto',
+      gaplessEnabled: json['gapless_enabled'] as bool? ?? true,
+      fixedVolume: json['fixed_volume'] as bool? ?? false,
     );
   }
 

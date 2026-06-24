@@ -176,6 +176,9 @@ class TuneApiClient {
   Future<void> renameZoneRemote(int zoneId, String name) =>
       _put('/zones/$zoneId/name', body: {'name': name});
 
+  Future<dynamic> patchZone(int zoneId, Map<String, dynamic> fields) =>
+      _patch('/zones/$zoneId', body: fields);
+
   Future<List<dynamic>> getDiscoveredDevices() =>
       _get('/devices').then((d) => d as List);
 
