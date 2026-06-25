@@ -171,6 +171,8 @@ extension AppStateLifecycle on AppState {
   Future<void> disconnectRemote() async {
     _remotePollingTimer?.cancel();
     _remotePollingTimer = null;
+    _zoneRefreshDebounce?.cancel();
+    _zoneRefreshDebounce = null;
     _trackNotificationService?.dispose();
     _trackNotificationService = null;
     _wsSubscription?.cancel();
@@ -291,14 +293,22 @@ extension AppStateLifecycle on AppState {
       if (zoneId != null && posMs != null && zoneId == zoneState.currentZoneId) {
         zoneState.syncPositionFromServer(zoneId, posMs);
       }
-    } else if (type.startsWith('playback.') || type.startsWith('zone.')) {
-      // Refresh zones from API
-      refreshZonesRemote();
+    } else if (type.startsWith('playback.') || type.startsWith('zone.') || type.startsWith('device.')) {
+      _scheduleZoneRefresh();
     }
+  }
+
+  void _scheduleZoneRefresh() {
+    _zoneRefreshDebounce?.cancel();
+    _zoneRefreshDebounce = Timer(const Duration(milliseconds: 300), () {
+      refreshZonesRemote();
+    });
   }
 
   Future<void> refreshZonesRemote() async {
     if (_apiClient == null) return;
+    if (_refreshingZones) return;
+    _refreshingZones = true;
     try {
       final zonesJson = await _apiClient!.getZones();
       final zones = zonesJson.map((z) => ZoneWithState.fromJson(z as Map<String, dynamic>)).toList();
@@ -383,6 +393,8 @@ extension AppStateLifecycle on AppState {
       }
     } catch (e) {
       debugPrint('[Remote] refreshZones error: $e');
+    } finally {
+      _refreshingZones = false;
     }
   }
 

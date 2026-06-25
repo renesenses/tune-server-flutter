@@ -66,6 +66,8 @@ class AppState extends ChangeNotifier {
   TuneWebSocket? _webSocket;
   StreamSubscription? _wsSubscription;
   Timer? _remotePollingTimer;
+  Timer? _zoneRefreshDebounce;
+  bool _refreshingZones = false;
 
   // Auth token — synced from AuthService, injected into API client
   String? _authToken;
