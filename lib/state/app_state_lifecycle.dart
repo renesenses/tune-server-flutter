@@ -101,6 +101,13 @@ extension AppStateLifecycle on AppState {
       notify();
       return;
     }
+    // Clean up any previous connection to avoid resource leaks
+    _wsSubscription?.cancel();
+    _wsSubscription = null;
+    _webSocket?.dispose();
+    _webSocket = null;
+    _remotePollingTimer?.cancel();
+    _remotePollingTimer = null;
     try {
       _apiClient = TuneApiClient(settingsState.remoteBaseUrl);
 

@@ -40,16 +40,19 @@ class _RootViewState extends State<RootView> {
   Future<void> _startServer() async {
     setState(() => _starting = true);
     final app = context.read<AppState>();
-    try {
-      if (app.settingsState.isRemoteMode) {
-        await app.connectRemote();
-      } else {
-        await app.startServer().timeout(const Duration(seconds: 10));
+    // ModeSelectorView already established the connection — skip if connected.
+    if (!app.serverStarted) {
+      try {
+        if (app.settingsState.isRemoteMode) {
+          await app.connectRemote();
+        } else {
+          await app.startServer().timeout(const Duration(seconds: 10));
+        }
+      } on TimeoutException {
+        debugPrint('[RootView] startServer timed out — continuing with UI');
+      } catch (e) {
+        debugPrint('[RootView] startServer error: $e');
       }
-    } on TimeoutException {
-      debugPrint('[RootView] startServer timed out — continuing with UI');
-    } catch (e) {
-      debugPrint('[RootView] startServer error: $e');
     }
     if (mounted) setState(() => _starting = false);
   }
