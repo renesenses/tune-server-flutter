@@ -63,7 +63,7 @@ class TuneApiClient {
     final resp = await _client.get(
       Uri.parse('$baseUrl$path'),
       headers: _headers(),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
@@ -82,7 +82,7 @@ class TuneApiClient {
     final resp = await _client.get(
       Uri.parse('$baseUrl$path'),
       headers: _headers(),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) {
@@ -96,7 +96,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
@@ -110,7 +110,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200 && resp.statusCode != 201) {
@@ -124,7 +124,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('PATCH $path failed: ${resp.statusCode}', resp.statusCode);
@@ -137,7 +137,7 @@ class TuneApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _headers(json: true),
       body: body != null ? jsonEncode(body) : null,
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200) {
       throw TuneHttpException('PUT $path failed: ${resp.statusCode}', resp.statusCode);
@@ -149,7 +149,7 @@ class TuneApiClient {
     final resp = await _client.delete(
       Uri.parse('$baseUrl$path'),
       headers: _headers(),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 204) {
       throw TuneHttpException('DELETE $path failed: ${resp.statusCode}', resp.statusCode);
@@ -1202,7 +1202,7 @@ class TuneApiClient {
   Future<String> exportM3U(int playlistId) async {
     final resp = await _client.get(
       Uri.parse('$baseUrl/playlists/$playlistId/export/m3u'),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     if (resp.statusCode != 200) {
       throw Exception('M3U export failed: ${resp.statusCode}');
     }
