@@ -477,6 +477,15 @@ class TuneApiClient {
 
   Future<dynamic> getSystemInfo() => _get('/system/info');
 
+  /// YouTube playback status on the (remote) server: whether the managed
+  /// yt-dlp helper is installed. Returns null on older servers without the
+  /// endpoint. Only meaningful in remote mode — the embedded server cannot run
+  /// yt-dlp on iOS/Android (sandbox).
+  Future<Map<String, dynamic>?> getYoutubeStatus() async {
+    final d = await _getOptional('/system/youtube/status');
+    return d as Map<String, dynamic>?;
+  }
+
   /// Bug report as markdown (may return String or Map with 'report' key).
   /// Returns null if the endpoint doesn't exist on this server version.
   Future<dynamic> getBugReportMarkdown() => _getOptional('/api/v1/system/bug-report/markdown');
