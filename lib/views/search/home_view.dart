@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../models/enums.dart';
 import '../../server/database/database.dart';
+import '../../server/streaming/streaming_service.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../../state/zone_state.dart';
@@ -362,7 +363,13 @@ class _ContinueListeningList extends StatelessWidget {
     final source = item['source'] as String?;
     final sourceId = item['source_id'] as String?;
     if (source != null && source != 'local' && sourceId != null) {
-      app.playStreaming(source, sourceId);
+      app.playStreaming(StreamingSearchResult(
+        id: sourceId,
+        title: item['title'] as String? ?? item['album_title'] as String? ?? '',
+        artist: item['artist_name'] as String?,
+        coverUrl: item['cover_path'] as String?,
+        serviceId: source,
+      ));
       return;
     }
     final albumId = item['album_id'] as int? ?? item['id'] as int?;
@@ -405,7 +412,6 @@ class _ContinueListeningList extends StatelessWidget {
           final title = item['title'] as String? ?? item['album_title'] as String? ?? '';
           final artist = item['artist_name'] as String? ?? '';
           final coverPath = item['cover_path'] as String?;
-          final albumId = item['album_id'] as int? ?? item['id'] as int?;
           final progressPercent = item['progress_percent'] as num?;
 
           return Padding(
