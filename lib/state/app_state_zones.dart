@@ -17,12 +17,19 @@ extension AppStateZones on AppState {
       await refreshZonesRemote();
       return;
     }
-    await engine.zoneManager.createZone(name);
+    try {
+      await engine.zoneManager.createZone(name);
+    } on ZoneLimitException {
+      _lastZoneError = 'zone_limit_reached';
+      notify();
+      return;
+    }
     await _refreshZones();
   }
 
   /// Creates a zone directly from a discovered device.
   /// The zone inherits the device's name and output type.
+  /// Returns the new zone id, or -1 if the Free zone limit was reached.
   Future<int> createZoneFromDevice(DiscoveredDevice device) async {
     final outputType = switch (device.type) {
       'bluos' => OutputType.bluos,
@@ -33,14 +40,20 @@ extension AppStateZones on AppState {
       'chromecast' => OutputType.chromecast,
       _ => OutputType.local,
     };
-    final instance = await engine.zoneManager.createZone(
-      device.name,
-      outputType: outputType,
-      device: device,
-    );
-    await _refreshZones();
-    zoneState.setCurrentZoneId(instance.zone.id);
-    return instance.zone.id;
+    try {
+      final instance = await engine.zoneManager.createZone(
+        device.name,
+        outputType: outputType,
+        device: device,
+      );
+      await _refreshZones();
+      zoneState.setCurrentZoneId(instance.zone.id);
+      return instance.zone.id;
+    } on ZoneLimitException {
+      _lastZoneError = 'zone_limit_reached';
+      notify();
+      return -1;
+    }
   }
 
   Future<void> deleteZone(int zoneId) async {

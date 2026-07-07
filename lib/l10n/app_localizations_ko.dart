@@ -105,6 +105,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playbackErrorFailed => '재생 실패';
 
   @override
+  String zoneLimitReached(int limit) {
+    return '무료 플랜은 $limit개 존으로 제한됩니다 — 무제한을 원하면 Premium으로 업그레이드';
+  }
+
+  @override
   String get navLibrary => '라이브러리';
 
   @override

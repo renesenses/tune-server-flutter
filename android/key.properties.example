@@ -1,0 +1,9 @@
+# Template de signing release Android — COPIER vers `android/key.properties` et remplir.
+# key.properties est gitignored : ne JAMAIS commiter le vrai fichier ni le .jks.
+#
+# storeFile : chemin ABSOLU vers le keystore (hors repo). Le `~` n'est PAS développé
+# par Gradle, donc mettre le chemin complet.
+storePassword=CHANGEME
+keyPassword=CHANGEME
+keyAlias=tune-upload
+storeFile=/Users/bertrand/keystores/tune-upload-keystore.jks

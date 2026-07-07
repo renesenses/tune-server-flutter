@@ -243,3 +243,20 @@
 | 17 | Localisation | 2 |
 | 18 | Qualité & CI | 5 |
 | **Total** | | **98 tâches** |
+
+---
+
+# Release Play Store (Android)
+
+> Track séparé (juillet 2026) — amener l'app Android jusqu'au Google Play Store.
+> Branche : `feature/android-playstore`. Bump/tag/publication réservés à Bertrand.
+
+- [x] **P1** Débloquer le build — corriger les erreurs de compilation (`home_view.dart`), `flutter analyze` = 0 erreur, APK debug bâti.
+- [x] **P2** Conformité Play Store — `targetSdk 35`, `compileSdk 36` (dép AndroidX), retrait `usesCleartextTraffic` redondant.
+- [x] **P3** Signing release — keystore upload (`~/keystores/tune-upload-keystore.jks`, alias `tune-upload`), `key.properties` (gitignored) + `signingConfigs.release` dans `build.gradle.kts`. AAB signé vérifié (`jarsigner -verify` OK, cert `CN=Tune, O=Mozaik Labs`).
+- [x] **P4** Assets store — adaptive icon Android générée via `flutter_launcher_icons` (logo carré Mozaik Labs, fond noir `#000000`, foreground pleine version). `mipmap-anydpi-v26` créé. iOS non touché. Build vérifié. *(splash/label = optionnels, à faire au besoin)*
+- [ ] **P5** Validation on-device + `flutter build appbundle --release`.
+- [~] **P6** Parité licence / freemium — **socle FAIT** : `LicenseManager` Dart (port de `tune-core/src/license.rs`), `FREE_MAX_ZONES = 10` (aligné sur le serveur Rust), enforcement dans `ZoneManager.createZone()` (`ZoneLimitException`), remontée `AppState.lastZoneError`, câblé dans `ServerEngine`. 16 tests unitaires (parité Rust), suite complète verte. **Reste** : (a) le déblocage premium par compte SSO n'est pas alimenté (pas encore de login SSO côté Flutter — setters `setAccountPremium` prêts) ; (b) UI paywall/upgrade sur `lastZoneError`. Premium = cloud/SSO, jamais Play Billing.
+
+Notes produit :
+- **OAAT non émis en mode embarqué Android** : `OutputType.oaat` n'est pas dans `availableTypes()` ; `output_factory` renvoie un placeholder (« handled by Rust server, Flutter acts as remote »). L'app n'affiche/sélectionne des devices OAAT qu'en mode remote d'un serveur Rust.

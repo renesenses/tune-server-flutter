@@ -19,6 +19,7 @@ import 'utils/health_monitor.dart';
 import 'utils/network_utils.dart';
 import 'utils/api_analytics.dart';
 import 'utils/credentials_vault.dart';
+import 'license/license_manager.dart';
 import 'zones/zone_manager.dart';
 import 'playback/auto_dj.dart';
 import 'playback/sleep_timer.dart';
@@ -85,6 +86,7 @@ class ServerEngine {
   // Services principaux
   final TuneDatabase db;
   final ServerConfiguration config;
+  final LicenseManager licenseManager;
   final ZoneManager zoneManager;
   final DiscoveryManager discoveryManager;
   final BluOSDiscovery bluosDiscovery;
@@ -107,6 +109,7 @@ class ServerEngine {
   ServerEngine._({
     required this.db,
     required this.config,
+    required this.licenseManager,
     required this.zoneManager,
     required this.discoveryManager,
     required this.bluosDiscovery,
@@ -134,7 +137,9 @@ class ServerEngine {
     final discoveryManager = DiscoveryManager(db);
     final bluosDiscovery = BluOSDiscovery();
     final upnpIndexer = UPnPIndexer(db);
-    final zoneManager = ZoneManager(db, discoveryManager);
+    final licenseManager = LicenseManager(db);
+    await licenseManager.load();
+    final zoneManager = ZoneManager(db, discoveryManager, licenseManager);
     final streamingManager = StreamingManager(
       db,
       qobuzAppId: qobuzAppId,
@@ -154,6 +159,7 @@ class ServerEngine {
     return ServerEngine._(
       db: db,
       config: config,
+      licenseManager: licenseManager,
       zoneManager: zoneManager,
       discoveryManager: discoveryManager,
       bluosDiscovery: bluosDiscovery,

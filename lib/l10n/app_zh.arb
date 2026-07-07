@@ -32,6 +32,7 @@
   "playbackErrorNoZone": "未选择区域 — 请创建或选择区域",
   "playbackErrorZoneNotFound": "未找到区域",
   "playbackErrorFailed": "播放失败",
+  "zoneLimitReached": "免费版限制为 {limit} 个区域 — 升级到高级版可无限使用",
   "navLibrary": "媒体库",
   "navSearch": "搜索",
   "navStreaming": "流媒体",

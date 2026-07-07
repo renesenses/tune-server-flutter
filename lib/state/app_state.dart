@@ -15,6 +15,7 @@ import '../models/enums.dart';
 import '../server/database/database.dart';
 import '../server/discovery/discovery_manager.dart';
 import '../server/event_bus.dart';
+import '../server/license/license_manager.dart';
 import '../server/server_engine.dart';
 import '../server/streaming/radio_metadata_service.dart';
 import '../server/streaming/streaming_service.dart';
@@ -58,6 +59,16 @@ class AppState extends ChangeNotifier {
   void clearPlaybackError() {
     if (_lastPlaybackError == null) return;
     _lastPlaybackError = null;
+    notifyListeners();
+  }
+
+  /// Dernière erreur liée aux zones (ex: limite du palier Free atteinte).
+  /// Les vues l'observent pour proposer un passage Premium.
+  String? _lastZoneError;
+  String? get lastZoneError => _lastZoneError;
+  void clearZoneError() {
+    if (_lastZoneError == null) return;
+    _lastZoneError = null;
     notifyListeners();
   }
 

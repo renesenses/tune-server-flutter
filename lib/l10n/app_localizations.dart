@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Playback failed'**
   String get playbackErrorFailed;
 
+  /// No description provided for @zoneLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Free plan limited to {limit} zones — upgrade to Premium for unlimited'**
+  String zoneLimitReached(int limit);
+
   /// No description provided for @navLibrary.
   ///
   /// In en, this message translates to:

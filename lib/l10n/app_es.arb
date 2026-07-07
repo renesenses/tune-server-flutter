@@ -32,6 +32,7 @@
   "playbackErrorNoZone": "No hay zona seleccionada — cree o seleccione una zona",
   "playbackErrorZoneNotFound": "Zona no encontrada",
   "playbackErrorFailed": "Error de reproducción",
+  "zoneLimitReached": "Plan gratuito limitado a {limit} zonas — cambia a Premium para tener zonas ilimitadas",
   "navLibrary": "Biblioteca",
   "navSearch": "Búsqueda",
   "navStreaming": "Streaming",

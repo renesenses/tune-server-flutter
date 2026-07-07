@@ -32,6 +32,7 @@
   "playbackErrorNoZone": "선택된 존 없음 — 존을 생성하거나 선택하세요",
   "playbackErrorZoneNotFound": "존을 찾을 수 없음",
   "playbackErrorFailed": "재생 실패",
+  "zoneLimitReached": "무료 플랜은 {limit}개 존으로 제한됩니다 — 무제한을 원하면 Premium으로 업그레이드",
   "navLibrary": "라이브러리",
   "navSearch": "검색",
   "navStreaming": "스트리밍",
