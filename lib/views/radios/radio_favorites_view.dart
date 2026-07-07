@@ -37,7 +37,7 @@ class _RadioFavoritesViewState extends State<RadioFavoritesView> {
     if (app.isRemoteMode && app.apiClient != null) {
       try {
         final resp = await app.apiClient!.getRadioFavorites();
-        final favs = (resp as List).map((j) {
+        final favs = resp.map((j) {
           final m = j as Map<String, dynamic>;
           return RadioFavorite(
             id: m['id'] as int? ?? 0,

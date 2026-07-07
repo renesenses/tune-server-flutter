@@ -58,7 +58,7 @@ class _MiniPlayerContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
     final zoneState = context.watch<ZoneState>();
-    final track = zoneState.currentTrack as Track?;
+    final track = zoneState.currentTrack;
     final state = zoneState.playbackState;
     final isPlaying = state == PlaybackState.playing;
     final isBuffering = state == PlaybackState.buffering;
