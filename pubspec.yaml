@@ -72,7 +72,21 @@ dev_dependencies:
   drift_dev: ^2.20.0
   build_runner: ^2.4.13
   mocktail: ^1.0.4
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   generate: true                 # active flutter gen-l10n pour la localisation
+
+# Icône de lancement Android (logo carré Mozaik Labs, fond noir).
+# android-only : ne touche PAS aux icônes iOS. Le foreground adaptive est la
+# version déjà paddée (marque centrée) → tient dans la safe-zone, zéro rognage.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/mozaik_icon_full.png"
+  adaptive_icon_background: "#000000"
+  # Version pleine en foreground : l'inset 16% du lanceur gère la safe-zone.
+  # Fond du logo noir = adaptive background noir → rognage des coins invisible.
+  adaptive_icon_foreground: "assets/icon/mozaik_icon_full.png"
+  min_sdk_android: 24
