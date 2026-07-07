@@ -114,24 +114,23 @@ void main() {
     });
   });
 
-  group('zone limit (Free = 3)', () {
-    test('constant is 3', () {
-      expect(LicenseManager.freeMaxZones, 3);
-      expect(LicenseManager.freeZoneLimit, 3);
+  group('zone limit (Free = 10)', () {
+    test('constant is 10', () {
+      expect(LicenseManager.freeMaxZones, 10);
+      expect(LicenseManager.freeZoneLimit, 10);
     });
 
-    test('free tier allows up to 3 zones then blocks', () {
+    test('free tier allows up to 10 zones then blocks', () {
       final free = _state(Tier.free);
       expect(checkZoneLimitForTest(free, 0), isTrue);
-      expect(checkZoneLimitForTest(free, 1), isTrue);
-      expect(checkZoneLimitForTest(free, 2), isTrue);
-      expect(checkZoneLimitForTest(free, 3), isFalse);
-      expect(checkZoneLimitForTest(free, 4), isFalse);
+      expect(checkZoneLimitForTest(free, 9), isTrue);
+      expect(checkZoneLimitForTest(free, 10), isFalse);
+      expect(checkZoneLimitForTest(free, 11), isFalse);
     });
 
     test('premium is unlimited', () {
       final premium = _state(Tier.premium);
-      expect(checkZoneLimitForTest(premium, 3), isTrue);
+      expect(checkZoneLimitForTest(premium, 10), isTrue);
       expect(checkZoneLimitForTest(premium, 100), isTrue);
     });
 

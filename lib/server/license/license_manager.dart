@@ -69,9 +69,9 @@ class LicenseState {
 /// State is loaded once from the settings table via [load]; query accessors
 /// then read the in-memory snapshot synchronously. Mutators persist to settings.
 class LicenseManager {
-  /// Max zones on the Free tier. **Deliberately 3 on mobile** (the Rust server
-  /// uses its own constant); a decision, not a copy — keep it explicit.
-  static const int freeMaxZones = 3;
+  /// Max zones on the Free tier. Kept at 10 to match the Rust server for now
+  /// (single source of truth for the freemium cap across platforms).
+  static const int freeMaxZones = 10;
 
   /// Offline grace: premium is honoured this many days past the last successful
   /// server confirmation before degrading to Free.
