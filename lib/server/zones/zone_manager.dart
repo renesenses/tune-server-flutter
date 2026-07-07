@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../database/database.dart';
 import '../discovery/discovery_manager.dart';
 import '../event_bus.dart';
+import '../license/license_manager.dart';
 import '../outputs/output_factory.dart';
 import 'zone_instance.dart';
 
@@ -19,10 +20,11 @@ import 'zone_instance.dart';
 class ZoneManager {
   final TuneDatabase _db;
   final DiscoveryManager _discovery;
+  final LicenseManager _license;
 
   final Map<int, ZoneInstance> _instances = {};
 
-  ZoneManager(this._db, this._discovery);
+  ZoneManager(this._db, this._discovery, this._license);
 
   // ---------------------------------------------------------------------------
   // Bootstrap
@@ -101,6 +103,12 @@ class ZoneManager {
     DiscoveredDevice? device,
     double volume = 0.5,
   }) async {
+    // Licence Free : plafonnée à LicenseManager.freeMaxZones zones.
+    // Premium (clé ou compte SSO) : illimité.
+    if (!_license.checkZoneLimit(_instances.length)) {
+      throw const ZoneLimitException(LicenseManager.freeMaxZones);
+    }
+
     final id = await _db.zoneRepo.insert(
       ZonesCompanion.insert(
         name: name,

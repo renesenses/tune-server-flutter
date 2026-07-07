@@ -32,6 +32,7 @@
   "playbackErrorNoZone": "ゾーンが選択されていません — ゾーンを作成または選択してください",
   "playbackErrorZoneNotFound": "ゾーンが見つかりません",
   "playbackErrorFailed": "再生に失敗しました",
+  "zoneLimitReached": "無料プランは{limit}ゾーンまでです — 無制限にするにはPremiumにアップグレード",
   "navLibrary": "ライブラリ",
   "navSearch": "検索",
   "navStreaming": "ストリーミング",

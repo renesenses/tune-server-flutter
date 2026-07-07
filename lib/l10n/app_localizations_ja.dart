@@ -105,6 +105,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackErrorFailed => '再生に失敗しました';
 
   @override
+  String zoneLimitReached(int limit) {
+    return '無料プランは$limitゾーンまでです — 無制限にするにはPremiumにアップグレード';
+  }
+
+  @override
   String get navLibrary => 'ライブラリ';
 
   @override

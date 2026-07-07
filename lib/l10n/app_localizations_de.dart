@@ -107,6 +107,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playbackErrorFailed => 'Wiedergabe fehlgeschlagen';
 
   @override
+  String zoneLimitReached(int limit) {
+    return 'Kostenlose Version auf $limit Zonen begrenzt — auf Premium upgraden für unbegrenzte Zonen';
+  }
+
+  @override
   String get navLibrary => 'Bibliothek';
 
   @override

@@ -105,6 +105,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playbackErrorFailed => '播放失败';
 
   @override
+  String zoneLimitReached(int limit) {
+    return '免费版限制为 $limit 个区域 — 升级到高级版可无限使用';
+  }
+
+  @override
   String get navLibrary => '媒体库';
 
   @override

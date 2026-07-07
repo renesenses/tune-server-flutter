@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/track_notification_service.dart';
+import '../server/license/license_manager.dart';
 import '../state/app_state.dart';
 import '../state/library_state.dart';
 import '../state/settings_state.dart';
@@ -125,8 +126,27 @@ class _PlaybackErrorListenerState extends State<_PlaybackErrorListener> {
   }
 
   void _onAppChanged() {
+    if (!mounted) return;
+
+    // Zone limit (Free tier) — surfaced as a paywall-style notice.
+    final zoneErr = _app?.lastZoneError;
+    if (zoneErr != null) {
+      final l = AppLocalizations.of(context);
+      _app!.clearZoneError();
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(zoneErr == 'zone_limit_reached'
+              ? l.zoneLimitReached(LicenseManager.freeMaxZones)
+              : zoneErr),
+          duration: const Duration(seconds: 4),
+          backgroundColor: TuneColors.accent,
+        ),
+      );
+    }
+
     final err = _app?.lastPlaybackError;
-    if (err == null || !mounted) return;
+    if (err == null) return;
     final l = AppLocalizations.of(context);
     final msg = switch (err) {
       'no_zone' => l.playbackErrorNoZone,

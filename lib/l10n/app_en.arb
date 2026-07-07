@@ -32,6 +32,12 @@
   "playbackErrorNoZone": "No zone selected — create or select a zone",
   "playbackErrorZoneNotFound": "Zone not found",
   "playbackErrorFailed": "Playback failed",
+  "zoneLimitReached": "Free plan limited to {limit} zones — upgrade to Premium for unlimited",
+  "@zoneLimitReached": {
+    "placeholders": {
+      "limit": { "type": "int" }
+    }
+  },
   "navLibrary": "Library",
   "navSearch": "Search",
   "navStreaming": "Streaming",
