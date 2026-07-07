@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,11 +8,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Charge les secrets de signing release depuis android/key.properties (gitignored).
+// Absent => les builds release retombent sur la clé debug (dev), voir buildTypes.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.mozaiklabs.tune"
-    // Play Store exige targetSdk >= 34 ; compileSdk fixé explicitement à 35
-    // pour être déterministe (>= targetSdk) quelle que soit la version de Flutter.
-    compileSdk = 35
+    // Play Store exige targetSdk >= 35 (voir defaultConfig). compileSdk fixé à 36 :
+    // une dépendance AndroidX est compilée contre android-36 et refuse un compileSdk
+    // inférieur. compileSdk (APIs dispo à la compilation) et targetSdk (comportement
+    // runtime) sont indépendants — cf. message AGP.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -32,11 +45,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Signe avec la clé release si key.properties existe, sinon retombe sur
+            // la clé debug pour que les builds locaux fonctionnent sans keystore.
+            signingConfig = if (keystorePropertiesFile.exists())
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
         }
     }
 }

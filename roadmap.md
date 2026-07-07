@@ -243,3 +243,20 @@
 | 17 | Localisation | 2 |
 | 18 | Qualité & CI | 5 |
 | **Total** | | **98 tâches** |
+
+---
+
+# Release Play Store (Android)
+
+> Track séparé (juillet 2026) — amener l'app Android jusqu'au Google Play Store.
+> Branche : `feature/android-playstore`. Bump/tag/publication réservés à Bertrand.
+
+- [x] **P1** Débloquer le build — corriger les erreurs de compilation (`home_view.dart`), `flutter analyze` = 0 erreur, APK debug bâti.
+- [x] **P2** Conformité Play Store — `targetSdk 35`, `compileSdk 36` (dép AndroidX), retrait `usesCleartextTraffic` redondant.
+- [~] **P3** Signing release — keystore upload (`~/keystores/tune-upload-keystore.jks`, alias `tune-upload`), `key.properties` (gitignored) + `signingConfigs.release` dans `build.gradle.kts`. AAB signé en validation.
+- [ ] **P4** Assets store — adaptive icon (`flutter_launcher_icons`, absente aujourd'hui : que des PNG legacy), splash, label.
+- [ ] **P5** Validation on-device + `flutter build appbundle --release`.
+- [ ] **P6** Parité licence / freemium — porter la logique du serveur Rust dans le serveur embarqué Flutter : limite de zones Free (`FREE_MAX_ZONES`), déblocage premium via compte SSO cloud (dégradation gracieuse offline). **Aujourd'hui aucune limite/monétisation dans l'app Flutter** (pas d'IAP, pas de paywall, zones illimitées). Premium = cloud/SSO, jamais Play Billing. *Décision produit — non démarrée.*
+
+Notes produit :
+- **OAAT non émis en mode embarqué Android** : `OutputType.oaat` n'est pas dans `availableTypes()` ; `output_factory` renvoie un placeholder (« handled by Rust server, Flutter acts as remote »). L'app n'affiche/sélectionne des devices OAAT qu'en mode remote d'un serveur Rust.
