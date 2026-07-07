@@ -15,7 +15,9 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.x'
+          # Doit fournir Dart >= 3.11.3 (cf. pubspec `sdk: ^3.11.3`).
+          # 3.32.x livrait Dart 3.8.1 → `flutter pub get` échouait.
+          flutter-version: '3.44.0'
           channel: stable
           cache: true
 

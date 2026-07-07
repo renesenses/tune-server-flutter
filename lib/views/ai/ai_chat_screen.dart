@@ -110,7 +110,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     final body = jsonEncode({
       'message': message,
-      ?'zone_id': zoneId,
+      'zone_id': ?zoneId,
     });
 
     final resp = await http.post(uri, headers: headers, body: body)

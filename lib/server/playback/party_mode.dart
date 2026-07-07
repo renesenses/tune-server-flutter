@@ -89,7 +89,7 @@ class PartyMode {
 
   /// Remove a track from the party queue (admin action).
   bool removeTrack(int trackId) {
-    final removed = _queue.removeWhere((e) => e.track.id == trackId);
+    _queue.removeWhere((e) => e.track.id == trackId);
     EventBus.instance.emit(PartyQueueChangedEvent(zoneId));
     return true;
   }

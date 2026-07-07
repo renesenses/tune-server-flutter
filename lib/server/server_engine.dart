@@ -21,16 +21,10 @@ import 'utils/api_analytics.dart';
 import 'utils/credentials_vault.dart';
 import 'license/license_manager.dart';
 import 'zones/zone_manager.dart';
-import 'playback/auto_dj.dart';
-import 'playback/sleep_timer.dart';
-import 'playback/party_mode.dart';
-import 'playback/collaborative_mode.dart';
 // file_system_watcher available but not wired yet (needs music dir discovery)
 import 'library/scan_scheduler.dart';
 import 'metadata/listenbrainz_scrobbler.dart';
 import 'metadata/auto_fix.dart';
-import 'outputs/dlna_buffer_stats.dart';
-import 'streaming/stream_cache.dart';
 
 // ---------------------------------------------------------------------------
 // T9.1 — ServerEngine
