@@ -959,6 +959,7 @@ class _AlbumBioSheet extends StatefulWidget {
 
 class _AlbumBioSheetState extends State<_AlbumBioSheet> {
   String? _bio;
+  Map<String, dynamic>? _provenance;
   bool _loading = true;
   String? _error;
 
@@ -979,6 +980,7 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
       if (!mounted) return;
       setState(() {
         _bio = data['bio'] as String? ?? data['review'] as String? ?? data['summary'] as String?;
+        _provenance = data['bio_provenance'] as Map<String, dynamic>?;
         _loading = false;
       });
     } catch (e) {
@@ -1024,8 +1026,17 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
                         : SingleChildScrollView(
                             controller: scrollController,
                             padding: const EdgeInsets.all(16),
-                            child: Text(_bio!,
-                                style: TuneFonts.body.copyWith(height: 1.5)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_bio!,
+                                    style: TuneFonts.body.copyWith(height: 1.5)),
+                                if (_provenance != null) ...[
+                                  const SizedBox(height: 12),
+                                  BioProvenanceLine(provenance: _provenance!),
+                                ],
+                              ],
+                            ),
                           ),
           ),
         ],
@@ -1037,6 +1048,46 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
 // ---------------------------------------------------------------------------
 // Widgets partagés (publics — réutilisés par les autres vues bibliothèque)
 // ---------------------------------------------------------------------------
+
+/// Attribution line for a sourced bio (source + licence). Renders nothing when
+/// no provenance is available. Consumes the `bio_provenance` object returned by
+/// the artist/album bio endpoints.
+class BioProvenanceLine extends StatelessWidget {
+  final Map<String, dynamic> provenance;
+  const BioProvenanceLine({super.key, required this.provenance});
+
+  static String labelFor(String source) {
+    switch (source) {
+      case 'wikipedia':
+        return 'Wikipédia';
+      case 'lastfm':
+        return 'Last.fm';
+      case 'theaudiodb':
+        return 'TheAudioDB';
+      case 'qobuz':
+        return 'Qobuz';
+      case 'community':
+        return 'Communauté Tune';
+      default:
+        return source;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final source = provenance['source'] as String?;
+    if (source == null || source.isEmpty) return const SizedBox.shrink();
+    final license = provenance['license'] as String?;
+    final label = labelFor(source);
+    final text = (license != null && license.isNotEmpty)
+        ? 'Source : $label · $license'
+        : 'Source : $label';
+    return Text(
+      text,
+      style: TuneFonts.subheadline.copyWith(color: TuneColors.textTertiary),
+    );
+  }
+}
 
 /// Badge de format audio (FLAC, MP3, AAC…). Hi-res = couleur accent.
 class FormatBadge extends StatelessWidget {
