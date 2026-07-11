@@ -64,7 +64,7 @@ class _FavoriteTracksViewState extends State<FavoriteTracksView> {
           onDismissed: (_) => app.toggleTrackFavorite(track.id),
           child: _FavoriteTile(
             track: track,
-            onTap: () => app.playTracks(favorites, startIndex: i),
+            onTap: () => app.playOrRestart(favorites, startIndex: i),
           ),
         );
       },

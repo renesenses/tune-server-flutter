@@ -130,7 +130,7 @@ class _TracksListViewState extends State<TracksListView> {
                       metadataFields: metadataFields,
                       onTap: () => context
                           .read<AppState>()
-                          .playTracks(filtered, startIndex: i),
+                          .playOrRestart(filtered, startIndex: i),
                       onEdit: () => showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
