@@ -47,6 +47,17 @@ class TuneWebSocket {
         },
       );
 
+      // The sink's `done` future completes with the socket error when the
+      // connection drops (app backgrounded → Android doze → "Software caused
+      // connection abort" on resume). The stream `onError` above already
+      // triggers a reconnect, but the SAME error ALSO completes `sink.done`;
+      // left unobserved it surfaces as an unhandled async exception (Fabien:
+      // remote-mode APK, WebSocketChannelException on resume). Observe it so it
+      // stays handled — reconnection is driven by the stream callbacks.
+      _channel!.sink.done.catchError((Object e) {
+        debugPrint('[WS] Sink closed: $e');
+      });
+
       debugPrint('[WS] Connected to $wsUrl');
     } catch (e) {
       debugPrint('[WS] Connect error: $e');
