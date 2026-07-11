@@ -902,8 +902,10 @@ class TuneApiClient {
 
   // Dashboard
 
-  Future<Map<String, dynamic>> getHistoryDashboard() async =>
-      await _get('/library/history/dashboard') as Map<String, dynamic>;
+  Future<Map<String, dynamic>> getHistoryDashboard({String? period}) async =>
+      await _get('/library/history/dashboard'
+              '${period != null ? '?period=$period' : ''}')
+          as Map<String, dynamic>;
 
   // Album Rating
 
