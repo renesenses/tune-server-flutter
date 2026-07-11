@@ -19,6 +19,20 @@ import 'views/mode_selector_view.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Global error boundary: log framework and uncaught async errors instead of
+  // letting them surface as fatal "Unhandled Exception" (Fabien: remote-mode
+  // APK, black screen after a dropped connection on resume). Returning true
+  // from onError marks the async error as handled so it never destabilizes the
+  // app; the error is still logged for diagnostics.
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('[uncaught:flutter] ${details.exception}');
+  };
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    debugPrint('[uncaught:async] $error');
+    return true;
+  };
+
   // Phase 1: show UI immediately, start server in background
   runApp(const _BootstrapApp());
 }
