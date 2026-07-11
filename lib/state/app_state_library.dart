@@ -177,6 +177,16 @@ extension AppStateLibrary on AppState {
   /// Toggle le flag favori d'une piste. Retourne le nouvel état.
   /// Rafraîchit les pistes et les favoris dans LibraryState.
   Future<bool> toggleTrackFavorite(int trackId) async {
+    // Remote mode: the local Drift DB is empty, so the previous code toggled a
+    // favourite that never reached the server and never showed up (Elie:
+    // "le bouton favori clignote, rien n'est ajouté"). Toggle on the server —
+    // /quick-fav flips the flag and returns the new state, which callers use to
+    // update the heart icon. (There is no favourites-list endpoint yet, so the
+    // Favoris tab is not refreshed in remote mode — tracked separately.)
+    if (isRemoteMode && _apiClient != null) {
+      final res = await _apiClient!.quickFavTrack(trackId);
+      return res['is_favorite'] as bool? ?? false;
+    }
     final isFav = await engine.db.trackRepo.toggleFavorite(trackId);
     await _refreshFavoriteTracks();
     // Si la liste complète des pistes est chargée, la rafraîchir aussi.
