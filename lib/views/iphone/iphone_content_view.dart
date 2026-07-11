@@ -85,6 +85,15 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
             children: [
               Expanded(
                 child: Stack(
+                  // Full-size tab pages: force tight constraints so the active
+                  // navigator fills the area. A raw Stack defaults to
+                  // StackFit.loose, which gives its non-positioned children
+                  // loose constraints — a page whose height comes from Expanded
+                  // then collapses to zero and the body renders blank (Elie:
+                  // black content in the iPhone / portrait layout, while the
+                  // iPad layout — which puts the page directly in an Expanded —
+                  // renders fine).
+                  fit: StackFit.expand,
                   children: List.generate(_rootPages.length, (i) {
                     // Keep all tab navigators alive but only show the active one.
                     return Offstage(
