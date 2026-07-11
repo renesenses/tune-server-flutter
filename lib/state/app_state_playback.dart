@@ -494,10 +494,43 @@ extension AppStatePlayback on AppState {
           };
           await _apiClient!.play(id, body);
         } else {
-          // Mixed/streaming: fall back to single track (no queue semantics
-          // yet for streaming-mixed lists; can be added later via /queue/add).
-          final track = tracks[startIndex];
-          await play(track: track, zoneId: id);
+          // Mixed/streaming list (e.g. a playlist of streaming tracks): /play
+          // with track_ids only accepts local IDs, so the old fallback sent a
+          // single track and playback stopped at its end instead of advancing
+          // (Elie: la playlist s'arrête au lieu de passer à la piste suivante).
+          // Build the full server queue like playStreamingList: clear, play the
+          // start track, then append the rest in order so the server
+          // auto-advances. (On the current two-table server queue, an
+          // interleaved local+streaming order is not preserved — locals group
+          // before streamings — but every track now plays instead of stopping.)
+          final clampedStart = startIndex.clamp(0, tracks.length - 1);
+          final first = tracks[clampedStart];
+          await _apiClient!.clearQueue(id);
+          if (first.id != 0 && first.source == Source.local.rawValue) {
+            await _apiClient!.play(id, {'track_ids': [first.id]});
+          } else {
+            await _apiClient!.play(id,
+                {'source': first.source, 'source_id': first.sourceId});
+          }
+          for (var i = 0; i < tracks.length; i++) {
+            if (i == clampedStart) continue;
+            final t = tracks[i];
+            try {
+              if (t.id != 0 && t.source == Source.local.rawValue) {
+                await _apiClient!.addToQueue(id, {'track_id': t.id});
+              } else {
+                await _apiClient!.addToQueue(id, {
+                  'source': t.source,
+                  'source_id': t.sourceId,
+                  'title': t.title,
+                  if (t.artistName != null) 'artist': t.artistName,
+                  if (t.albumTitle != null) 'album': t.albumTitle,
+                });
+              }
+            } catch (e) {
+              debugPrint('[playTracks] mixed queue add[$i] failed: $e');
+            }
+          }
         }
         await refreshZonesRemote();
       } catch (e, st) {
