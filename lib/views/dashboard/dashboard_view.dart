@@ -50,6 +50,11 @@ class _DashboardViewState extends State<DashboardView> {
         .toIso8601String();
   }
 
+  /// Number of days in the selected period, for the "listening by day" chart.
+  /// null (all time) falls back to 30.
+  int _daysFromPeriod() =>
+      switch (_period) { '7d' => 7, '30d' => 30, '90d' => 90, _ => 30 };
+
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
 
@@ -58,7 +63,7 @@ class _DashboardViewState extends State<DashboardView> {
 
       // Remote mode: use API client
       if (app.isRemoteMode && app.apiClient != null) {
-        final data = await app.apiClient!.getHistoryDashboard();
+        final data = await app.apiClient!.getHistoryDashboard(period: _period);
         if (!mounted) return;
         setState(() { _data = data; _loading = false; });
         return;
@@ -132,6 +137,10 @@ class _DashboardViewState extends State<DashboardView> {
     final topArtists = (data['top_artists'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final topAlbums = (data['top_albums'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final hourly = (data['hourly_distribution'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    // Daily listening (server `trend`: [{day, plays, listening_ms}], one row
+    // per day in the selected period) — Elie wants the row count to follow the
+    // period (today / 7 / 30 days) instead of the fixed 24-hour chart.
+    final trend = (data['trend'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     if (totalListens == 0) return const _EmptyDashboard();
 
@@ -249,6 +258,19 @@ class _DashboardViewState extends State<DashboardView> {
                   letterSpacing: 1)),
           const SizedBox(height: 12),
           _HourlyChart(data: hourly),
+        ],
+
+        // Daily Distribution — one bar per day of the selected period.
+        if (trend.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          const Text('LISTENING BY DAY',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: TuneColors.textTertiary,
+                  letterSpacing: 1)),
+          const SizedBox(height: 12),
+          _DailyChart(data: trend, days: _daysFromPeriod()),
         ],
 
         const SizedBox(height: 80),
@@ -473,6 +495,89 @@ class _TopListTile extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // _HourlyChart — simple bar chart using Container widgets
 // ---------------------------------------------------------------------------
+
+class _DailyChart extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+  final int days;
+
+  const _DailyChart({required this.data, required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    // Server `trend` only lists days that had plays; index by date so we can
+    // fill empty days with zero and always render exactly `days` bars.
+    final byDay = <String, int>{};
+    for (final e in data) {
+      final day = e['day'] as String?;
+      if (day != null) byDay[day] = (e['plays'] as int?) ?? 0;
+    }
+    final n = days.clamp(1, 92);
+    final base = () {
+      final t = DateTime.now();
+      return DateTime(t.year, t.month, t.day);
+    }();
+    final counts = <int>[];
+    final dates = <DateTime>[];
+    for (int i = n - 1; i >= 0; i--) {
+      final d = base.subtract(Duration(days: i));
+      final key = '${d.year.toString().padLeft(4, '0')}-'
+          '${d.month.toString().padLeft(2, '0')}-'
+          '${d.day.toString().padLeft(2, '0')}';
+      counts.add(byDay[key] ?? 0);
+      dates.add(d);
+    }
+    final maxCount = counts.fold<int>(1, (m, c) => math.max(m, c));
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: TuneColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 120,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (int i = 0; i < n; i++) ...[
+                  if (i > 0) const SizedBox(width: 2),
+                  Expanded(
+                    child: Tooltip(
+                      message:
+                          '${dates[i].day}/${dates[i].month} — ${counts[i]} plays',
+                      child: Container(
+                        height: (counts[i] / maxCount * 100).clamp(2.0, 100.0),
+                        decoration: BoxDecoration(
+                          color: TuneColors.accent.withValues(
+                            alpha: 0.4 + (counts[i] / maxCount * 0.6),
+                          ),
+                          borderRadius:
+                              const BorderRadius.vertical(top: Radius.circular(2)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('${dates.first.day}/${dates.first.month}',
+                  style: TuneFonts.caption),
+              Text('${dates.last.day}/${dates.last.month}',
+                  style: TuneFonts.caption),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _HourlyChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
