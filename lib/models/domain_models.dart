@@ -68,7 +68,11 @@ Radio radioFromJson(Map<String, dynamic> j) => Radio(
       codec: j['codec'] as String?,
       country: j['country'] as String?,
       homepageUrl: j['homepage_url'] as String?,
-      favorite: j['favorite'] as bool? ?? false,
+      // The server serialises this as `is_favorite`; reading only `favorite`
+      // always yielded false, so a toggled radio favourite never showed as set
+      // after a refresh (Elie: "le bouton favori des radios ne fait rien").
+      // Accept both keys.
+      favorite: (j['is_favorite'] ?? j['favorite']) as bool? ?? false,
     );
 
 // ---------------------------------------------------------------------------
