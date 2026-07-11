@@ -20,21 +20,31 @@ extension AppStatePlayback on AppState {
     if (id == null) return;
 
     if (isRemoteMode && _apiClient != null) {
-      if (track != null) {
-        final body = <String, dynamic>{};
-        if (track.id != 0 && track.source == Source.local.rawValue) {
-          body['track_id'] = track.id;
-        } else if (track.sourceId != null) {
-          body['source'] = track.source;
-          body['source_id'] = track.sourceId;
-        } else if (track.filePath != null) {
-          body['file_path'] = track.filePath;
+      // Remote play/resume can throw on a flaky link to the server (WS/REST
+      // timeouts seen on Android remote). Without this guard the exception was
+      // unhandled, playback silently never started and the user got no
+      // feedback. Surface it as a playback error instead. (Elie, Android remote)
+      try {
+        if (track != null) {
+          final body = <String, dynamic>{};
+          if (track.id != 0 && track.source == Source.local.rawValue) {
+            body['track_id'] = track.id;
+          } else if (track.sourceId != null) {
+            body['source'] = track.source;
+            body['source_id'] = track.sourceId;
+          } else if (track.filePath != null) {
+            body['file_path'] = track.filePath;
+          }
+          await _apiClient!.play(id, body);
+        } else {
+          await _apiClient!.resume(id);
         }
-        await _apiClient!.play(id, body);
-      } else {
-        await _apiClient!.resume(id);
+        await refreshZonesRemote();
+      } catch (e, st) {
+        _lastPlaybackError = 'playback_failed';
+        debugPrint('[play] remote EXCEPTION: $e\n$st');
+        notify();
       }
-      await refreshZonesRemote();
       return;
     }
 
@@ -465,26 +475,36 @@ extension AppStatePlayback on AppState {
       // Send the whole queue so server auto-advances. Sending only the
       // single track at `startIndex` left the queue at length 1 — playback
       // stopped at end-of-track. (Bug reported by Jacques on Android.)
-      final localIds = <int>[];
-      for (final t in tracks) {
-        if (t.id != 0 && t.source == Source.local.rawValue) {
-          localIds.add(t.id);
+      //
+      // Wrapped in try/catch: a REST timeout to a flaky remote server used to
+      // throw uncaught here, so tapping a track did nothing and showed no
+      // error. Surface it as a playback error. (Elie, Android remote)
+      try {
+        final localIds = <int>[];
+        for (final t in tracks) {
+          if (t.id != 0 && t.source == Source.local.rawValue) {
+            localIds.add(t.id);
+          }
         }
+        if (localIds.length == tracks.length) {
+          // Pure-local queue: server resolves IDs.
+          final body = <String, dynamic>{
+            'track_ids': localIds,
+            if (startIndex > 0) 'start_index': startIndex,
+          };
+          await _apiClient!.play(id, body);
+        } else {
+          // Mixed/streaming: fall back to single track (no queue semantics
+          // yet for streaming-mixed lists; can be added later via /queue/add).
+          final track = tracks[startIndex];
+          await play(track: track, zoneId: id);
+        }
+        await refreshZonesRemote();
+      } catch (e, st) {
+        _lastPlaybackError = 'playback_failed';
+        debugPrint('[playTracks] remote EXCEPTION: $e\n$st');
+        notify();
       }
-      if (localIds.length == tracks.length) {
-        // Pure-local queue: server resolves IDs.
-        final body = <String, dynamic>{
-          'track_ids': localIds,
-          if (startIndex > 0) 'start_index': startIndex,
-        };
-        await _apiClient!.play(id, body);
-      } else {
-        // Mixed/streaming: fall back to single track (no queue semantics
-        // yet for streaming-mixed lists; can be added later via /queue/add).
-        final track = tracks[startIndex];
-        await play(track: track, zoneId: id);
-      }
-      await refreshZonesRemote();
       return;
     }
 

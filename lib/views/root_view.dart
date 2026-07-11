@@ -268,6 +268,15 @@ class _StartupStatusBannerState extends State<_StartupStatusBanner> {
   final bool _showStreamingInit = true;
   bool _streamingDismissed = false;
 
+  // Safety net: a UPnP index that starts but never completes (LibraryScan
+  // Started without a matching Completed — happens when a discovered DLNA
+  // device stalls on a flaky network) leaves LibraryState.isScanning stuck at
+  // true, pinning this banner (and its spinner) on screen forever. Force-hide
+  // it after a hard cap so the "stuck spinner top-left" can't happen. (Elie)
+  static const _maxVisible = Duration(seconds: 25);
+  Timer? _safetyTimer;
+  bool _forceHidden = false;
+
   @override
   void initState() {
     super.initState();
@@ -275,6 +284,12 @@ class _StartupStatusBannerState extends State<_StartupStatusBanner> {
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) setState(() => _streamingDismissed = true);
     });
+  }
+
+  @override
+  void dispose() {
+    _safetyTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -287,7 +302,14 @@ class _StartupStatusBannerState extends State<_StartupStatusBanner> {
 
     final showScan = isScanning;
     final showStreaming = !showScan && !_streamingDismissed && _showStreamingInit;
-    final show = showScan || showStreaming;
+    final show = (showScan || showStreaming) && !_forceHidden;
+
+    // Arm the hard-cap safety timer the first time the banner becomes visible.
+    if (show && _safetyTimer == null) {
+      _safetyTimer = Timer(_maxVisible, () {
+        if (mounted) setState(() => _forceHidden = true);
+      });
+    }
 
     // Once we've shown streaming init and scan is now active, mark streaming done
     if (isScanning && !_streamingDismissed) {
@@ -303,13 +325,18 @@ class _StartupStatusBannerState extends State<_StartupStatusBanner> {
       label = 'Connexion aux services streaming…';
     }
 
+    // Offset by the real status-bar height. Relying on SafeArea inside the
+    // banner was not enough: an ancestor had already consumed the top padding,
+    // so the banner rendered at y=0 and only the spinner peeked out over the
+    // status bar (the "slider en haut à gauche"). (Elie, Android)
+    final topInset = MediaQuery.viewPaddingOf(context).top;
     return Stack(
       children: [
         widget.child,
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          top: show ? 0 : -64,
+          top: show ? topInset : -(72 + topInset),
           left: 0,
           right: 0,
           child: _StatusBannerWidget(label: label ?? '', sub: sub),
@@ -329,6 +356,7 @@ class _StatusBannerWidget extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: SafeArea(
+        top: false,
         bottom: false,
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
