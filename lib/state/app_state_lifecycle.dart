@@ -326,19 +326,19 @@ extension AppStateLifecycle on AppState {
         }
       }
 
-      // setZones replaces the full list including positionMs.  For the
-      // current zone, if we're interpolating locally and the server
-      // position is close, we want to keep our interpolated value to avoid
-      // visible jumps.  We do this by patching the incoming zone data to
-      // preserve the local position when drift is small.
+      // setZones replaces the full list including positionMs. Capture the
+      // locally-interpolated position first so we can avoid visible jumps.
+      final localPosBefore = zoneState.currentZone?.positionMs ?? 0;
+
+      // While playing, keep our interpolated value when the server position is
+      // close (avoids stutter from the ~1s poll cadence).
       if (curId != null && serverPositionMs != null && serverState == PlaybackState.playing) {
-        final localPos = zoneState.currentZone?.positionMs ?? 0;
-        final drift = (localPos - serverPositionMs).abs();
+        final drift = (localPosBefore - serverPositionMs).abs();
         if (drift <= 2000) {
           // Patch the incoming zone to keep local interpolated position
           final idx = zones.indexWhere((z) => z.id == curId);
           if (idx >= 0) {
-            zones[idx] = zones[idx].copyWith(positionMs: localPos);
+            zones[idx] = zones[idx].copyWith(positionMs: localPosBefore);
           }
         }
       }
@@ -351,9 +351,17 @@ extension AppStateLifecycle on AppState {
           zoneState.startSeekTimer();
         } else {
           zoneState.stopSeekTimer();
-          // When not playing, use exact server position
           if (serverPositionMs != null) {
-            zoneState.updatePosition(curId, serverPositionMs);
+            // A just-paused zone can still report the pre-pause / last-seek
+            // position for a beat, which would snap the displayed time
+            // backwards (Elie: seek to 30s, play to 40s, pause → shows 30s).
+            // Keep the local position when the server is only slightly behind;
+            // the next refresh reconciles once the server catches up.
+            final backDrift = localPosBefore - serverPositionMs;
+            final pos = (backDrift > 0 && backDrift <= 4000)
+                ? localPosBefore
+                : serverPositionMs;
+            zoneState.updatePosition(curId, pos);
           }
         }
       }
