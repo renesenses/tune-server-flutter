@@ -343,6 +343,15 @@ class _SettingsList extends StatelessWidget {
                   activeThumbColor: TuneColors.accent,
                 ),
               ),
+              const Divider(height: 1, indent: 16, color: TuneColors.divider),
+              _SettingsTile(
+                title: 'Lire en boucle par défaut',
+                trailing: Switch(
+                  value: settings.repeatOneByDefault,
+                  onChanged: (v) => settings.setRepeatOneByDefault(v),
+                  activeThumbColor: TuneColors.accent,
+                ),
+              ),
               if (settings.crossfadeEnabled) ...[
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 Padding(

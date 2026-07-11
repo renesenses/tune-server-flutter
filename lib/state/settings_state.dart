@@ -112,6 +112,12 @@ class SettingsState extends ChangeNotifier {
   bool get crossfadeEnabled => _config.crossfadeEnabled;
   double get crossfadeDuration => _config.crossfadeDuration;
 
+  bool get repeatOneByDefault => _config.repeatOneByDefault;
+  Future<void> setRepeatOneByDefault(bool value) async {
+    await _config.setRepeatOneByDefault(value);
+    notifyListeners();
+  }
+
   Future<void> setCrossfadeEnabled(bool value) async {
     await _config.setCrossfadeEnabled(value);
     notifyListeners();

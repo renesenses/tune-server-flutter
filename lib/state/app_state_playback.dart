@@ -169,6 +169,41 @@ extension AppStatePlayback on AppState {
     }
   }
 
+  /// Set the repeat mode directly (used for the "loop by default" setting).
+  Future<void> setRepeatMode(RepeatMode mode, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (isRemoteMode && _apiClient != null) {
+      if (id != null) await _apiClient!.setRepeat(id, mode.rawValue);
+      await refreshZonesRemote();
+      return;
+    }
+    final instance = engine.zoneManager.zone(id ?? -1);
+    instance?.queue.setRepeat(mode);
+    if (instance != null) {
+      zoneState.setQueueSnapshot(instance.queue.snapshot());
+    }
+  }
+
+  /// Tap handler for a track row: if the tapped track is the one already
+  /// playing, restart it (seek to 0) instead of rebuilding the queue (Elie:
+  /// "retour au début de la piste"). Otherwise play the list at startIndex.
+  Future<void> playOrRestart(List<Track> tracks, {int startIndex = 0}) async {
+    if (startIndex >= 0 && startIndex < tracks.length) {
+      final tapped = tracks[startIndex];
+      final cur = zoneState.currentTrack;
+      final isCurrent = cur != null &&
+          ((tapped.id != 0 && tapped.id == cur.id) ||
+              (tapped.sourceId != null &&
+                  tapped.sourceId == cur.sourceId &&
+                  tapped.source == cur.source));
+      if (isCurrent) {
+        await seek(Duration.zero);
+        return;
+      }
+    }
+    await playTracks(tracks, startIndex: startIndex);
+  }
+
   Future<void> moveQueueItem(int fromIndex, int toIndex, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
     if (id == null) return;
@@ -532,6 +567,11 @@ extension AppStatePlayback on AppState {
             }
           }
         }
+        if (settingsState.repeatOneByDefault) {
+          try {
+            await _apiClient!.setRepeat(id, 'one');
+          } catch (_) {}
+        }
         await refreshZonesRemote();
       } catch (e, st) {
         _lastPlaybackError = 'playback_failed';
@@ -555,6 +595,10 @@ extension AppStatePlayback on AppState {
       instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
       instance.player.crossfadeDuration = settingsState.crossfadeDuration;
       await instance.player.play();
+      if (settingsState.repeatOneByDefault) {
+        instance.queue.setRepeat(RepeatMode.one);
+        zoneState.setQueueSnapshot(instance.queue.snapshot());
+      }
     } catch (e, st) {
       _lastPlaybackError = 'playback_failed';
       debugPrint('[playTracks] EXCEPTION: $e\n$st');

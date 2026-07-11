@@ -143,6 +143,13 @@ class ServerConfiguration {
   double get crossfadeDuration => (_p.getDouble(_kCrossfadeDuration) ?? 3.0);
   Future<void> setCrossfadeDuration(double value) => _p.setDouble(_kCrossfadeDuration, value);
 
+  // Repeat the current track by default: when on, playback starts with
+  // RepeatMode.one so a finished track restarts from the beginning (Elie).
+  static const _kRepeatOneByDefault = 'repeat_one_by_default';
+  bool get repeatOneByDefault => _p.getBool(_kRepeatOneByDefault) ?? false;
+  Future<void> setRepeatOneByDefault(bool value) =>
+      _p.setBool(_kRepeatOneByDefault, value);
+
   // ---------------------------------------------------------------------------
   // Exclusive Mode (WASAPI / bit-perfect)
   // ---------------------------------------------------------------------------

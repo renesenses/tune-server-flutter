@@ -522,7 +522,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
           delegate: SliverChildBuilderDelegate(
             (_, i) => _AlbumTrackTile(
               track: _tracks![i],
-              onTap: () => app.playTracks(_tracks!, startIndex: i),
+              onTap: () => app.playOrRestart(_tracks!, startIndex: i),
               onAddToPlaylist: () => showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
