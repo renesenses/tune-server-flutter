@@ -855,13 +855,23 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
     setState(() => _showCredits = !_showCredits);
     if (_showCredits && _credits == null) {
       final app = Provider.of<AppState>(context, listen: false);
-      if (app.apiClient != null) {
-        try {
-          final result = await app.apiClient!.getTrackCredits(widget.track.id);
-          if (mounted) setState(() => _credits = result.cast<Map<String, dynamic>>());
-        } catch (_) {
-          if (mounted) setState(() => _credits = []);
+      if (app.apiClient == null) {
+        // Local mode has no credits endpoint — show the empty state rather
+        // than leaving the panel blank with the button toggled on.
+        if (mounted) setState(() => _credits = []);
+        return;
+      }
+      try {
+        final result = await app.apiClient!.getTrackCredits(widget.track.id);
+        // whereType (not cast) so a malformed entry can't throw lazily during
+        // build and surface as a red error widget (Elie: "crédits => erreur").
+        if (mounted) {
+          setState(() =>
+              _credits = result.whereType<Map<String, dynamic>>().toList());
         }
+      } catch (e) {
+        debugPrint('[credits] load failed for track ${widget.track.id}: $e');
+        if (mounted) setState(() => _credits = []);
       }
     }
   }
@@ -918,7 +928,9 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
               spacing: 6,
               runSpacing: 4,
               children: _credits!.map((c) {
-                final name = c['artist_name'] ?? '';
+                // Coerce to String: a non-String value handed to Text() throws
+                // during build (red error widget).
+                final name = '${c['artist_name'] ?? ''}';
                 final instrument = c['instrument'];
                 return Chip(
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
