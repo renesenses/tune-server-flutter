@@ -67,6 +67,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
+
+        <!-- Disable Impeller (fall back to the Skia renderer). Impeller/Vulkan
+             is a known cause of black screens on some Android GPUs, notably on
+             surface recreation during rotation (the activity handles orientation
+             itself via configChanges, so Flutter recreates the Vulkan swapchain
+             in place). Skia is stable across devices; revisit once the upstream
+             Impeller bug is resolved. Portrait black screen — Elie/Fabien. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false"/>
     </application>
 
     <queries>
