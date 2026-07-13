@@ -84,25 +84,25 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
           child: Column(
             children: [
               Expanded(
-                child: Stack(
-                  // Full-size tab pages: force tight constraints so the active
-                  // navigator fills the area. A raw Stack defaults to
-                  // StackFit.loose, which gives its non-positioned children
-                  // loose constraints — a page whose height comes from Expanded
-                  // then collapses to zero and the body renders blank (Elie:
-                  // black content in the iPhone / portrait layout, while the
-                  // iPad layout — which puts the page directly in an Expanded —
-                  // renders fine).
-                  fit: StackFit.expand,
+                // Tab pages: IndexedStack keeps every tab's Navigator alive and
+                // shows only the active one, laying ALL children out at full
+                // size (so the active page always has proper constraints).
+                // The previous Stack + Offstage(Navigator) approach left the
+                // content black in the iPhone/portrait layout even with
+                // StackFit.expand: a Navigator built while its Offstage was
+                // collapsed (zero-size) did not re-layout its route when shown,
+                // so the page area rendered blank (Elie/Bertrand, Android
+                // portrait; the iPad layout puts the page directly in an
+                // Expanded and renders fine). IndexedStack is the idiomatic
+                // pattern for persistent tab content and avoids the collapse.
+                child: IndexedStack(
+                  index: _selectedIndex,
+                  sizing: StackFit.expand,
                   children: List.generate(_rootPages.length, (i) {
-                    // Keep all tab navigators alive but only show the active one.
-                    return Offstage(
-                      offstage: _selectedIndex != i,
-                      child: Navigator(
-                        key: _navigatorKeys[i],
-                        onGenerateRoute: (_) => MaterialPageRoute(
-                          builder: (_) => _rootPages[i],
-                        ),
+                    return Navigator(
+                      key: _navigatorKeys[i],
+                      onGenerateRoute: (_) => MaterialPageRoute(
+                        builder: (_) => _rootPages[i],
                       ),
                     );
                   }),
