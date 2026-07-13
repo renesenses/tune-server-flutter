@@ -43,13 +43,6 @@ class iPhoneContentView extends StatefulWidget {
 class _iPhoneContentViewState extends State<iPhoneContentView> {
   int _selectedIndex = 0;
 
-  // One Navigator key per tab so sub-page pushes stay inside the tab area
-  // and the bottom bar is never hidden.
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    5,
-    (_) => GlobalKey<NavigatorState>(),
-  );
-
   static const _rootPages = [
     LibraryView(),
     StreamingView(),
@@ -73,10 +66,8 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final nav = _navigatorKeys[_selectedIndex].currentState;
-        if (nav != null && nav.canPop()) {
-          nav.pop();
-        }
+        final nav = Navigator.of(context);
+        if (nav.canPop()) nav.pop();
       },
       child: Scaffold(
         backgroundColor: TuneColors.background,
@@ -84,28 +75,24 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
           child: Column(
             children: [
               Expanded(
-                // Tab pages: IndexedStack keeps every tab's Navigator alive and
-                // shows only the active one, laying ALL children out at full
-                // size (so the active page always has proper constraints).
-                // The previous Stack + Offstage(Navigator) approach left the
-                // content black in the iPhone/portrait layout even with
-                // StackFit.expand: a Navigator built while its Offstage was
-                // collapsed (zero-size) did not re-layout its route when shown,
-                // so the page area rendered blank (Elie/Bertrand, Android
-                // portrait; the iPad layout puts the page directly in an
-                // Expanded and renders fine). IndexedStack is the idiomatic
-                // pattern for persistent tab content and avoids the collapse.
+                // Tab pages: IndexedStack keeps every tab alive and shows only
+                // the active one, laying all children out at full size — the
+                // active page always has proper constraints.
+                //
+                // The pages are placed DIRECTLY (no per-tab Navigator). The
+                // previous approach wrapped each tab in a Navigator whose root
+                // route was a MaterialPageRoute: nested inside an IndexedStack,
+                // that route left the content BLACK on the first frame on some
+                // Android GPUs (Elie, Xiaomi/Android 16, portrait) — its
+                // entrance transition/opacity never resolved for a non-top-level
+                // Navigator. The iPad layout renders the page straight into an
+                // Expanded and never shows the black; this mirrors it. Sub-page
+                // pushes now go to the root Navigator (full-screen), which is
+                // fine and matches the iPad behaviour.
                 child: IndexedStack(
                   index: _selectedIndex,
                   sizing: StackFit.expand,
-                  children: List.generate(_rootPages.length, (i) {
-                    return Navigator(
-                      key: _navigatorKeys[i],
-                      onGenerateRoute: (_) => MaterialPageRoute(
-                        builder: (_) => _rootPages[i],
-                      ),
-                    );
-                  }),
+                  children: _rootPages,
                 ),
               ),
               // Reserve space for the mini player at the bottom so content
