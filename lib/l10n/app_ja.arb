@@ -492,6 +492,8 @@
   "librarySortYear": "年",
   "librarySortOriginalYear": "オリジナル年",
   "librarySortAddedDate": "追加日",
+  "librarySortAscending": "昇順",
+  "librarySortDescending": "降順",
   "addFavorite": "お気に入りに追加",
   "addFolder": "フォルダを追加",
   "addThisFolder": "このフォルダを追加",

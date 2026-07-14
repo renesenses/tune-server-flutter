@@ -48,14 +48,32 @@ class LibraryState extends ChangeNotifier {
   AlbumSortField _albumSortField = AlbumSortField.title;
   AlbumSortField get albumSortField => _albumSortField;
 
+  // Ascending = A→Z / chronological (oldest first) / oldest added first.
+  // Descending reverses it (Z→A / newest first). Defaults to ascending so the
+  // year sorts read chronologically.
+  bool _albumSortAscending = true;
+  bool get albumSortAscending => _albumSortAscending;
+
   void setAlbumSort(AlbumSortField field) {
     if (_albumSortField == field) return;
     _albumSortField = field;
     notifyListeners();
   }
 
+  void setAlbumSortAscending(bool ascending) {
+    if (_albumSortAscending == ascending) return;
+    _albumSortAscending = ascending;
+    notifyListeners();
+  }
+
+  void toggleAlbumSortDirection() {
+    _albumSortAscending = !_albumSortAscending;
+    notifyListeners();
+  }
+
   List<Album> get _sortedAlbums {
     final sorted = List<Album>.from(_albums);
+    // Compare in ascending order; reverse below for descending.
     switch (_albumSortField) {
       case AlbumSortField.title:
         sorted.sort((a, b) => (a.title).compareTo(b.title));
@@ -63,15 +81,15 @@ class LibraryState extends ChangeNotifier {
         sorted.sort((a, b) =>
             (a.artistName ?? '').compareTo(b.artistName ?? ''));
       case AlbumSortField.year:
-        sorted.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+        sorted.sort((a, b) => (a.year ?? 0).compareTo(b.year ?? 0));
       case AlbumSortField.originalYear:
         sorted.sort((a, b) =>
-            (b.originalYear ?? b.year ?? 0)
-                .compareTo(a.originalYear ?? a.year ?? 0));
+            (a.originalYear ?? a.year ?? 0)
+                .compareTo(b.originalYear ?? b.year ?? 0));
       case AlbumSortField.addedDate:
-        sorted.sort((a, b) => b.id.compareTo(a.id)); // higher ID = added later
+        sorted.sort((a, b) => a.id.compareTo(b.id)); // higher ID = added later
     }
-    return sorted;
+    return _albumSortAscending ? sorted : sorted.reversed.toList();
   }
 
   // ---------------------------------------------------------------------------

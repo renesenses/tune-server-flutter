@@ -1201,6 +1201,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get librarySortAddedDate => '添加日期';
 
   @override
+  String get librarySortAscending => '升序';
+
+  @override
+  String get librarySortDescending => '降序';
+
+  @override
   String get addFavorite => '加入收藏';
 
   @override

@@ -1217,6 +1217,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get librarySortAddedDate => 'Date d\'ajout';
 
   @override
+  String get librarySortAscending => 'Croissant';
+
+  @override
+  String get librarySortDescending => 'Décroissant';
+
+  @override
   String get addFavorite => 'Ajouter aux favoris';
 
   @override

@@ -104,6 +104,21 @@ class _ShuffleAllBar extends StatelessWidget {
           const Spacer(),
           // Sort selector
           _AlbumSortSelector(lib: lib),
+          // Sort direction toggle (ascending = chronological for the year sorts)
+          IconButton(
+            icon: Icon(
+              lib.albumSortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+              size: 20,
+              color: TuneColors.textSecondary,
+            ),
+            tooltip: lib.albumSortAscending
+                ? l.librarySortAscending
+                : l.librarySortDescending,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => lib.toggleAlbumSortDirection(),
+          ),
         ],
       ),
     );

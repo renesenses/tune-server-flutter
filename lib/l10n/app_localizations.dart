@@ -2402,6 +2402,18 @@ abstract class AppLocalizations {
   /// **'Date Added'**
   String get librarySortAddedDate;
 
+  /// No description provided for @librarySortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get librarySortAscending;
+
+  /// No description provided for @librarySortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get librarySortDescending;
+
   /// No description provided for @addFavorite.
   ///
   /// In en, this message translates to:
