@@ -1206,6 +1206,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get librarySortAddedDate => '追加日';
 
   @override
+  String get librarySortAscending => '昇順';
+
+  @override
+  String get librarySortDescending => '降順';
+
+  @override
   String get addFavorite => 'お気に入りに追加';
 
   @override

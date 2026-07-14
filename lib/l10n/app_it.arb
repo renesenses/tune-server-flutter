@@ -492,6 +492,8 @@
   "librarySortYear": "Anno",
   "librarySortOriginalYear": "Anno originale",
   "librarySortAddedDate": "Data di aggiunta",
+  "librarySortAscending": "Crescente",
+  "librarySortDescending": "Decrescente",
   "addFavorite": "Aggiungi ai preferiti",
   "addFolder": "Aggiungi una cartella",
   "addThisFolder": "Aggiungi questa cartella",

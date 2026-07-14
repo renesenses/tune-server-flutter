@@ -1205,6 +1205,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get librarySortAddedDate => '추가 날짜';
 
   @override
+  String get librarySortAscending => '오름차순';
+
+  @override
+  String get librarySortDescending => '내림차순';
+
+  @override
   String get addFavorite => '즐겨찾기에 추가';
 
   @override

@@ -492,6 +492,8 @@
   "librarySortYear": "年份",
   "librarySortOriginalYear": "原始年份",
   "librarySortAddedDate": "添加日期",
+  "librarySortAscending": "升序",
+  "librarySortDescending": "降序",
   "addFavorite": "加入收藏",
   "addFolder": "添加文件夹",
   "addThisFolder": "添加此文件夹",
