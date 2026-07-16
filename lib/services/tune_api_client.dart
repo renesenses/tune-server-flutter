@@ -29,6 +29,12 @@ class TuneApiClient {
   /// Auth token injected by AuthService — added to all requests.
   String? authToken;
 
+  /// Active profile id, sent as `X-Profile-Id` so the server scopes per-profile
+  /// data (playlists, favorites, theme, display columns…) to the profile this
+  /// client has selected. Null → server falls back to its global active profile
+  /// (then profile 1), so existing behaviour is unchanged.
+  String? activeProfileId;
+
   /// Called when a 401 response is received — app should clear token and
   /// redirect to login.
   OnUnauthorized? onUnauthorized;
@@ -50,6 +56,9 @@ class TuneApiClient {
     if (json) h['Content-Type'] = 'application/json';
     if (authToken != null && authToken!.isNotEmpty) {
       h['Authorization'] = 'Bearer $authToken';
+    }
+    if (activeProfileId != null && activeProfileId!.isNotEmpty) {
+      h['X-Profile-Id'] = activeProfileId!;
     }
     return h;
   }
