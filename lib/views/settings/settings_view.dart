@@ -1132,6 +1132,9 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
               break;
             }
           }
+          // Send the active profile on every request so the server scopes
+          // playlists/favorites/settings to it.
+          widget.api.activeProfileId = _activeProfileId?.toString();
           _loading = false;
         });
       }
@@ -1143,6 +1146,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
   Future<void> _selectProfile(int id) async {
     try {
       await widget.api.updateProfile(id, {'active': true});
+      widget.api.activeProfileId = id.toString();
       setState(() => _activeProfileId = id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
