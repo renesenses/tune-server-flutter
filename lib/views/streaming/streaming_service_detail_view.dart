@@ -10,6 +10,7 @@ import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
+import '../../widgets/favorite_button.dart';
 import '../helpers/tune_fonts.dart';
 import 'streaming_album_detail_view.dart';
 import 'streaming_helpers.dart';
@@ -342,10 +343,21 @@ class _ResultTile extends StatelessWidget {
           style: TuneFonts.body, maxLines: 1,
           overflow: TextOverflow.ellipsis),
       subtitle: _subtitle,
-      trailing: IconButton(
-        icon: const Icon(Icons.more_vert_rounded,
-            size: 18, color: TuneColors.textTertiary),
-        onPressed: () => _showMenu(context, app),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FavoriteButton(
+            isFavorite: app.libraryState.isStreamingFavorite(
+                result.type, result.serviceId, result.id),
+            size: 18,
+            onToggle: () => app.toggleStreamingFavorite(result),
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert_rounded,
+                size: 18, color: TuneColors.textTertiary),
+            onPressed: () => _showMenu(context, app),
+          ),
+        ],
       ),
     );
   }

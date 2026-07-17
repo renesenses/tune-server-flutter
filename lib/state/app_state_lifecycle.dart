@@ -152,6 +152,7 @@ extension AppStateLifecycle on AppState {
         _refreshRadiosRemote(),
         _refreshLibraryRemote(),
         _refreshStreamingServicesRemote(),
+        loadStreamingFavorites(),
       ]);
 
       // Start polling for position updates (every 3s)

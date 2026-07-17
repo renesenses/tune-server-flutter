@@ -240,6 +240,29 @@ class LibraryState extends ChangeNotifier {
   bool isTrackFavorite(int trackId) =>
       _favoriteTracks.any((t) => t.id == trackId);
 
+  // Favoris streaming (Qobuz/Tidal/… « cœur » par profil), en cache mémoire pour
+  // qu'une ligne réponde en O(1) sans appel API. Clé = `itemType:service:serviceId`.
+  Set<String> _streamingFavKeys = {};
+
+  String streamingFavKey(String itemType, String service, String serviceId) =>
+      '$itemType:$service:$serviceId';
+
+  bool isStreamingFavorite(String itemType, String service, String serviceId) =>
+      _streamingFavKeys.contains(streamingFavKey(itemType, service, serviceId));
+
+  void setStreamingFavKeys(Set<String> keys) {
+    _streamingFavKeys = keys;
+    notifyListeners();
+  }
+
+  void addStreamingFavKey(String key) {
+    if (_streamingFavKeys.add(key)) notifyListeners();
+  }
+
+  void removeStreamingFavKey(String key) {
+    if (_streamingFavKeys.remove(key)) notifyListeners();
+  }
+
   // ---------------------------------------------------------------------------
   // Playlists
   // ---------------------------------------------------------------------------
