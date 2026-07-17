@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/enums.dart';
+import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
@@ -10,6 +11,7 @@ import '../helpers/skip_button.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../nowplaying/now_playing_view.dart';
+import '../nowplaying/volume_control_view.dart';
 import '../streaming/streaming_helpers.dart';
 
 // ---------------------------------------------------------------------------
@@ -20,8 +22,17 @@ import '../streaming/streaming_helpers.dart';
 // Miroir de MiniPlayerView.swift (iOS)
 // ---------------------------------------------------------------------------
 
-class MiniPlayerView extends StatelessWidget {
+class MiniPlayerView extends StatefulWidget {
   const MiniPlayerView({super.key});
+
+  @override
+  State<MiniPlayerView> createState() => _MiniPlayerViewState();
+}
+
+class _MiniPlayerViewState extends State<MiniPlayerView> {
+  bool _expanded = false;
+
+  void _toggle() => setState(() => _expanded = !_expanded);
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +48,189 @@ class MiniPlayerView extends StatelessWidget {
     return Material(
       color: TuneColors.miniPlayerBg,
       elevation: 8,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      // Swipe up on the bar to reveal zone + volume + follow-me; swipe down to
+      // collapse. The grab handle also toggles on tap.
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragEnd: (details) {
+          final v = details.primaryVelocity ?? 0;
+          if (v < -80 && !_expanded) {
+            setState(() => _expanded = true);
+          } else if (v > 80 && _expanded) {
+            setState(() => _expanded = false);
+          }
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Divider(height: 1),
+            _GrabHandle(expanded: _expanded, onTap: _toggle),
+            _MiniPlayerContent(),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              child: _expanded
+                  ? const _ExpandedControls()
+                  : const SizedBox(width: double.infinity),
+            ),
+            _ProgressBar(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Poignée d'expansion (tap ou swipe)
+// ---------------------------------------------------------------------------
+
+class _GrabHandle extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onTap;
+  const _GrabHandle({required this.expanded, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.only(top: 4, bottom: 2),
+        child: Container(
+          width: 34,
+          height: 4,
+          decoration: BoxDecoration(
+            color: TuneColors.textTertiary.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rangée étendue : sélecteur de zone · volume · follow-me
+// ---------------------------------------------------------------------------
+
+class _ExpandedControls extends StatelessWidget {
+  const _ExpandedControls();
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.read<AppState>();
+    final zoneState = context.watch<ZoneState>();
+    final zones = zoneState.zones;
+    final currentId = zoneState.currentZoneId;
+    final current = zoneState.currentZone;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 8, 8),
+      child: Row(
         children: [
-          const Divider(height: 1),
-          _MiniPlayerContent(),
-          _ProgressBar(),
+          // Sélecteur de zone → change la zone contrôlée
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _pickZone(
+              context,
+              zones,
+              currentId,
+              title: 'Changer de zone',
+              onPick: (id) => app.selectZone(id),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.speaker_group_rounded,
+                      size: 18, color: TuneColors.textSecondary),
+                  const SizedBox(width: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 90),
+                    child: Text(
+                      current?.name ?? 'Zone',
+                      style: TuneFonts.footnote,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down_rounded,
+                      size: 18, color: TuneColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          // Volume de la zone active
+          const Expanded(child: VolumeControlView()),
+          // Follow me → transfère la lecture vers une zone choisie
+          IconButton(
+            icon: const Icon(Icons.move_up_rounded),
+            iconSize: 20,
+            color: TuneColors.textSecondary,
+            tooltip: 'Follow me',
+            onPressed: () => _pickZone(
+              context,
+              zones.where((z) => z.id != currentId).toList(),
+              null,
+              title: 'Amener la lecture vers…',
+              onPick: (id) => app.followMeTo(id),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _pickZone(
+    BuildContext context,
+    List<ZoneWithState> zones,
+    int? currentId, {
+    required String title,
+    required void Function(int) onPick,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(title, style: TuneFonts.body),
+              ),
+            ),
+            if (zones.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Aucune autre zone', style: TuneFonts.footnote),
+              ),
+            for (final z in zones)
+              ListTile(
+                leading: Icon(
+                  z.id == currentId
+                      ? Icons.check_circle_rounded
+                      : Icons.speaker_rounded,
+                  color: z.id == currentId
+                      ? TuneColors.accent
+                      : TuneColors.textSecondary,
+                ),
+                title: Text(z.name, style: TuneFonts.body),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  onPick(z.id);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
