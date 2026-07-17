@@ -195,4 +195,61 @@ extension AppStateLibrary on AppState {
   }
 
   Future<void> refreshFavoriteTracks() => _refreshFavoriteTracks();
+
+  // ---------------------------------------------------------------------------
+  // Favoris streaming (par profil)
+  // ---------------------------------------------------------------------------
+
+  /// Charge en cache les clés des favoris streaming du profil actif (mode
+  /// distant) pour que le cœur de chaque ligne réponde en O(1).
+  Future<void> loadStreamingFavorites() async {
+    if (!isRemoteMode || _apiClient == null) return;
+    final pid = int.tryParse(_apiClient!.activeProfileId ?? '');
+    if (pid == null) return;
+    try {
+      final raw = await _apiClient!.getProfileStreamingFavorites(pid);
+      final keys = <String>{};
+      for (final f in raw) {
+        if (f is Map) {
+          final it = f['item_type']?.toString();
+          final svc = f['service']?.toString();
+          final sid = f['service_id']?.toString();
+          if (it != null && svc != null && sid != null) {
+            keys.add(libraryState.streamingFavKey(it, svc, sid));
+          }
+        }
+      }
+      libraryState.setStreamingFavKeys(keys);
+    } catch (_) {
+      // Best-effort: an empty cache just means hearts start unfilled.
+    }
+  }
+
+  /// Toggle le favori streaming d'un résultat. Retourne le nouvel état.
+  Future<bool> toggleStreamingFavorite(StreamingSearchResult r) async {
+    final pid = int.tryParse(_apiClient?.activeProfileId ?? '');
+    if (pid == null || _apiClient == null) return false;
+    final key = libraryState.streamingFavKey(r.type, r.serviceId, r.id);
+    final wasFav = libraryState.isStreamingFavorite(r.type, r.serviceId, r.id);
+    if (wasFav) {
+      await _apiClient!.removeProfileStreamingFavorite(pid, {
+        'item_type': r.type,
+        'service': r.serviceId,
+        'service_id': r.id,
+      });
+      libraryState.removeStreamingFavKey(key);
+      return false;
+    }
+    await _apiClient!.addProfileStreamingFavorite(pid, {
+      'item_type': r.type,
+      'service': r.serviceId,
+      'service_id': r.id,
+      'title': r.title,
+      'artist': r.artist,
+      'album': r.album,
+      'cover_url': r.coverUrl,
+    });
+    libraryState.addStreamingFavKey(key);
+    return true;
+  }
 }
