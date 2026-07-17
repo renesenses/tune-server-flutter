@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../state/app_state.dart';
+import 'remote_favorites_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import '../search/global_search_overlay.dart';
@@ -89,7 +92,11 @@ class _LibraryViewState extends State<LibraryView>
           const AlbumsGridView(),
           const ArtistsListView(),
           const TracksListView(),
-          const FavoriteTracksView(),
+          // Remote mode: rich favorites (local + streaming Tune + service).
+          // Embedded mode: local DB tracks only.
+          context.watch<AppState>().isRemoteMode
+              ? const RemoteFavoritesView()
+              : const FavoriteTracksView(),
           const PlaylistManagerView(),
           if (_showAppleMusic) const AppleMusicView(),
         ],

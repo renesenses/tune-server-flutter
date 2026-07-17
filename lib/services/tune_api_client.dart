@@ -1173,6 +1173,39 @@ class TuneApiClient {
   Future<void> removeProfileStreamingFavorite(int profileId, Map<String, dynamic> params) async =>
       await _post('/api/v1/profiles/$profileId/favorites/streaming/remove', body: params);
 
+  // --- Local (library) profile favorites, remote mode ---
+  // The server returns a flat list of records [{item_type, item_id}]; callers
+  // hydrate each via the by-id endpoints below.
+  Future<List<dynamic>> getProfileFavorites(int profileId, {String? type}) async {
+    final q = type != null ? '?item_type=$type' : '';
+    final raw = await _get('/api/v1/profiles/$profileId/favorites$q');
+    return raw is List ? raw : [];
+  }
+
+  Future<Map<String, dynamic>?> getTrackById(int id) async {
+    try {
+      return await _get('/api/v1/library/tracks/$id') as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getAlbumById(int id) async {
+    try {
+      return await _get('/api/v1/library/albums/$id') as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getArtistById(int id) async {
+    try {
+      return await _get('/api/v1/library/artists/$id') as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // ── Genre Tree ──
   // ---------------------------------------------------------------------------
