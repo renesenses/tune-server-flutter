@@ -156,4 +156,22 @@ extension AppStateZones on AppState {
     zoneState.setCurrentZoneId(newZoneId);
     await _refreshZones();
   }
+
+  /// « Follow me » : transfère la lecture en cours vers [targetZoneId] (le son
+  /// te suit), puis rend cette zone active pour continuer à la contrôler.
+  /// Mode distant : POST /zones/{from}/transfer/{to} via l'API.
+  Future<void> followMeTo(int targetZoneId) async {
+    final from = zoneState.currentZoneId;
+    if (from == null || from == targetZoneId) return;
+    if (isRemoteMode && _apiClient != null) {
+      try {
+        await _apiClient!.transferPlayback(from, targetZoneId);
+      } catch (e) {
+        debugPrint('followMeTo transferPlayback error: $e');
+        return;
+      }
+    }
+    // Follow the playback: make the target zone the one we now control.
+    await selectZone(targetZoneId);
+  }
 }
