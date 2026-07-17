@@ -1157,6 +1157,22 @@ class TuneApiClient {
   Future<void> removeStreamingFavorite(String service, String type, {required String itemId}) async =>
       await _delete('/api/v1/streaming/$service/favorites/$type?item_id=${Uri.encodeComponent(itemId)}');
 
+  // --- Tune-hearted streaming favorites (per profile) ---
+  // Distinct from getStreamingFavorites(service,type) above (a service's own
+  // favorites). These are items the user hearted in Tune, stored server-side
+  // with metadata. `type` = 'track' | 'album' | 'artist'.
+  Future<List<dynamic>> getProfileStreamingFavorites(int profileId, {String? type}) async {
+    final q = type != null ? '?item_type=$type' : '';
+    final raw = await _get('/api/v1/profiles/$profileId/favorites/streaming$q');
+    return raw is List ? raw : [];
+  }
+
+  Future<void> addProfileStreamingFavorite(int profileId, Map<String, dynamic> fav) async =>
+      await _post('/api/v1/profiles/$profileId/favorites/streaming/add', body: fav);
+
+  Future<void> removeProfileStreamingFavorite(int profileId, Map<String, dynamic> params) async =>
+      await _post('/api/v1/profiles/$profileId/favorites/streaming/remove', body: params);
+
   // ---------------------------------------------------------------------------
   // ── Genre Tree ──
   // ---------------------------------------------------------------------------
