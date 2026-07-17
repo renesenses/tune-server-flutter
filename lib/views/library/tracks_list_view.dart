@@ -7,6 +7,7 @@ import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../../state/settings_state.dart';
 import '../../widgets/metadata_chips.dart';
+import '../../widgets/favorite_button.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -300,6 +301,12 @@ class _TrackTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _QualityBadge(track: track),
+          FavoriteButton(
+            isFavorite: track.favorite,
+            size: 18,
+            onToggle: () =>
+                context.read<AppState>().toggleTrackFavorite(track.id),
+          ),
           IconButton(
             icon: const Icon(Icons.more_vert_rounded,
                 size: 18, color: TuneColors.textTertiary),
