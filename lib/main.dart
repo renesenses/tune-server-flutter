@@ -171,8 +171,15 @@ class TuneServerApp extends StatelessWidget {
         if (child == null) return const SizedBox.shrink();
         final isPhone = MediaQuery.sizeOf(context).width < 768;
         if (!isPhone) return child;
+        // The iPhone tab bar renders at kBottomNavigationBarHeight PLUS the
+        // bottom safe-area inset (Android gesture nav bar / iPhone home
+        // indicator), because BottomNavigationBar pads itself up by that inset.
+        // Lifting the mini-player by the height alone left it overlapping the
+        // tab-bar labels on devices with a bottom inset, so the menu bar looked
+        // gone in portrait (Fabien, Android v0.8.336). Include the safe area.
+        final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
         return PlayerSheetScaffold(
-          sheetBottomInset: kBottomNavigationBarHeight,
+          sheetBottomInset: kBottomNavigationBarHeight + safeBottom,
           child: child,
         );
       },
