@@ -8,6 +8,7 @@ import 'state/app_state.dart';
 import 'state/library_state.dart';
 import 'state/settings_state.dart';
 import 'state/zone_state.dart';
+import 'views/components/player_sheet.dart';
 import 'views/helpers/app_theme.dart';
 import 'views/mode_selector_view.dart';
 
@@ -161,6 +162,20 @@ class TuneServerApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      // Mount the player sheet ABOVE the Navigator so the mini-player stays
+      // visible while browsing into sub-pages / folders — pushing a full-screen
+      // route no longer hides it (Rhorn, #1088). Phone only: the iPad layout has
+      // its own now-playing bar. The inset keeps the mini-player above the iPhone
+      // tab bar on the root screen (matches the width breakpoint in RootView).
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        final isPhone = MediaQuery.sizeOf(context).width < 768;
+        if (!isPhone) return child;
+        return PlayerSheetScaffold(
+          sheetBottomInset: kBottomNavigationBarHeight,
+          child: child,
+        );
+      },
       home: const ModeSelectorView(),
     );
   }
