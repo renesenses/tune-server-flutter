@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
-import '../components/player_sheet.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -71,9 +70,11 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       },
       child: Scaffold(
         backgroundColor: TuneColors.background,
-        body: PlayerSheetScaffold(
-          child: Column(
-            children: [
+        // The player sheet is now mounted globally (above the Navigator) in
+        // main.dart so the mini-player survives sub-page pushes into folders
+        // (#1088). The body is just the tab content here.
+        body: Column(
+          children: [
               Expanded(
                 // Tab pages: IndexedStack keeps every tab alive and shows only
                 // the active one, laying all children out at full size — the
@@ -100,7 +101,6 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
               const SizedBox(height: 72),
             ],
           ),
-        ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (i) => setState(() => _selectedIndex = i),

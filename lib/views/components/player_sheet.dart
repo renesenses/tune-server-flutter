@@ -48,7 +48,18 @@ const double _kQueue = 0.95;
 class PlayerSheetScaffold extends StatelessWidget {
   final Widget child;
 
-  const PlayerSheetScaffold({super.key, required this.child});
+  /// Bottom padding applied to the player sheet only (not the content), so the
+  /// mini-player floats ABOVE a persistent bottom bar — the iPhone tab bar —
+  /// instead of covering it. Non-zero when the sheet is mounted globally (above
+  /// the Navigator, so the mini-player survives sub-page pushes into folders —
+  /// Rhorn, #1088): the inset equals the tab-bar height.
+  final double sheetBottomInset;
+
+  const PlayerSheetScaffold({
+    super.key,
+    required this.child,
+    this.sheetBottomInset = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +75,12 @@ class PlayerSheetScaffold extends StatelessWidget {
       children: [
         // Main content — pad bottom so content is never hidden behind mini player
         Positioned.fill(child: child),
-        // Unified player sheet
-        const PlayerSheet(),
+        // Unified player sheet, padded up by sheetBottomInset so it clears a
+        // persistent tab bar underneath (see field doc).
+        Padding(
+          padding: EdgeInsets.only(bottom: sheetBottomInset),
+          child: const PlayerSheet(),
+        ),
       ],
     );
   }
