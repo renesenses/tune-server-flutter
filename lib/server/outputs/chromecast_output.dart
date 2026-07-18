@@ -55,6 +55,19 @@ class ChromecastOutput implements OutputTarget {
   int _mediaSessionId = 0;
   int _requestId = 0;
   Timer? _heartbeatTimer;
+
+  /// Called once when the device reports the current media finished naturally
+  /// (playerState IDLE + idleReason FINISHED). Lets the player advance to the
+  /// next track immediately. Without this the only end-of-track detection is
+  /// position polling, which never fires on Chromecast because isPlaying goes
+  /// false at track end and the poll loop early-returns — hence the 30-60 s
+  /// stall between tracks (Rhorn, Android app casting to Chromecast Audio,
+  /// #1072). Mirrors the Rust server's idle_reason==Finished handling (#649).
+  void Function()? onCompleted;
+
+  /// mediaSessionId whose FINISHED was already reported, so repeated IDLE
+  /// status messages for the same session don't advance twice.
+  int _finishedReportedFor = -1;
   final _pendingRequests = <int, Completer<Map<String, dynamic>>>{};
   final _incomingBuffer = <int>[];
 
@@ -738,6 +751,19 @@ class ChromecastOutput implements OutputTarget {
     final playerState = status['playerState'] as String?;
     if (playerState != null) {
       _playing = playerState == 'PLAYING' || playerState == 'BUFFERING';
+    }
+
+    // End of track: Chromecast goes IDLE with idleReason FINISHED. Signal the
+    // player so it advances at once instead of waiting on the broken position
+    // fallback. Dedup per mediaSessionId — the device repeats the IDLE status.
+    // Other idle reasons (CANCELLED/INTERRUPTED/ERROR, or a new LOAD) must NOT
+    // advance the queue.
+    final idleReason = status['idleReason'] as String?;
+    if (playerState == 'IDLE' && idleReason == 'FINISHED') {
+      if (_finishedReportedFor != _mediaSessionId) {
+        _finishedReportedFor = _mediaSessionId;
+        onCompleted?.call();
+      }
     }
 
     _updatePositionFromMediaStatus(status);
