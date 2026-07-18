@@ -7,6 +7,7 @@ import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
+import '../../widgets/favorite_button.dart';
 
 // ---------------------------------------------------------------------------
 // T13.3 — StreamingAlbumDetailView
@@ -33,52 +34,11 @@ class _StreamingAlbumDetailViewState
   List<StreamingSearchResult>? _tracks;
   bool _loading = true;
   String? _error;
-  bool _isFavorite = false;
-  bool _favoriteLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadAlbum();
-  }
-
-  Future<void> _toggleFavorite() async {
-    final app = context.read<AppState>();
-    final api = app.apiClient;
-    if (api == null) return;
-
-    final albumId = widget.track.raw['album_id']?.toString() ??
-        widget.track.raw['album']?['id']?.toString() ??
-        widget.track.id;
-
-    setState(() => _favoriteLoading = true);
-    try {
-      if (_isFavorite) {
-        await api.removeStreamingFavorite(
-          widget.track.serviceId,
-          'albums',
-          itemId: albumId,
-        );
-      } else {
-        await api.addStreamingFavorite(
-          widget.track.serviceId,
-          'albums',
-          itemId: albumId,
-        );
-      }
-      if (mounted) setState(() => _isFavorite = !_isFavorite);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: TuneColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _favoriteLoading = false);
-    }
   }
 
   Future<void> _loadAlbum() async {
@@ -133,30 +93,18 @@ class _StreamingAlbumDetailViewState
             overflow: TextOverflow.ellipsis),
         actions: [
           if (app.apiClient != null)
-            _favoriteLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: TuneColors.accent),
-                    ),
-                  )
-                : IconButton(
-                    icon: Icon(
-                      _isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: _isFavorite
-                          ? TuneColors.error
-                          : TuneColors.textSecondary,
-                    ),
-                    tooltip: _isFavorite
-                        ? 'Remove from favorites'
-                        : 'Add to favorites',
-                    onPressed: _toggleFavorite,
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              // Same per-profile streaming favourite as the catalog cards and
+              // track rows (was a separate non-profile addStreamingFavorite
+              // path that never reflected the shared favourite state).
+              child: FavoriteButton(
+                isFavorite: app.libraryState.isStreamingFavorite(
+                    track.type, track.serviceId, track.id),
+                size: 22,
+                onToggle: () => app.toggleStreamingFavorite(track),
+              ),
+            ),
         ],
       ),
       body: CustomScrollView(
