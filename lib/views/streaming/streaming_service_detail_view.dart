@@ -281,6 +281,7 @@ class _AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final app = context.read<AppState>();
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -292,7 +293,29 @@ class _AlbumCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ArtworkView(url: result.coverUrl, size: 130, cornerRadius: 8),
+            // Artwork + quick favourite heart (same per-profile streaming
+            // favourite the track rows and the album detail use).
+            Stack(
+              children: [
+                ArtworkView(url: result.coverUrl, size: 130, cornerRadius: 8),
+                Positioned(
+                  right: 2,
+                  bottom: 2,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    child: FavoriteButton(
+                      isFavorite: app.libraryState.isStreamingFavorite(
+                          result.type, result.serviceId, result.id),
+                      size: 18,
+                      onToggle: () => app.toggleStreamingFavorite(result),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 6),
             Text(result.title, style: TuneFonts.caption,
                 maxLines: 1, overflow: TextOverflow.ellipsis),
