@@ -8,6 +8,7 @@ import '../audio/local_audio_output.dart';
 import '../configuration.dart';
 import '../database/database.dart';
 import '../event_bus.dart';
+import '../outputs/chromecast_output.dart';
 import '../outputs/dlna_output.dart';
 import '../outputs/output_target.dart';
 import 'play_queue.dart';
@@ -125,6 +126,16 @@ class Player {
         }
       });
     } else {
+      // Chromecast reports end-of-track natively (IDLE + idleReason FINISHED);
+      // wire it straight to the advance path. The position polling below never
+      // catches Chromecast's track end because isPlaying goes false when the
+      // device idles, so the loop early-returns (Rhorn, #1072).
+      if (output is ChromecastOutput) {
+        output.onCompleted = () {
+          if (!_crossfading) _onTrackCompleted();
+        };
+      }
+
       // DLNA / AirPlay : polling toutes les 5 secondes
       // Les renderers DLNA (DMP-A8) sont sensibles aux requêtes SOAP fréquentes
       _positionTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
