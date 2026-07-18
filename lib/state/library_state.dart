@@ -114,10 +114,12 @@ class LibraryState extends ChangeNotifier {
   AudioQuality? _selectedQuality;
   String? _selectedFormat;
   int? _selectedMinSampleRate;
+  int? _selectedYear;
 
   AudioQuality? get selectedQuality => _selectedQuality;
   String? get selectedFormat => _selectedFormat;
   int? get selectedMinSampleRate => _selectedMinSampleRate;
+  int? get selectedYear => _selectedYear;
 
   void setQualityFilter(AudioQuality? quality) {
     _selectedQuality = (_selectedQuality == quality) ? null : quality;
@@ -134,21 +136,47 @@ class LibraryState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Toggle the year filter (tapping the active year clears it).
+  void setYearFilter(int? year) {
+    _selectedYear = (_selectedYear == year) ? null : year;
+    notifyListeners();
+  }
+
   void clearFilters() {
     _selectedQuality = null;
     _selectedFormat = null;
     _selectedMinSampleRate = null;
+    _selectedYear = null;
     notifyListeners();
   }
 
   bool get hasActiveFilters =>
       _selectedQuality != null ||
       _selectedFormat != null ||
+      _selectedMinSampleRate != null ||
+      _selectedYear != null;
+
+  bool get _hasChipFilters =>
+      _selectedQuality != null ||
+      _selectedFormat != null ||
       _selectedMinSampleRate != null;
 
-  /// Returns albums filtered by current quality/format/sampleRate filters.
-  List<Album> get filteredAlbums {
-    if (!hasActiveFilters) return albums;
+  /// True when albums are sorted by a year field (release or original).
+  bool get isYearSort =>
+      _albumSortField == AlbumSortField.year ||
+      _albumSortField == AlbumSortField.originalYear;
+
+  /// The year of an album, consistent with the active year sort field so the
+  /// index and the filter agree (originalYear sort falls back to year).
+  int? _yearOf(Album a) => _albumSortField == AlbumSortField.originalYear
+      ? (a.originalYear ?? a.year)
+      : a.year;
+
+  /// Albums after the quality/format/sampleRate filters but BEFORE the year
+  /// filter. The year index derives from this so every year stays selectable
+  /// while one is active.
+  List<Album> get _albumsBeforeYearFilter {
+    if (!_hasChipFilters) return albums;
     return _sortedAlbums.where((album) {
       final info = _albumAudioInfo[album.id];
       if (info == null) return false;
@@ -168,6 +196,26 @@ class LibraryState extends ChangeNotifier {
       }
       return true;
     }).toList();
+  }
+
+  /// Returns albums filtered by current quality/format/sampleRate + year filters.
+  List<Album> get filteredAlbums {
+    final base = _albumsBeforeYearFilter;
+    if (_selectedYear == null) return base;
+    return base.where((a) => _yearOf(a) == _selectedYear).toList();
+  }
+
+  /// Distinct years for the year index (when sorting by year), ordered per the
+  /// current sort direction. Derived from the chip-filtered set so all years
+  /// remain selectable even while one is filtered.
+  List<int> get albumYears {
+    final years = <int>{};
+    for (final a in _albumsBeforeYearFilter) {
+      final y = _yearOf(a);
+      if (y != null && y > 0) years.add(y);
+    }
+    final sorted = years.toList()..sort();
+    return _albumSortAscending ? sorted : sorted.reversed.toList();
   }
 
   /// Available formats derived from album audio info.

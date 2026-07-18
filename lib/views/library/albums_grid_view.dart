@@ -49,28 +49,88 @@ class AlbumsGridView extends StatelessWidget {
         // Filter chips row
         if (hasAudioInfo) _AlbumFilterChips(lib: lib),
 
-        // Album grid
+        // Album grid (+ year index on the right when sorting by year)
         Expanded(
-          child: displayedAlbums.isEmpty
-              ? LibraryEmptyState(
-                  icon: Icons.filter_list_off_rounded,
-                  message: l.libraryNoFilterResults,
-                )
-              : GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.72,
-                  ),
-                  itemCount: displayedAlbums.length,
-                  itemBuilder: (_, i) =>
-                      _AlbumCard(album: displayedAlbums[i]),
-                ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: displayedAlbums.isEmpty
+                    ? LibraryEmptyState(
+                        icon: Icons.filter_list_off_rounded,
+                        message: l.libraryNoFilterResults,
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(12),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.72,
+                        ),
+                        itemCount: displayedAlbums.length,
+                        itemBuilder: (_, i) =>
+                            _AlbumCard(album: displayedAlbums[i]),
+                      ),
+              ),
+              if (lib.isYearSort && lib.albumYears.length > 1)
+                _YearIndexBar(lib: lib),
+            ],
+          ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _YearIndexBar — vertical year index on the Albums grid (year sort only).
+// Tapping a year filters the grid to that year; tapping the active year again
+// clears it. Mirrors the web client's year AlphaIndex.
+// ---------------------------------------------------------------------------
+
+class _YearIndexBar extends StatelessWidget {
+  const _YearIndexBar({required this.lib});
+  final LibraryState lib;
+
+  @override
+  Widget build(BuildContext context) {
+    final years = lib.albumYears;
+    final selected = lib.selectedYear;
+    return Container(
+      width: 46,
+      color: TuneColors.surface,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final y in years)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => lib.setYearFilter(y),
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$y',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: y == selected
+                          ? TuneColors.accent
+                          : TuneColors.textSecondary,
+                      fontWeight:
+                          y == selected ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
