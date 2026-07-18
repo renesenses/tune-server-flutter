@@ -53,6 +53,14 @@ class PlayerSheetScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      // Expand to the incoming (full-body) constraints. Without this the Stack
+      // uses StackFit.loose and sizes itself to its only non-positioned child,
+      // PlayerSheet — which collapses to SizedBox.shrink() when nothing is
+      // playing. The Stack then shrank to zero height, the Positioned.fill
+      // content got zero constraints, and the whole portrait screen was BLACK
+      // on launch when no track was playing (Fabien, Android portrait; landscape
+      // uses the iPad layout which has no PlayerSheetScaffold, hence never black).
+      fit: StackFit.expand,
       children: [
         // Main content — pad bottom so content is never hidden behind mini player
         Positioned.fill(child: child),
