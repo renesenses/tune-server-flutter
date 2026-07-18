@@ -272,7 +272,10 @@ class _SheetBody extends StatelessWidget {
                     if (npProgress < 0.8)
                       Opacity(
                         opacity: (1 - npProgress / 0.8).clamp(0.0, 1.0),
-                        child: _MiniRow(track: track),
+                        child: _MiniRow(
+                          track: track,
+                          sheetController: sheetController,
+                        ),
                       ),
 
                     // Now Playing content (fades in as we expand, fades out as we go to queue)
@@ -313,7 +316,22 @@ class _SheetBody extends StatelessWidget {
 
 class _MiniRow extends StatelessWidget {
   final Track? track;
-  const _MiniRow({required this.track});
+  final DraggableScrollableController sheetController;
+  const _MiniRow({required this.track, required this.sheetController});
+
+  /// Expand the sheet to the now-playing snap, which exposes the full
+  /// interactive seek bar and the volume control. Tapping the track (or the
+  /// volume icon) opens it — the 2px mini progress bar itself is not seekable
+  /// (Fabien: "barre trop petite, impossible d'avancer" + "il faudrait une
+  /// icône volume", Android v0.8.336).
+  void _expand() {
+    if (!sheetController.isAttached) return;
+    sheetController.animateTo(
+      _kNowPlaying,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -330,34 +348,53 @@ class _MiniRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              ArtworkView(
-                filePath: track?.coverPath,
-                size: 44,
-                cornerRadius: 6,
-              ),
-              const SizedBox(width: 12),
+              // Tap the artwork + title area to open the full player (seek +
+              // volume live in the now-playing section).
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      track?.title ?? 'No track',
-                      style: TuneFonts.miniTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (track?.artistName != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        track!.artistName!,
-                        style: TuneFonts.miniArtist,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _expand,
+                  child: Row(
+                    children: [
+                      ArtworkView(
+                        filePath: track?.coverPath,
+                        size: 44,
+                        cornerRadius: 6,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              track?.title ?? 'No track',
+                              style: TuneFonts.miniTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (track?.artistName != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                track!.artistName!,
+                                style: TuneFonts.miniArtist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.volume_up_rounded),
+                iconSize: 22,
+                color: TuneColors.textPrimary,
+                tooltip: 'Volume',
+                onPressed: _expand,
               ),
               SkipButton(
                 isForward: false,
