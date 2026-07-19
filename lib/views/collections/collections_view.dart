@@ -313,9 +313,12 @@ class _CollectionDetailViewState
                 )
               : GridView.builder(
                   padding: const EdgeInsets.all(12),
+                  // Target a tile extent instead of a fixed column count so
+                  // cover size stays constant across orientation/screen size,
+                  // same as the Albums grid (#1103).
                   gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     childAspectRatio: 0.72,
