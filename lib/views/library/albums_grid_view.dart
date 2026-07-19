@@ -62,9 +62,16 @@ class AlbumsGridView extends StatelessWidget {
                       )
                     : GridView.builder(
                         padding: const EdgeInsets.all(12),
+                        // Size tiles by a target extent instead of a fixed
+                        // column count so the cover size stays constant across
+                        // orientations (and screen sizes): the column count
+                        // adapts to the available width — 2 columns in phone
+                        // portrait, more in landscape/tablet — instead of the
+                        // covers ballooning when the grid gets wider (#1103).
+                        // 200 keeps the previous ~phone-portrait tile size.
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                           childAspectRatio: 0.72,
