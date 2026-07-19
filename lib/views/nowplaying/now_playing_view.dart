@@ -359,6 +359,7 @@ class _TrackInfo extends StatelessWidget {
                   ),
                 ),
               ],
+              _PlayCount(track: track),
             ],
           ),
         ),
@@ -421,6 +422,67 @@ class _TrackInfo extends StatelessWidget {
             },
           ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Play count — how many times the current local track was played (Progman, #1056)
+// ---------------------------------------------------------------------------
+
+class _PlayCount extends StatefulWidget {
+  final Track? track;
+  const _PlayCount({required this.track});
+
+  @override
+  State<_PlayCount> createState() => _PlayCountState();
+}
+
+class _PlayCountState extends State<_PlayCount> {
+  int? _plays;
+  int? _loadedFor;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _maybeLoad();
+  }
+
+  @override
+  void didUpdateWidget(_PlayCount old) {
+    super.didUpdateWidget(old);
+    _maybeLoad();
+  }
+
+  void _maybeLoad() {
+    final t = widget.track;
+    final id = (t != null && t.source == Source.local.rawValue) ? t.id : null;
+    if (id == _loadedFor) return;
+    _loadedFor = id;
+    _plays = null;
+    if (id == null) {
+      if (mounted) setState(() {});
+      return;
+    }
+    context.read<AppState>().trackPlays(id).then((n) {
+      if (mounted && _loadedFor == id) setState(() => _plays = n);
+    }).catchError((_) {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = _plays;
+    if (n == null || n <= 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.headphones_rounded, size: 13, color: TuneColors.textTertiary),
+          const SizedBox(width: 4),
+          Text('$n', style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary)),
+        ],
+      ),
     );
   }
 }
