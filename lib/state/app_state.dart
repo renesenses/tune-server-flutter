@@ -149,6 +149,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Non-radio play count for a local track (Progman, #1056).
+  Future<int> trackPlays(int trackId) => engine.db.historyRepo.trackPlays(trackId);
+
   // ---------------------------------------------------------------------------
   // Factory
   // ---------------------------------------------------------------------------

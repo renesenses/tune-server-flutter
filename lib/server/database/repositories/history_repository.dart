@@ -86,6 +86,21 @@ class HistoryRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Per-track play count (Progman, #1056)
+  // ---------------------------------------------------------------------------
+
+  /// How many times a track was played, excluding radio.
+  Future<int> trackPlays(int trackId) async {
+    final rows = await _db.customSelect(
+      "SELECT COUNT(*) AS c FROM listen_history "
+      "WHERE track_id = ? AND source != 'radio'",
+      variables: [Variable(trackId)],
+      readsFrom: {_db.listenHistory},
+    ).get();
+    return rows.isEmpty ? 0 : rows.first.read<int>('c');
+  }
+
+  // ---------------------------------------------------------------------------
   // Top artists
   // ---------------------------------------------------------------------------
 
