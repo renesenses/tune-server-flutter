@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -8,6 +10,7 @@ import '../../models/domain_models.dart';
 import '../../models/enums.dart';
 import '../../server/discovery/discovery_manager.dart';
 import '../../services/bluetooth_service.dart';
+import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -437,6 +440,7 @@ class _ActiveZoneBanner extends StatelessWidget {
       case OutputType.dlna:
         return Icons.cast_rounded;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
@@ -461,6 +465,7 @@ class _ActiveZoneBanner extends StatelessWidget {
       case OutputType.dlna:
         return l.zonesOutputDlna;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;
@@ -676,6 +681,18 @@ class _ZoneTile extends StatelessWidget {
                 _showZoneSettings(context);
               },
             ),
+            if (zone.outputType?.isAirplay == true &&
+                zone.outputDeviceId != null &&
+                context.read<AppState>().apiClient != null)
+              ListTile(
+                leading: const Icon(Icons.lock_outline_rounded,
+                    color: TuneColors.textSecondary),
+                title: Text(l.zonesAirplayPair),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showAirplayPairing(context);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.delete_rounded,
                   color: TuneColors.error),
@@ -742,6 +759,21 @@ class _ZoneTile extends StatelessWidget {
     );
   }
 
+  void _showAirplayPairing(BuildContext context) {
+    final apiClient = context.read<AppState>().apiClient;
+    final deviceId = zone.outputDeviceId;
+    if (apiClient == null || deviceId == null) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _AirplayPairingDialog(
+        apiClient: apiClient,
+        deviceId: deviceId,
+        deviceName: zone.name,
+      ),
+    );
+  }
+
   void _confirmDelete(BuildContext context) {
     final zones = context.read<ZoneState>().zones;
     if (zones.length <= 1) {
@@ -759,6 +791,7 @@ class _ZoneTile extends StatelessWidget {
       case OutputType.dlna:
         return Icons.cast_rounded;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
@@ -783,6 +816,7 @@ class _ZoneTile extends StatelessWidget {
       case OutputType.dlna:
         return l.zonesOutputDlna;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;
@@ -2175,5 +2209,257 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
         ),
       ),
     );
+  }
+}
+
+/// AirPlay 2 PIN pairing dialog (#1135).
+///
+/// Drives the server-side pairing flow for AirPlay-2-only TVs (Samsung, LG)
+/// and Apple TV: start pairing → the receiver shows a 4-digit code → the user
+/// types it back → poll until connected/failed. Transient receivers (HomePod)
+/// never need this; they pair automatically on playback.
+class _AirplayPairingDialog extends StatefulWidget {
+  const _AirplayPairingDialog({
+    required this.apiClient,
+    required this.deviceId,
+    required this.deviceName,
+  });
+
+  final TuneApiClient apiClient;
+  final String deviceId;
+  final String deviceName;
+
+  @override
+  State<_AirplayPairingDialog> createState() => _AirplayPairingDialogState();
+}
+
+enum _PairPhase { idle, starting, waitingPin, pinEntry, submitting, connected, failed }
+
+class _AirplayPairingDialogState extends State<_AirplayPairingDialog> {
+  _PairPhase _phase = _PairPhase.idle;
+  final TextEditingController _pinCtrl = TextEditingController();
+  String? _error;
+  bool _polling = false;
+
+  @override
+  void dispose() {
+    _polling = false;
+    _pinCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startPairing() async {
+    setState(() {
+      _error = null;
+      _phase = _PairPhase.starting;
+      _pinCtrl.clear();
+    });
+    try {
+      await widget.apiClient.airplayPairStart(widget.deviceId);
+      if (!mounted) return;
+      setState(() => _phase = _PairPhase.waitingPin);
+      _pollStatus();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _phase = _PairPhase.failed;
+      });
+    }
+  }
+
+  Future<void> _pollStatus() async {
+    if (_polling) return;
+    _polling = true;
+    while (_polling && mounted) {
+      String status;
+      try {
+        final res = await widget.apiClient.airplayPairStatus(widget.deviceId);
+        status = (res['status'] as String?) ?? 'idle';
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _error = e.toString();
+          _phase = _PairPhase.failed;
+        });
+        _polling = false;
+        return;
+      }
+      if (!mounted) return;
+      if (status == 'pin_requested') {
+        if (_phase != _PairPhase.pinEntry && _phase != _PairPhase.submitting) {
+          setState(() => _phase = _PairPhase.pinEntry);
+        }
+      } else if (status == 'connected') {
+        setState(() => _phase = _PairPhase.connected);
+        _polling = false;
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+        if (mounted) Navigator.of(context).pop();
+        return;
+      } else if (status.startsWith('failed:')) {
+        setState(() {
+          _error = status.substring('failed:'.length);
+          _phase = _PairPhase.failed;
+        });
+        _polling = false;
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
+    }
+  }
+
+  Future<void> _submitPin() async {
+    final pin = _pinCtrl.text.trim();
+    if (pin.isEmpty) return;
+    setState(() {
+      _phase = _PairPhase.submitting;
+      _error = null;
+    });
+    try {
+      await widget.apiClient.airplayPairPin(widget.deviceId, pin);
+      // Keep polling — the daemon reports connected/failed via pair-status.
+      _pollStatus();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _phase = _PairPhase.failed;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      backgroundColor: TuneColors.surface,
+      title: Text(l.zonesAirplayPairTitle, style: TuneFonts.title3),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(widget.deviceName,
+              style: const TextStyle(color: TuneColors.textSecondary)),
+          const SizedBox(height: 12),
+          if (_error != null) ...[
+            Text(_error!, style: const TextStyle(color: TuneColors.error)),
+            const SizedBox(height: 12),
+          ],
+          ..._buildPhaseBody(l),
+        ],
+      ),
+      actions: _buildActions(l),
+    );
+  }
+
+  List<Widget> _buildPhaseBody(AppLocalizations l) {
+    switch (_phase) {
+      case _PairPhase.idle:
+        return [
+          Text(l.zonesAirplayPairIntro,
+              style: const TextStyle(color: TuneColors.textSecondary)),
+        ];
+      case _PairPhase.starting:
+      case _PairPhase.waitingPin:
+        return [
+          Row(children: [
+            const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(l.zonesAirplayPairWaiting,
+                    style: const TextStyle(color: TuneColors.textSecondary))),
+          ]),
+        ];
+      case _PairPhase.pinEntry:
+      case _PairPhase.submitting:
+        return [
+          Text(l.zonesAirplayPairEnterCode,
+              style: const TextStyle(color: TuneColors.textSecondary)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _pinCtrl,
+            autofocus: true,
+            enabled: _phase == _PairPhase.pinEntry,
+            keyboardType: TextInputType.number,
+            maxLength: 8,
+            textAlign: TextAlign.center,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(
+                color: TuneColors.textPrimary,
+                fontSize: 24,
+                letterSpacing: 8),
+            decoration: const InputDecoration(
+              counterText: '',
+              hintText: '––––',
+              hintStyle: TextStyle(color: TuneColors.textTertiary),
+            ),
+            onSubmitted: (_) => _submitPin(),
+          ),
+        ];
+      case _PairPhase.connected:
+        return [
+          const Row(children: [
+            Icon(Icons.check_circle_rounded, color: TuneColors.accent),
+            SizedBox(width: 8),
+            Text('OK', style: TextStyle(color: TuneColors.textPrimary)),
+          ]),
+        ];
+      case _PairPhase.failed:
+        return const [];
+    }
+  }
+
+  List<Widget> _buildActions(AppLocalizations l) {
+    switch (_phase) {
+      case _PairPhase.idle:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.btnCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            onPressed: _startPairing,
+            child: Text(l.zonesAirplayPairStart),
+          ),
+        ];
+      case _PairPhase.pinEntry:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.btnCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            onPressed: _submitPin,
+            child: Text(l.zonesAirplayPairSubmit),
+          ),
+        ];
+      case _PairPhase.failed:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.btnCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+            onPressed: _startPairing,
+            child: Text(l.zonesAirplayPairRetry),
+          ),
+        ];
+      case _PairPhase.starting:
+      case _PairPhase.waitingPin:
+      case _PairPhase.submitting:
+      case _PairPhase.connected:
+        return [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.btnCancel),
+          ),
+        ];
+    }
   }
 }

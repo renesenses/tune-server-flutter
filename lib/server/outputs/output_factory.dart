@@ -66,6 +66,7 @@ class OutputFactory {
         );
 
       case OutputType.airplay:
+      case OutputType.airplay2:
         if (Platform.isIOS) {
           return AirPlayOutput();
         }

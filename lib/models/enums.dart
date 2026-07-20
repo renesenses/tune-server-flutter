@@ -96,6 +96,7 @@ enum OutputType {
   local,
   dlna,
   airplay,
+  airplay2,
   bluetooth,
   bluos,
   chromecast,
@@ -104,6 +105,9 @@ enum OutputType {
   oaat;
 
   String get rawValue => name;
+
+  /// True for both legacy AirPlay and AirPlay 2 outputs.
+  bool get isAirplay => this == OutputType.airplay || this == OutputType.airplay2;
 
   static OutputType? fromRawValue(String value) {
     try {
