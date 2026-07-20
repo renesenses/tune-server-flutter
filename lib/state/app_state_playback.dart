@@ -271,6 +271,81 @@ extension AppStatePlayback on AppState {
     zoneState.setQueueSnapshot(instance.queue.snapshot());
   }
 
+  /// "Play next" / "Lire ensuite" : insère [track] juste après la piste
+  /// courante. Si la zone est au repos (rien en lecture : queue vide ou état
+  /// arrêté), démarre AUSSI la lecture de la piste insérée — sinon on
+  /// n'enfilait la piste sans jamais rien jouer (bug web « Lire ensuite » sur
+  /// zone inactive). Si quelque chose joue déjà, on se contente d'enfiler la
+  /// piste sans interrompre la lecture en cours.
+  Future<void> playNext(Track track, {int? zoneId}) async {
+    final id = zoneId ?? zoneState.currentZoneId;
+    if (id == null) return;
+
+    if (isRemoteMode && _apiClient != null) {
+      // La zone est-elle au repos AVANT insertion ? (queue vide / arrêtée)
+      // NB : le serveur REST ne sait qu'ajouter en fin de queue (pas
+      // d'insertion « juste après la courante »). On enfile donc la piste,
+      // et si la zone était au repos on saute dessus pour la jouer.
+      ZoneWithState? z;
+      for (final zone in zoneState.zones) {
+        if (zone.id == id) {
+          z = zone;
+          break;
+        }
+      }
+      final prevLength = z?.queueLength ?? 0;
+      final wasIdle =
+          prevLength == 0 || z == null || z.state == PlaybackState.stopped;
+      final body = <String, dynamic>{};
+      if (track.id != 0 && track.source == Source.local.rawValue) {
+        body['track_id'] = track.id;
+      } else {
+        body['source'] = track.source;
+        body['source_id'] = track.sourceId;
+        body['title'] = track.title;
+        if (track.artistName != null) body['artist'] = track.artistName;
+        if (track.albumTitle != null) body['album'] = track.albumTitle;
+      }
+      try {
+        await _apiClient!.addToQueue(id, body);
+        if (wasIdle) {
+          // La piste vient d'être ajoutée en fin de queue → position prevLength.
+          await _apiClient!.jumpToQueuePosition(id, prevLength);
+        }
+        await refreshZonesRemote();
+      } catch (e) {
+        _lastPlaybackError = 'playback_failed';
+        debugPrint('[playNext] remote error: $e');
+        notify();
+      }
+      return;
+    }
+
+    final instance = engine.zoneManager.zone(id);
+    if (instance == null) return;
+
+    // Idle = rien en lecture : queue vide OU état arrêté.
+    final wasIdle = instance.queue.isEmpty ||
+        instance.playbackState == PlaybackState.stopped;
+
+    final resolved = _resolveTrackSync(track);
+    instance.queue.addNext(resolved);
+
+    if (wasIdle) {
+      // Position de la piste tout juste insérée (juste après la courante).
+      final nextPos = instance.queue.currentIndex < 0
+          ? 0
+          : (instance.queue.currentIndex + 1)
+              .clamp(0, instance.queue.length - 1);
+      instance.player.crossfadeEnabled = settingsState.crossfadeEnabled;
+      instance.player.crossfadeDuration = settingsState.crossfadeDuration;
+      instance.queue.jumpTo(nextPos);
+      await instance.player.play();
+    }
+
+    zoneState.setQueueSnapshot(instance.queue.snapshot());
+  }
+
   // ---------------------------------------------------------------------------
   // Shuffle all — lecture aléatoire de toute la bibliothèque
   // ---------------------------------------------------------------------------

@@ -454,11 +454,7 @@ class _TrackMenu extends StatelessWidget {
             title: Text(AppLocalizations.of(context).libraryPlayNext, style: TuneFonts.body),
             onTap: () {
               Navigator.pop(context);
-              final zoneId = app.zoneState.currentZoneId;
-              if (zoneId != null) {
-                final inst = app.engine.zoneManager.zone(zoneId);
-                inst?.queue.addNext(track);
-              }
+              app.playNext(track);
             },
           ),
           ListTile(
