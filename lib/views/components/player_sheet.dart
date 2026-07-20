@@ -582,10 +582,18 @@ class _TrackInfo extends StatelessWidget {
                 const SizedBox(height: 4),
                 GestureDetector(
                   onTap: () {
+                    // Prefer the track's artistId (reliable even when the
+                    // in-memory artist list isn't loaded or names don't match
+                    // exactly); fall back to matching by name. Silent no-op if
+                    // the artist isn't in the library (e.g. streaming track).
                     final artists = app.libraryState.artists;
-                    final artist = artists.cast<Artist?>().where(
-                      (a) => a?.name == track!.artistName,
-                    ).firstOrNull;
+                    final artist = artists.cast<Artist?>().firstWhere(
+                      (a) => a?.id == track!.artistId,
+                      orElse: () => artists.cast<Artist?>().firstWhere(
+                        (a) => a?.name == track!.artistName,
+                        orElse: () => null,
+                      ),
+                    );
                     if (artist != null) {
                       Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => ArtistDetailView(artist: artist),
@@ -607,12 +615,18 @@ class _TrackInfo extends StatelessWidget {
                 const SizedBox(height: 2),
                 GestureDetector(
                   onTap: () {
+                    // Prefer the track's albumId; fall back to title+artist
+                    // matching. Silent no-op if the album isn't in the library.
                     final albums = app.libraryState.albums;
-                    final album = albums.cast<Album?>().where(
-                      (a) =>
-                          a?.title == track!.albumTitle &&
-                          a?.artistName == track!.artistName,
-                    ).firstOrNull;
+                    final album = albums.cast<Album?>().firstWhere(
+                      (a) => a?.id == track!.albumId,
+                      orElse: () => albums.cast<Album?>().firstWhere(
+                        (a) =>
+                            a?.title == track!.albumTitle &&
+                            a?.artistName == track!.artistName,
+                        orElse: () => null,
+                      ),
+                    );
                     if (album != null) {
                       Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => AlbumDetailView(album: album),

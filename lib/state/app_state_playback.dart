@@ -131,6 +131,13 @@ extension AppStatePlayback on AppState {
   Future<void> setVolume(double volume, {int? zoneId}) async {
     final id = zoneId ?? zoneState.currentZoneId;
     if (id == null) return;
+    // Reflect the new volume in ZoneState immediately so the slider persists
+    // its position instead of snapping back to the stale cached value once the
+    // drag ends (which read as "volume control does nothing").
+    final zone = zoneState.zones.where((z) => z.id == id).firstOrNull;
+    if (zone != null) {
+      zoneState.updateZone(zone.copyWith(volume: volume));
+    }
     if (isRemoteMode && _apiClient != null) {
       await _apiClient!.setVolume(id, volume);
       return;
