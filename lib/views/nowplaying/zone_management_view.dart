@@ -191,6 +191,7 @@ class _ZoneRow extends StatelessWidget {
       case OutputType.dlna:
         return Icons.cast_rounded;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return Icons.airplay_rounded;
       case OutputType.bluetooth:
         return Icons.bluetooth_rounded;
@@ -215,6 +216,7 @@ class _ZoneRow extends StatelessWidget {
       case OutputType.dlna:
         return l.zonesOutputDlna;
       case OutputType.airplay:
+      case OutputType.airplay2:
         return l.zonesOutputAirplay;
       case OutputType.bluetooth:
         return l.zonesOutputBluetooth;

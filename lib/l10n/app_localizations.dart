@@ -752,6 +752,54 @@ abstract class AppLocalizations {
   /// **'AirPlay'**
   String get zonesOutputAirplay;
 
+  /// No description provided for @zonesAirplayPair.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair (PIN code)'**
+  String get zonesAirplayPair;
+
+  /// No description provided for @zonesAirplayPairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AirPlay pairing'**
+  String get zonesAirplayPairTitle;
+
+  /// No description provided for @zonesAirplayPairIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Some TVs (Samsung, LG) and the Apple TV show a 4-digit code on screen. Start pairing, then enter the code.'**
+  String get zonesAirplayPairIntro;
+
+  /// No description provided for @zonesAirplayPairWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the code shown on the device…'**
+  String get zonesAirplayPairWaiting;
+
+  /// No description provided for @zonesAirplayPairEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code shown on the device:'**
+  String get zonesAirplayPairEnterCode;
+
+  /// No description provided for @zonesAirplayPairStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start pairing'**
+  String get zonesAirplayPairStart;
+
+  /// No description provided for @zonesAirplayPairSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit code'**
+  String get zonesAirplayPairSubmit;
+
+  /// No description provided for @zonesAirplayPairRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get zonesAirplayPairRetry;
+
   /// No description provided for @zonesOutputBluetooth.
   ///
   /// In en, this message translates to:

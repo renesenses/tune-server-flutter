@@ -526,6 +526,21 @@ class TuneApiClient {
         if (outputDeviceId != null) 'output_device_id': outputDeviceId,
       }).then((d) => d as Map<String, dynamic>);
 
+  // AirPlay 2 PIN pairing (#1135) — for AirPlay-2-only TVs (Samsung, LG) and
+  // Apple TV that show a 4-digit HomeKit code the user must type back.
+
+  /// Ask the receiver to display its 4-digit pairing code.
+  Future<Map<String, dynamic>> airplayPairStart(String deviceId) =>
+      _post('/outputs/$deviceId/airplay/pair-start').then((d) => (d ?? {}) as Map<String, dynamic>);
+
+  /// Poll the pairing phase: `idle` | `pin_requested` | `connected` | `failed:*`.
+  Future<Map<String, dynamic>> airplayPairStatus(String deviceId) =>
+      _get('/outputs/$deviceId/airplay/pair-status').then((d) => d as Map<String, dynamic>);
+
+  /// Submit the code the user read off the receiver.
+  Future<Map<String, dynamic>> airplayPairPin(String deviceId, String pin) =>
+      _post('/outputs/$deviceId/airplay/pair-pin', body: {'pin': pin}).then((d) => (d ?? {}) as Map<String, dynamic>);
+
   // Mute
 
   Future<Map<String, dynamic>> muteZone(int zoneId, bool muted) =>
