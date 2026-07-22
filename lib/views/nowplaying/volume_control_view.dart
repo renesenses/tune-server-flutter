@@ -71,6 +71,11 @@ class _VolumeControlViewState extends State<VolumeControlView> {
   Widget build(BuildContext context) {
     final zoneVolume =
         context.select<ZoneState, double>((z) => z.currentZone?.volume ?? 0.5);
+    // Fixed-volume outputs (e.g. line-out at unity gain) ignore volume
+    // commands server-side, so disable the control and label it rather than
+    // present a slider that silently does nothing (reads as "inactive").
+    final fixedVolume =
+        context.select<ZoneState, bool>((z) => z.currentZone?.fixedVolume ?? false);
     final displayVolume = _draggingVolume ?? zoneVolume;
     final pct = (displayVolume * 100).round();
 
@@ -81,40 +86,47 @@ class _VolumeControlViewState extends State<VolumeControlView> {
           icon: Icon(_volumeIcon(displayVolume),
               size: 22, color: TuneColors.textSecondary),
           tooltip: 'Mute',
-          onPressed: _toggleMute,
+          onPressed: fixedVolume ? null : _toggleMute,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackShape: const _ThinTrackShape(),
-              thumbShape:
-                  const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape:
-                  const RoundSliderOverlayShape(overlayRadius: 14),
-            ),
-            child: Slider(
-              value: displayVolume.clamp(0.0, 1.0),
-              onChanged: _onVolumeChanged,
-              onChangeEnd: _onVolumeChangeEnd,
-            ),
-          ),
+          child: fixedVolume
+              ? Text(
+                  'Volume fixe',
+                  style: TuneFonts.caption
+                      .copyWith(color: TuneColors.textTertiary),
+                )
+              : SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackShape: const _ThinTrackShape(),
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 14),
+                  ),
+                  child: Slider(
+                    value: displayVolume.clamp(0.0, 1.0),
+                    onChanged: _onVolumeChanged,
+                    onChangeEnd: _onVolumeChangeEnd,
+                  ),
+                ),
         ),
         const SizedBox(width: 6),
         // Pourcentage
-        SizedBox(
-          width: 36,
-          child: Text(
-            '$pct%',
-            style: TuneFonts.caption.copyWith(
-              color: TuneColors.textSecondary,
-              fontFeatures: [const FontFeature.tabularFigures()],
+        if (!fixedVolume)
+          SizedBox(
+            width: 36,
+            child: Text(
+              '$pct%',
+              style: TuneFonts.caption.copyWith(
+                color: TuneColors.textSecondary,
+                fontFeatures: [const FontFeature.tabularFigures()],
+              ),
+              textAlign: TextAlign.right,
             ),
-            textAlign: TextAlign.right,
           ),
-        ),
       ],
     );
   }

@@ -43,6 +43,50 @@ const double _kMini = 0.09;
 const double _kNowPlaying = 0.52;
 const double _kQueue = 0.95;
 
+// ---------------------------------------------------------------------------
+// Shared now-playing navigation — resolve the album/artist for a track and
+// push its detail page. Prefer the track's albumId/artistId (reliable even
+// when the in-memory list isn't loaded or names don't match exactly), fall
+// back to name matching. Silent no-op if nothing resolves (e.g. a streaming
+// track not in the local library). Shared by the expanded _TrackInfo and the
+// collapsed mini-row so the title/artist are tappable everywhere (Fabien:
+// "Les liens du titre et de l'artiste ne sont pas actifs").
+// ---------------------------------------------------------------------------
+
+void _openArtistForTrack(BuildContext context, Track track) {
+  final artists = context.read<AppState>().libraryState.artists;
+  final artist = artists.cast<Artist?>().firstWhere(
+    (a) => a?.id == track.artistId,
+    orElse: () => artists.cast<Artist?>().firstWhere(
+      (a) => a?.name == track.artistName,
+      orElse: () => null,
+    ),
+  );
+  if (artist != null) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ArtistDetailView(artist: artist),
+    ));
+  }
+}
+
+void _openAlbumForTrack(BuildContext context, Track track) {
+  final albums = context.read<AppState>().libraryState.albums;
+  final album = albums.cast<Album?>().firstWhere(
+    (a) => a?.id == track.albumId,
+    orElse: () => albums.cast<Album?>().firstWhere(
+      (a) =>
+          a?.title == track.albumTitle &&
+          a?.artistName == track.artistName,
+      orElse: () => null,
+    ),
+  );
+  if (album != null) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => AlbumDetailView(album: album),
+    ));
+  }
+}
+
 /// Wraps the app content in a [Stack] with the [PlayerSheet] overlaid on top.
 /// Insert this as the [body] of the iPhone scaffold.
 class PlayerSheetScaffold extends StatelessWidget {
@@ -333,6 +377,42 @@ class _MiniRow extends StatelessWidget {
     );
   }
 
+  /// Show a compact popup with the live volume slider so the volume is
+  /// adjustable straight from the mini-player. The slider (VolumeControlView)
+  /// sends every change to the server via AppState.setVolume and updates the
+  /// zone optimistically, so the mini-player volume icon is genuinely
+  /// functional instead of merely expanding the sheet.
+  void _showVolumePopup(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TuneColors.surface,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: TuneColors.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const VolumeControlView(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
@@ -348,53 +428,63 @@ class _MiniRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              // Tap the artwork + title area to open the full player (seek +
-              // volume live in the now-playing section).
+              // Tap the artwork to open the full player (seek + volume live in
+              // the now-playing section). Title and artist are individually
+              // tappable → album / artist detail (Fabien: "Les liens du titre
+              // et de l'artiste ne sont pas actifs").
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _expand,
+                child: ArtworkView(
+                  filePath: track?.coverPath,
+                  size: 44,
+                  cornerRadius: 6,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _expand,
-                  child: Row(
-                    children: [
-                      ArtworkView(
-                        filePath: track?.coverPath,
-                        size: 44,
-                        cornerRadius: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: track?.albumTitle != null
+                          ? () => _openAlbumForTrack(context, track!)
+                          : _expand,
+                      child: Text(
+                        track?.title ?? 'No track',
+                        style: TuneFonts.miniTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              track?.title ?? 'No track',
-                              style: TuneFonts.miniTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (track?.artistName != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                track!.artistName!,
-                                style: TuneFonts.miniArtist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
+                    ),
+                    if (track?.artistName != null) ...[
+                      const SizedBox(height: 2),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _openArtistForTrack(context, track!),
+                        child: Text(
+                          track!.artistName!,
+                          style: TuneFonts.miniArtist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
+              // Volume: tapping the icon opens an in-place slider popup so the
+              // volume is genuinely adjustable from the mini-player without
+              // expanding the whole sheet (Fabien: "l'icône volume toujours
+              // inactive, si je clique dessus ça ouvre le volet").
               IconButton(
                 icon: const Icon(Icons.volume_up_rounded),
                 iconSize: 22,
                 color: TuneColors.textPrimary,
                 tooltip: 'Volume',
-                onPressed: _expand,
+                onPressed: () => _showVolumePopup(context),
               ),
               SkipButton(
                 isForward: false,
@@ -581,25 +671,7 @@ class _TrackInfo extends StatelessWidget {
               if (track?.artistName != null) ...[
                 const SizedBox(height: 4),
                 GestureDetector(
-                  onTap: () {
-                    // Prefer the track's artistId (reliable even when the
-                    // in-memory artist list isn't loaded or names don't match
-                    // exactly); fall back to matching by name. Silent no-op if
-                    // the artist isn't in the library (e.g. streaming track).
-                    final artists = app.libraryState.artists;
-                    final artist = artists.cast<Artist?>().firstWhere(
-                      (a) => a?.id == track!.artistId,
-                      orElse: () => artists.cast<Artist?>().firstWhere(
-                        (a) => a?.name == track!.artistName,
-                        orElse: () => null,
-                      ),
-                    );
-                    if (artist != null) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => ArtistDetailView(artist: artist),
-                      ));
-                    }
-                  },
+                  onTap: () => _openArtistForTrack(context, track!),
                   child: Text(
                     track!.artistName!,
                     style: TuneFonts.subheadline.copyWith(
@@ -614,25 +686,7 @@ class _TrackInfo extends StatelessWidget {
               if (track?.albumTitle != null) ...[
                 const SizedBox(height: 2),
                 GestureDetector(
-                  onTap: () {
-                    // Prefer the track's albumId; fall back to title+artist
-                    // matching. Silent no-op if the album isn't in the library.
-                    final albums = app.libraryState.albums;
-                    final album = albums.cast<Album?>().firstWhere(
-                      (a) => a?.id == track!.albumId,
-                      orElse: () => albums.cast<Album?>().firstWhere(
-                        (a) =>
-                            a?.title == track!.albumTitle &&
-                            a?.artistName == track!.artistName,
-                        orElse: () => null,
-                      ),
-                    );
-                    if (album != null) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => AlbumDetailView(album: album),
-                      ));
-                    }
-                  },
+                  onTap: () => _openAlbumForTrack(context, track!),
                   child: Text(
                     track!.albumTitle!,
                     style: TuneFonts.footnote.copyWith(
