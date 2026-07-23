@@ -116,6 +116,14 @@ class MainActivity : FlutterActivity() {
 
             val extraTags = readExtraTags(path)
 
+            // Extended k/v store — arbitrary Vorbis fields with no dedicated column.
+            val extended = buildMap<String, String> {
+                extraTags["release_country"]?.let { put("release_country", it) }
+                extraTags["mb_release_track_id"]?.let { put("mb_release_track_id", it) }
+                extraTags["encoder_software"]?.let { put("encoder_software", it) }
+                extraTags["source_media"]?.let { put("source_media", it) }
+            }
+
             // Compilation flag: from extra tags (Vorbis/ID3/M4A) or MediaMetadataRetriever (API 30+)
             val isCompilation = extraTags["compilation"] == "1" ||
                 (android.os.Build.VERSION.SDK_INT >= 30 &&
@@ -146,6 +154,7 @@ class MainActivity : FlutterActivity() {
                 "musicbrainzReleaseGroupId" to extraTags["musicbrainzReleaseGroupId"],
                 "discSubtitle" to extraTags["discSubtitle"],
                 "compilation" to isCompilation,
+                "extended" to extended,
             )
         } catch (e: Exception) {
             // Fallback : nom de fichier uniquement
@@ -312,6 +321,16 @@ class MainActivity : FlutterActivity() {
                         out.putIfAbsent("compilation", "1")
                     }
                 }
+                // Extended k/v fields (no dedicated column). ENCODER is the
+                // encoding software — kept distinct from ENCODEDBY (unmatched here).
+                "RELEASECOUNTRY" ->
+                    out.putIfAbsent("release_country", value)
+                "MUSICBRAINZ_RELEASETRACKID" ->
+                    out.putIfAbsent("mb_release_track_id", value)
+                "ENCODER" ->
+                    out.putIfAbsent("encoder_software", value)
+                "SOURCE" ->
+                    out.putIfAbsent("source_media", value)
             }
         }
     }

@@ -188,14 +188,31 @@ class LibraryScanner {
         discSubtitle: Value(meta.discSubtitle),
       );
 
+      final int trackId;
       if (existing == null) {
-        await _db.into(_db.tracks).insert(companion);
+        trackId = await _db.into(_db.tracks).insert(companion);
         added++;
       } else {
         await (_db.update(_db.tracks)
               ..where((t) => t.id.equals(existing.id)))
             .write(companion);
+        trackId = existing.id;
         updated++;
+      }
+
+      // Extended k/v metadata (release_country, mb_release_track_id,
+      // encoder_software, source_media, …) → open track_metadata store.
+      for (final entry in meta.extended.entries) {
+        if (entry.value.isEmpty) continue;
+        await _db.customInsert(
+          'INSERT INTO track_metadata (track_id, key, value) VALUES (?, ?, ?) '
+          'ON CONFLICT(track_id, key) DO UPDATE SET value = excluded.value',
+          variables: [
+            Variable.withInt(trackId),
+            Variable.withString(entry.key),
+            Variable.withString(entry.value),
+          ],
+        );
       }
     });
 

@@ -148,6 +148,8 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
         }
 
         // Extra metadata: disc subtitle + dates + compilation from raw keys (Vorbis, iTunes freeform)
+        // Extended k/v store — arbitrary Vorbis fields with no dedicated column.
+        var extended: [String: String] = [:]
         for format in formats {
             let items = asset.metadata(forFormat: format)
             for item in items {
@@ -199,6 +201,26 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                         }
                     }
                 }
+                // Extended k/v fields. ENCODER (encoding software) is matched
+                // exactly so it stays distinct from ENCODEDBY.
+                let needle = ks.isEmpty ? idStr : ks
+                let mappedKey: String?
+                if needle == "releasecountry" {
+                    mappedKey = "release_country"
+                } else if needle.contains("musicbrainz_releasetrackid")
+                    || needle.contains("musicbrainz release track id") {
+                    mappedKey = "mb_release_track_id"
+                } else if needle == "encoder" {
+                    mappedKey = "encoder_software"
+                } else if needle == "source" {
+                    mappedKey = "source_media"
+                } else {
+                    mappedKey = nil
+                }
+                if let mappedKey, extended[mappedKey] == nil,
+                   let s = item.stringValue, !s.isEmpty {
+                    extended[mappedKey] = s
+                }
             }
         }
 
@@ -232,6 +254,8 @@ public class LibraryPlugin: NSObject, FlutterPlugin {
                 }
             }
         }
+
+        if !extended.isEmpty { dict["extended"] = extended }
 
         return dict
     }

@@ -104,7 +104,7 @@ class TuneDatabase extends _$TuneDatabase {
 
   // Incrémenté à chaque nouvelle migration
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -112,6 +112,7 @@ class TuneDatabase extends _$TuneDatabase {
           await m.createAll();
           await _createFts5Tables(m);
           await _createIndexes(m);
+          await _createTrackMetadataTable();
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -183,6 +184,9 @@ class TuneDatabase extends _$TuneDatabase {
                 'CREATE INDEX IF NOT EXISTS idx_track_source_links_service '
                 'ON track_source_links(service)');
           }
+          if (from < 13) {
+            await _createTrackMetadataTable();
+          }
         },
         beforeOpen: (details) async {
           // Active WAL mode + foreign keys à chaque ouverture
@@ -195,6 +199,20 @@ class TuneDatabase extends _$TuneDatabase {
   // FTS5 virtual tables (content tables synchronisées)
   // Créés en raw SQL — même sémantique que GRDB FTS5()
   // ---------------------------------------------------------------------------
+
+  /// Open key/value store for extended track metadata, mirroring the Rust
+  /// engine's `track_metadata` table. Created in raw SQL (not a Drift table) so
+  /// arbitrary Vorbis fields land here without regenerating the Drift code.
+  Future<void> _createTrackMetadataTable() async {
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS track_metadata (
+        track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY (track_id, key)
+      )
+    ''');
+  }
 
   Future<void> _createFts5Tables(Migrator m) async {
     await customStatement('''

@@ -52,6 +52,10 @@ class TrackMetadata {
   final String? originalDate;
   // Compilation flag — true if COMPILATION/cpil tag is "1" or true
   final bool compilation;
+  // Open key/value store for extended Vorbis fields with no dedicated column
+  // (release_country, mb_release_track_id, encoder_software, source_media, …).
+  // Mirrors the Rust engine's `track_metadata` map.
+  final Map<String, String> extended;
 
   const TrackMetadata({
     required this.filePath,
@@ -79,6 +83,7 @@ class TrackMetadata {
     this.releaseDate,
     this.originalDate,
     this.compilation = false,
+    this.extended = const {},
   });
 }
 
@@ -216,7 +221,23 @@ class MetadataReader {
       releaseDate: raw['releaseDate'] as String?,
       originalDate: raw['originalDate'] as String?,
       compilation: raw['compilation'] == true,
+      extended: _parseExtended(raw['extended']),
     );
+  }
+
+  /// Coerce the native `extended` sub-map (dynamic keys/values from the platform
+  /// channel) into a clean `Map<String, String>`, dropping empty values.
+  static Map<String, String> _parseExtended(dynamic v) {
+    if (v is! Map) return const {};
+    final out = <String, String>{};
+    v.forEach((key, value) {
+      final k = key?.toString();
+      final val = value?.toString();
+      if (k != null && k.isNotEmpty && val != null && val.isNotEmpty) {
+        out[k] = val;
+      }
+    });
+    return out;
   }
 
   static TrackMetadata? _fallbackMetadata(String filePath) {
