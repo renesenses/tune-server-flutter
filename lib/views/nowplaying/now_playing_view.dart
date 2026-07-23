@@ -309,71 +309,79 @@ class _TrackInfo extends StatelessWidget {
               ),
               if (track?.artistName != null) ...[
                 const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: () {
-                    // Prefer the track's artistId (reliable even when the
-                    // in-memory artist list isn't loaded or names don't match
-                    // exactly); fall back to matching by name. Silent no-op if
-                    // the artist isn't in the library (e.g. streaming track).
-                    final artists = app.libraryState.artists;
-                    final artist = artists.cast<Artist?>().firstWhere(
-                      (a) => a?.id == track!.artistId,
-                      orElse: () => artists.cast<Artist?>().firstWhere(
-                        (a) => a?.name == track!.artistName,
-                        orElse: () => null,
-                      ),
-                    );
-                    if (artist != null) {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => ArtistDetailView(artist: artist),
-                      ));
-                    }
-                  },
-                  child: Text(
+                // Resolve the artist up front: prefer the track's artistId
+                // (reliable even when names don't match exactly), fall back to
+                // name. Only render as an underlined, tappable link when it
+                // actually exists in the library — otherwise (e.g. a streaming
+                // track not matched locally) show plain text instead of a
+                // dead-looking link (Fabien, Android v0.8.365).
+                Builder(builder: (context) {
+                  final artists = app.libraryState.artists;
+                  final artist = artists.cast<Artist?>().firstWhere(
+                    (a) => a?.id == track!.artistId,
+                    orElse: () => artists.cast<Artist?>().firstWhere(
+                      (a) => a?.name == track!.artistName,
+                      orElse: () => null,
+                    ),
+                  );
+                  final label = Text(
                     track!.artistName!,
                     style: TuneFonts.subheadline.copyWith(
-                      decoration: TextDecoration.underline,
+                      decoration: artist != null
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
                       decorationColor: TuneColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                  );
+                  if (artist == null) return label;
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => ArtistDetailView(artist: artist),
+                      ));
+                    },
+                    child: label,
+                  );
+                }),
               ],
               if (track?.albumTitle != null) ...[
                 const SizedBox(height: 2),
-                GestureDetector(
-                  onTap: () {
-                    // Prefer the track's albumId; fall back to title+artist
-                    // matching. Silent no-op if the album isn't in the library.
-                    final albums = app.libraryState.albums;
-                    final album = albums.cast<Album?>().firstWhere(
-                      (a) => a?.id == track!.albumId,
-                      orElse: () => albums.cast<Album?>().firstWhere(
-                        (a) =>
-                            a?.title == track!.albumTitle &&
-                            a?.artistName == track!.artistName,
-                        orElse: () => null,
-                      ),
-                    );
-                    if (album != null) {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => AlbumDetailView(album: album),
-                      ));
-                    }
-                  },
-                  child: Text(
+                Builder(builder: (context) {
+                  final albums = app.libraryState.albums;
+                  final album = albums.cast<Album?>().firstWhere(
+                    (a) => a?.id == track!.albumId,
+                    orElse: () => albums.cast<Album?>().firstWhere(
+                      (a) =>
+                          a?.title == track!.albumTitle &&
+                          a?.artistName == track!.artistName,
+                      orElse: () => null,
+                    ),
+                  );
+                  final label = Text(
                     track!.albumTitle!,
                     style: TuneFonts.footnote.copyWith(
-                      decoration: TextDecoration.underline,
+                      decoration: album != null
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
                       decorationColor: TuneColors.textTertiary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                  );
+                  if (album == null) return label;
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => AlbumDetailView(album: album),
+                      ));
+                    },
+                    child: label,
+                  );
+                }),
               ],
               _PlayCount(track: track),
             ],
