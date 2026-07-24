@@ -32,6 +32,21 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
+      # Without a stable release keystore, every runner signs with its own
+      # freshly-generated debug key: each APK gets a different signature and
+      # Android refuses the in-place update ("Application non installée",
+      # forum #584). Skipped when the secret is absent so forks still build.
+      - name: Install release keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/tune-upload-keystore.jks
+          {
+            echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
+            echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+            echo "storeFile=tune-upload-keystore.jks"
+          } > android/key.properties
+
       - name: Build APK
         run: flutter build apk --release
 
