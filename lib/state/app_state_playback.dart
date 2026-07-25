@@ -41,6 +41,16 @@ extension AppStatePlayback on AppState {
         }
         await refreshZonesRemote();
       } catch (e, st) {
+        // Overlapping tap while a slow HI-RES pre-transcode is in flight
+        // (Tidal/Qobuz DASH, 6-23 s): the server rejects the duplicate play
+        // with "DASH file already being decoded" while the first request
+        // keeps working and playback then starts (#1146). That is loading,
+        // not a failure — no "Échec de lecture" snackbar. Same treatment as
+        // the web client (tune-web-client#157).
+        if (e.toString().contains('already being decoded')) {
+          debugPrint('[play] duplicate tap during pre-transcode, ignored: $e');
+          return;
+        }
         _lastPlaybackError = 'playback_failed';
         debugPrint('[play] remote EXCEPTION: $e\n$st');
         notify();
