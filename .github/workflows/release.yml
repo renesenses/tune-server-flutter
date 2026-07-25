@@ -37,13 +37,25 @@ jobs:
       # Android refuses the in-place update ("Application non installée",
       # forum #584). Skipped when the secret is absent so forks still build.
       - name: Install release keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        # secrets.* is not allowed in a step `if` (GitHub rejects the whole
+        # workflow file: both v0.9.6 tag runs died with "workflow file
+        # issue"). Route through env and guard in shell instead — forks
+        # without the secret still build unsigned.
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/tune-upload-keystore.jks
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "no keystore secret — building unsigned"
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/tune-upload-keystore.jks
           {
-            echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
-            echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
-            echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
             echo "storeFile=tune-upload-keystore.jks"
           } > android/key.properties
 
