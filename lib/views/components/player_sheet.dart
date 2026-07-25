@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../app_navigator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/enums.dart';
 import '../../server/database/database.dart';
@@ -63,7 +64,10 @@ void _openArtistForTrack(BuildContext context, Track track) {
     ),
   );
   if (artist != null) {
-    Navigator.of(context).push(MaterialPageRoute(
+    // Use the app navigator key: the player sheet sits outside the Navigator
+    // subtree (mounted via MaterialApp.builder), so Navigator.of(context) here
+    // finds nothing and the push silently no-ops (Fabien: artist link dead).
+    appNavigatorKey.currentState?.push(MaterialPageRoute(
       builder: (_) => ArtistDetailView(artist: artist),
     ));
   }
@@ -81,7 +85,7 @@ void _openAlbumForTrack(BuildContext context, Track track) {
     ),
   );
   if (album != null) {
-    Navigator.of(context).push(MaterialPageRoute(
+    appNavigatorKey.currentState?.push(MaterialPageRoute(
       builder: (_) => AlbumDetailView(album: album),
     ));
   }
@@ -384,7 +388,11 @@ class _MiniRow extends StatelessWidget {
   /// functional instead of merely expanding the sheet.
   void _showVolumePopup(BuildContext context) {
     showModalBottomSheet(
-      context: context,
+      // The player sheet has no Navigator ancestor (mounted via
+      // MaterialApp.builder), so opening the modal from its own context did
+      // nothing (Fabien: volume icon "inactive"). Anchor it on the app
+      // navigator's context, which is inside the Navigator subtree.
+      context: appNavigatorKey.currentContext ?? context,
       backgroundColor: TuneColors.surface,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
