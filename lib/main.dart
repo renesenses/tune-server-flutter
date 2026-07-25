@@ -8,6 +8,7 @@ import 'state/app_state.dart';
 import 'state/library_state.dart';
 import 'state/settings_state.dart';
 import 'state/zone_state.dart';
+import 'app_navigator.dart';
 import 'views/components/player_sheet.dart';
 import 'views/helpers/app_theme.dart';
 import 'views/mode_selector_view.dart';
@@ -150,6 +151,7 @@ class TuneServerApp extends StatelessWidget {
     final settings = context.watch<SettingsState>();
     return MaterialApp(
       title: 'Tune Server',
+      navigatorKey: appNavigatorKey,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
