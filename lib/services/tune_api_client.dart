@@ -100,12 +100,18 @@ class TuneApiClient {
     return jsonDecode(resp.body);
   }
 
-  Future<dynamic> _post(String path, {Map<String, dynamic>? body}) async {
-    final resp = await _client.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _headers(json: true),
-      body: body != null ? jsonEncode(body) : null,
-    ).timeout(const Duration(seconds: 60));
+  Future<dynamic> _post(
+    String path, {
+    Map<String, dynamic>? body,
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    final resp = await _client
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: _headers(json: true),
+          body: body != null ? jsonEncode(body) : null,
+        )
+        .timeout(timeout);
     _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 201) {
       throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
@@ -195,8 +201,12 @@ class TuneApiClient {
   // Playback
   // ---------------------------------------------------------------------------
 
+  // A HI-RES Tidal/Qobuz DASH track pre-transcodes server-side (6-23s, more on a
+  // slow link) before /play returns, so the default 60s POST timeout could abort
+  // a slow-but-successful start and show a false "Échec de lecture" (#1146). Give
+  // play a longer, dedicated timeout.
   Future<dynamic> play(int zoneId, Map<String, dynamic> body) =>
-      _post('/zones/$zoneId/play', body: body);
+      _post('/zones/$zoneId/play', body: body, timeout: const Duration(seconds: 120));
 
   Future<dynamic> pause(int zoneId) => _post('/zones/$zoneId/pause');
 
