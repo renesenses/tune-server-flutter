@@ -702,9 +702,12 @@ class _StreamingPlaylistDetailViewState extends State<_StreamingPlaylistDetailVi
                   itemBuilder: (_, i) {
                     final t = _tracks![i];
                     return ListTile(
+                      // Lire à partir d'ici : toute la playlist part en file et
+                      // l'enchaînement continue après la piste tapée, comme pour
+                      // les playlists locales (parité web #188).
                       onTap: () {
                         if (t.sourceId != null) {
-                          app.play(track: t);
+                          app.playTracks(_tracks!, startIndex: i);
                         }
                       },
                       leading: Text('${i + 1}', style: TuneFonts.footnote),
