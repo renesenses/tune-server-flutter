@@ -118,6 +118,11 @@ class ZoneWithState {
   final bool gaplessEnabled;
   final bool fixedVolume;
 
+  /// Cap this DLNA/OpenHome zone's output to 16-bit. For renderers that
+  /// advertise FLAC but only decode 16-bit (Ruark R3, LHC-62 — forum #1137):
+  /// re-encodes hi-res to 16-bit FLAC instead of sending 24-bit that plays silent.
+  final bool dlnaCap16bit;
+
   const ZoneWithState({
     required this.id,
     required this.name,
@@ -133,6 +138,7 @@ class ZoneWithState {
     this.dsdMode = 'auto',
     this.gaplessEnabled = true,
     this.fixedVolume = false,
+    this.dlnaCap16bit = false,
   });
 
   ZoneWithState copyWith({
@@ -150,6 +156,7 @@ class ZoneWithState {
     String? dsdMode,
     bool? gaplessEnabled,
     bool? fixedVolume,
+    bool? dlnaCap16bit,
   }) =>
       ZoneWithState(
         id: id ?? this.id,
@@ -166,6 +173,7 @@ class ZoneWithState {
         dsdMode: dsdMode ?? this.dsdMode,
         gaplessEnabled: gaplessEnabled ?? this.gaplessEnabled,
         fixedVolume: fixedVolume ?? this.fixedVolume,
+        dlnaCap16bit: dlnaCap16bit ?? this.dlnaCap16bit,
       );
 
   factory ZoneWithState.fromJson(Map<String, dynamic> json) {
@@ -187,6 +195,7 @@ class ZoneWithState {
       dsdMode: json['dsd_mode'] as String? ?? 'auto',
       gaplessEnabled: json['gapless_enabled'] as bool? ?? true,
       fixedVolume: json['fixed_volume'] as bool? ?? false,
+      dlnaCap16bit: json['dlna_cap_16bit'] as bool? ?? false,
     );
   }
 
