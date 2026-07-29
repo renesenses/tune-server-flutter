@@ -2126,6 +2126,7 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
   late String _dsdMode;
   late bool _gapless;
   late bool _fixedVolume;
+  late bool _cap16bit;
 
   @override
   void initState() {
@@ -2133,6 +2134,7 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
     _dsdMode = widget.zone.dsdMode;
     _gapless = widget.zone.gaplessEnabled;
     _fixedVolume = widget.zone.fixedVolume;
+    _cap16bit = widget.zone.dlnaCap16bit;
   }
 
   Future<void> _patch(Map<String, dynamic> fields) async {
@@ -2204,6 +2206,21 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
               },
               contentPadding: EdgeInsets.zero,
             ),
+            // Ruark R3 / LHC-62 and other FLAC-16-only DLNA renderers play 24-bit
+            // as silence (forum #1137) — only meaningful for DLNA/OpenHome zones.
+            if (widget.zone.outputType == OutputType.dlna ||
+                widget.zone.outputType == OutputType.openhome)
+              SwitchListTile(
+                title: const Text('Limiter à 16 bits', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('À activer si le hi-res (24 bits) reste muet alors que le 16 bits fonctionne (Ruark R3). Reconvertit en FLAC 16 bits.',
+                    style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+                value: _cap16bit,
+                onChanged: (v) {
+                  setState(() => _cap16bit = v);
+                  _patch({'dlna_cap_16bit': v});
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
             const SizedBox(height: 16),
           ],
         ),
