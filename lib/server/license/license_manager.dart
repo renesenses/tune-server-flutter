@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
 import '../database/database.dart';
@@ -13,6 +18,22 @@ enum Tier {
 
   static Tier fromString(String? s) =>
       s == 'premium' ? Tier.premium : Tier.free;
+}
+
+/// Live signal that the premium licence is currently held by ANOTHER server
+/// (floating-licence single-session model, à la Roon). Port of the Rust
+/// `SessionConflict`. Set by the heartbeat when the cloud answers
+/// `session_conflict:true`; runtime-only (never persisted) — the next heartbeat
+/// re-establishes the truth. While present it suppresses premium *here* even
+/// with an otherwise-valid key, and carries just enough context for the UI.
+class SessionConflict {
+  /// Label (or server_id) of the server currently holding the session.
+  final String? activeServer;
+
+  /// ISO-8601 timestamp of that server's last heartbeat.
+  final String? activeSince;
+
+  const SessionConflict({this.activeServer, this.activeSince});
 }
 
 /// Snapshot of the licence state. Port of the Rust `LicenseState`.
@@ -31,6 +52,11 @@ class LicenseState {
   String? accountPremiumExpires;
   String? accountPremiumChecked;
 
+  /// Live single-session conflict: non-null while another server holds the
+  /// floating licence. Runtime-only — never persisted; the next heartbeat
+  /// restores it if still in conflict.
+  SessionConflict? sessionConflict;
+
   LicenseState({
     required this.tier,
     this.licenseKey,
@@ -39,6 +65,7 @@ class LicenseState {
     this.accountPremium = false,
     this.accountPremiumExpires,
     this.accountPremiumChecked,
+    this.sessionConflict,
   });
 
   LicenseState copyWith() => LicenseState(
@@ -49,6 +76,7 @@ class LicenseState {
         accountPremium: accountPremium,
         accountPremiumExpires: accountPremiumExpires,
         accountPremiumChecked: accountPremiumChecked,
+        sessionConflict: sessionConflict,
       );
 
   Map<String, dynamic> toJson() => {
@@ -59,6 +87,12 @@ class LicenseState {
         'account_premium': accountPremium,
         'account_premium_expires': accountPremiumExpires,
         'account_premium_checked': accountPremiumChecked,
+        'session_conflict': sessionConflict == null
+            ? null
+            : {
+                'active_server': sessionConflict!.activeServer,
+                'active_since': sessionConflict!.activeSince,
+              },
       };
 }
 
@@ -204,6 +238,65 @@ class LicenseManager {
     _state.accountPremiumChecked = null;
   }
 
+  // --- Single-session conflict (floating licence) ---
+
+  /// Record that the floating licence is currently held by ANOTHER server
+  /// (cloud answered `session_conflict:true`). Gates the effective tier to Free
+  /// here — authoritative "not now" — WITHOUT touching the key or lastValidated,
+  /// so premium snaps back the moment the other server stops pinging.
+  void setSessionConflict(String? activeServer, String? activeSince) {
+    final wasClear = _state.sessionConflict == null;
+    _state.sessionConflict =
+        SessionConflict(activeServer: activeServer, activeSince: activeSince);
+    if (wasClear) {
+      debugPrint('[license] session conflict set — held by another server');
+    }
+  }
+
+  /// Clear a previously recorded session conflict (reclaimed here / no conflict).
+  void clearSessionConflict() {
+    if (_state.sessionConflict != null) {
+      _state.sessionConflict = null;
+      debugPrint('[license] session conflict cleared — reclaimed here');
+    }
+  }
+
+  /// Current session conflict, if the licence is held elsewhere right now.
+  SessionConflict? get sessionConflict => _state.sessionConflict;
+
+  // --- Device identity (for the cloud heartbeat) ---
+
+  /// Stable per-install hardware fingerprint (64-hex), persisted. Generated once
+  /// from the hostname + a random salt; mirrors the *role* of the Rust SHA-256
+  /// fingerprint (mobile has no stable hardware serial without extra plugins, so
+  /// a persisted per-install id is the pragmatic equivalent — one device, one
+  /// activation).
+  Future<String> hardwareFingerprint() async {
+    final cached = await _settings.get('hardware_fingerprint');
+    if (cached != null && cached.isNotEmpty) return cached;
+    final salt = List<int>.generate(32, (_) => Random.secure().nextInt(256));
+    final digest =
+        sha256.convert([...utf8.encode('${Platform.localHostname}:'), ...salt]);
+    final fp = digest.toString();
+    await _settings.set('hardware_fingerprint', fp);
+    return fp;
+  }
+
+  /// Stable per-install instance id (UUID-v4-shaped), persisted. Sent with the
+  /// heartbeat so the cloud can dedupe this server instance.
+  Future<String> instanceId() async {
+    final cached = await _settings.get('instance_id');
+    if (cached != null && cached.isNotEmpty) return cached;
+    final b = List<int>.generate(16, (_) => Random.secure().nextInt(256));
+    b[6] = (b[6] & 0x0f) | 0x40; // version 4
+    b[8] = (b[8] & 0x3f) | 0x80; // variant
+    String h(int i) => b[i].toRadixString(16).padLeft(2, '0');
+    final id = '${h(0)}${h(1)}${h(2)}${h(3)}-${h(4)}${h(5)}-${h(6)}${h(7)}'
+        '-${h(8)}${h(9)}-${h(10)}${h(11)}${h(12)}${h(13)}${h(14)}${h(15)}';
+    await _settings.set('instance_id', id);
+    return id;
+  }
+
   /// Zone limit for the Free tier (for UI display).
   static int get freeZoneLimit => freeMaxZones;
 }
@@ -214,8 +307,17 @@ class LicenseManager {
 
 /// Effective tier = Premium if the license key is premium OR the account
 /// premium (SSO) is active. Otherwise Free.
-Tier _effectiveTier(LicenseState s) =>
-    (s.tier == Tier.premium || _accountPremiumActive(s)) ? Tier.premium : Tier.free;
+///
+/// A live single-session conflict overrides everything: while another server
+/// holds the floating licence, premium is suppressed here even though the key /
+/// account are otherwise valid. This enforces "one active session at a time"
+/// and, unlike a transient rejection, is authoritative (not softened by grace).
+Tier _effectiveTier(LicenseState s) {
+  if (s.sessionConflict != null) return Tier.free;
+  return (s.tier == Tier.premium || _accountPremiumActive(s))
+      ? Tier.premium
+      : Tier.free;
+}
 
 /// Pure zone-limit rule: Premium unlimited, Free capped at [LicenseManager.freeMaxZones].
 bool _checkZoneLimit(LicenseState s, int currentCount) =>

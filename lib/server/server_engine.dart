@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'configuration.dart';
@@ -20,6 +22,7 @@ import 'utils/network_utils.dart';
 import 'utils/api_analytics.dart';
 import 'utils/credentials_vault.dart';
 import 'license/license_manager.dart';
+import 'license/license_heartbeat.dart';
 import 'zones/zone_manager.dart';
 // file_system_watcher available but not wired yet (needs music dir discovery)
 import 'library/scan_scheduler.dart';
@@ -96,6 +99,7 @@ class ServerEngine {
   final ListenBrainzScrobbler listenBrainz;
   final AutoFix autoFix;
   final ScanScheduler scanScheduler;
+  final LicenseHeartbeat licenseHeartbeat;
 
   String? _localIp;
   bool _running = false;
@@ -117,6 +121,7 @@ class ServerEngine {
         required this.listenBrainz,
     required this.autoFix,
     required this.scanScheduler,
+    required this.licenseHeartbeat,
   });
 
   /// Crée et initialise le ServerEngine.
@@ -133,6 +138,7 @@ class ServerEngine {
     final upnpIndexer = UPnPIndexer(db);
     final licenseManager = LicenseManager(db);
     await licenseManager.load();
+    final licenseHeartbeat = LicenseHeartbeat(licenseManager);
     final zoneManager = ZoneManager(db, discoveryManager, licenseManager);
     final streamingManager = StreamingManager(
       db,
@@ -167,6 +173,7 @@ class ServerEngine {
       listenBrainz: ListenBrainzScrobbler(),
       autoFix: AutoFix(db),
       scanScheduler: scanScheduler,
+      licenseHeartbeat: licenseHeartbeat,
     );
   }
 
@@ -225,6 +232,11 @@ class ServerEngine {
     // 11. Scan scheduler
     scanScheduler.start();
 
+    // 12. Cloud licence validation (heartbeat) — floating-licence single-session
+    //     enforcement incl. session_conflict. Fire-and-forget: never blocks
+    //     startup, degrades gracefully offline.
+    unawaited(licenseHeartbeat.start());
+
     _running = true;
     EventBus.instance.emit(ServerStartedEvent(config.httpStreamerPort));
   }
@@ -276,6 +288,7 @@ class ServerEngine {
 
   Future<void> stop() async {
     if (!_running) return;
+    licenseHeartbeat.stop();
     artistEnrichment.stop();
     HealthMonitor.instance.stop();
     RadioMetadataService.instance.stopAll();

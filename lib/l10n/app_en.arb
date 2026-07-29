@@ -651,4 +651,13 @@
   "@tracksCount": {"placeholders": {"n": {"type": "int"}}},
   "username": "Username",
   "visualizer": "Visualizer"
+,
+  "licenseSessionConflictTitle": "License active on another server",
+  "licenseSessionConflictBody": "Your Tune license is already in use on another of your servers. This server will switch back to Premium automatically a few minutes after the other one stops.",
+  "licenseSessionConflictBodyNamed": "Your Tune license is active on “{server}”. This server will switch back to Premium automatically a few minutes after the other one stops.",
+  "@licenseSessionConflictBodyNamed": {
+    "placeholders": {
+      "server": { "type": "String" }
+    }
+  }
 }

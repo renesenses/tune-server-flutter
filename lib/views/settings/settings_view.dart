@@ -66,9 +66,48 @@ class _SettingsList extends StatelessWidget {
 
     final l = AppLocalizations.of(context);
     final updateInfo = app.updateInfo;
+    final licenseConflict = app.engine.licenseManager.sessionConflict;
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
+        if (licenseConflict != null) ...[
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.45)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, color: Colors.orange),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.licenseSessionConflictTitle,
+                        style: TuneFonts.body.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        licenseConflict.activeServer != null
+                            ? l.licenseSessionConflictBodyNamed(
+                                licenseConflict.activeServer!)
+                            : l.licenseSessionConflictBody,
+                        style: TuneFonts.caption
+                            .copyWith(color: TuneColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (updateInfo != null && updateInfo.updateAvailable) ...[
           Container(
             margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),

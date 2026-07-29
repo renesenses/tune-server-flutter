@@ -50,6 +50,11 @@ extension AppStateEvents on AppState {
     _subs.add(EventBus.instance
         .subscribe<RadioMetadataEvent>(_onRadioMetadata));
 
+    // Licence — floating single-session conflict changed → rebuild UI so the
+    // settings banner appears/disappears without a manual refresh.
+    _subs.add(EventBus.instance
+        .subscribe<LicenseSessionConflictChangedEvent>((_) => notify()));
+
     // Zone lifecycle — auto-refresh zones list on changes
     _subs.add(EventBus.instance
         .subscribe<ZoneCreatedEvent>((_) => _refreshZones()));

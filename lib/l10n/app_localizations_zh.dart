@@ -1514,4 +1514,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get visualizer => '可视化';
+
+  @override
+  String get licenseSessionConflictTitle => '许可证已在其他服务器上使用';
+
+  @override
+  String get licenseSessionConflictBody =>
+      '您的 Tune 许可证已在您的另一台服务器上使用。另一台停止后几分钟，此服务器将自动恢复为 Premium。';
+
+  @override
+  String licenseSessionConflictBodyNamed(String server) {
+    return '您的 Tune 许可证正在“$server”上使用。另一台停止后几分钟，此服务器将自动恢复为 Premium。';
+  }
 }

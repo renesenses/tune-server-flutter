@@ -188,6 +188,15 @@ class ServerErrorEvent extends AppEvent {
   const ServerErrorEvent(this.message);
 }
 
+/// The floating-licence single-session state changed: [inConflict] is true when
+/// the licence is now held by ANOTHER server (premium suppressed here), false
+/// when this server (re)took the session. Drives the UI banner.
+class LicenseSessionConflictChangedEvent extends AppEvent {
+  final bool inConflict;
+  final String? activeServer;
+  const LicenseSessionConflictChangedEvent(this.inConflict, {this.activeServer});
+}
+
 // ---------------------------------------------------------------------------
 // EventBus
 // ---------------------------------------------------------------------------
