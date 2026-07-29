@@ -1533,4 +1533,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get visualizer => 'Visualizzatore';
+
+  @override
+  String get licenseSessionConflictTitle => 'Licenza attiva su un altro server';
+
+  @override
+  String get licenseSessionConflictBody =>
+      'La tua licenza Tune è già in uso su un altro dei tuoi server. Questo server tornerà a Premium automaticamente qualche minuto dopo l\'arresto dell\'altro.';
+
+  @override
+  String licenseSessionConflictBodyNamed(String server) {
+    return 'La tua licenza Tune è attiva su «$server». Questo server tornerà a Premium automaticamente qualche minuto dopo l\'arresto dell\'altro.';
+  }
 }

@@ -102,6 +102,29 @@ void main() {
     });
   });
 
+  group('effectiveTier / session conflict (floating licence)', () {
+    test('free during conflict even with a premium key', () {
+      final s = _state(Tier.premium);
+      s.sessionConflict = const SessionConflict(activeServer: 'Maison Paris');
+      expect(effectiveTierForTest(s), Tier.free);
+    });
+
+    test('free during conflict even with active account premium', () {
+      final s = _state(Tier.free,
+          accountPremium: true, accountPremiumChecked: _nowIso());
+      s.sessionConflict = const SessionConflict();
+      expect(effectiveTierForTest(s), Tier.free);
+    });
+
+    test('premium restored the moment the conflict clears', () {
+      final s = _state(Tier.premium);
+      s.sessionConflict = const SessionConflict();
+      expect(effectiveTierForTest(s), Tier.free);
+      s.sessionConflict = null;
+      expect(effectiveTierForTest(s), Tier.premium);
+    });
+  });
+
   group('isExpired', () {
     test('true for old date', () {
       expect(isExpiredForTest('2020-01-01T00:00:00Z', 30), isTrue);

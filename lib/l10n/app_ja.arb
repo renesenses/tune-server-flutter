@@ -585,4 +585,8 @@
   "tracksCount": "{n} 曲",
   "username": "ユーザー名",
   "visualizer": "ビジュアライザー"
+,
+  "licenseSessionConflictTitle": "別のサーバーでライセンスが使用中",
+  "licenseSessionConflictBody": "お使いの Tune ライセンスは、別のサーバーですでに使用されています。もう一方が停止してから数分後に、このサーバーは自動的に Premium に戻ります。",
+  "licenseSessionConflictBodyNamed": "お使いの Tune ライセンスは「{server}」で使用中です。もう一方が停止してから数分後に、このサーバーは自動的に Premium に戻ります。"
 }

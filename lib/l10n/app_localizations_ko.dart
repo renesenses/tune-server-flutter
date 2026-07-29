@@ -1519,4 +1519,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get visualizer => '비주얼라이저';
+
+  @override
+  String get licenseSessionConflictTitle => '다른 서버에서 라이선스 사용 중';
+
+  @override
+  String get licenseSessionConflictBody =>
+      'Tune 라이선스가 이미 다른 서버에서 사용 중입니다. 다른 서버가 중지된 후 몇 분 후에 이 서버가 자동으로 Premium으로 전환됩니다.';
+
+  @override
+  String licenseSessionConflictBodyNamed(String server) {
+    return 'Tune 라이선스가 \'$server\'에서 사용 중입니다. 다른 서버가 중지된 후 몇 분 후에 이 서버가 자동으로 Premium으로 전환됩니다.';
+  }
 }

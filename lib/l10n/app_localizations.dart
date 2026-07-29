@@ -3007,6 +3007,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Visualizer'**
   String get visualizer;
+
+  /// No description provided for @licenseSessionConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'License active on another server'**
+  String get licenseSessionConflictTitle;
+
+  /// No description provided for @licenseSessionConflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Tune license is already in use on another of your servers. This server will switch back to Premium automatically a few minutes after the other one stops.'**
+  String get licenseSessionConflictBody;
+
+  /// No description provided for @licenseSessionConflictBodyNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Tune license is active on “{server}”. This server will switch back to Premium automatically a few minutes after the other one stops.'**
+  String licenseSessionConflictBodyNamed(String server);
 }
 
 class _AppLocalizationsDelegate

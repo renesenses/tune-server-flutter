@@ -585,4 +585,8 @@
   "tracksCount": "{n} brani",
   "username": "Nome utente",
   "visualizer": "Visualizzatore"
+,
+  "licenseSessionConflictTitle": "Licenza attiva su un altro server",
+  "licenseSessionConflictBody": "La tua licenza Tune è già in uso su un altro dei tuoi server. Questo server tornerà a Premium automaticamente qualche minuto dopo l'arresto dell'altro.",
+  "licenseSessionConflictBodyNamed": "La tua licenza Tune è attiva su «{server}». Questo server tornerà a Premium automaticamente qualche minuto dopo l'arresto dell'altro."
 }
