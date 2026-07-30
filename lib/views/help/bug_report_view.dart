@@ -27,6 +27,8 @@ class _BugReportViewState extends State<BugReportView> {
   bool _loading = true;
   String? _error;
   bool _copied = false;
+  bool _submitting = false;
+  bool _submitted = false;
 
   @override
   void initState() {
@@ -158,6 +160,38 @@ class _BugReportViewState extends State<BugReportView> {
     );
   }
 
+  /// Submit the report to the community forum via the server (remote mode only:
+  /// the embedded Dart server has no forwarding endpoint). Falls back visibly to
+  /// copy on any failure.
+  Future<void> _submit() async {
+    final app = context.read<AppState>();
+    setState(() => _submitting = true);
+    try {
+      final res = await app.apiClient?.submitBugReport();
+      if (!mounted) return;
+      if (res == null) throw Exception('endpoint indisponible');
+      setState(() {
+        _submitted = true;
+        _submitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bug envoye, merci !'),
+          backgroundColor: TuneColors.success,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Echec de l'envoi. Copie le rapport dans le forum."),
+          backgroundColor: TuneColors.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -220,6 +254,41 @@ class _BugReportViewState extends State<BugReportView> {
                           horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
+                          // Direct submit — only in remote mode (the embedded
+                          // server has no forwarding endpoint).
+                          if (context.read<AppState>().isRemoteMode) ...[
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: (_submitting || _submitted)
+                                    ? null
+                                    : _submit,
+                                icon: _submitting
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white),
+                                      )
+                                    : Icon(
+                                        _submitted
+                                            ? Icons.check_rounded
+                                            : Icons.send_rounded,
+                                        size: 16,
+                                      ),
+                                label: Text(_submitted
+                                    ? 'Envoye !'
+                                    : (_submitting ? 'Envoi...' : 'Soumettre')),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _submitted
+                                      ? TuneColors.success
+                                      : TuneColors.accent,
+                                  minimumSize: const Size.fromHeight(44),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           Expanded(
                             child: FilledButton.icon(
                               onPressed: _copyToClipboard,

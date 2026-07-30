@@ -507,7 +507,13 @@ class TuneApiClient {
 
   /// Bug report as markdown (may return String or Map with 'report' key).
   /// Returns null if the endpoint doesn't exist on this server version.
-  Future<dynamic> getBugReportMarkdown() => _getOptional('/api/v1/system/bug-report/markdown');
+  /// (baseUrl already ends in /api/v1, so the path must be relative.)
+  Future<dynamic> getBugReportMarkdown() => _getOptional('/system/bug-report/markdown');
+
+  /// Submit the bug report to the community forum: the server generates the
+  /// report and forwards it to mozaiklabs.fr, creating a moderated bug thread.
+  /// Returns the created thread info (id/slug/url). Remote mode only.
+  Future<dynamic> submitBugReport() => _postOptional('/system/bug-report/submit');
 
   /// Quick connectivity test
   Future<bool> testConnection() async {
