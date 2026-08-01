@@ -48,34 +48,35 @@ const double _kQueue = 0.95;
 // Shared now-playing navigation — resolve the album/artist for a track and
 // push its detail page. Prefer the track's albumId/artistId (reliable even
 // when the in-memory list isn't loaded or names don't match exactly), fall
-// back to name matching. Silent no-op if nothing resolves (e.g. a streaming
-// track not in the local library). Shared by the expanded _TrackInfo and the
-// collapsed mini-row so the title/artist are tappable everywhere (Fabien:
-// "Les liens du titre et de l'artiste ne sont pas actifs").
+// back to name matching against the in-memory LOCAL library.
+//
+// A streaming (Tidal/Qobuz/YouTube) or radio track has no matching row in the
+// local library, so resolution returns null. Callers must NOT then leave a
+// dead-looking, silently no-op tap (Fabien Premium #5b: "les liens ne sont pas
+// cliquables" — the tap did nothing because openXForTrack no-op'd). Instead we
+// mirror the full-screen now_playing_view.dart contract:
+//   * expanded _TrackInfo — render an underlined tappable link ONLY when the
+//     target resolves; otherwise plain, non-underlined, non-tappable text.
+//   * collapsed _MiniRow — fall back to expanding the sheet (open the full
+//     player) so the tap is never inert.
+// The resolvers below are pure lookups; the open* helpers return whether they
+// actually navigated so callers can degrade cleanly.
 // ---------------------------------------------------------------------------
 
-void _openArtistForTrack(BuildContext context, Track track) {
+Artist? _resolveArtistForTrack(BuildContext context, Track track) {
   final artists = context.read<AppState>().libraryState.artists;
-  final artist = artists.cast<Artist?>().firstWhere(
+  return artists.cast<Artist?>().firstWhere(
     (a) => a?.id == track.artistId,
     orElse: () => artists.cast<Artist?>().firstWhere(
       (a) => a?.name == track.artistName,
       orElse: () => null,
     ),
   );
-  if (artist != null) {
-    // Use the app navigator key: the player sheet sits outside the Navigator
-    // subtree (mounted via MaterialApp.builder), so Navigator.of(context) here
-    // finds nothing and the push silently no-ops (Fabien: artist link dead).
-    appNavigatorKey.currentState?.push(MaterialPageRoute(
-      builder: (_) => ArtistDetailView(artist: artist),
-    ));
-  }
 }
 
-void _openAlbumForTrack(BuildContext context, Track track) {
+Album? _resolveAlbumForTrack(BuildContext context, Track track) {
   final albums = context.read<AppState>().libraryState.albums;
-  final album = albums.cast<Album?>().firstWhere(
+  return albums.cast<Album?>().firstWhere(
     (a) => a?.id == track.albumId,
     orElse: () => albums.cast<Album?>().firstWhere(
       (a) =>
@@ -84,11 +85,32 @@ void _openAlbumForTrack(BuildContext context, Track track) {
       orElse: () => null,
     ),
   );
-  if (album != null) {
-    appNavigatorKey.currentState?.push(MaterialPageRoute(
-      builder: (_) => AlbumDetailView(album: album),
-    ));
-  }
+}
+
+/// Push the artist detail page if it resolves locally. Returns true when it
+/// navigated, false when nothing resolved (streaming/radio track) so the
+/// caller can degrade instead of leaving a dead tap.
+bool _openArtistForTrack(BuildContext context, Track track) {
+  final artist = _resolveArtistForTrack(context, track);
+  if (artist == null) return false;
+  // Use the app navigator key: the player sheet sits outside the Navigator
+  // subtree (mounted via MaterialApp.builder), so Navigator.of(context) here
+  // finds nothing and the push silently no-ops (Fabien: artist link dead).
+  appNavigatorKey.currentState?.push(MaterialPageRoute(
+    builder: (_) => ArtistDetailView(artist: artist),
+  ));
+  return true;
+}
+
+/// Push the album detail page if it resolves locally. Returns true when it
+/// navigated, false when nothing resolved (streaming/radio track).
+bool _openAlbumForTrack(BuildContext context, Track track) {
+  final album = _resolveAlbumForTrack(context, track);
+  if (album == null) return false;
+  appNavigatorKey.currentState?.push(MaterialPageRoute(
+    builder: (_) => AlbumDetailView(album: album),
+  ));
+  return true;
 }
 
 /// Wraps the app content in a [Stack] with the [PlayerSheet] overlaid on top.
@@ -457,9 +479,16 @@ class _MiniRow extends StatelessWidget {
                   children: [
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: track?.albumTitle != null
-                          ? () => _openAlbumForTrack(context, track!)
-                          : _expand,
+                      // Open the album if it resolves locally; otherwise (a
+                      // streaming/radio track with no local row) expand the
+                      // full player instead of a dead no-op tap (Fabien #5b).
+                      onTap: () {
+                        if (track?.albumTitle != null &&
+                            _openAlbumForTrack(context, track!)) {
+                          return;
+                        }
+                        _expand();
+                      },
                       child: Text(
                         track?.title ?? 'No track',
                         style: TuneFonts.miniTitle,
@@ -471,7 +500,12 @@ class _MiniRow extends StatelessWidget {
                       const SizedBox(height: 2),
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () => _openArtistForTrack(context, track!),
+                        // Same degrade path for the artist link.
+                        onTap: () {
+                          if (!_openArtistForTrack(context, track!)) {
+                            _expand();
+                          }
+                        },
                         child: Text(
                           track!.artistName!,
                           style: TuneFonts.miniArtist,
@@ -678,33 +712,52 @@ class _TrackInfo extends StatelessWidget {
               ),
               if (track?.artistName != null) ...[
                 const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: () => _openArtistForTrack(context, track!),
-                  child: Text(
+                // Resolve up front: render an underlined, tappable link only
+                // when the artist exists locally. A streaming/radio track that
+                // doesn't match shows plain text instead of a dead-looking
+                // underlined link that no-ops on tap (Fabien Premium #5b,
+                // mirrors full-screen now_playing_view.dart).
+                Builder(builder: (context) {
+                  final artist = _resolveArtistForTrack(context, track!);
+                  final label = Text(
                     track!.artistName!,
                     style: TuneFonts.subheadline.copyWith(
-                      decoration: TextDecoration.underline,
+                      decoration: artist != null
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
                       decorationColor: TuneColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                  );
+                  if (artist == null) return label;
+                  return GestureDetector(
+                    onTap: () => _openArtistForTrack(context, track!),
+                    child: label,
+                  );
+                }),
               ],
               if (track?.albumTitle != null) ...[
                 const SizedBox(height: 2),
-                GestureDetector(
-                  onTap: () => _openAlbumForTrack(context, track!),
-                  child: Text(
+                Builder(builder: (context) {
+                  final album = _resolveAlbumForTrack(context, track!);
+                  final label = Text(
                     track!.albumTitle!,
                     style: TuneFonts.footnote.copyWith(
-                      decoration: TextDecoration.underline,
+                      decoration: album != null
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
                       decorationColor: TuneColors.textTertiary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                  );
+                  if (album == null) return label;
+                  return GestureDetector(
+                    onTap: () => _openAlbumForTrack(context, track!),
+                    child: label,
+                  );
+                }),
               ],
             ],
           ),
