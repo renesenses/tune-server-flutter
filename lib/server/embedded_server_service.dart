@@ -61,13 +61,38 @@ class EmbeddedServerService {
         ? musicDirs
         : await _defaultMusicDirs();
 
+    // Android 13+ (the app targets SDK 35): a foreground service cannot start
+    // without the POST_NOTIFICATIONS runtime permission — startService throws a
+    // native ForegroundServiceStartNotAllowedException / SecurityException that
+    // crashes the whole app ("Tune Server closed because this app has a bug",
+    // Levente). Request it first. If the user declines we still try to start
+    // (best-effort) but the try/catch below turns any failure into a clean
+    // false instead of a process crash.
+    if (Platform.isAndroid) {
+      try {
+        final perm = await FlutterForegroundTask.checkNotificationPermission();
+        if (perm != NotificationPermission.granted) {
+          await FlutterForegroundTask.requestNotificationPermission();
+        }
+      } catch (_) {
+        // Permission API unavailable on this OS version — ignore and try to start.
+      }
+    }
+
     // Start foreground service
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Tune Server',
-      notificationText: 'Running on port $port',
-      serviceId: 256,
-      callback: _serviceCallback,
-    );
+    try {
+      await FlutterForegroundTask.startService(
+        notificationTitle: 'Tune Server',
+        notificationText: 'Running on port $port',
+        serviceId: 256,
+        callback: _serviceCallback,
+      );
+    } catch (e) {
+      // A foreground-service start failure surfaces here as a PlatformException
+      // on flutter_foreground_task ≥8; return false so the UI shows an error
+      // rather than the app crashing.
+      return false;
+    }
 
     // Start Rust server via FFI
     final result = TuneNativeServer.start(
