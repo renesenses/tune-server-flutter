@@ -1317,6 +1317,17 @@ class _TransportControls extends StatelessWidget {
           color: TuneColors.textPrimary,
           onPressed: () => app.next(),
         ),
+
+        // Stop — mirrors the Swift iPhone player (PR #27). Distinct from
+        // pause: stops the local player / pauses a remote zone (see
+        // AppState.stop). Reported missing by Sevy.
+        IconButton(
+          icon: const Icon(Icons.stop_rounded),
+          iconSize: 36,
+          color: TuneColors.textSecondary,
+          tooltip: 'Stop',
+          onPressed: () => app.stop(),
+        ),
       ],
     );
   }
