@@ -299,6 +299,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get queueTitle => '재생 대기열';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '다음 $count곡 · $time';
+  }
+
+  @override
   String get queueEmpty => '대기열 비어 있음';
 
   @override

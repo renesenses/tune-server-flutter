@@ -114,6 +114,7 @@
   "historyClearTitle": "清除历史记录",
   "nowPlayingNoTrack": "没有曲目",
   "queueTitle": "播放队列",
+  "queueUpNextSummary": "接下来 {count} 首 · {time}",
   "queueEmpty": "队列为空",
   "queueClearTitle": "清空队列？",
   "queueClearBody": "播放队列中的所有曲目将被移除。",

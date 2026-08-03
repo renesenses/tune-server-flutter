@@ -22,6 +22,13 @@ import 'smart_autoplay_sheet.dart';
 // Miroir de QueueView.swift (iOS)
 // ---------------------------------------------------------------------------
 
+/// Compact total-time label for the "up next" summary: "42 min" or "1 h 05".
+String _fmtRemaining(int ms) {
+  final m = ms ~/ 60000;
+  if (m >= 60) return '${m ~/ 60} h ${(m % 60).toString().padLeft(2, '0')}';
+  return '$m min';
+}
+
 class QueueView extends StatelessWidget {
   const QueueView({super.key});
 
@@ -54,6 +61,13 @@ class QueueView extends StatelessWidget {
     final snapshot = context.watch<ZoneState>().queueSnapshot;
     final tracks = (snapshot?.tracks ?? []).cast<Track>();
     final currentPosition = snapshot?.position ?? -1;
+    // "Up next": tracks after the current one + their total time (Dominique Comet).
+    final upNextCount = (currentPosition >= 0 && currentPosition + 1 < tracks.length)
+        ? tracks.length - (currentPosition + 1)
+        : 0;
+    final upNextMs = upNextCount > 0
+        ? tracks.sublist(currentPosition + 1).fold<int>(0, (s, t) => s + (t.durationMs ?? 0))
+        : 0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -101,6 +115,19 @@ class QueueView extends StatelessWidget {
             ],
           ),
         ),
+        if (upNextCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                AppLocalizations.of(context)
+                    .queueUpNextSummary(upNextCount, _fmtRemaining(upNextMs)),
+                style: const TextStyle(
+                    fontSize: 12, color: TuneColors.textSecondary),
+              ),
+            ),
+          ),
         const Divider(height: 1),
         // Liste
         Flexible(

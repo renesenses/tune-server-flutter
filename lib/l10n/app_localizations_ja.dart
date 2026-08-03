@@ -299,6 +299,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueTitle => '再生キュー';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '次の$count曲 · $time';
+  }
+
+  @override
   String get queueEmpty => 'キューが空';
 
   @override

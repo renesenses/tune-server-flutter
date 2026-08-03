@@ -300,6 +300,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueTitle => 'Playback queue';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '$count up next · $time';
+  }
+
+  @override
   String get queueEmpty => 'Empty queue';
 
   @override

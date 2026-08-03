@@ -114,6 +114,7 @@
   "historyClearTitle": "Effacer l'historique",
   "nowPlayingNoTrack": "Aucune piste",
   "queueTitle": "File de lecture",
+  "queueUpNextSummary": "{count} à suivre · {time}",
   "queueEmpty": "File vide",
   "queueClearTitle": "Vider la file ?",
   "queueClearBody": "Toutes les pistes seront supprimées de la file de lecture.",
