@@ -301,6 +301,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get queueTitle => 'Wiedergabeliste';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '$count als Nächstes · $time';
+  }
+
+  @override
   String get queueEmpty => 'Liste leer';
 
   @override

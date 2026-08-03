@@ -114,6 +114,7 @@
   "historyClearTitle": "Verlauf löschen",
   "nowPlayingNoTrack": "Kein Titel",
   "queueTitle": "Wiedergabeliste",
+  "queueUpNextSummary": "{count} als Nächstes · {time}",
   "queueEmpty": "Liste leer",
   "queueClearTitle": "Liste leeren?",
   "queueClearBody": "Alle Titel werden aus der Wiedergabeliste entfernt.",

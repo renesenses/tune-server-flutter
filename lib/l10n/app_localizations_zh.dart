@@ -299,6 +299,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get queueTitle => '播放队列';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '接下来 $count 首 · $time';
+  }
+
+  @override
   String get queueEmpty => '队列为空';
 
   @override

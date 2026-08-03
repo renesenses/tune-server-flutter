@@ -114,6 +114,7 @@
   "historyClearTitle": "Cancella cronologia",
   "nowPlayingNoTrack": "Nessun brano",
   "queueTitle": "Coda di riproduzione",
+  "queueUpNextSummary": "{count} in coda · {time}",
   "queueEmpty": "Coda vuota",
   "queueClearTitle": "Svuotare la coda?",
   "queueClearBody": "Tutti i brani verranno rimossi dalla coda di riproduzione.",

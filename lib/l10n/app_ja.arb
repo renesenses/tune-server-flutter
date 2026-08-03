@@ -114,6 +114,7 @@
   "historyClearTitle": "履歴を消去",
   "nowPlayingNoTrack": "曲なし",
   "queueTitle": "再生キュー",
+  "queueUpNextSummary": "次の{count}曲 · {time}",
   "queueEmpty": "キューが空",
   "queueClearTitle": "キューをクリアしますか？",
   "queueClearBody": "再生キューからすべてのトラックが削除されます。",

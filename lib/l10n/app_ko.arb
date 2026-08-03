@@ -114,6 +114,7 @@
   "historyClearTitle": "기록 지우기",
   "nowPlayingNoTrack": "트랙 없음",
   "queueTitle": "재생 대기열",
+  "queueUpNextSummary": "다음 {count}곡 · {time}",
   "queueEmpty": "대기열 비어 있음",
   "queueClearTitle": "대기열을 비우시겠습니까?",
   "queueClearBody": "재생 대기열에서 모든 트랙이 제거됩니다.",

@@ -301,6 +301,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get queueTitle => 'Coda di riproduzione';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '$count in coda · $time';
+  }
+
+  @override
   String get queueEmpty => 'Coda vuota';
 
   @override

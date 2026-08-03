@@ -674,6 +674,12 @@ abstract class AppLocalizations {
   /// **'Playback queue'**
   String get queueTitle;
 
+  /// No description provided for @queueUpNextSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} up next · {time}'**
+  String queueUpNextSummary(int count, String time);
+
   /// No description provided for @queueEmpty.
   ///
   /// In en, this message translates to:

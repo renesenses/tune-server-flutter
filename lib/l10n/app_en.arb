@@ -119,6 +119,13 @@
   "historyClearTitle": "Clear history",
   "nowPlayingNoTrack": "No track",
   "queueTitle": "Playback queue",
+  "queueUpNextSummary": "{count} up next · {time}",
+  "@queueUpNextSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "time": { "type": "String" }
+    }
+  },
   "queueEmpty": "Empty queue",
   "queueClearTitle": "Clear queue?",
   "queueClearBody": "All tracks will be removed from the playback queue.",

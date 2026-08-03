@@ -300,6 +300,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get queueTitle => 'Cola de reproducción';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '$count a continuación · $time';
+  }
+
+  @override
   String get queueEmpty => 'Cola vacía';
 
   @override

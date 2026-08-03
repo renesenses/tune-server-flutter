@@ -301,6 +301,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get queueTitle => 'File de lecture';
 
   @override
+  String queueUpNextSummary(int count, String time) {
+    return '$count à suivre · $time';
+  }
+
+  @override
   String get queueEmpty => 'File vide';
 
   @override
