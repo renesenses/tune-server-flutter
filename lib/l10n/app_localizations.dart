@@ -368,6 +368,12 @@ abstract class AppLocalizations {
   /// **'Tracks'**
   String get tabTracks;
 
+  /// No description provided for @albumTracksDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks · {duration}'**
+  String albumTracksDuration(int count, String duration);
+
   /// No description provided for @tabGenres.
   ///
   /// In en, this message translates to:

@@ -43,6 +43,7 @@
   "tabAlbums": "专辑",
   "tabArtists": "艺术家",
   "tabTracks": "曲目",
+  "albumTracksDuration": "{count} 首 · {duration}",
   "tabGenres": "流派",
   "tabPlaylists": "播放列表",
   "tabFavorites": "收藏",

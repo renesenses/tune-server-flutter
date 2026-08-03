@@ -43,6 +43,7 @@
   "tabAlbums": "Album",
   "tabArtists": "Artisti",
   "tabTracks": "Brani",
+  "albumTracksDuration": "{count} tracce · {duration}",
   "tabGenres": "Generi",
   "tabPlaylists": "Playlist",
   "tabFavorites": "Preferiti",

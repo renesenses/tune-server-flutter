@@ -43,6 +43,7 @@
   "tabAlbums": "アルバム",
   "tabArtists": "アーティスト",
   "tabTracks": "曲",
+  "albumTracksDuration": "{count}曲 · {duration}",
   "tabGenres": "ジャンル",
   "tabPlaylists": "プレイリスト",
   "tabFavorites": "お気に入り",

@@ -141,6 +141,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tabTracks => 'Brani';
 
   @override
+  String albumTracksDuration(int count, String duration) {
+    return '$count tracce · $duration';
+  }
+
+  @override
   String get tabGenres => 'Generi';
 
   @override

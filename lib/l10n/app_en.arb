@@ -48,6 +48,13 @@
   "tabAlbums": "Albums",
   "tabArtists": "Artists",
   "tabTracks": "Tracks",
+  "albumTracksDuration": "{count} tracks · {duration}",
+  "@albumTracksDuration": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  },
   "tabGenres": "Genres",
   "tabPlaylists": "Playlists",
   "tabFavorites": "Favorites",

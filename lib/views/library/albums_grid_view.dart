@@ -480,6 +480,13 @@ class _AlbumCard extends StatelessWidget {
 // AlbumDetailView
 // ---------------------------------------------------------------------------
 
+/// Compact total-duration label for an album header: "42 min" or "1 h 05".
+String _fmtAlbumDuration(int ms) {
+  final m = ms ~/ 60000;
+  if (m >= 60) return '${m ~/ 60} h ${(m % 60).toString().padLeft(2, '0')}';
+  return '$m min';
+}
+
 class AlbumDetailView extends StatefulWidget {
   final Album album;
   const AlbumDetailView({super.key, required this.album});
@@ -750,6 +757,23 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
         slivers: [
           // Header artwork + méta
           SliverToBoxAdapter(child: _AlbumHeader(album: album)),
+
+          // Track count + total album duration (Dominique Comet).
+          if (_tracks != null && _tracks!.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 6),
+                child: Text(
+                  AppLocalizations.of(context).albumTracksDuration(
+                    _tracks!.length,
+                    _fmtAlbumDuration(_tracks!
+                        .fold<int>(0, (s, t) => s + (t.durationMs ?? 0))),
+                  ),
+                  style: TuneFonts.caption
+                      .copyWith(color: TuneColors.textSecondary),
+                ),
+              ),
+            ),
 
           // Star rating
           SliverToBoxAdapter(
