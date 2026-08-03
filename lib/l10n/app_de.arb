@@ -43,6 +43,7 @@
   "tabAlbums": "Alben",
   "tabArtists": "Künstler",
   "tabTracks": "Titel",
+  "albumTracksDuration": "{count} Titel · {duration}",
   "tabGenres": "Genres",
   "tabPlaylists": "Playlists",
   "tabFavorites": "Favoriten",

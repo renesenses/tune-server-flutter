@@ -141,6 +141,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tabTracks => 'Pistes';
 
   @override
+  String albumTracksDuration(int count, String duration) {
+    return '$count pistes · $duration';
+  }
+
+  @override
   String get tabGenres => 'Genres';
 
   @override

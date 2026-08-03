@@ -140,6 +140,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get tabTracks => '트랙';
 
   @override
+  String albumTracksDuration(int count, String duration) {
+    return '$count곡 · $duration';
+  }
+
+  @override
   String get tabGenres => '장르';
 
   @override

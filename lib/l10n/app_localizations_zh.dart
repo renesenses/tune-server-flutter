@@ -140,6 +140,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabTracks => '曲目';
 
   @override
+  String albumTracksDuration(int count, String duration) {
+    return '$count 首 · $duration';
+  }
+
+  @override
   String get tabGenres => '流派';
 
   @override

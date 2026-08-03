@@ -43,6 +43,7 @@
   "tabAlbums": "앨범",
   "tabArtists": "아티스트",
   "tabTracks": "트랙",
+  "albumTracksDuration": "{count}곡 · {duration}",
   "tabGenres": "장르",
   "tabPlaylists": "플레이리스트",
   "tabFavorites": "즐겨찾기",
