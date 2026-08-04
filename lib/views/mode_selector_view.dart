@@ -56,23 +56,35 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
       _error = null;
     });
 
-    TuneNativeServer.initialize();
-    await EmbeddedServerService.init();
+    // Guard the whole embedded-start path: initializing the native server (FFI)
+    // and starting the foreground service can throw, and an unguarded throw here
+    // escapes to a process crash instead of a shown error (Levente, Android).
+    try {
+      TuneNativeServer.initialize();
+      await EmbeddedServerService.init();
 
-    final ok = await EmbeddedServerService.start();
-    if (!mounted) return;
-
-    if (ok) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('last_mode', 'embedded');
-      final appState = context.read<AppState>();
-      await appState.connectToServer('127.0.0.1', 8888);
+      final ok = await EmbeddedServerService.start();
       if (!mounted) return;
-      _navigateToApp();
-    } else {
+
+      if (ok) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('last_mode', 'embedded');
+        if (!mounted) return;
+        final appState = context.read<AppState>();
+        await appState.connectToServer('127.0.0.1', 8888);
+        if (!mounted) return;
+        _navigateToApp();
+      } else {
+        setState(() {
+          _starting = false;
+          _error = 'Failed to start server';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
         _starting = false;
-        _error = 'Failed to start server';
+        _error = 'Failed to start server: $e';
       });
     }
   }
@@ -82,18 +94,25 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
       context: context,
       builder: (ctx) => _RemoteConnectDialog(
         onConnect: (host, port) async {
-          final appState = context.read<AppState>();
-          await appState.connectToServer(host, port);
-          if (!mounted) return;
-          if (appState.isRemoteConnected) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('last_mode', 'remote');
-            await prefs.setString('last_remote_host', host);
-            await prefs.setInt('last_remote_port', port);
-            _navigateToApp();
-          } else {
+          try {
+            final appState = context.read<AppState>();
+            await appState.connectToServer(host, port);
+            if (!mounted) return;
+            if (appState.isRemoteConnected) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('last_mode', 'remote');
+              await prefs.setString('last_remote_host', host);
+              await prefs.setInt('last_remote_port', port);
+              _navigateToApp();
+            } else {
+              setState(() {
+                _error = appState.errorMessage ?? 'Connection failed';
+              });
+            }
+          } catch (e) {
+            if (!mounted) return;
             setState(() {
-              _error = appState.errorMessage ?? 'Connection failed';
+              _error = 'Connection failed: $e';
             });
           }
         },
