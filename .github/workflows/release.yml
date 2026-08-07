@@ -59,14 +59,26 @@ jobs:
             echo "storeFile=tune-upload-keystore.jks"
           } > android/key.properties
 
+      # One APK per ABI instead of a single "fat" one. The fat APK carried every
+      # architecture at once (162 MB), including ~63 MB of x86_64 that only
+      # emulators can use — enough to fail installation on a phone that is short
+      # on free space. Per-ABI builds bring the phone download down to ~55 MB.
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
 
       - name: Rename APK
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          cp build/app/outputs/flutter-apk/app-release.apk "tune-server-${VERSION}-android.apk"
-          sha256sum "tune-server-${VERSION}-android.apk" | awk '{print $1}' > "tune-server-${VERSION}-android.apk.sha256"
+          OUT=build/app/outputs/flutter-apk
+          # arm64 is the default download: every 64-bit Android device, i.e.
+          # anything sold in the last several years.
+          cp "$OUT/app-arm64-v8a-release.apk"   "tune-server-${VERSION}-android-arm64.apk"
+          # Kept for older 32-bit devices.
+          cp "$OUT/app-armeabi-v7a-release.apk" "tune-server-${VERSION}-android-armv7.apk"
+          for f in tune-server-${VERSION}-android-*.apk; do
+            sha256sum "$f" | awk '{print $1}' > "$f.sha256"
+          done
+          ls -la tune-server-*.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -81,15 +93,27 @@ jobs:
         with:
           node-version: "20"
 
+      # Without --groups the APK is uploaded but handed to nobody: it shows up in
+      # the Firebase console while every tester keeps waiting. That is why the
+      # last build testers actually received was 0.9.41.
+      # The group name carries an accent, so it must stay quoted.
       - name: Upload to Firebase App Distribution
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           npm install -g firebase-tools
           firebase appdistribution:distribute \
-            "tune-server-${{ steps.version.outputs.version }}-android.apk" \
+            "tune-server-${{ steps.version.outputs.version }}-android-arm64.apk" \
             --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" \
+            --groups "tune-béta-testeurs" \
             --release-notes "Tune v${{ steps.version.outputs.version }}" \
-            --token "${{ secrets.FIREBASE_CI_TOKEN }}"
+            --token "${{ secrets.FIREBASE_CI_TOKEN }}" \
+            | tee /tmp/fad.log
+          # The CLI can report a 404 on the group and still exit 0, so the
+          # success line is checked explicitly rather than trusted.
+          grep -q "distributed to testers/groups successfully" /tmp/fad.log || {
+            echo "::error::Firebase upload succeeded but distribution to testers FAILED"
+            exit 1
+          }
 
   build-ios:
     runs-on: macos-latest
@@ -153,7 +177,8 @@ jobs:
             ## Tune Server Flutter v${{ github.ref_name }}
 
             ### Downloads
-            - **Android**: `tune-server-*-android.apk` — Install directly on your device
+            - **Android (most devices)**: `tune-server-*-android-arm64.apk` — 64-bit, ~55 MB
+            - **Android (older 32-bit devices)**: `tune-server-*-android-armv7.apk`
             - **iOS**: `tune-server-*-ios.ipa` — Unsigned IPA (for TestFlight, use Xcode to upload)
           files: |
             artifacts/tune-server-*.apk
