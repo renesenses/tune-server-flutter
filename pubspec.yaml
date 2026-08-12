@@ -1,6 +1,6 @@
 name: tune_server
 description: "Tune Server — serveur musical multi-room embarqué pour iOS et Android."
-version: 0.9.68+495
+version: 0.9.69+496
 publish_to: 'none'
 
 environment:
