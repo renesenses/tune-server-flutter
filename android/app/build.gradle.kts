@@ -68,6 +68,27 @@ android {
     }
 }
 
+// Garde-fou « bibliothèques natives périmées » (#1751).
+//
+// Les `.so` embarqués sont versionnés dans le dépôt : rien n'empêchait un APK
+// de partir avec un moteur de trois semaines et demie sous une interface
+// récente — c'est arrivé (rust v0.8.354 sous l'app 0.9.76). La vérification est
+// branchée sur `preBuild`, donc AUCUN build Android ne peut la contourner :
+// ni `flutter build apk` en local, ni la CI de release.
+//
+// Elle échoue, elle n'avertit pas. Pour repartir d'un état sain, reconstruire
+// les .so puis `scripts/check-native-libs.sh --update`.
+val checkNativeLibs = tasks.register<Exec>("checkNativeLibs") {
+    description = "Échoue si les libtuneserver.so embarqués ne sont pas ceux de la version construite (#1751)"
+    // rootProject = android/ ; son parent = racine du dépôt Flutter.
+    workingDir = rootProject.projectDir.parentFile
+    commandLine("bash", "scripts/check-native-libs.sh")
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn(checkNativeLibs)
+}
+
 flutter {
     source = "../.."
 }

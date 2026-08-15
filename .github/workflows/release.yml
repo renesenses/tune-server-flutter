@@ -14,6 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Avant toute chose : les .so embarqués doivent être ceux de la version
+      # qu'on distribue. Sans ce contrôle, un APK peut partir chez les testeurs
+      # avec un moteur périmé — vécu, rust v0.8.354 sous l'app 0.9.76 (#1751).
+      # Placé avant l'installation de Flutter pour échouer en quelques secondes.
+      - name: Vérifier les bibliothèques natives (garde-fou #1751)
+        run: ./scripts/check-native-libs.sh
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:

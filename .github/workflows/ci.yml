@@ -7,6 +7,18 @@ on:
     branches: [main]
 
 jobs:
+  # Les `.so` du serveur Rust sont versionnés dans ce dépôt. Rien ne signalait
+  # qu'ils dataient de trois semaines et demie : les testeurs Android ont tourné
+  # sur rust v0.8.354 sous une interface 0.9.76 (#1751). Ce job rend la dérive
+  # visible dès la PR, avant qu'un APK ne parte chez les testeurs.
+  native-libs:
+    name: Bibliothèques natives à jour
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier les libtuneserver.so embarqués
+        run: ./scripts/check-native-libs.sh
+
   analyze-and-test:
     name: Analyze & Test
     runs-on: ubuntu-latest
