@@ -69,6 +69,27 @@ lib/
 ARB files in `lib/l10n/app_*.arb`, generated classes in `lib/l10n/app_localizations_*.dart`.
 8 languages supported. Add strings to all `.arb` files + regenerate with `flutter gen-l10n`.
 
+## Bibliothèques natives Android (`libtuneserver.so`)
+
+Les trois `.so` du serveur Rust sont **versionnés dans ce dépôt**
+(`android/app/src/main/jniLibs/<abi>/libtuneserver.so`). Leur empreinte est
+figée dans `android/app/src/main/jniLibs/tune-native.manifest`.
+
+`scripts/check-native-libs.sh` **fait échouer** tout build Android dont les
+`.so` ne portent pas la version de `pubspec.yaml` — branché sur `preBuild`
+(Gradle), sur la CI et sur la release. Ce n'est pas un avertissement.
+
+Après avoir reconstruit les `.so` (`./tune-ffi/build-android.sh --release`
+dans `tune-server-rust`) :
+
+```bash
+scripts/check-native-libs.sh --update   # régénère l'empreinte
+```
+
+puis committer **les `.so` ET le manifeste**. `--update` refuse de tamponner
+une bibliothèque qui ne contient pas la version attendue : un build cassé ne
+peut donc pas se faire passer pour un build à jour (#1751).
+
 ## CRITICAL RULES
 
 - **NEVER mention or reference recorder, recording, or special-edition features.** This is a public repo.
