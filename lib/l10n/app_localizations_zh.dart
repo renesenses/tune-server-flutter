@@ -348,30 +348,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get zonesOutputAirplay => 'AirPlay';
 
   @override
-  String get zonesAirplayPair => 'Pair (PIN code)';
+  String get zonesAirplayPair => '配对（PIN 码）';
 
   @override
-  String get zonesAirplayPairTitle => 'AirPlay pairing';
+  String get zonesAirplayPairTitle => 'AirPlay 配对';
 
   @override
   String get zonesAirplayPairIntro =>
-      'Some TVs (Samsung, LG) and the Apple TV show a 4-digit code on screen. Start pairing, then enter the code.';
+      '部分电视（三星、LG）和 Apple TV 会在屏幕上显示 4 位代码。请先开始配对，然后输入代码。';
 
   @override
-  String get zonesAirplayPairWaiting =>
-      'Waiting for the code shown on the device…';
+  String get zonesAirplayPairWaiting => '正在等待设备上显示的代码…';
 
   @override
-  String get zonesAirplayPairEnterCode => 'Enter the code shown on the device:';
+  String get zonesAirplayPairEnterCode => '请输入设备上显示的代码：';
 
   @override
-  String get zonesAirplayPairStart => 'Start pairing';
+  String get zonesAirplayPairStart => '开始配对';
 
   @override
-  String get zonesAirplayPairSubmit => 'Submit code';
+  String get zonesAirplayPairSubmit => '提交代码';
 
   @override
-  String get zonesAirplayPairRetry => 'Try again';
+  String get zonesAirplayPairRetry => '重试';
 
   @override
   String get zonesOutputBluetooth => '蓝牙';

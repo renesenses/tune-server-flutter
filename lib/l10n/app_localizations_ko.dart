@@ -348,30 +348,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get zonesOutputAirplay => 'AirPlay';
 
   @override
-  String get zonesAirplayPair => 'Pair (PIN code)';
+  String get zonesAirplayPair => '페어링(PIN 코드)';
 
   @override
-  String get zonesAirplayPairTitle => 'AirPlay pairing';
+  String get zonesAirplayPairTitle => 'AirPlay 페어링';
 
   @override
   String get zonesAirplayPairIntro =>
-      'Some TVs (Samsung, LG) and the Apple TV show a 4-digit code on screen. Start pairing, then enter the code.';
+      '일부 TV(삼성, LG)와 Apple TV는 화면에 4자리 코드를 표시합니다. 페어링을 시작한 다음 코드를 입력하세요.';
 
   @override
-  String get zonesAirplayPairWaiting =>
-      'Waiting for the code shown on the device…';
+  String get zonesAirplayPairWaiting => '기기에 표시된 코드를 기다리는 중…';
 
   @override
-  String get zonesAirplayPairEnterCode => 'Enter the code shown on the device:';
+  String get zonesAirplayPairEnterCode => '기기에 표시된 코드를 입력하세요:';
 
   @override
-  String get zonesAirplayPairStart => 'Start pairing';
+  String get zonesAirplayPairStart => '페어링 시작';
 
   @override
-  String get zonesAirplayPairSubmit => 'Submit code';
+  String get zonesAirplayPairSubmit => '코드 제출';
 
   @override
-  String get zonesAirplayPairRetry => 'Try again';
+  String get zonesAirplayPairRetry => '다시 시도';
 
   @override
   String get zonesOutputBluetooth => '블루투스';
