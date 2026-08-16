@@ -351,30 +351,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String get zonesOutputAirplay => 'AirPlay';
 
   @override
-  String get zonesAirplayPair => 'Pair (PIN code)';
+  String get zonesAirplayPair => 'Associa (codice PIN)';
 
   @override
-  String get zonesAirplayPairTitle => 'AirPlay pairing';
+  String get zonesAirplayPairTitle => 'Associazione AirPlay';
 
   @override
   String get zonesAirplayPairIntro =>
-      'Some TVs (Samsung, LG) and the Apple TV show a 4-digit code on screen. Start pairing, then enter the code.';
+      'Alcuni TV (Samsung, LG) e l\'Apple TV mostrano un codice a 4 cifre sullo schermo. Avvia l\'associazione, poi inserisci il codice.';
 
   @override
   String get zonesAirplayPairWaiting =>
-      'Waiting for the code shown on the device…';
+      'In attesa del codice mostrato sul dispositivo…';
 
   @override
-  String get zonesAirplayPairEnterCode => 'Enter the code shown on the device:';
+  String get zonesAirplayPairEnterCode =>
+      'Inserisci il codice mostrato sul dispositivo:';
 
   @override
-  String get zonesAirplayPairStart => 'Start pairing';
+  String get zonesAirplayPairStart => 'Avvia l\'associazione';
 
   @override
-  String get zonesAirplayPairSubmit => 'Submit code';
+  String get zonesAirplayPairSubmit => 'Conferma codice';
 
   @override
-  String get zonesAirplayPairRetry => 'Try again';
+  String get zonesAirplayPairRetry => 'Riprova';
 
   @override
   String get zonesOutputBluetooth => 'Bluetooth';
