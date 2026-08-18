@@ -1,7 +1,7 @@
 # Empreinte des bibliothèques natives embarquées (libtuneserver.so).
 # Générée par scripts/check-native-libs.sh --update — ne pas éditer à la main.
 # Toute dérive entre cette empreinte et pubspec.yaml fait ÉCHOUER le build (#1751).
-version=0.9.76
-arm64-v8a=817df78db89225beaad65ce0b5915b0a15334243ac65a25f6fed70d6f27e8415
-armeabi-v7a=a820813d071e6220ada94748d7a6da3d4a9e5f0c287a79f69bc919a2326da524
-x86_64=28b05fb56c8e4eb77e70b91364dc5734a5fc1e64499fbe419b3fae4c1d70f594
+version=0.9.85
+arm64-v8a=de99884b62b424fb92f4df3540813a3df8dc53d8ec3cd21fe20af7bbafbc2695
+armeabi-v7a=54005f41fe0e7ebc568a8c8effd856e55d8944ce030f5f94a919806d3cf769af
+x86_64=31c9352a6cd15afebbb2ccba82dfd288222f0c5e6736af268dc29aeeed7de7f4
