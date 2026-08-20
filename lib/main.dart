@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import 'services/auth_service.dart';
 import 'state/app_state.dart';
 import 'state/library_state.dart';
 import 'state/settings_state.dart';
+import 'state/tab_shell.dart';
 import 'state/zone_state.dart';
 import 'app_navigator.dart';
 import 'views/components/player_sheet.dart';
@@ -180,9 +182,59 @@ class TuneServerApp extends StatelessWidget {
         // tab-bar labels on devices with a bottom inset, so the menu bar looked
         // gone in portrait (Fabien, Android v0.8.336). Include the safe area.
         final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
+        // La barre d'ONGLETS monte ici elle aussi (#1950). Portée par le
+        // Scaffold de la vue racine, elle était recouverte par chaque
+        // sous-page poussée en plein écran sur le Navigator racine : la
+        // navigation principale disparaissait au moindre tap sur un album, un
+        // artiste ou un genre. Au-dessus du Navigator, elle survit aux pushes,
+        // exactement comme la barre de lecture depuis #1088.
+        //
+        // ⚠️ Ce n'est PAS un retour aux Navigators par onglet, qui avaient
+        // laissé l'écran noir sur Xiaomi/Android 16 — voir tab_shell.dart.
         return PlayerSheetScaffold(
           sheetBottomInset: kBottomNavigationBarHeight + safeBottom,
-          child: child,
+          child: Stack(
+            children: [
+              Positioned.fill(child: child),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: TabShell.mounted,
+                  builder: (context, shown, _) {
+                    // Hors de la vue à onglets — sélecteur de mode au
+                    // démarrage, par exemple — il n'y a pas d'onglets à
+                    // montrer, et une barre y serait une invitation à cliquer
+                    // dans le vide.
+                    if (!shown) return const SizedBox.shrink();
+                    return ValueListenableBuilder<List<TabShellItem>?>(
+                      valueListenable: TabShell.items,
+                      builder: (context, items, _) {
+                        if (items == null || items.length < 2) {
+                          return const SizedBox.shrink();
+                        }
+                        return ValueListenableBuilder<int>(
+                          valueListenable: TabShell.index,
+                          builder: (context, index, _) => BottomNavigationBar(
+                            currentIndex: index.clamp(0, items.length - 1),
+                            onTap: (i) => TabShell.index.value = i,
+                            items: items
+                                .map((t) => BottomNavigationBarItem(
+                                      icon: Icon(t.icon),
+                                      activeIcon: Icon(t.activeIcon),
+                                      label: t.label,
+                                    ))
+                                .toList(),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
       home: const ModeSelectorView(),

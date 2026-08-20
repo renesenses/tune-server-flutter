@@ -58,10 +58,30 @@ class ZoneState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Appelé à chaque changement de zone active, pour que la préférence
+  /// survive au redémarrage (#1952).
+  ///
+  /// Un callback plutôt qu'une dépendance directe à `SettingsState` : six
+  /// endroits changent la zone active (app_state_zones, app_state_playback,
+  /// home_view), et les faire tous écrire la préférence aurait garanti qu'un
+  /// septième l'oublie. Le point de passage unique est ici.
+  void Function(int id)? onZoneChosen;
+
+  /// Zone à préférer au premier `setZones`, lue depuis les préférences.
+  ///
+  /// ⚠️ Elle n'est appliquée QUE si elle figure dans la liste renvoyée par le
+  /// serveur. Les identifiants ne sont pas stables entre mode local et mode
+  /// distant : restaurer un id absent donnerait une zone fantôme, donc un état
+  /// pire que l'heuristique actuelle.
+  int? preferredZoneId;
+
   void setZones(List<ZoneWithState> zones) {
     _zones = zones;
     if (_currentZoneId == null && zones.isNotEmpty) {
-      _currentZoneId = zones.first.id;
+      final wanted = preferredZoneId;
+      final restorable =
+          wanted != null && zones.any((z) => z.id == wanted);
+      _currentZoneId = restorable ? wanted : zones.first.id;
     }
     notifyListeners();
   }
@@ -77,6 +97,9 @@ class ZoneState extends ChangeNotifier {
   void setCurrentZoneId(int id) {
     if (_currentZoneId == id) return;
     _currentZoneId = id;
+    // Mémorise le choix. Placé ici et nulle part ailleurs : c'est le seul
+    // chemin par lequel passent les six appelants (#1952).
+    onZoneChosen?.call(id);
     notifyListeners();
   }
 

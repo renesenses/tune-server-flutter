@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
+import '../../state/tab_shell.dart';
 import '../dj/dj_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -40,7 +41,28 @@ class iPhoneContentView extends StatefulWidget {
 }
 
 class _iPhoneContentViewState extends State<iPhoneContentView> {
-  int _selectedIndex = 0;
+  int get _selectedIndex => TabShell.index.value;
+
+  @override
+  void initState() {
+    super.initState();
+    // La barre d'onglets est dessinee par `main.dart`, AU-DESSUS du Navigator
+    // (#1950) : sans ca elle est recouverte par chaque sous-page poussee en
+    // plein ecran. On s'abonne a l'index qu'elle ecrit.
+    TabShell.mounted.value = true;
+    TabShell.index.addListener(_onTabChanged);
+  }
+
+  @override
+  void dispose() {
+    TabShell.index.removeListener(_onTabChanged);
+    TabShell.detach();
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (mounted) setState(() {});
+  }
 
   static const _rootPages = [
     LibraryView(),
@@ -60,6 +82,21 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
       (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
       (icon: Icons.more_horiz_rounded,       activeIcon: Icons.more_horiz_rounded,      label: 'More'),
     ];
+
+    // Publie les onglets pour la barre montee dans `main.dart`. Fait pendant le
+    // build parce que les libelles dependent des traductions, donc du contexte.
+    final published = tabs
+        .map((t) => TabShellItem(
+              icon: t.icon,
+              activeIcon: t.activeIcon,
+              label: t.label,
+            ))
+        .toList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Apres la frame : ecrire un ValueNotifier pendant le build declencherait
+      // une reconstruction en cours de reconstruction.
+      if (mounted) TabShell.items.value = published;
+    });
 
     return PopScope(
       canPop: false,
@@ -101,17 +138,6 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
               const SizedBox(height: 72),
             ],
           ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
-          items: tabs
-              .map((t) => BottomNavigationBarItem(
-                    icon: Icon(t.icon),
-                    activeIcon: Icon(t.activeIcon),
-                    label: t.label,
-                  ))
-              .toList(),
-        ),
       ),
     );
   }

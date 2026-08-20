@@ -100,4 +100,64 @@ void main() {
       expect(state.currentZoneId, isNull);
     });
   });
+
+  group('ZoneState — dernière zone utilisée (#1952)', () {
+    test('restaure la zone préférée quand elle existe encore', () {
+      final state = ZoneState()..preferredZoneId = 2;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 2,
+          reason: 'sans ça on retombe sur zones.first et la préférence ne sert à rien');
+    });
+
+    /// Le piège du ticket : les identifiants de zone ne sont PAS stables entre
+    /// le mode local et le mode distant. Restaurer un id absent donnerait une
+    /// zone fantôme — un état pire que l'heuristique qu'on remplace.
+    test('ignore une zone préférée absente de la liste du serveur', () {
+      final state = ZoneState()..preferredZoneId = 42;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 1, reason: 'repli sur la première zone');
+    });
+
+    test('sans préférence, garde le comportement d\'origine', () {
+      final state = ZoneState();
+      state.setZones(const [
+        ZoneWithState(id: 7, name: 'Salon'),
+        ZoneWithState(id: 8, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 7);
+    });
+
+    test('un changement de zone est signalé une fois, et une seule', () {
+      final vus = <int>[];
+      final state = ZoneState()..onZoneChosen = vus.add;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      state.setCurrentZoneId(2);
+      state.setCurrentZoneId(2); // re-sélectionner la même : rien à mémoriser
+      state.setCurrentZoneId(1);
+      expect(vus, [2, 1]);
+    });
+
+    test('la restauration au démarrage ne réécrit pas la préférence', () {
+      final vus = <int>[];
+      final state = ZoneState()
+        ..preferredZoneId = 2
+        ..onZoneChosen = vus.add;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 2);
+      expect(vus, isEmpty,
+          reason: 'setZones ne passe pas par setCurrentZoneId : rien à réécrire');
+    });
+  });
 }

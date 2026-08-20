@@ -384,10 +384,32 @@ class _SheetBody extends StatelessWidget {
 // Mini row — compact track info + transport (shown when nearly collapsed)
 // ---------------------------------------------------------------------------
 
-class _MiniRow extends StatelessWidget {
+class _MiniRow extends StatefulWidget {
   final Track? track;
   final DraggableScrollableController sheetController;
   const _MiniRow({required this.track, required this.sheetController});
+
+  @override
+  State<_MiniRow> createState() => _MiniRowState();
+}
+
+class _MiniRowState extends State<_MiniRow> {
+  /// La ligne de volume est-elle dépliée ?
+  ///
+  /// Elle remplace un `showModalBottomSheet` qui posait deux problèmes à la
+  /// fois (#1949, Fabien) : le widget étant sans état, re-cliquer sur l'icône
+  /// EMPILAIT un second sheet au lieu de fermer le premier ; et son barrier
+  /// était peint SOUS la barre de lecture, montée au-dessus du Navigator par
+  /// `main.dart`. L'icône restait donc cliquable pendant que le modal était
+  /// ouvert, et le glissement vers le bas qui aurait dû le refermer était
+  /// mangé par le DraggableScrollableSheet.
+  ///
+  /// Une ligne dépliable DANS la barre supprime les deux causes d'un coup :
+  /// plus de z-order, plus de barrier, et la bascule devient un booléen.
+  bool _volumeOpen = false;
+
+  Track? get track => widget.track;
+  DraggableScrollableController get sheetController => widget.sheetController;
 
   /// Expand the sheet to the now-playing snap, which exposes the full
   /// interactive seek bar and the volume control. Tapping the track (or the
@@ -403,45 +425,10 @@ class _MiniRow extends StatelessWidget {
     );
   }
 
-  /// Show a compact popup with the live volume slider so the volume is
-  /// adjustable straight from the mini-player. The slider (VolumeControlView)
-  /// sends every change to the server via AppState.setVolume and updates the
-  /// zone optimistically, so the mini-player volume icon is genuinely
-  /// functional instead of merely expanding the sheet.
-  void _showVolumePopup(BuildContext context) {
-    showModalBottomSheet(
-      // The player sheet has no Navigator ancestor (mounted via
-      // MaterialApp.builder), so opening the modal from its own context did
-      // nothing (Fabien: volume icon "inactive"). Anchor it on the app
-      // navigator's context, which is inside the Navigator subtree.
-      context: appNavigatorKey.currentContext ?? context,
-      backgroundColor: TuneColors.surface,
-      useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: TuneColors.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const VolumeControlView(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  /// Déplie ou replie la ligne de volume, dans la barre elle-même.
+  ///
+  /// Aucun `showModalBottomSheet` : voir `_volumeOpen` pour ce que ça coûtait.
+  void _toggleVolume() => setState(() => _volumeOpen = !_volumeOpen);
 
   @override
   Widget build(BuildContext context) {
@@ -522,11 +509,16 @@ class _MiniRow extends StatelessWidget {
               // expanding the whole sheet (Fabien: "l'icône volume toujours
               // inactive, si je clique dessus ça ouvre le volet").
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded),
+                icon: Icon(_volumeOpen
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_up_outlined),
                 iconSize: 22,
-                color: TuneColors.textPrimary,
+                // L'icône dit l'état : pleine quand la ligne est dépliée. Sans
+                // ce retour, rien ne distingue « ouvert » de « fermé » et on
+                // reclique en croyant que ça n'a pas marché (#1949).
+                color: _volumeOpen ? TuneColors.accent : TuneColors.textPrimary,
                 tooltip: 'Volume',
-                onPressed: () => _showVolumePopup(context),
+                onPressed: _toggleVolume,
               ),
               SkipButton(
                 isForward: false,
@@ -567,6 +559,19 @@ class _MiniRow extends StatelessWidget {
             ],
           ),
         ),
+        // Ligne de volume dépliable — remplace le modal (#1949).
+        AnimatedCrossFade(
+          firstChild: const SizedBox(width: double.infinity, height: 0),
+          secondChild: const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: VolumeControlView(),
+          ),
+          crossFadeState: _volumeOpen
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 180),
+          sizeCurve: Curves.easeOut,
+        ),
         // Progress bar at bottom of mini player
         _MiniProgressBar(),
       ],
@@ -574,7 +579,42 @@ class _MiniRow extends StatelessWidget {
   }
 }
 
-class _MiniProgressBar extends StatelessWidget {
+/// Barre de progression de la vue compacte — désormais utilisable pour se
+/// positionner dans la piste.
+///
+/// Elle n'était qu'un `LinearProgressIndicator` de 2 px, explicitement non
+/// interactif : « the 2px mini progress bar itself is not seekable ». Le repli
+/// prévu était de déplier le volet pour atteindre le vrai `SeekBarView` — mais
+/// ce glissement vers le haut est indécouvrable : la poignée fait 36×4 px et
+/// Fabien, qui utilise l'application tous les jours, ne l'a jamais trouvé
+/// (#1951).
+///
+/// Le trait reste fin — on ne veut pas voler de la hauteur à la barre — mais
+/// la ZONE TACTILE fait 18 px : c'est elle qui rend le geste possible, pas
+/// l'épaisseur visible. Un doigt ne vise pas 2 pixels.
+class _MiniProgressBar extends StatefulWidget {
+  @override
+  State<_MiniProgressBar> createState() => _MiniProgressBarState();
+}
+
+class _MiniProgressBarState extends State<_MiniProgressBar> {
+  /// Position en cours de glissement, `null` hors geste.
+  ///
+  /// Pendant le glissement on affiche CETTE valeur et non celle de la zone :
+  /// sinon le trait revient en arrière à chaque rafraîchissement du serveur,
+  /// et le doigt semble glisser sur une barre qui résiste.
+  double? _dragFraction;
+
+  double _fractionFromX(double dx, double width) =>
+      width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+
+  void _seekTo(BuildContext context, double fraction, int durationMs) {
+    if (durationMs <= 0) return;
+    context
+        .read<AppState>()
+        .seek(Duration(milliseconds: (fraction * durationMs).round()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final positionMs =
@@ -582,14 +622,45 @@ class _MiniProgressBar extends StatelessWidget {
     final track =
         context.select<ZoneState, dynamic>((z) => z.currentTrack) as Track?;
     final durationMs = track?.durationMs ?? 0;
-    final progress =
-        durationMs > 0 ? (positionMs / durationMs).clamp(0.0, 1.0) : 0.0;
+    final progress = _dragFraction ??
+        (durationMs > 0 ? (positionMs / durationMs).clamp(0.0, 1.0) : 0.0);
 
-    return LinearProgressIndicator(
+    final bar = LinearProgressIndicator(
       value: progress,
       minHeight: 2,
       backgroundColor: TuneColors.divider,
       valueColor: const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+    );
+
+    // Une piste sans durée connue (radio, flux) ne se cherche pas : on rend la
+    // barre telle quelle, sans geste, plutôt qu'un curseur qui ne ferait rien.
+    if (durationMs <= 0) return bar;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) =>
+              _seekTo(context, _fractionFromX(d.localPosition.dx, width), durationMs),
+          onHorizontalDragStart: (d) => setState(
+              () => _dragFraction = _fractionFromX(d.localPosition.dx, width)),
+          onHorizontalDragUpdate: (d) => setState(
+              () => _dragFraction = _fractionFromX(d.localPosition.dx, width)),
+          onHorizontalDragEnd: (_) {
+            final f = _dragFraction;
+            setState(() => _dragFraction = null);
+            if (f != null) _seekTo(context, f, durationMs);
+          },
+          // Le glissement HORIZONTAL est capté ici ; le vertical continue de
+          // remonter au DraggableScrollableSheet, qui déplie le volet. Les deux
+          // gestes cohabitent parce qu'ils sont sur des axes différents.
+          child: SizedBox(
+            height: 18,
+            child: Align(alignment: Alignment.bottomCenter, child: bar),
+          ),
+        );
+      },
     );
   }
 }

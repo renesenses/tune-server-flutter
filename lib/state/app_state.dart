@@ -169,6 +169,16 @@ class AppState extends ChangeNotifier {
     final zoneState = ZoneState();
     final libraryState = LibraryState();
 
+    // Dernière zone utilisée (#1952). La persistance existait — clé
+    // `default_zone_id`, getter, setter — et n'avait AUCUN appelant : rien
+    // n'écrivait le choix, rien ne le relisait, et le démarrage retombait
+    // toujours sur `zones.first`.
+    //
+    // Le branchement se fait ici, au seul endroit où les deux états se
+    // rencontrent, plutôt que dans les six appelants de `setCurrentZoneId`.
+    zoneState.preferredZoneId = settingsState.defaultZoneId;
+    zoneState.onZoneChosen = (id) => settingsState.setDefaultZoneId(id);
+
     final app = AppState(
       engine: engine,
       zoneState: zoneState,
