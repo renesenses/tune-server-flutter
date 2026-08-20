@@ -61,7 +61,13 @@ class ZoneState extends ChangeNotifier {
   void setZones(List<ZoneWithState> zones) {
     _zones = zones;
     if (_currentZoneId == null && zones.isNotEmpty) {
-      _currentZoneId = zones.first.id;
+      // La zone mémorisée d'abord, la première ensuite. Avant ce correctif, le
+      // démarrage prenait TOUJOURS `zones.first` — l'ordre du serveur — alors
+      // que `defaultZoneId` existait de bout en bout dans `configuration.dart`
+      // et `settings_state.dart` sans le moindre appelant (#1952).
+      final preferee = zonePreferee;
+      final connue = preferee != null && zones.any((z) => z.id == preferee);
+      _currentZoneId = connue ? preferee : zones.first.id;
     }
     notifyListeners();
   }
@@ -74,9 +80,26 @@ class ZoneState extends ChangeNotifier {
     }
   }
 
+  /// Appelé à chaque changement de zone active, pour persister le choix.
+  ///
+  /// Injecté plutôt qu'appelé en dur : `ZoneState` ne doit pas dépendre du
+  /// stockage, sinon il devient intestable sans SharedPreferences. Et posé ICI
+  /// plutôt que chez les sept appelants de `setCurrentZoneId` — un seul point
+  /// de passage, donc aucun oubli possible quand un huitième apparaîtra.
+  void Function(int id)? onZoneChanged;
+
+  /// Zone à préférer au premier `setZones`, si elle est encore là.
+  ///
+  /// ⚠️ Vérifiée contre la liste avant d'être appliquée : l'identifiant de zone
+  /// n'est PAS stable entre le mode local et le mode distant. Restaurer un id
+  /// fantôme laisserait l'application sur une zone qui n'existe pas — pire que
+  /// l'état actuel, où elle prend au moins la première venue.
+  int? zonePreferee;
+
   void setCurrentZoneId(int id) {
     if (_currentZoneId == id) return;
     _currentZoneId = id;
+    onZoneChanged?.call(id);
     notifyListeners();
   }
 
