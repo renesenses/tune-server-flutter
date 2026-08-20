@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app_navigator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
 import '../dj/dj_view.dart';
@@ -40,7 +41,21 @@ class iPhoneContentView extends StatefulWidget {
 }
 
 class _iPhoneContentViewState extends State<iPhoneContentView> {
-  int _selectedIndex = 0;
+  // La barre d'onglets est dessinée par `BarreOnglets`, au-dessus du Navigator
+  // (#1950). Elle ne peut pas deviner seule si des onglets ont un sens à
+  // l'écran : c'est cette vue, et elle seule, qui le sait. Sans ce drapeau la
+  // barre s'afficherait aussi sur le sélecteur de mode du lancement.
+  @override
+  void initState() {
+    super.initState();
+    ongletsMontes.value = true;
+  }
+
+  @override
+  void dispose() {
+    ongletsMontes.value = false;
+    super.dispose();
+  }
 
   static const _rootPages = [
     LibraryView(),
@@ -52,15 +67,6 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final tabs = [
-      (icon: Icons.library_music_outlined,   activeIcon: Icons.library_music_rounded,   label: l.navLibrary),
-      (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
-      (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
-      (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
-      (icon: Icons.more_horiz_rounded,       activeIcon: Icons.more_horiz_rounded,      label: 'More'),
-    ];
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -90,10 +96,16 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
                 // Expanded and never shows the black; this mirrors it. Sub-page
                 // pushes now go to the root Navigator (full-screen), which is
                 // fine and matches the iPad behaviour.
-                child: IndexedStack(
-                  index: _selectedIndex,
-                  sizing: StackFit.expand,
-                  children: _rootPages,
+                // L'index vient de `ongletActif` et non d'un état local : la
+                // barre d'onglets est désormais montée AU-DESSUS du Navigator
+                // (main.dart), donc hors de cet arbre de widgets (#1950).
+                child: ValueListenableBuilder<int>(
+                  valueListenable: ongletActif,
+                  builder: (context, index, _) => IndexedStack(
+                    index: index,
+                    sizing: StackFit.expand,
+                    children: _rootPages,
+                  ),
                 ),
               ),
               // Reserve space for the mini player at the bottom so content
@@ -101,17 +113,9 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
               const SizedBox(height: 72),
             ],
           ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
-          items: tabs
-              .map((t) => BottomNavigationBarItem(
-                    icon: Icon(t.icon),
-                    activeIcon: Icon(t.activeIcon),
-                    label: t.label,
-                  ))
-              .toList(),
-        ),
+        // Plus de `bottomNavigationBar` ici : la barre est montée au-dessus du
+        // Navigator dans main.dart, sinon toute sous-page plein écran la
+        // recouvrait (#1950). Même remède que pour le tiroir de lecture (#1088).
       ),
     );
   }
