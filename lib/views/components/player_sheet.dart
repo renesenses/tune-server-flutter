@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -589,22 +590,105 @@ class _MiniRowState extends State<_MiniRow> {
   }
 }
 
-class _MiniProgressBar extends StatelessWidget {
+/// Fraction de morceau visée par un toucher à l'abscisse `dx`, sur une barre
+/// de largeur `largeur`.
+///
+/// Extraite et publique pour être testable : c'est ici que vivent les erreurs
+/// de bornes, et un widget privé dépendant de deux `Provider` ne se teste pas
+/// à ce grain.
+///
+/// ⚠️ La largeur nulle n'est PAS théorique. `LayoutBuilder` peut la produire
+/// pendant une passe de mise en page, et `dx / 0` donne `NaN` — que `.clamp()`
+/// propage, et dont `.round()` LÈVE UNE EXCEPTION en Dart. Sans ce garde, un
+/// toucher au mauvais moment ferait planter la barre de lecture.
+@visibleForTesting
+double fractionVisee(double dx, double largeur) {
+  if (!(largeur > 0)) return 0.0;
+  final v = dx / largeur;
+  if (v.isNaN) return 0.0;
+  return v.clamp(0.0, 1.0);
+}
+
+/// Barre de progression de la barre de lecture compacte — désormais UTILISABLE
+/// pour se positionner dans le morceau (#1951).
+///
+/// Elle n'était qu'un `LinearProgressIndicator` de 2 px, et le commentaire
+/// d'alors l'assumait : « the 2px mini progress bar itself is not seekable ».
+/// Le slider existait bien, mais seulement après avoir tiré le tiroir vers le
+/// haut — un geste que Fabien, qui utilise l'application tous les jours, n'a
+/// jamais trouvé. La poignée fait 36 × 4 px et rien ne dit qu'on peut la tirer.
+///
+/// L'APPARENCE ne change pas : toujours 2 px. Seule la zone TACTILE est
+/// élargie, de façon invisible, parce qu'on ne vise pas 2 pixels au doigt.
+class _MiniProgressBar extends StatefulWidget {
+  @override
+  State<_MiniProgressBar> createState() => _MiniProgressBarState();
+}
+
+class _MiniProgressBarState extends State<_MiniProgressBar> {
+  /// Position visée pendant le geste. Sans elle, la barre reviendrait à la
+  /// position réelle à chaque rafraîchissement, et sauterait sous le doigt.
+  double? _enCours;
+
+  void _viser(double dx, double largeur, int durationMs, {required bool relacher}) {
+    if (durationMs <= 0) return;
+    final v = fractionVisee(dx, largeur);
+    if (relacher) {
+      setState(() => _enCours = null);
+      context.read<AppState>().seek(Duration(milliseconds: (v * durationMs).round()));
+    } else {
+      setState(() => _enCours = v);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final positionMs =
-        context.select<ZoneState, int>((z) => z.positionMs);
+    final positionMs = context.select<ZoneState, int>((z) => z.positionMs);
     final track =
         context.select<ZoneState, dynamic>((z) => z.currentTrack) as Track?;
     final durationMs = track?.durationMs ?? 0;
-    final progress =
+    final reelle =
         durationMs > 0 ? (positionMs / durationMs).clamp(0.0, 1.0) : 0.0;
+    final progress = _enCours ?? reelle;
 
-    return LinearProgressIndicator(
-      value: progress,
-      minHeight: 2,
-      backgroundColor: TuneColors.divider,
-      valueColor: const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+    return LayoutBuilder(
+      builder: (context, contraintes) {
+        final largeur = contraintes.maxWidth;
+        return GestureDetector(
+          // Gestes HORIZONTAUX seulement : le tiroir de lecture est un
+          // `DraggableScrollableSheet` qui écoute la verticale. Capter les deux
+          // volerait le glissement vers le haut, c'est-à-dire l'accès à la vue
+          // complète — on corrigerait un défaut en en créant un pire.
+          onTapDown: (d) => _viser(d.localPosition.dx, largeur, durationMs, relacher: true),
+          onHorizontalDragUpdate: (d) =>
+              _viser(d.localPosition.dx, largeur, durationMs, relacher: false),
+          onHorizontalDragEnd: (_) {
+            final v = _enCours;
+            if (v != null && durationMs > 0) {
+              setState(() => _enCours = null);
+              context.read<AppState>().seek(Duration(milliseconds: (v * durationMs).round()));
+            }
+          },
+          // Opaque : la zone élargie doit recevoir les touchers même là où elle
+          // est transparente, sinon seuls les 2 px visibles répondraient.
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            // 20 px de haut pour le doigt, 2 px visibles pour l'oeil. La barre
+            // reste alignée en bas, exactement où elle était.
+            height: 20,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 2,
+                backgroundColor: TuneColors.divider,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
