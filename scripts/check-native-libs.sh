@@ -17,14 +17,24 @@
 # Usage :
 #   scripts/check-native-libs.sh            # vérifie (code de sortie 1 si dérive)
 #   scripts/check-native-libs.sh --update   # régénère l'empreinte après un rebuild
+#   scripts/check-native-libs.sh --staged   # vérifie le PROCHAIN COMMIT (index)
 #
 # `--update` refuse d'écrire l'empreinte si un `.so` ne porte pas la version
 # attendue : un build cassé ne peut donc pas se faire tamponner « à jour ».
+#
+# `--staged` juge l'index et non la copie de travail : c'est ce que le hook
+# `pre-commit` appelle pour qu'un commit de bump ne puisse pas exister sans les
+# `.so` reconstruits. Constater la dérive après coup ne suffisait pas — sur
+# 0.9.81, 0.9.85, 0.9.89, 0.9.90 et 0.9.91, le commit de bump a laissé la CI
+# rouge et il a fallu un second commit de reconstruction pour la repasser au
+# vert. Ici la dérive n'existe jamais : le commit est refusé.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# TUNE_CHECK_ROOT : arborescence à inspecter quand elle n'est pas la copie de
+# travail — c'est ainsi que `--staged` se relance sur le contenu de l'index.
+REPO_ROOT="${TUNE_CHECK_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 JNI_DIR="$REPO_ROOT/android/app/src/main/jniLibs"
 MANIFEST="$JNI_DIR/tune-native.manifest"
@@ -33,11 +43,52 @@ PUBSPEC="$REPO_ROOT/pubspec.yaml"
 ABIS="arm64-v8a armeabi-v7a x86_64"
 
 MODE="check"
-if [ "${1:-}" = "--update" ]; then
-    MODE="update"
-elif [ -n "${1:-}" ]; then
-    echo "ERREUR : argument inconnu « $1 » (attendu : --update ou rien)" >&2
-    exit 2
+case "${1:-}" in
+    "")        MODE="check" ;;
+    --update)  MODE="update" ;;
+    --staged)  MODE="staged" ;;
+    *)
+        echo "ERREUR : argument inconnu « $1 » (attendu : --update, --staged ou rien)" >&2
+        exit 2
+        ;;
+esac
+
+# ------------------------------------------------------------------- --staged
+#
+# On matérialise le contenu de l'INDEX dans une arborescence jetable, puis on se
+# relance dessus en mode `check`. L'index — pas la copie de travail — est ce qui
+# deviendra le commit : un `.so` reconstruit mais non ajouté doit être compté
+# comme absent, sinon le hook validerait un commit que la CI refusera.
+if [ "$MODE" = "staged" ]; then
+    if ! command -v git >/dev/null 2>&1 || ! git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+        echo "ERREUR : --staged exige un dépôt git" >&2
+        exit 2
+    fi
+
+    STAGE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/tune-native-staged.XXXXXX")"
+    trap 'rm -rf "$STAGE_ROOT"' EXIT
+
+    # `git ls-files --stage` ne liste QUE l'index. Un fichier supprimé de
+    # l'index n'y figure plus : on le laisse absent, et la vérification échoue
+    # comme elle le doit.
+    materialiser() {
+        REL="$1"
+        if [ -z "$(git -C "$REPO_ROOT" ls-files --stage -- "$REL")" ]; then
+            return 0
+        fi
+        mkdir -p "$STAGE_ROOT/$(dirname "$REL")"
+        git -C "$REPO_ROOT" show ":$REL" > "$STAGE_ROOT/$REL"
+    }
+
+    materialiser "pubspec.yaml"
+    materialiser "android/app/src/main/jniLibs/tune-native.manifest"
+    for ABI in $ABIS; do
+        materialiser "android/app/src/main/jniLibs/$ABI/libtuneserver.so"
+    done
+
+    STATUS=0
+    TUNE_CHECK_ROOT="$STAGE_ROOT" "$SCRIPT_DIR/$(basename "$0")" || STATUS=$?
+    exit "$STATUS"
 fi
 
 fail() {
@@ -48,7 +99,11 @@ fail() {
         echo "   $1" >&2
         shift
     done
-    echo "" >&2
+    if [ -n "${TUNE_CHECK_ROOT:-}" ]; then
+        echo "   (analyse du contenu de l'index : les chemins ci-dessus sont une" >&2
+        echo "    copie jetable du prochain commit, pas votre copie de travail.)" >&2
+        echo "" >&2
+    fi
     echo "   Pour repartir d'un état sain :" >&2
     echo "     1. dans tune-server-rust : ./tune-ffi/build-android.sh --release" >&2
     echo "     2. ici                   : scripts/check-native-libs.sh --update" >&2
