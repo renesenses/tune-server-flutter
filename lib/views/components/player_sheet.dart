@@ -384,10 +384,25 @@ class _SheetBody extends StatelessWidget {
 // Mini row — compact track info + transport (shown when nearly collapsed)
 // ---------------------------------------------------------------------------
 
-class _MiniRow extends StatelessWidget {
+class _MiniRow extends StatefulWidget {
   final Track? track;
   final DraggableScrollableController sheetController;
   const _MiniRow({required this.track, required this.sheetController});
+
+  @override
+  State<_MiniRow> createState() => _MiniRowState();
+}
+
+class _MiniRowState extends State<_MiniRow> {
+  /// Le volume est-il déplié ?
+  ///
+  /// C'est l'état qui MANQUAIT, et toute la cause de #1949 : sans lui,
+  /// `showModalBottomSheet` était rappelé à chaque tap et EMPILAIT un second
+  /// tiroir au lieu de fermer le premier.
+  bool _volumeOuvert = false;
+
+  Track? get track => widget.track;
+  DraggableScrollableController get sheetController => widget.sheetController;
 
   /// Expand the sheet to the now-playing snap, which exposes the full
   /// interactive seek bar and the volume control. Tapping the track (or the
@@ -408,38 +423,34 @@ class _MiniRow extends StatelessWidget {
   /// sends every change to the server via AppState.setVolume and updates the
   /// zone optimistically, so the mini-player volume icon is genuinely
   /// functional instead of merely expanding the sheet.
-  void _showVolumePopup(BuildContext context) {
-    showModalBottomSheet(
-      // The player sheet has no Navigator ancestor (mounted via
-      // MaterialApp.builder), so opening the modal from its own context did
-      // nothing (Fabien: volume icon "inactive"). Anchor it on the app
-      // navigator's context, which is inside the Navigator subtree.
-      context: appNavigatorKey.currentContext ?? context,
-      backgroundColor: TuneColors.surface,
-      useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: TuneColors.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const VolumeControlView(),
-            ],
-          ),
-        ),
-      ),
+  /// Ligne de volume repliable, DANS la barre.
+  ///
+  /// Remplace un `showModalBottomSheet` qui cumulait deux défauts (#1949) :
+  ///
+  /// 1. Aucun état d'ouverture n'était retenu, donc recliquer sur l'icône
+  ///    empilait un SECOND tiroir au lieu de fermer le premier.
+  /// 2. Le voile du modal était peint SOUS la barre de lecture — celle-ci est
+  ///    montée au-dessus du `Navigator` (#1088) — donc l'icône restait
+  ///    cliquable pendant l'ouverture, et le glissement vers le bas qui aurait
+  ///    dû refermer le tiroir était mangé par le `DraggableScrollableSheet`.
+  ///    Depuis #1950, la barre d'onglets s'ajoute à cette pile : une couche de
+  ///    plus entre le doigt et le voile.
+  ///
+  /// Un correctif antérieur avait déjà déplacé ce modal vers le `Navigator`
+  /// pour qu'il s'ouvre (« icône volume inactive », déjà signalé par Fabien) —
+  /// c'est précisément ce qui l'a placé sous la barre. Le sortir de la pile
+  /// supprime la classe entière de problèmes au lieu de la déplacer.
+  Widget _ligneVolume() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      alignment: Alignment.bottomCenter,
+      child: _volumeOuvert
+          ? const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: VolumeControlView(),
+            )
+          : const SizedBox(width: double.infinity, height: 0),
     );
   }
 
@@ -517,16 +528,19 @@ class _MiniRow extends StatelessWidget {
                   ],
                 ),
               ),
-              // Volume: tapping the icon opens an in-place slider popup so the
-              // volume is genuinely adjustable from the mini-player without
-              // expanding the whole sheet (Fabien: "l'icône volume toujours
-              // inactive, si je clique dessus ça ouvre le volet").
+              // Volume : l'icône BASCULE une ligne repliable dans la barre.
+              // Plus de modal — voir `_ligneVolume` pour ce que ça corrige.
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded),
+                icon: Icon(_volumeOuvert
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_up_outlined),
                 iconSize: 22,
-                color: TuneColors.textPrimary,
+                color: _volumeOuvert
+                    ? TuneColors.accent
+                    : TuneColors.textPrimary,
                 tooltip: 'Volume',
-                onPressed: () => _showVolumePopup(context),
+                onPressed: () =>
+                    setState(() => _volumeOuvert = !_volumeOuvert),
               ),
               SkipButton(
                 isForward: false,
@@ -567,6 +581,7 @@ class _MiniRow extends StatelessWidget {
             ],
           ),
         ),
+        _ligneVolume(),
         // Progress bar at bottom of mini player
         _MiniProgressBar(),
       ],
