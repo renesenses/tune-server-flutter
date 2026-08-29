@@ -32,8 +32,8 @@ import '../streaming/streaming_helpers.dart';
 // ---------------------------------------------------------------------------
 // PlayerSheet — unified mini / now-playing / queue bottom sheet
 //
-// 3 snap stops (as fractions of screen height):
-//   _kMini     (~8%)   — collapsed mini player
+// 3 snap stops (as fractions of screen height), plus a transient volume stop:
+//   _kMini     (~9%)   — collapsed mini player
 //   _kNowPlaying(~52%) — Now Playing with artwork + transport
 //   _kQueue    (~95%)  — full queue list
 //
@@ -44,6 +44,24 @@ import '../streaming/streaming_helpers.dart';
 const double _kMini = 0.09;
 const double _kNowPlaying = 0.52;
 const double _kQueue = 0.95;
+const double _kVolumeRowHeight = 56;
+
+/// Fraction de feuille nécessaire pour révéler la ligne de volume compacte.
+///
+/// `_kMini` ne réserve que la barre repliée. Ajouter `VolumeControlView` à sa
+/// `Column` sans agrandir le `DraggableScrollableSheet` la rend hors champ :
+/// l'icône change bien d'état, mais l'utilisateur ne voit rien (#2309).
+///
+/// Le calcul part de la hauteur réellement disponible au sheet, pas d'une
+/// fraction fixe : la ligne gagne ainsi 56 px sur téléphone court comme long.
+/// La borne haute laisse toujours le cran Lecture en cours distinct.
+@visibleForTesting
+double tailleMiniAvecVolume(double hauteurDisponible) {
+  if (!hauteurDisponible.isFinite || hauteurDisponible <= 0) return _kMini;
+  return (_kMini + _kVolumeRowHeight / hauteurDisponible)
+      .clamp(_kMini, _kNowPlaying - 0.01)
+      .toDouble();
+}
 
 // ---------------------------------------------------------------------------
 // Shared now-playing navigation — resolve the album/artist for a track and
@@ -171,9 +189,44 @@ class PlayerSheet extends StatefulWidget {
 class _PlayerSheetState extends State<PlayerSheet> {
   final DraggableScrollableController _controller =
       DraggableScrollableController();
+  bool _volumeOuvert = false;
+  bool _animationVolume = false;
+  double _cranVolume = _kMini;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_fermerVolumeSiLeCranChange);
+  }
+
+  void _fermerVolumeSiLeCranChange() {
+    if (!_volumeOuvert || _animationVolume || !_controller.isAttached) return;
+    // Un glissement volontaire vers le mini-player ou Lecture en cours quitte
+    // le cran volume. Sans cela, revenir ensuite au mini-player rouvrirait une
+    // ligne que l'utilisateur avait déjà quittée.
+    if ((_controller.size - _cranVolume).abs() > 0.015 && mounted) {
+      setState(() => _volumeOuvert = false);
+    }
+  }
+
+  Future<void> _afficherVolume(bool ouvert) async {
+    setState(() => _volumeOuvert = ouvert);
+    if (!_controller.isAttached) return;
+    _animationVolume = true;
+    try {
+      await _controller.animateTo(
+        ouvert ? _cranVolume : _kMini,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    } finally {
+      _animationVolume = false;
+    }
+  }
 
   @override
   void dispose() {
+    _controller.removeListener(_fermerVolumeSiLeCranChange);
     _controller.dispose();
     super.dispose();
   }
@@ -189,17 +242,30 @@ class _PlayerSheetState extends State<PlayerSheet> {
       return const SizedBox.shrink();
     }
 
-    return DraggableScrollableSheet(
-      controller: _controller,
-      initialChildSize: _kMini,
-      minChildSize: _kMini,
-      maxChildSize: _kQueue,
-      snap: true,
-      snapSizes: const [_kMini, _kNowPlaying, _kQueue],
-      builder: (context, scrollController) {
-        return _PlayerSheetContent(
-          scrollController: scrollController,
-          sheetController: _controller,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _cranVolume = tailleMiniAvecVolume(constraints.maxHeight);
+        return DraggableScrollableSheet(
+          controller: _controller,
+          initialChildSize: _kMini,
+          minChildSize: _kMini,
+          maxChildSize: _kQueue,
+          snap: true,
+          snapSizes: [
+            _kMini,
+            if (_cranVolume > _kMini) _cranVolume,
+            _kNowPlaying,
+            _kQueue,
+          ],
+          builder: (context, scrollController) {
+            return _PlayerSheetContent(
+              scrollController: scrollController,
+              sheetController: _controller,
+              volumeOuvert: _volumeOuvert,
+              cranVolume: _cranVolume,
+              onVolumeChanged: _afficherVolume,
+            );
+          },
         );
       },
     );
@@ -213,10 +279,16 @@ class _PlayerSheetState extends State<PlayerSheet> {
 class _PlayerSheetContent extends StatelessWidget {
   final ScrollController scrollController;
   final DraggableScrollableController sheetController;
+  final bool volumeOuvert;
+  final double cranVolume;
+  final ValueChanged<bool> onVolumeChanged;
 
   const _PlayerSheetContent({
     required this.scrollController,
     required this.sheetController,
+    required this.volumeOuvert,
+    required this.cranVolume,
+    required this.onVolumeChanged,
   });
 
   /// Fraction of the screen height currently occupied by the sheet.
@@ -234,10 +306,22 @@ class _PlayerSheetContent extends StatelessWidget {
       animation: sheetController,
       builder: (context, _) {
         final currentSize = _size(context);
-        final currentNpProgress = ((currentSize - _kMini) / (_kNowPlaying - _kMini)).clamp(0.0, 1.0);
-        final currentQueueProgress = ((currentSize - _kNowPlaying) / (_kQueue - _kNowPlaying)).clamp(0.0, 1.0);
-        final currentIsMini = currentSize < (_kMini + (_kNowPlaying - _kMini) * 0.3);
-        final currentIsQueue = currentSize > (_kNowPlaying + (_kQueue - _kNowPlaying) * 0.5);
+        // Le cran volume agrandit la feuille sans commencer à fondre le
+        // mini-player vers la vue Lecture en cours. Dès que l'utilisateur le
+        // dépasse, la progression normale reprend.
+        final visualSize = volumeOuvert && currentSize <= cranVolume + 0.015
+            ? _kMini
+            : currentSize;
+        final currentNpProgress =
+            ((visualSize - _kMini) / (_kNowPlaying - _kMini))
+                .clamp(0.0, 1.0);
+        final currentQueueProgress =
+            ((currentSize - _kNowPlaying) / (_kQueue - _kNowPlaying))
+                .clamp(0.0, 1.0);
+        final currentIsMini =
+            visualSize < (_kMini + (_kNowPlaying - _kMini) * 0.3);
+        final currentIsQueue =
+            currentSize > (_kNowPlaying + (_kQueue - _kNowPlaying) * 0.5);
 
         return _SheetBody(
           track: track,
@@ -247,6 +331,8 @@ class _PlayerSheetContent extends StatelessWidget {
           queueProgress: currentQueueProgress,
           isMini: currentIsMini,
           isQueue: currentIsQueue,
+          volumeOuvert: volumeOuvert,
+          onVolumeChanged: onVolumeChanged,
         );
       },
     );
@@ -261,6 +347,8 @@ class _SheetBody extends StatelessWidget {
   final double queueProgress;
   final bool isMini;
   final bool isQueue;
+  final bool volumeOuvert;
+  final ValueChanged<bool> onVolumeChanged;
 
   const _SheetBody({
     required this.track,
@@ -270,6 +358,8 @@ class _SheetBody extends StatelessWidget {
     required this.queueProgress,
     required this.isMini,
     required this.isQueue,
+    required this.volumeOuvert,
+    required this.onVolumeChanged,
   });
 
   @override
@@ -346,6 +436,8 @@ class _SheetBody extends StatelessWidget {
                         child: _MiniRow(
                           track: track,
                           sheetController: sheetController,
+                          volumeOuvert: volumeOuvert,
+                          onVolumeChanged: onVolumeChanged,
                         ),
                       ),
 
@@ -385,25 +477,17 @@ class _SheetBody extends StatelessWidget {
 // Mini row — compact track info + transport (shown when nearly collapsed)
 // ---------------------------------------------------------------------------
 
-class _MiniRow extends StatefulWidget {
+class _MiniRow extends StatelessWidget {
   final Track? track;
   final DraggableScrollableController sheetController;
-  const _MiniRow({required this.track, required this.sheetController});
-
-  @override
-  State<_MiniRow> createState() => _MiniRowState();
-}
-
-class _MiniRowState extends State<_MiniRow> {
-  /// Le volume est-il déplié ?
-  ///
-  /// C'est l'état qui MANQUAIT, et toute la cause de #1949 : sans lui,
-  /// `showModalBottomSheet` était rappelé à chaque tap et EMPILAIT un second
-  /// tiroir au lieu de fermer le premier.
-  bool _volumeOuvert = false;
-
-  Track? get track => widget.track;
-  DraggableScrollableController get sheetController => widget.sheetController;
+  final bool volumeOuvert;
+  final ValueChanged<bool> onVolumeChanged;
+  const _MiniRow({
+    required this.track,
+    required this.sheetController,
+    required this.volumeOuvert,
+    required this.onVolumeChanged,
+  });
 
   /// Expand the sheet to the now-playing snap, which exposes the full
   /// interactive seek bar and the volume control. Tapping the track (or the
@@ -446,7 +530,7 @@ class _MiniRowState extends State<_MiniRow> {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       alignment: Alignment.bottomCenter,
-      child: _volumeOuvert
+      child: volumeOuvert
           ? const Padding(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: VolumeControlView(),
@@ -532,16 +616,15 @@ class _MiniRowState extends State<_MiniRow> {
               // Volume : l'icône BASCULE une ligne repliable dans la barre.
               // Plus de modal — voir `_ligneVolume` pour ce que ça corrige.
               IconButton(
-                icon: Icon(_volumeOuvert
+                icon: Icon(volumeOuvert
                     ? Icons.volume_up_rounded
                     : Icons.volume_up_outlined),
                 iconSize: 22,
-                color: _volumeOuvert
+                color: volumeOuvert
                     ? TuneColors.accent
                     : TuneColors.textPrimary,
                 tooltip: 'Volume',
-                onPressed: () =>
-                    setState(() => _volumeOuvert = !_volumeOuvert),
+                onPressed: () => onVolumeChanged(!volumeOuvert),
               ),
               SkipButton(
                 isForward: false,
