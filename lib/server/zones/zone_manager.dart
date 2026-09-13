@@ -32,6 +32,13 @@ class ZoneManager {
 
   /// Charge toutes les zones depuis la DB et crée une ZoneInstance par zone.
   /// Appelé au démarrage par ServerEngine (Phase 9).
+  ///
+  /// ⚠️ #4077 — AUCUN filtrage par la licence ici, et c'est délibéré. Le
+  /// plafond du gratuit est passé de 10 à 3 : des installations Android
+  /// portent légitimement jusqu'à dix zones. Elles sont toutes instanciées et
+  /// restent jouables. N'ajoutez pas de garde de licence dans cette boucle —
+  /// ce serait supprimer des zones en service chez des gens qui n'ont rien
+  /// fait de mal. Le plafond ne s'applique qu'à [createZone].
   Future<void> bootstrap() async {
     final zones = await _db.zoneRepo.all();
 
@@ -43,6 +50,12 @@ class ZoneManager {
 
     for (final zone in zones) {
       await _instantiate(zone);
+    }
+
+    if (_license.zonesOverFreeCap(_instances.length)) {
+      debugPrint('[zone_manager] ${_instances.length} zones conservées '
+          'au-delà du plafond gratuit (${LicenseManager.freeMaxZones}) — '
+          'aucune création supplémentaire ne sera acceptée (#4077)');
     }
 
     // Listen for device discovery to reconcile zone device IDs
@@ -105,8 +118,14 @@ class ZoneManager {
   }) async {
     // Licence Free : plafonnée à LicenseManager.freeMaxZones zones.
     // Premium (clé ou compte SSO) : illimité.
+    //
+    // Garde de CRÉATION uniquement (#4077) : une installation qui porte déjà
+    // plus de zones que le plafond les conserve toutes (cf. bootstrap), seule
+    // la zone suivante est refusée. Le compte courant part avec l'exception
+    // pour que l'interface puisse le dire.
     if (!_license.checkZoneLimit(_instances.length)) {
-      throw const ZoneLimitException(LicenseManager.freeMaxZones);
+      throw ZoneLimitException(
+          LicenseManager.freeMaxZones, _instances.length);
     }
 
     final id = await _db.zoneRepo.insert(

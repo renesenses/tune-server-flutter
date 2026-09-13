@@ -38,6 +38,13 @@
       "limit": { "type": "int" }
     }
   },
+  "zoneLimitOverCap": "Your {current} zones keep working, but the free plan allows {limit} — remove one or upgrade to Premium to add a new zone",
+  "@zoneLimitOverCap": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
   "navLibrary": "Library",
   "navSearch": "Search",
   "navStreaming": "Streaming",
