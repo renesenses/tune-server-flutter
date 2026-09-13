@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'Free plan limited to {limit} zones — upgrade to Premium for unlimited'**
   String zoneLimitReached(int limit);
 
+  /// No description provided for @zoneLimitOverCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {current} zones keep working, but the free plan allows {limit} — remove one or upgrade to Premium to add a new zone'**
+  String zoneLimitOverCap(int current, int limit);
+
   /// No description provided for @navLibrary.
   ///
   /// In en, this message translates to:

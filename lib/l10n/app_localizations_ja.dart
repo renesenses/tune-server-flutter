@@ -110,6 +110,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String zoneLimitOverCap(int current, int limit) {
+    return '既存の$currentゾーンはそのまま使えますが、無料プランの上限は$limitゾーンです — 追加するにはゾーンを削除するかPremiumにアップグレードしてください';
+  }
+
+  @override
   String get navLibrary => 'ライブラリ';
 
   @override

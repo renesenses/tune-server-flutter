@@ -137,18 +137,23 @@ void main() {
     });
   });
 
-  group('zone limit (Free = 10)', () {
-    test('constant is 10', () {
-      expect(LicenseManager.freeMaxZones, 10);
-      expect(LicenseManager.freeZoneLimit, 10);
+  group('zone limit (Free = 3)', () {
+    // #4077 — this constant sat at 10 while the Rust server enforced 3, behind
+    // a comment claiming the two matched. The witness below is red at 10.
+    test('constant is 3, mirroring DEFAULT_FREE_MAX_ZONES in tune-core', () {
+      expect(LicenseManager.freeMaxZones, 3);
+      expect(LicenseManager.freeZoneLimit, 3);
     });
 
-    test('free tier allows up to 10 zones then blocks', () {
+    test('free tier allows up to 3 zones then blocks', () {
       final free = _state(Tier.free);
       expect(checkZoneLimitForTest(free, 0), isTrue);
-      expect(checkZoneLimitForTest(free, 9), isTrue);
+      expect(checkZoneLimitForTest(free, 2), isTrue);
+      expect(checkZoneLimitForTest(free, 3), isFalse);
+      expect(checkZoneLimitForTest(free, 4), isFalse);
+      // The values that used to pass under the 10-zone cap.
+      expect(checkZoneLimitForTest(free, 9), isFalse);
       expect(checkZoneLimitForTest(free, 10), isFalse);
-      expect(checkZoneLimitForTest(free, 11), isFalse);
     });
 
     test('premium is unlimited', () {
@@ -161,6 +166,49 @@ void main() {
       final acct = _state(Tier.free,
           accountPremium: true, accountPremiumChecked: _nowIso());
       expect(checkZoneLimitForTest(acct, 5), isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // #4077 — the excess already on disk
+  //
+  // Android free installs could create up to ten zones. Lowering the cap must
+  // not make those zones vanish: the cap gates creation, nothing else.
+  // ---------------------------------------------------------------------------
+  group('grandfathered installs (over the Free cap)', () {
+    test('a free install holding 7 zones is flagged as over the cap', () {
+      final free = _state(Tier.free);
+      expect(zonesOverFreeCapForTest(free, 7), isTrue);
+      expect(zonesOverFreeCapForTest(free, 10), isTrue);
+      expect(zonesOverFreeCapForTest(free, 4), isTrue);
+    });
+
+    test('at or below the cap is not "over the cap"', () {
+      final free = _state(Tier.free);
+      expect(zonesOverFreeCapForTest(free, 3), isFalse);
+      expect(zonesOverFreeCapForTest(free, 2), isFalse);
+      expect(zonesOverFreeCapForTest(free, 0), isFalse);
+    });
+
+    test('premium is never over the cap', () {
+      expect(zonesOverFreeCapForTest(_state(Tier.premium), 42), isFalse);
+      final acct = _state(Tier.free,
+          accountPremium: true, accountPremiumChecked: _nowIso());
+      expect(zonesOverFreeCapForTest(acct, 42), isFalse);
+    });
+
+    test('the refusal carries the real zone count, not just the cap', () {
+      const e = ZoneLimitException(LicenseManager.freeMaxZones, 7);
+      expect(e.limit, 3);
+      expect(e.currentCount, 7);
+      expect(e.isGrandfathered, isTrue);
+      expect(e.toString(), contains('7'));
+      expect(e.toString(), contains('3'));
+    });
+
+    test('a user standing exactly at the cap is not grandfathered', () {
+      const e = ZoneLimitException(LicenseManager.freeMaxZones, 3);
+      expect(e.isGrandfathered, isFalse);
     });
   });
 }
