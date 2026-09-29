@@ -10,8 +10,10 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 class UpdateInfo {
   final String currentVersion;
@@ -42,7 +44,9 @@ class UpdateChecker {
         return UpdateInfo(currentVersion: current, updateAvailable: false);
       }
       final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      final tag = (body['tag_name'] as String? ?? '').replaceAll('v', '');
+      // `replaceFirst(RegExp('^v'))` et non `replaceAll('v')` : on retire le
+      // préfixe, pas une lettre au hasard du suffixe.
+      final tag = (body['tag_name'] as String? ?? '').replaceFirst(RegExp('^v'), '');
       final url = body['html_url'] as String?;
       if (tag.isEmpty) {
         return UpdateInfo(currentVersion: current, updateAvailable: false);
@@ -60,19 +64,23 @@ class UpdateChecker {
     }
   }
 
-  bool _isNewer(String newVersion, String current) {
+  /// `newVersion` est-elle STRICTEMENT plus récente que `current` ?
+  ///
+  /// L'ancienne comparaison passait chaque morceau à `int.parse` : sur
+  /// `1.0.0-rc1`, `int.parse('0-rc1')` levait, le `catch` rendait `false`, et
+  /// aucune mise à jour n'était jamais signalée, ni vers une RC ni depuis une
+  /// RC. `pub_semver` suit semver : `1.0.0-rc1 < 1.0.0`. Une version
+  /// illisible ne passe jamais pour plus récente.
+  @visibleForTesting
+  static bool isNewer(String newVersion, String current) {
     try {
-      final newParts = newVersion.split('.').map(int.parse).toList();
-      final curParts = current.split('.').map(int.parse).toList();
-      while (newParts.length < curParts.length) newParts.add(0);
-      while (curParts.length < newParts.length) curParts.add(0);
-      for (var i = 0; i < newParts.length; i++) {
-        if (newParts[i] > curParts[i]) return true;
-        if (newParts[i] < curParts[i]) return false;
-      }
-      return false;
-    } catch (_) {
+      return Version.parse(_sansV(newVersion)) > Version.parse(_sansV(current));
+    } on FormatException {
       return false;
     }
   }
+
+  static String _sansV(String v) => v.trim().replaceFirst(RegExp('^v'), '');
+
+  bool _isNewer(String newVersion, String current) => isNewer(newVersion, current);
 }
