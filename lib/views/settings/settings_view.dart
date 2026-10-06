@@ -332,6 +332,8 @@ class _SettingsList extends StatelessWidget {
                     const DropdownMenuItem(value: 'it', child: Text('Italiano')),
                     const DropdownMenuItem(value: 'zh', child: Text('中文')),
                     const DropdownMenuItem(value: 'ja', child: Text('日本語')),
+                    const DropdownMenuItem(value: 'ko', child: Text('한국어')),
+                    const DropdownMenuItem(value: 'hu', child: Text('Magyar')),
                   ],
                   onChanged: (v) => settings.setLanguage(v),
                 ),
