@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -24,11 +25,12 @@ class _DatabaseViewState extends State<DatabaseView> {
   bool _error = false;
 
   Future<void> _export() async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final api = app.apiClient;
     if (api == null) {
       setState(() {
-        _message = 'Aucun serveur connecté.';
+        _message = l.cfgDbNoServer;
         _error = true;
       });
       return;
@@ -48,13 +50,14 @@ class _DatabaseViewState extends State<DatabaseView> {
       final sizeMb = (result['size'] as int) / 1024 / 1024;
       if (!mounted) return;
       setState(() {
-        _message = 'Export OK : ${sizeMb.toStringAsFixed(1)} MB\n${result['path']}';
+        _message = l.cfgDbExportOk(
+            sizeMb.toStringAsFixed(1), '${result['path']}');
         _error = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _message = 'Erreur : $e';
+        _message = l.errorWith(e.toString());
         _error = true;
       });
     } finally {
@@ -63,11 +66,12 @@ class _DatabaseViewState extends State<DatabaseView> {
   }
 
   Future<void> _import() async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final api = app.apiClient;
     if (api == null) {
       setState(() {
-        _message = 'Aucun serveur connecté.';
+        _message = l.cfgDbNoServer;
         _error = true;
       });
       return;
@@ -82,7 +86,7 @@ class _DatabaseViewState extends State<DatabaseView> {
     final path = picked.path;
     if (path == null) {
       setState(() {
-        _message = 'Chemin du fichier inaccessible.';
+        _message = l.cfgDbPathUnavailable;
         _error = true;
       });
       return;
@@ -93,18 +97,17 @@ class _DatabaseViewState extends State<DatabaseView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Confirmer l\'import', style: TuneFonts.title3),
+        title: Text(l.cfgDbImportConfirmTitle, style: TuneFonts.title3),
         content: Text(
-          'Remplacer la base de données du serveur avec "${picked.name}" ?\n\n'
-          'Un backup de sécurité sera créé automatiquement. Le serveur devra être redémarré après l\'import.',
+          l.cfgDbImportConfirmBody(picked.name),
           style: TuneFonts.body,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-            child: const Text('Importer'),
+            child: Text(l.btnImport),
           ),
         ],
       ),
@@ -122,14 +125,14 @@ class _DatabaseViewState extends State<DatabaseView> {
       final sizeMb = (result['size'] as int) / 1024 / 1024;
       if (!mounted) return;
       setState(() {
-        _message = 'Import OK : ${sizeMb.toStringAsFixed(1)} MB (${result['engine']}).\n'
-            'Redémarre le serveur pour appliquer les changements.';
+        _message = l.cfgDbImportOk(
+            sizeMb.toStringAsFixed(1), '${result['engine']}');
         _error = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _message = 'Erreur : $e';
+        _message = l.errorWith(e.toString());
         _error = true;
       });
     } finally {
@@ -139,18 +142,18 @@ class _DatabaseViewState extends State<DatabaseView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Base de données', style: TuneFonts.title3),
+        title: Text(l.cfgDbTitle, style: TuneFonts.title3),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Exporte ou importe la base de données du serveur connecté.\n'
-            'SQLite : fichier .db. PostgreSQL : dump SQL.',
+          Text(
+            l.cfgDbIntro,
             style: TuneFonts.footnote,
           ),
           const SizedBox(height: 20),
@@ -163,7 +166,7 @@ class _DatabaseViewState extends State<DatabaseView> {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.download),
-              label: Text(_exporting ? 'Export en cours...' : 'Exporter la base'),
+              label: Text(_exporting ? l.cfgDbExporting : l.cfgDbExportBtn),
               style: FilledButton.styleFrom(
                 backgroundColor: TuneColors.accent,
                 minimumSize: const Size.fromHeight(48),
@@ -180,7 +183,7 @@ class _DatabaseViewState extends State<DatabaseView> {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.upload),
-              label: Text(_importing ? 'Import en cours...' : 'Importer un fichier'),
+              label: Text(_importing ? l.cfgDbImporting : l.cfgDbImportBtn),
               style: FilledButton.styleFrom(
                 backgroundColor: TuneColors.surfaceVariant,
                 foregroundColor: TuneColors.textPrimary,
@@ -209,9 +212,8 @@ class _DatabaseViewState extends State<DatabaseView> {
           const SizedBox(height: 24),
           const _Separator(),
           const SizedBox(height: 16),
-          const Text(
-            'Après un import, redémarre le serveur pour appliquer les changements. '
-            'Un backup de sécurité est créé automatiquement avant le remplacement.',
+          Text(
+            l.cfgDbFooter,
             style: TuneFonts.footnote,
           ),
         ],

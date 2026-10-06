@@ -81,7 +81,7 @@ class _GenreTile extends StatelessWidget {
       ),
       title: Text(genre.name, style: TuneFonts.body),
       subtitle: Text(
-        '${genre.count} album${genre.count > 1 ? "s" : ""}',
+        AppLocalizations.of(context).libAlbumCount(genre.count),
         style: TuneFonts.footnote,
       ),
       trailing: const Icon(Icons.chevron_right_rounded,
@@ -121,7 +121,7 @@ class GenreAlbumsView extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              '${albums.length} album${albums.length > 1 ? "s" : ""}',
+              AppLocalizations.of(context).libAlbumCount(albums.length),
               style: TuneFonts.footnote,
             ),
           ),

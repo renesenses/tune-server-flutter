@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -26,6 +27,7 @@ class _LastfmViewState extends State<LastfmView> {
   bool _loading = true;
   bool _busy = false;
   String? _error;
+  bool _noServer = false;
 
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -46,7 +48,7 @@ class _LastfmViewState extends State<LastfmView> {
   Future<void> _refresh() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) {
-      if (mounted) setState(() { _loading = false; _error = 'Not connected to server'; });
+      if (mounted) setState(() { _loading = false; _error = null; _noServer = true; });
       return;
     }
     try {
@@ -65,7 +67,7 @@ class _LastfmViewState extends State<LastfmView> {
     final username = _usernameCtrl.text.trim();
     final password = _passwordCtrl.text.trim();
     if (username.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Username and password are required');
+      setState(() => _error = AppLocalizations.of(context).cfgCredentialsRequired);
       return;
     }
     final api = context.read<AppState>().apiClient;
@@ -81,7 +83,9 @@ class _LastfmViewState extends State<LastfmView> {
         _passwordCtrl.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Last.fm connected.')),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).cfgServiceConnected('Last.fm'))),
       );
     } catch (e) {
       if (!mounted) return;
@@ -98,7 +102,9 @@ class _LastfmViewState extends State<LastfmView> {
       if (!mounted) return;
       setState(() { _status = result; _busy = false; });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Last.fm disconnected.')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)
+                .cfgServiceDisconnected('Last.fm'))),
       );
     } catch (e) {
       if (!mounted) return;
@@ -108,11 +114,12 @@ class _LastfmViewState extends State<LastfmView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Last.fm Scrobble', style: TuneFonts.title3),
+        title: Text(l.cfgLastfmTitle, style: TuneFonts.title3),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
@@ -146,8 +153,7 @@ class _LastfmViewState extends State<LastfmView> {
                             const Text('Last.fm', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: TuneColors.textPrimary)),
                             const SizedBox(height: 4),
                             Text(
-                              'Scrobble your listening history to Last.fm. '
-                              'Tracks are automatically scrobbled when played on any zone.',
+                              l.cfgLastfmDesc,
                               style: TuneFonts.footnote,
                             ),
                           ],
@@ -169,7 +175,7 @@ class _LastfmViewState extends State<LastfmView> {
                       icon: _busy
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.link_off_rounded),
-                      label: Text(_busy ? 'Disconnecting...' : 'Disconnect'),
+                      label: Text(_busy ? l.cfgDisconnecting : l.btnDisconnect),
                       style: FilledButton.styleFrom(
                         backgroundColor: TuneColors.error,
                         minimumSize: const Size.fromHeight(48),
@@ -178,14 +184,14 @@ class _LastfmViewState extends State<LastfmView> {
                   ),
                 ] else ...[
                   // Login form
-                  const Text('CONNECT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+                  Text(l.cfgConnectHeader, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _usernameCtrl,
                     style: TuneFonts.body,
                     autocorrect: false,
                     decoration: InputDecoration(
-                      labelText: 'Username',
+                      labelText: l.smbUser,
                       prefixIcon: const Icon(Icons.person_outline, color: TuneColors.textSecondary),
                       filled: true,
                       fillColor: TuneColors.surface,
@@ -201,7 +207,7 @@ class _LastfmViewState extends State<LastfmView> {
                     obscureText: true,
                     autocorrect: false,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l.password,
                       prefixIcon: const Icon(Icons.lock_outline, color: TuneColors.textSecondary),
                       filled: true,
                       fillColor: TuneColors.surface,
@@ -219,7 +225,7 @@ class _LastfmViewState extends State<LastfmView> {
                       icon: _busy
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.link_rounded),
-                      label: Text(_busy ? 'Connecting...' : 'Connect'),
+                      label: Text(_busy ? l.cfgConnecting : l.btnConnect),
                       style: FilledButton.styleFrom(
                         backgroundColor: TuneColors.accent,
                         minimumSize: const Size.fromHeight(48),
@@ -228,7 +234,7 @@ class _LastfmViewState extends State<LastfmView> {
                   ),
                 ],
 
-                if (_error != null) ...[
+                if (_error != null || _noServer) ...[
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(10),
@@ -240,7 +246,7 @@ class _LastfmViewState extends State<LastfmView> {
                       children: [
                         const Icon(Icons.error_outline, color: TuneColors.error, size: 18),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(_error!, style: TuneFonts.caption.copyWith(color: TuneColors.error))),
+                        Expanded(child: Text(_noServer ? l.cfgNotConnectedToServer : _error!, style: TuneFonts.caption.copyWith(color: TuneColors.error))),
                       ],
                     ),
                   ),
@@ -261,6 +267,7 @@ class _StatusSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final username = status['username'] as String? ?? '';
     final scrobbleCount = status['scrobble_count'] as int? ?? 0;
     final lastScrobble = status['last_scrobble'] as String?;
@@ -285,7 +292,7 @@ class _StatusSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('Connected', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: TuneColors.success)),
+              Text(l.streamingConnected, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: TuneColors.success)),
             ],
           ),
           const SizedBox(height: 12),
@@ -301,7 +308,7 @@ class _StatusSection extends StatelessWidget {
             children: [
               const Icon(Icons.music_note_rounded, size: 18, color: TuneColors.textSecondary),
               const SizedBox(width: 8),
-              Text('$scrobbleCount scrobbles', style: TuneFonts.footnote),
+              Text(l.cfgScrobbleCount(scrobbleCount), style: TuneFonts.footnote),
             ],
           ),
           if (lastScrobble != null) ...[
@@ -310,7 +317,7 @@ class _StatusSection extends StatelessWidget {
               children: [
                 const Icon(Icons.access_time, size: 18, color: TuneColors.textSecondary),
                 const SizedBox(width: 8),
-                Text('Last: $lastScrobble', style: TuneFonts.footnote),
+                Text(l.cfgLastScrobble(lastScrobble), style: TuneFonts.footnote),
               ],
             ),
           ],

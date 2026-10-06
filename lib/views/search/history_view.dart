@@ -126,7 +126,7 @@ class _HistoryTile extends StatelessWidget {
               const Text(' · ',
                   style: TextStyle(
                       fontSize: 10, color: TuneColors.textTertiary)),
-              Text(_formatDate(entry.playedAt),
+              Text(_formatDate(AppLocalizations.of(context), entry.playedAt),
                   style: TuneFonts.caption
                       .copyWith(color: TuneColors.textTertiary)),
             ],
@@ -174,16 +174,16 @@ class _HistoryTile extends StatelessWidget {
     return null;
   }
 
-  static String _formatDate(String iso) {
+  static String _formatDate(AppLocalizations l, String iso) {
     try {
       final dt = DateTime.parse(iso).toLocal();
       final now = DateTime.now();
       final diff = now.difference(dt);
-      if (diff.inMinutes < 1) return 'À l\'instant';
-      if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-      if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
-      if (diff.inDays == 1) return 'Hier';
-      if (diff.inDays < 7) return 'Il y a ${diff.inDays} j';
+      if (diff.inMinutes < 1) return l.libJustNow;
+      if (diff.inMinutes < 60) return l.libMinutesAgo(diff.inMinutes);
+      if (diff.inHours < 24) return l.libHoursAgo(diff.inHours);
+      if (diff.inDays == 1) return l.libYesterday;
+      if (diff.inDays < 7) return l.libDaysAgo(diff.inDays);
       return '${dt.day.toString().padLeft(2, '0')}/'
           '${dt.month.toString().padLeft(2, '0')}/'
           '${dt.year}';

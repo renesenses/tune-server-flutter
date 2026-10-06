@@ -171,10 +171,10 @@ class _RemoteFavoritesViewState extends State<RemoteFavoritesView> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: SegmentedButton<_FavKind>(
-            segments: const [
-              ButtonSegment(value: _FavKind.track, label: Text('Pistes')),
-              ButtonSegment(value: _FavKind.album, label: Text('Albums')),
-              ButtonSegment(value: _FavKind.artist, label: Text('Artistes')),
+            segments: [
+              ButtonSegment(value: _FavKind.track, label: Text(l.tabTracks)),
+              ButtonSegment(value: _FavKind.album, label: Text(l.tabAlbums)),
+              ButtonSegment(value: _FavKind.artist, label: Text(l.tabArtists)),
             ],
             selected: {_kind},
             onSelectionChanged: (s) {

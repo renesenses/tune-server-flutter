@@ -114,7 +114,7 @@ class _StreamingServiceDetailViewState
         actions: [
           IconButton(
             icon: const Icon(Icons.favorite_rounded, color: TuneColors.error),
-            tooltip: 'Favorites',
+            tooltip: AppLocalizations.of(context).tabFavorites,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -127,7 +127,7 @@ class _StreamingServiceDetailViewState
           if (widget.status.serviceId == 'youtube')
             IconButton(
               icon: const Icon(Icons.explore_rounded, color: TuneColors.accent),
-              tooltip: 'Explorer',
+              tooltip: AppLocalizations.of(context).miscExplore,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const YouTubeBrowseView()),
@@ -409,7 +409,8 @@ class _ResultTile extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.play_arrow_rounded,
                   color: TuneColors.accent),
-              title: const Text('Lire', style: TuneFonts.body),
+              title: Text(AppLocalizations.of(context).libraryPlay,
+                  style: TuneFonts.body),
               onTap: () {
                 Navigator.pop(context);
                 app.playStreaming(result);
@@ -524,6 +525,7 @@ class _CatalogViewState extends State<_CatalogView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (_loading && _sections.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: TuneColors.accent),
@@ -542,7 +544,7 @@ class _CatalogViewState extends State<_CatalogView> {
           if (_favoriteAlbums.isNotEmpty) ...[
             Row(
               children: [
-                const Expanded(child: _SectionHeader(title: 'Favorite Albums')),
+                Expanded(child: _SectionHeader(title: l.miscFavoriteAlbums)),
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: TextButton(
@@ -554,7 +556,7 @@ class _CatalogViewState extends State<_CatalogView> {
                         ),
                       ),
                     ),
-                    child: Text('See all',
+                    child: Text(l.btnSeeAll,
                         style: TuneFonts.footnote.copyWith(color: TuneColors.accent)),
                   ),
                 ),
@@ -579,7 +581,7 @@ class _CatalogViewState extends State<_CatalogView> {
             const SizedBox(height: 12),
           ],
           if (_favoriteTracks.isNotEmpty) ...[
-            _SectionHeader(title: 'Favorite Tracks'),
+            _SectionHeader(title: l.miscFavoriteTracks),
             ..._favoriteTracks.take(5).map((fav) {
               final m = fav as Map<String, dynamic>;
               final trackId = m['source_id']?.toString() ?? m['id']?.toString() ?? '';
@@ -615,7 +617,7 @@ class _CatalogViewState extends State<_CatalogView> {
                     ),
                   ),
                   child: Text(
-                    'See all ${_favoriteTracks.length} tracks',
+                    l.miscSeeAllTracks(_favoriteTracks.length),
                     style: TuneFonts.footnote.copyWith(color: TuneColors.accent),
                   ),
                 ),
@@ -643,7 +645,7 @@ class _CatalogViewState extends State<_CatalogView> {
         ],
         // Playlists utilisateur
         if (_playlists.isNotEmpty) ...[
-          _SectionHeader(title: 'Mes Playlists'),
+          _SectionHeader(title: l.miscMyPlaylists),
           ..._playlists.map((p) => ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
@@ -801,6 +803,10 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
   bool _loading = true;
   String? _error;
 
+  // Sentinelle : _loadAll() peut tourner depuis initState(), où le contexte
+  // ne peut pas encore lire AppLocalizations — le texte est résolu dans build().
+  static const _kNoApiClient = '\u0000no-api-client';
+
   @override
   void initState() {
     super.initState();
@@ -821,7 +827,7 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
   Future<void> _loadAll() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) {
-      if (mounted) setState(() { _loading = false; _error = 'No API client'; });
+      if (mounted) setState(() { _loading = false; _error = _kNoApiClient; });
       return;
     }
     try {
@@ -846,6 +852,7 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
   @override
   Widget build(BuildContext context) {
     final info = serviceInfo(widget.serviceId);
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: TuneColors.background,
@@ -856,7 +863,7 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
             const Icon(Icons.favorite_rounded,
                 size: 20, color: TuneColors.error),
             const SizedBox(width: 8),
-            Text('${info.name} Favorites', style: TuneFonts.title3),
+            Text(l.miscServiceFavorites(info.name), style: TuneFonts.title3),
           ],
         ),
         bottom: TabBar(
@@ -865,9 +872,9 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
           labelColor: TuneColors.accent,
           unselectedLabelColor: TuneColors.textTertiary,
           tabs: [
-            Tab(text: 'Albums${_albums.isNotEmpty ? ' (${_albums.length})' : ''}'),
-            Tab(text: 'Tracks${_tracks.isNotEmpty ? ' (${_tracks.length})' : ''}'),
-            Tab(text: 'Artists${_artists.isNotEmpty ? ' (${_artists.length})' : ''}'),
+            Tab(text: '${l.tabAlbums}${_albums.isNotEmpty ? ' (${_albums.length})' : ''}'),
+            Tab(text: '${l.tabTracks}${_tracks.isNotEmpty ? ' (${_tracks.length})' : ''}'),
+            Tab(text: '${l.tabArtists}${_artists.isNotEmpty ? ' (${_artists.length})' : ''}'),
           ],
         ),
       ),
@@ -882,7 +889,11 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
                       const Icon(Icons.error_outline_rounded,
                           size: 48, color: TuneColors.error),
                       const SizedBox(height: 12),
-                      Text(_error!, style: TuneFonts.subheadline),
+                      Text(
+                          _error == _kNoApiClient
+                              ? l.miscNoApiClient
+                              : _error!,
+                          style: TuneFonts.subheadline),
                       const SizedBox(height: 16),
                       FilledButton(
                         onPressed: () {
@@ -891,7 +902,7 @@ class _StreamingFavoritesViewState extends State<_StreamingFavoritesView>
                         },
                         style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent),
-                        child: const Text('Retry'),
+                        child: Text(l.btnRetry),
                       ),
                     ],
                   ),
@@ -937,9 +948,9 @@ class _FavAlbumsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (albums.isEmpty) {
-      return const _EmptyFavorites(
+      return _EmptyFavorites(
         icon: Icons.album_rounded,
-        message: 'No favorite albums yet',
+        message: AppLocalizations.of(context).noFavAlbums,
       );
     }
     return RefreshIndicator(
@@ -980,9 +991,9 @@ class _FavTracksTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tracks.isEmpty) {
-      return const _EmptyFavorites(
+      return _EmptyFavorites(
         icon: Icons.music_note_rounded,
-        message: 'No favorite tracks yet',
+        message: AppLocalizations.of(context).noFavTracks,
       );
     }
     final app = context.read<AppState>();
@@ -1001,7 +1012,7 @@ class _FavTracksTab extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: Text('Play All (${tracks.length})'),
+                      label: Text(AppLocalizations.of(context).miscPlayAllCount(tracks.length)),
                       style: FilledButton.styleFrom(
                           backgroundColor: TuneColors.accent),
                       onPressed: () {
@@ -1016,7 +1027,7 @@ class _FavTracksTab extends StatelessWidget {
                   const SizedBox(width: 8),
                   FilledButton.icon(
                     icon: const Icon(Icons.shuffle_rounded),
-                    label: const Text('Shuffle'),
+                    label: Text(AppLocalizations.of(context).btnShuffle),
                     style: FilledButton.styleFrom(
                       backgroundColor: TuneColors.surfaceVariant,
                       foregroundColor: TuneColors.textPrimary,
@@ -1066,9 +1077,9 @@ class _FavArtistsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (artists.isEmpty) {
-      return const _EmptyFavorites(
+      return _EmptyFavorites(
         icon: Icons.person_rounded,
-        message: 'No favorite artists yet',
+        message: AppLocalizations.of(context).noFavArtists,
       );
     }
     return RefreshIndicator(

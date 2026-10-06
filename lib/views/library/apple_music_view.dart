@@ -30,6 +30,7 @@ class _AppleMusicViewState extends State<AppleMusicView> {
 
   _ViewState _state = _ViewState.idle;
   List<TrackMetadata> _tracks = [];
+  /// Error code, localized in build(): 'access_denied' or 'permission_refused'.
   String? _errorMsg;
 
   @override
@@ -48,7 +49,7 @@ class _AppleMusicViewState extends State<AppleMusicView> {
       if (mounted) {
         setState(() {
           _state = _ViewState.error;
-          _errorMsg = 'Accès à la bibliothèque Apple Music refusé.';
+          _errorMsg = 'access_denied';
         });
       }
     }
@@ -63,8 +64,7 @@ class _AppleMusicViewState extends State<AppleMusicView> {
       if (mounted) {
         setState(() {
           _state = _ViewState.error;
-          _errorMsg = 'Autorisation refusée. '
-              'Activez l\'accès dans Réglages > Confidentialité > Musique.';
+          _errorMsg = 'permission_refused';
         });
       }
     }
@@ -86,6 +86,7 @@ class _AppleMusicViewState extends State<AppleMusicView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return switch (_state) {
       _ViewState.idle || _ViewState.loading => const Center(
           child: CircularProgressIndicator(),
@@ -93,7 +94,12 @@ class _AppleMusicViewState extends State<AppleMusicView> {
       _ViewState.needsPermission => _PermissionPrompt(
           onRequest: _requestPermission,
         ),
-      _ViewState.error => _ErrorView(message: _errorMsg ?? 'Erreur inconnue'),
+      _ViewState.error => _ErrorView(
+          message: switch (_errorMsg) {
+            'access_denied' => l.libAppleMusicAccessDenied,
+            'permission_refused' => l.libAppleMusicPermissionRefused,
+            _ => l.libUnknownError,
+          }),
       _ViewState.loaded => _TrackList(
           tracks: _tracks,
           onRefresh: _loadTracks,
@@ -127,15 +133,14 @@ class _PermissionPrompt extends StatelessWidget {
             const Icon(Icons.library_music_rounded,
                 size: 64, color: TuneColors.textTertiary),
             const SizedBox(height: 20),
-            const Text(
-              'Accès à Apple Music',
+            Text(
+              AppLocalizations.of(context).libAppleMusicAccessTitle,
               style: TuneFonts.title3,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Autorisez l\'accès à votre bibliothèque musicale '
-              'pour lire vos pistes Apple Music.',
+            Text(
+              AppLocalizations.of(context).libAppleMusicAccessBody,
               style: TuneFonts.subheadline,
               textAlign: TextAlign.center,
             ),
@@ -193,9 +198,9 @@ class _TrackList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tracks.isEmpty) {
-      return const LibraryEmptyState(
+      return LibraryEmptyState(
         icon: Icons.music_off_rounded,
-        message: 'Bibliothèque Apple Music vide',
+        message: AppLocalizations.of(context).libAppleMusicEmpty,
       );
     }
     return RefreshIndicator(

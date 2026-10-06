@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
@@ -157,12 +158,13 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       color: TuneColors.surface,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       child: Row(
         children: [
-          _StepDot(index: 0, current: currentStep, label: 'Configuration'),
+          _StepDot(index: 0, current: currentStep, label: l.srvMpStepSetup),
           Expanded(
             child: Container(
               height: 2,
@@ -170,7 +172,7 @@ class _StepIndicator extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 8),
             ),
           ),
-          _StepDot(index: 1, current: currentStep, label: 'Réglages fins'),
+          _StepDot(index: 1, current: currentStep, label: l.srvMpStepFineTune),
         ],
       ),
     );
@@ -239,20 +241,21 @@ class _Step1Questions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ── Question 1: Listening mode ────────────────────────────────────
         _QuestionSection(
-          title: 'Comment écoutez-vous ?',
-          subtitle: 'Le profil sera adapté à votre configuration d\'écoute',
+          title: l.srvMpListenTitle,
+          subtitle: l.srvMpListenSubtitle,
           child: Row(
             children: [
               Expanded(
                 child: _ChoiceCard(
                   icon: Icons.speaker_rounded,
-                  label: 'Enceintes',
-                  sublabel: 'Salle de musique',
+                  label: l.srvMpSpeakers,
+                  sublabel: l.srvMpSpeakersSub,
                   selected: profile.listening == ListeningMode.speakers,
                   onTap: () => onUpdate(
                       profile.copyWith(listening: ListeningMode.speakers)),
@@ -262,8 +265,8 @@ class _Step1Questions extends StatelessWidget {
               Expanded(
                 child: _ChoiceCard(
                   icon: Icons.headphones_rounded,
-                  label: 'Casque',
-                  sublabel: 'Écoute personnelle',
+                  label: l.srvMpHeadphones,
+                  sublabel: l.srvMpHeadphonesSub,
                   selected: profile.listening == ListeningMode.headphones,
                   onTap: () => onUpdate(
                       profile.copyWith(listening: ListeningMode.headphones)),
@@ -278,14 +281,14 @@ class _Step1Questions extends StatelessWidget {
         // ── Question 2: Room size (hidden for headphones) ─────────────────
         if (profile.listening == ListeningMode.speakers) ...[
           _QuestionSection(
-            title: 'Quelle est la taille de la pièce ?',
-            subtitle: 'Influence les fréquences basses et la réverbération',
+            title: l.srvMpRoomTitle,
+            subtitle: l.srvMpRoomSubtitle,
             child: Row(
               children: [
                 Expanded(
                   child: _ChoiceCard(
                     icon: Icons.chair_rounded,
-                    label: 'Petite',
+                    label: l.srvMpRoomSmall,
                     sublabel: '< 15 m²',
                     selected: profile.roomSize == RoomSize.small,
                     onTap: () =>
@@ -296,7 +299,7 @@ class _Step1Questions extends StatelessWidget {
                 Expanded(
                   child: _ChoiceCard(
                     icon: Icons.living_rounded,
-                    label: 'Moyenne',
+                    label: l.srvMpRoomMedium,
                     sublabel: '15 – 30 m²',
                     selected: profile.roomSize == RoomSize.medium,
                     onTap: () =>
@@ -307,7 +310,7 @@ class _Step1Questions extends StatelessWidget {
                 Expanded(
                   child: _ChoiceCard(
                     icon: Icons.domain_rounded,
-                    label: 'Grande',
+                    label: l.srvMpRoomLarge,
                     sublabel: '> 30 m²',
                     selected: profile.roomSize == RoomSize.large,
                     onTap: () =>
@@ -320,14 +323,14 @@ class _Step1Questions extends StatelessWidget {
           const SizedBox(height: 20),
           // ── Question 3: Speaker placement ──────────────────────────────
           _QuestionSection(
-            title: 'Placement des enceintes',
-            subtitle: 'L\'emplacement affecte les réflexions de basses',
+            title: l.srvMpPlacementTitle,
+            subtitle: l.srvMpPlacementSubtitle,
             child: Row(
               children: [
                 Expanded(
                   child: _ChoiceCard(
                     icon: Icons.align_horizontal_left_rounded,
-                    label: 'Près d\'un mur',
+                    label: l.srvMpNearWall,
                     sublabel: '< 50 cm',
                     selected: profile.speakerPlacement ==
                         SpeakerPlacement.nearWall,
@@ -339,7 +342,7 @@ class _Step1Questions extends StatelessWidget {
                 Expanded(
                   child: _ChoiceCard(
                     icon: Icons.open_in_full_rounded,
-                    label: 'En espace libre',
+                    label: l.srvMpFreeStanding,
                     sublabel: '> 50 cm',
                     selected: profile.speakerPlacement ==
                         SpeakerPlacement.freeStanding,
@@ -358,7 +361,7 @@ class _Step1Questions extends StatelessWidget {
         FilledButton.icon(
           onPressed: onNext,
           icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-          label: const Text('Régler le son'),
+          label: Text(l.srvMpTuneSound),
           style: FilledButton.styleFrom(
             backgroundColor: TuneColors.accent,
             minimumSize: const Size.fromHeight(48),
@@ -396,6 +399,7 @@ class _Step2Sliders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -406,9 +410,9 @@ class _Step2Sliders extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: SwitchListTile(
-            title: const Text('Correction active', style: TuneFonts.body),
+            title: Text(l.srvMpCorrectionActive, style: TuneFonts.body),
             subtitle: Text(
-              'Applique le profil à la zone en cours',
+              l.srvMpCorrectionDesc,
               style: TuneFonts.footnote,
             ),
             value: profile.enabled,
@@ -421,10 +425,10 @@ class _Step2Sliders extends StatelessWidget {
 
         // ── Bass slider ───────────────────────────────────────────────────
         _PerceptualSlider(
-          label: 'Graves',
-          description: 'Poids, chaleur, corps du son',
-          lowLabel: 'Maigre',
-          highLabel: 'Lourd',
+          label: l.srvMpBass,
+          description: l.srvMpBassDesc,
+          lowLabel: l.srvMpBassLow,
+          highLabel: l.srvMpBassHigh,
           value: profile.bassGainDb,
           onChanged: (v) => onUpdate(profile.copyWith(bassGainDb: v)),
           iconData: Icons.graphic_eq_rounded,
@@ -434,10 +438,10 @@ class _Step2Sliders extends StatelessWidget {
 
         // ── Mid / Voice slider ────────────────────────────────────────────
         _PerceptualSlider(
-          label: 'Voix / Médiums',
-          description: 'Présence, clarté, intelligibilité',
-          lowLabel: 'En retrait',
-          highLabel: 'En avant',
+          label: l.srvMpMid,
+          description: l.srvMpMidDesc,
+          lowLabel: l.srvMpMidLow,
+          highLabel: l.srvMpMidHigh,
           value: profile.midGainDb,
           onChanged: (v) => onUpdate(profile.copyWith(midGainDb: v)),
           iconData: Icons.mic_rounded,
@@ -447,10 +451,10 @@ class _Step2Sliders extends StatelessWidget {
 
         // ── Treble slider ─────────────────────────────────────────────────
         _PerceptualSlider(
-          label: 'Aigus',
-          description: 'Brillance, détail, air dans le son',
-          lowLabel: 'Sombre',
-          highLabel: 'Brillant',
+          label: l.srvMpTreble,
+          description: l.srvMpTrebleDesc,
+          lowLabel: l.srvMpTrebleLow,
+          highLabel: l.srvMpTrebleHigh,
           value: profile.trebleGainDb,
           onChanged: (v) => onUpdate(profile.copyWith(trebleGainDb: v)),
           iconData: Icons.equalizer_rounded,
@@ -473,13 +477,13 @@ class _Step2Sliders extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.check_circle_rounded,
+              children: [
+                const Icon(Icons.check_circle_rounded,
                     size: 16, color: TuneColors.success),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Text(
-                  'Profil appliqué',
-                  style: TextStyle(color: TuneColors.success, fontSize: 13),
+                  l.srvMpProfileApplied,
+                  style: const TextStyle(color: TuneColors.success, fontSize: 13),
                 ),
               ],
             ),
@@ -496,7 +500,7 @@ class _Step2Sliders extends StatelessWidget {
                       strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.check_rounded, size: 18),
-          label: Text(saving ? 'Application...' : 'Appliquer le profil'),
+          label: Text(saving ? l.srvMpApplying : l.srvMpApply),
           style: FilledButton.styleFrom(
             backgroundColor: TuneColors.accent,
             minimumSize: const Size.fromHeight(48),
@@ -511,7 +515,7 @@ class _Step2Sliders extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onBack,
           icon: const Icon(Icons.arrow_back_rounded, size: 16),
-          label: const Text('Retour aux questions'),
+          label: Text(l.srvMpBackToQuestions),
           style: OutlinedButton.styleFrom(
             foregroundColor: TuneColors.textSecondary,
             side: const BorderSide(color: TuneColors.surfaceVariant),

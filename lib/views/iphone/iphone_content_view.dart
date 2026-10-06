@@ -134,26 +134,26 @@ class _MoreView extends StatelessWidget {
     final isRemote = context.watch<SettingsState>().isRemoteMode;
     final items = [
       if (isRemote)
-        (icon: Icons.folder_rounded,           label: 'Repertoires',       page: const BrowseLibraryView()),
-      (icon: Icons.collections_bookmark_rounded, label: 'Collections',  page: const CollectionsView()),
-      (icon: Icons.auto_awesome_motion_rounded, label: 'Smart Collections', page: const SmartCollectionsView()),
+        (icon: Icons.folder_rounded,           label: l.miscNavFolders,       page: const BrowseLibraryView()),
+      (icon: Icons.collections_bookmark_rounded, label: l.miscNavCollections,  page: const CollectionsView()),
+      (icon: Icons.auto_awesome_motion_rounded, label: l.miscNavSmartCollections, page: const SmartCollectionsView()),
       // Party + DJ require routes only the remote Python server provides.
       if (isRemote)
-        (icon: Icons.album_rounded,          label: 'DJ Mode',           page: const DJView()),
+        (icon: Icons.album_rounded,          label: l.miscNavDjMode,           page: const DJView()),
       if (isRemote)
-        (icon: Icons.celebration_rounded,    label: 'Party Mode',        page: const PartyView()),
-      (icon: Icons.auto_awesome_rounded,   label: 'Smart Playlists',   page: const SmartPlaylistsView()),
+        (icon: Icons.celebration_rounded,    label: l.miscNavPartyMode,        page: const PartyView()),
+      (icon: Icons.auto_awesome_rounded,   label: l.miscNavSmartPlaylists,   page: const SmartPlaylistsView()),
       (icon: Icons.podcasts_rounded,       label: l.navPodcasts,       page: const PodcastsView()),
       if (isRemote)
-        (icon: Icons.alarm_rounded,        label: 'Alarmes',           page: const AlarmsView()),
+        (icon: Icons.alarm_rounded,        label: l.miscNavAlarms,           page: const AlarmsView()),
       if (isRemote)
-        (icon: Icons.account_tree_rounded, label: 'Genre Tree',        page: const GenreTreeView()),
-      (icon: Icons.bar_chart_rounded,       label: 'Dashboard',         page: const DashboardView()),
-      (icon: Icons.find_replace_rounded,   label: 'Duplicates',        page: const DuplicatesView()),
+        (icon: Icons.account_tree_rounded, label: l.miscNavGenreTree,        page: const GenreTreeView()),
+      (icon: Icons.bar_chart_rounded,       label: l.miscNavDashboard,         page: const DashboardView()),
+      (icon: Icons.find_replace_rounded,   label: l.metadataSectionDuplicates,        page: const DuplicatesView()),
       if (isRemote)
-        (icon: Icons.monitor_heart_rounded, label: 'Diagnostics',      page: const DiagnosticsView()),
+        (icon: Icons.monitor_heart_rounded, label: l.miscNavDiagnostics,      page: const DiagnosticsView()),
       if (isRemote)
-        (icon: Icons.dashboard_rounded,     label: 'Admin',            page: const AdminDashboardView()),
+        (icon: Icons.dashboard_rounded,     label: l.miscNavAdmin,            page: const AdminDashboardView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
     ];
 
@@ -161,7 +161,7 @@ class _MoreView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('More', style: TuneFonts.title2),
+        title: Text(l.miscNavMore, style: TuneFonts.title2),
         actions: [
           Builder(
             builder: (ctx) => IconButton(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/metadata_fields.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
@@ -90,13 +91,14 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
     final api = _api;
     final data = _data;
     if (api == null || data == null) return;
+    final l = AppLocalizations.of(context);
     try {
       await api.updateMetadataFieldSettings(data.enabledKeys);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur de sauvegarde: $e'),
+            content: Text(l.cfgSaveError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -112,16 +114,17 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Champs de metadonnees', style: TuneFonts.title3),
+        title: Text(l.metadataFields, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Recharger',
+            tooltip: l.cfgReload,
             onPressed: _load,
           ),
         ],
@@ -131,6 +134,7 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(
         child: CircularProgressIndicator(color: TuneColors.accent),
@@ -147,7 +151,7 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
                   color: TuneColors.error, size: 48),
               const SizedBox(height: 16),
               Text(
-                'Impossible de charger les champs',
+                l.cfgFieldsLoadError,
                 style: TuneFonts.title3,
               ),
               const SizedBox(height: 8),
@@ -162,7 +166,7 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
                 onPressed: _load,
                 style:
                     FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-                child: const Text('Reessayer'),
+                child: Text(l.btnRetry),
               ),
             ],
           ),
@@ -174,7 +178,7 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
     if (data == null || data.categories.isEmpty) {
       return Center(
         child: Text(
-          'Aucun champ disponible',
+          l.cfgFieldsNone,
           style: TuneFonts.body.copyWith(color: TuneColors.textSecondary),
         ),
       );
@@ -187,7 +191,7 @@ class _MetadataFieldsViewState extends State<MetadataFieldsView> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            'Choisissez les champs de metadonnees affiches dans la vue edition de piste.',
+            l.cfgFieldsHint,
             style:
                 TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
           ),

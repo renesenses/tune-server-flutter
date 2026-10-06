@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../server/database/database.dart' show Track;
 import '../../services/tune_api_client.dart';
@@ -60,16 +61,17 @@ class _BrowseLibraryViewState extends State<BrowseLibraryView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Repertoires', style: TuneFonts.title3),
+        title: Text(l.libDirectories, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Actualiser',
+            tooltip: l.btnRefresh,
             onPressed: _loadRoots,
           ),
         ],
@@ -79,6 +81,7 @@ class _BrowseLibraryViewState extends State<BrowseLibraryView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
@@ -91,7 +94,7 @@ class _BrowseLibraryViewState extends State<BrowseLibraryView> {
             const Icon(Icons.error_outline_rounded,
                 size: 48, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Erreur de chargement', style: TuneFonts.subheadline),
+            Text(l.libLoadError, style: TuneFonts.subheadline),
             const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -100,8 +103,8 @@ class _BrowseLibraryViewState extends State<BrowseLibraryView> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loadRoots,
-              child: const Text('Reessayer',
-                  style: TextStyle(color: TuneColors.accent)),
+              child: Text(l.btnRetry,
+                  style: const TextStyle(color: TuneColors.accent)),
             ),
           ],
         ),
@@ -117,9 +120,9 @@ class _BrowseLibraryViewState extends State<BrowseLibraryView> {
             const Icon(Icons.folder_open_rounded,
                 size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Aucun dossier', style: TuneFonts.subheadline),
+            Text(l.libNoFolders, style: TuneFonts.subheadline),
             const SizedBox(height: 4),
-            Text('Ajoutez des dossiers musicaux dans les reglages',
+            Text(l.libAddFoldersInSettings,
                 style: TuneFonts.caption),
           ],
         ),
@@ -262,6 +265,7 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -272,13 +276,13 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
             IconButton(
               icon: const Icon(Icons.play_arrow_rounded,
                   color: TuneColors.accent),
-              tooltip: 'Tout lire',
+              tooltip: l.libraryPlayAll,
               onPressed: _playAll,
             ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Actualiser',
+            tooltip: l.btnRefresh,
             onPressed: _loadDirectory,
           ),
         ],
@@ -288,6 +292,7 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
@@ -300,7 +305,7 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
             const Icon(Icons.error_outline_rounded,
                 size: 48, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Erreur de chargement', style: TuneFonts.subheadline),
+            Text(l.libLoadError, style: TuneFonts.subheadline),
             const SizedBox(height: 4),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -309,8 +314,8 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loadDirectory,
-              child: const Text('Reessayer',
-                  style: TextStyle(color: TuneColors.accent)),
+              child: Text(l.btnRetry,
+                  style: const TextStyle(color: TuneColors.accent)),
             ),
           ],
         ),
@@ -321,14 +326,14 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
     final tracks = _tracks ?? [];
 
     if (dirs.isEmpty && tracks.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.folder_open_rounded,
+            const Icon(Icons.folder_open_rounded,
                 size: 48, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
-            Text('Dossier vide', style: TuneFonts.subheadline),
+            const SizedBox(height: 12),
+            Text(l.browseNoContent, style: TuneFonts.subheadline),
           ],
         ),
       );
@@ -340,13 +345,13 @@ class _BrowseDirectoryViewState extends State<_BrowseDirectoryView> {
     // Total items: optional header + dirs + optional header + tracks
     final items = <_ListEntry>[];
     if (hasDirectories) {
-      items.add(_ListEntry.header('Dossiers'));
+      items.add(_ListEntry.header(l.libFoldersHeader));
       for (final dir in dirs) {
         items.add(_ListEntry.directory(dir));
       }
     }
     if (hasTracks) {
-      items.add(_ListEntry.header('Pistes (${tracks.length})'));
+      items.add(_ListEntry.header(l.libTracksHeaderCount(tracks.length)));
       for (int i = 0; i < tracks.length; i++) {
         items.add(_ListEntry.track(tracks[i], i));
       }
@@ -531,6 +536,7 @@ class _TrackTile extends StatelessWidget {
 
   Widget _buildMenu(BuildContext context) {
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert_rounded,
           color: TuneColors.textTertiary, size: 20),
@@ -544,13 +550,13 @@ class _TrackTile extends StatelessWidget {
         }
       },
       itemBuilder: (_) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'play',
-          child: Text('Lire', style: TuneFonts.body),
+          child: Text(l.libraryPlay, style: TuneFonts.body),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'play_from_here',
-          child: Text('Lire a partir d\'ici', style: TuneFonts.body),
+          child: Text(l.libPlayFromHere, style: TuneFonts.body),
         ),
       ],
     );

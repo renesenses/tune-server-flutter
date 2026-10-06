@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -22,6 +23,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
   List<Map<String, dynamic>> _shares = [];
   bool _loading = true;
   String? _error;
+  bool _notConnected = false;
 
   @override
   void initState() {
@@ -35,7 +37,8 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
     final api = _api;
     if (api == null) {
       setState(() {
-        _error = 'Non connecte a un serveur distant';
+        _error = null;
+        _notConnected = true;
         _loading = false;
       });
       return;
@@ -43,6 +46,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
     setState(() {
       _loading = true;
       _error = null;
+      _notConnected = false;
     });
     try {
       final data = await api.discoverSMBShares();
@@ -68,13 +72,15 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
 
     final userCtrl = TextEditingController(text: 'guest');
     final passCtrl = TextEditingController();
+    final l = AppLocalizations.of(context);
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
         title: Text(
-          'Monter ${share['name'] ?? share['share_name'] ?? ''}',
+          l.cfgSmbMountTitle(
+              '${share['name'] ?? share['share_name'] ?? ''}'),
           style: TuneFonts.title3,
         ),
         content: Column(
@@ -83,8 +89,8 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
             TextField(
               controller: userCtrl,
               style: TuneFonts.body,
-              decoration: const InputDecoration(
-                labelText: 'Utilisateur',
+              decoration: InputDecoration(
+                labelText: l.smbUser,
                 border: OutlineInputBorder(),
                 filled: true,
                 fillColor: TuneColors.background,
@@ -95,8 +101,8 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
               controller: passCtrl,
               obscureText: true,
               style: TuneFonts.body,
-              decoration: const InputDecoration(
-                labelText: 'Mot de passe',
+              decoration: InputDecoration(
+                labelText: l.smbPassword,
                 border: OutlineInputBorder(),
                 filled: true,
                 fillColor: TuneColors.background,
@@ -107,12 +113,12 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Monter'),
+            child: Text(l.cfgSmbMount),
           ),
         ],
       ),
@@ -142,7 +148,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$shareName monte avec succes'),
+            content: Text(l.cfgSmbMountSuccess('$shareName')),
             backgroundColor: TuneColors.success,
           ),
         );
@@ -150,7 +156,9 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(
+              content: Text(l.errorWith(e.toString())),
+              backgroundColor: TuneColors.error),
         );
       }
     }
@@ -158,11 +166,12 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Partages reseau (SMB)', style: TuneFonts.title3),
+        title: Text(l.cfgSmbTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.textSecondary),
@@ -175,6 +184,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return Center(
         child: Column(
@@ -183,7 +193,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
             const CircularProgressIndicator(color: TuneColors.accent),
             const SizedBox(height: 16),
             Text(
-              'Recherche de partages SMB...',
+              l.cfgSmbSearching,
               style: TuneFonts.subheadline.copyWith(color: TuneColors.textSecondary),
             ),
           ],
@@ -191,7 +201,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
       );
     }
 
-    if (_error != null) {
+    if (_error != null || _notConnected) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -200,12 +210,13 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
             children: [
               const Icon(Icons.error_outline_rounded, size: 48, color: TuneColors.error),
               const SizedBox(height: 12),
-              Text(_error!, style: TuneFonts.footnote, textAlign: TextAlign.center),
+              Text(_notConnected ? l.cfgSmbNotConnected : _error!,
+                  style: TuneFonts.footnote, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _discover,
                 style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-                child: const Text('Reessayer'),
+                child: Text(l.btnRetry),
               ),
             ],
           ),
@@ -220,12 +231,12 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
           children: [
             const Icon(Icons.folder_off_rounded, size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Aucun partage SMB decouvert', style: TuneFonts.subheadline),
+            Text(l.cfgSmbNone, style: TuneFonts.subheadline),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _discover,
               icon: const Icon(Icons.radar_rounded, size: 18),
-              label: const Text('Rescanner'),
+              label: Text(l.sourcesRescanBtn),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             ),
           ],
@@ -242,7 +253,7 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
             const Divider(height: 1, indent: 56, color: TuneColors.divider),
         itemBuilder: (_, i) {
           final share = _shares[i];
-          final name = share['name'] ?? share['share_name'] ?? 'Unknown';
+          final name = share['name'] ?? share['share_name'] ?? l.cfgUnknown;
           final host = share['host'] ?? share['ip'] ?? share['address'] ?? '';
           final type = share['type'] ?? '';
 
@@ -267,12 +278,12 @@ class _SMBBrowserViewState extends State<SMBBrowserView> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.save_rounded, color: TuneColors.accent, size: 20),
-                  tooltip: 'Sauvegarder identifiants',
+                  tooltip: l.cfgSmbSaveCredentials,
                   onPressed: () => _mountShare(share),
                 ),
                 IconButton(
                   icon: const Icon(Icons.link_rounded, color: TuneColors.success, size: 20),
-                  tooltip: 'Monter',
+                  tooltip: l.cfgSmbMount,
                   onPressed: () => _mountShare(share),
                 ),
               ],

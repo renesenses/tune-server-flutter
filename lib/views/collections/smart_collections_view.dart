@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
@@ -29,6 +30,7 @@ class SmartCollectionsView extends StatefulWidget {
 class _SmartCollectionsViewState extends State<SmartCollectionsView> {
   List<dynamic>? _collections;
   bool _loading = true;
+  /// Raw error text, or the code 'not_connected' (localized in build()).
   String? _error;
 
   @override
@@ -40,7 +42,7 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
   Future<void> _load() async {
     final app = context.read<AppState>();
     if (app.apiClient == null) {
-      if (mounted) setState(() { _loading = false; _error = 'Non connecté'; });
+      if (mounted) setState(() { _loading = false; _error = 'not_connected'; });
       return;
     }
     setState(() { _loading = true; _error = null; });
@@ -56,14 +58,15 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
 
   Future<void> _delete(int id) async {
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Supprimer ?'),
-        content: const Text('Cette Smart Collection sera supprimée définitivement.'),
+        title: Text(l.libDeleteConfirmTitle),
+        content: Text(l.libDeleteSmartCollectionBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.btnCancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l.btnDelete)),
         ],
       ),
     );
@@ -92,10 +95,10 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
     return parsed != null ? Color(parsed) : TuneColors.accent;
   }
 
-  String _summary(dynamic raw) {
+  String _summary(AppLocalizations l, dynamic raw) {
     try {
       final rules = jsonDecode(raw['rules'] as String? ?? '[]') as List;
-      if (rules.isEmpty) return 'aucune règle';
+      if (rules.isEmpty) return l.libNoRules;
       final parts = rules.take(2).map((r) {
         final field = r['field'] as String? ?? '';
         final op = r['op'] as String? ?? '';
@@ -103,11 +106,11 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
         if (field == 'credit' && value is Map) {
           final role = value['role'] ?? '*';
           final artist = value['artist_name'] ?? '*';
-          return 'crédit: $role=$artist';
+          return l.libRuleCreditSummary('$role', '$artist');
         }
         return '$field $op ${value ?? ''}';
       });
-      final glue = (raw['match_mode'] == 'all') ? ' ET ' : ' OU ';
+      final glue = (raw['match_mode'] == 'all') ? ' ${l.libAnd} ' : ' ${l.libOr} ';
       var summary = parts.join(glue);
       if (rules.length > 2) summary += ' + ${rules.length - 2}';
       return summary;
@@ -118,16 +121,17 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('Smart Collections', style: TuneFonts.title3),
+        title: Text(l.libSmartCollections, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _openEditor(),
-            tooltip: 'Nouvelle Smart Collection',
+            tooltip: l.libNewSmartCollection,
           ),
         ],
       ),
@@ -136,7 +140,9 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
         : _error != null
           ? Center(child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(_error!, style: TextStyle(color: Colors.red[300])),
+              child: Text(
+                  _error == 'not_connected' ? l.streamingNotConnected : _error!,
+                  style: TextStyle(color: Colors.red[300])),
             ))
           : _collections == null || _collections!.isEmpty
             ? Center(child: Padding(
@@ -144,16 +150,16 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.auto_awesome, size: 48, color: TuneColors.textSecondary),
                   const SizedBox(height: 12),
-                  Text('Aucune Smart Collection', style: TuneFonts.body),
+                  Text(l.libNoSmartCollections, style: TuneFonts.body),
                   const SizedBox(height: 8),
-                  Text('Le serveur seed normalement 7 collections par défaut au premier démarrage.',
+                  Text(l.libSmartCollectionsSeedHint,
                        style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                        textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: () => _openEditor(),
                     icon: const Icon(Icons.add),
-                    label: const Text('Créer ma première Smart Collection'),
+                    label: Text(l.libCreateFirstSmartCollection),
                   ),
                 ]),
               ))
@@ -184,7 +190,7 @@ class _SmartCollectionsViewState extends State<SmartCollectionsView> {
                           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                         ),
                         title: Text(c['name'] as String? ?? '', style: TuneFonts.body),
-                        subtitle: Text(_summary(c),
+                        subtitle: Text(_summary(l, c),
                           style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                         trailing: IconButton(
@@ -260,10 +266,11 @@ class _SmartCollectionDetailPageState extends State<SmartCollectionDetailPage> {
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.inbox, size: 48, color: TuneColors.textSecondary),
                   const SizedBox(height: 12),
-                  Text('Aucun album ne correspond', style: TuneFonts.body),
+                  Text(AppLocalizations.of(context).libNoMatchingAlbums,
+                      style: TuneFonts.body),
                   const SizedBox(height: 8),
                   Text(
-                    "Pour les règles basées sur les crédits (engineer, performer, …), enrichis d'abord la bibliothèque depuis Settings.",
+                    AppLocalizations.of(context).libSmartCreditsHint,
                     style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -332,32 +339,69 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
   ];
 
   // Mirrors tune_server.library.smart_collection field whitelist.
+  // Labels are localized by _fieldLabel().
   static const _fields = [
-    {'value': 'sample_rate', 'label': 'Sample rate', 'type': 'int'},
-    {'value': 'bit_depth',   'label': 'Bit depth',   'type': 'int'},
-    {'value': 'year',        'label': 'Année',       'type': 'int'},
-    {'value': 'track_count', 'label': 'Nb pistes',   'type': 'int'},
-    {'value': 'format',      'label': 'Format',      'type': 'text'},
-    {'value': 'genre',       'label': 'Genre',       'type': 'text'},
-    {'value': 'label',       'label': 'Label',       'type': 'text'},
-    {'value': 'artist_name', 'label': 'Artiste',     'type': 'text'},
-    {'value': 'title',       'label': "Titre album", 'type': 'text'},
-    {'value': 'source',      'label': 'Source',      'type': 'text'},
-    {'value': 'cover_path',  'label': 'Pochette',    'type': 'nullable'},
-    {'value': 'added_at',    'label': "Date d'ajout",'type': 'timestamp'},
-    {'value': 'credit',      'label': 'Crédit',      'type': 'credit'},
-    {'value': 'play_count',  'label': 'Nb lectures', 'type': 'count'},
-    {'value': 'last_played_at', 'label': 'Dernière lecture', 'type': 'timestamp'},
+    {'value': 'sample_rate', 'type': 'int'},
+    {'value': 'bit_depth',   'type': 'int'},
+    {'value': 'year',        'type': 'int'},
+    {'value': 'track_count', 'type': 'int'},
+    {'value': 'format',      'type': 'text'},
+    {'value': 'genre',       'type': 'text'},
+    {'value': 'label',       'type': 'text'},
+    {'value': 'artist_name', 'type': 'text'},
+    {'value': 'title',       'type': 'text'},
+    {'value': 'source',      'type': 'text'},
+    {'value': 'cover_path',  'type': 'nullable'},
+    {'value': 'added_at',    'type': 'timestamp'},
+    {'value': 'credit',      'type': 'credit'},
+    {'value': 'play_count',  'type': 'count'},
+    {'value': 'last_played_at', 'type': 'timestamp'},
   ];
 
+  static String _fieldLabel(AppLocalizations l, String field) {
+    switch (field) {
+      case 'sample_rate': return l.libFieldSampleRate;
+      case 'bit_depth': return l.libFieldBitDepth;
+      case 'year': return l.metadataYearField;
+      case 'track_count': return l.libFieldTrackCount;
+      case 'format': return l.libFieldFormat;
+      case 'genre': return l.metadataGenreField;
+      case 'label': return l.libFieldLabel;
+      case 'artist_name': return l.metadataArtistField;
+      case 'title': return l.libFieldAlbumTitle;
+      case 'source': return l.libFieldSource;
+      case 'cover_path': return l.cover;
+      case 'added_at': return l.librarySortAddedDate;
+      case 'credit': return l.libFieldCredit;
+      case 'play_count': return l.libFieldPlayCount;
+      case 'last_played_at': return l.libFieldLastPlayed;
+      default: return field;
+    }
+  }
+
+  /// Localized operator label; symbols (=, ≠, ≥…) are kept as-is.
+  static String _opLabel(AppLocalizations l, String type, List<String> o) {
+    switch (o[0]) {
+      case 'between': return l.libOpBetween;
+      case 'contains':
+      case 'has': return l.libOpContains;
+      case 'starts_with': return l.libOpStartsWith;
+      case 'is_null': return type == 'timestamp' ? l.libOpNever : l.libOpEmpty;
+      case 'is_not_null': return l.libOpNotEmpty;
+      case '>': return type == 'timestamp' ? l.libOpAfter : o[1];
+      case '<': return type == 'timestamp' ? l.libOpBefore : o[1];
+      default: return o[1];
+    }
+  }
+
   static const _opsByType = {
-    'int':       [['=','='], ['!=','≠'], ['>=','≥'], ['>','>'], ['<=','≤'], ['<','<'], ['between','entre']],
-    'text':      [['=','='], ['!=','≠'], ['contains','contient'], ['starts_with','commence par'],
-                  ['is_null','vide'], ['is_not_null','non vide']],
-    'nullable':  [['is_null','vide'], ['is_not_null','non vide']],
-    'timestamp': [['>','après'], ['<','avant'], ['is_null','jamais']],
-    'credit':    [['has','contient']],
-    'count':     [['>=','≥'], ['>','>'], ['=','='], ['<','<'], ['between','entre']],
+    'int':       [['=','='], ['!=','≠'], ['>=','≥'], ['>','>'], ['<=','≤'], ['<','<'], ['between','between']],
+    'text':      [['=','='], ['!=','≠'], ['contains','contains'], ['starts_with','starts_with'],
+                  ['is_null','is_null'], ['is_not_null','is_not_null']],
+    'nullable':  [['is_null','is_null'], ['is_not_null','is_not_null']],
+    'timestamp': [['>','>'], ['<','<'], ['is_null','is_null']],
+    'credit':    [['has','contains']],
+    'count':     [['>=','≥'], ['>','>'], ['=','='], ['<','<'], ['between','between']],
   };
 
   @override
@@ -458,15 +502,16 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text(widget.collection == null ? 'Nouvelle Smart Collection' : 'Modifier'),
+        title: Text(widget.collection == null ? l.libNewSmartCollection : l.btnEdit),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
-            child: Text(widget.collection == null ? 'Créer' : 'Enregistrer'),
+            child: Text(widget.collection == null ? l.btnCreate : l.btnSave),
           ),
         ],
       ),
@@ -475,7 +520,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         children: [
           TextField(
             controller: _nameCtrl,
-            decoration: const InputDecoration(labelText: 'Nom', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l.libNameLabel, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           Wrap(spacing: 8, children: _colorOptions.map((c) {
@@ -494,10 +539,10 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _matchMode,
-            decoration: const InputDecoration(labelText: 'Combinaison', border: OutlineInputBorder()),
-            items: const [
-              DropdownMenuItem(value: 'all', child: Text('Toutes les règles (ET)')),
-              DropdownMenuItem(value: 'any', child: Text('Au moins une (OU)')),
+            decoration: InputDecoration(labelText: l.libMatchMode, border: const OutlineInputBorder()),
+            items: [
+              DropdownMenuItem(value: 'all', child: Text(l.libMatchAll)),
+              DropdownMenuItem(value: 'any', child: Text(l.libMatchAny)),
             ],
             onChanged: (v) {
               if (v != null) {
@@ -512,7 +557,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
           OutlinedButton.icon(
             onPressed: _addRule,
             icon: const Icon(Icons.add),
-            label: const Text('Ajouter une règle'),
+            label: Text(l.libAddRule),
           ),
           const SizedBox(height: 24),
           Container(
@@ -531,7 +576,10 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
               : Row(children: [
                   Icon(Icons.album, color: TuneColors.accent),
                   const SizedBox(width: 8),
-                  Text('${_previewCount ?? '…'} album${(_previewCount ?? 0) > 1 ? 's' : ''} correspondant${(_previewCount ?? 0) > 1 ? 's' : ''}',
+                  Text(
+                    _previewCount == null
+                        ? l.libMatchingAlbumsPending
+                        : l.libMatchingAlbums(_previewCount!),
                     style: TuneFonts.body.copyWith(fontWeight: FontWeight.w600)),
                 ]),
           ),
@@ -545,6 +593,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
     final op = rule['op'] as String? ?? 'contains';
     final type = _typeOf(field);
     final ops = _opsByType[type] ?? _opsByType['text']!;
+    final l = AppLocalizations.of(context);
 
     return Card(
       color: TuneColors.surfaceVariant,
@@ -558,7 +607,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
                 isExpanded: true,
                 value: field,
                 items: _fields.map((f) => DropdownMenuItem(
-                  value: f['value'], child: Text(f['label']!, overflow: TextOverflow.ellipsis),
+                  value: f['value'], child: Text(_fieldLabel(l, f['value']!), overflow: TextOverflow.ellipsis),
                 )).toList(),
                 onChanged: (v) {
                   if (v == null) return;
@@ -575,7 +624,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: ops.any((o) => o[0] == op) ? op : ops.first[0],
-              items: ops.map((o) => DropdownMenuItem(value: o[0], child: Text(o[1]))).toList(),
+              items: ops.map((o) => DropdownMenuItem(value: o[0], child: Text(_opLabel(l, type, o)))).toList(),
               onChanged: (v) {
                 if (v == null) return;
                 setState(() {
@@ -618,7 +667,9 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         controller: TextEditingController(text: '${rule['value'] ?? ''}'),
         decoration: InputDecoration(
           isDense: true,
-          hintText: type == 'timestamp' ? 'now-30d ou 2024-01-01' : 'valeur',
+          hintText: type == 'timestamp'
+              ? AppLocalizations.of(context).libTimestampHint
+              : AppLocalizations.of(context).libValueHint,
           border: const OutlineInputBorder(),
         ),
         keyboardType: (type == 'int' || type == 'count') ? TextInputType.number : TextInputType.text,
@@ -637,7 +688,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
       child: Row(children: [
         Expanded(child: TextField(
           controller: TextEditingController(text: '${list.elementAtOrNull(0) ?? ''}'),
-          decoration: const InputDecoration(hintText: 'min', isDense: true, border: OutlineInputBorder()),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context).libMinHint, isDense: true, border: const OutlineInputBorder()),
           keyboardType: (type == 'int' || type == 'count') ? TextInputType.number : TextInputType.text,
           onChanged: (v) {
             list.length = 2;
@@ -649,7 +700,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('→')),
         Expanded(child: TextField(
           controller: TextEditingController(text: '${list.elementAtOrNull(1) ?? ''}'),
-          decoration: const InputDecoration(hintText: 'max', isDense: true, border: OutlineInputBorder()),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context).libMaxHint, isDense: true, border: const OutlineInputBorder()),
           keyboardType: (type == 'int' || type == 'count') ? TextInputType.number : TextInputType.text,
           onChanged: (v) {
             list.length = 2;
@@ -668,9 +719,9 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
       padding: const EdgeInsets.only(top: 8),
       child: TextField(
         controller: TextEditingController(text: raw),
-        decoration: const InputDecoration(
-          hintText: 'valeurs séparées par des virgules',
-          isDense: true, border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          hintText: AppLocalizations.of(context).libCommaSeparatedHint,
+          isDense: true, border: const OutlineInputBorder(),
         ),
         onChanged: (v) {
           rule['value'] = v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -700,10 +751,11 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         },
       ),
     );
+    final l = AppLocalizations.of(context);
     return Column(children: [
-      input('role', 'rôle (engineer, performer, …)'),
-      input('artist_name', 'artiste (Rudy Van Gelder, …)'),
-      input('instrument', 'instrument (Piano, …) — optionnel'),
+      input('role', l.libCreditRoleHint),
+      input('artist_name', l.libCreditArtistHint),
+      input('instrument', l.libCreditInstrumentHint),
     ]);
   }
 }

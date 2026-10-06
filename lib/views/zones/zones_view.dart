@@ -84,7 +84,7 @@ class ZonesView extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.dashboard_customize_rounded,
                   color: TuneColors.accent),
-              tooltip: 'Zone Manager',
+              tooltip: l.znZoneManagerTitle,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -511,8 +511,7 @@ class _ZoneTile extends StatelessWidget {
         final zones = context.read<ZoneState>().zones;
         if (zones.length <= 1) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Impossible de supprimer la dernière zone')),
+            SnackBar(content: Text(l.znCannotDeleteLastZone)),
           );
           return false;
         }
@@ -572,7 +571,7 @@ class _ZoneTile extends StatelessWidget {
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Erreur changement de zone: $e'),
+                content: Text(l.znZoneSwitchError(e.toString())),
                 duration: const Duration(seconds: 3),
                 backgroundColor: TuneColors.error,
               ),
@@ -675,7 +674,7 @@ class _ZoneTile extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.settings_rounded,
                   color: TuneColors.textSecondary),
-              title: const Text('Zone settings'),
+              title: Text(l.znZoneSettings),
               onTap: () {
                 Navigator.pop(ctx);
                 _showZoneSettings(context);
@@ -777,9 +776,9 @@ class _ZoneTile extends StatelessWidget {
   void _confirmDelete(BuildContext context) {
     final zones = context.read<ZoneState>().zones;
     if (zones.length <= 1) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Impossible de supprimer la dernière zone')),
+        SnackBar(content: Text(l.znCannotDeleteLastZone)),
       );
       return;
     }
@@ -892,7 +891,7 @@ class _OutputPickerSheet extends StatelessWidget {
           _OutputOption(
             icon: Icons.speaker_phone_rounded,
             label: l.zonesOutputLocal,
-            subtitle: 'Haut-parleurs du téléphone',
+            subtitle: l.znPhoneSpeakers,
             isSelected: currentType == OutputType.local,
             onTap: () {
               context
@@ -910,8 +909,8 @@ class _OutputPickerSheet extends StatelessWidget {
             icon: Icons.bluetooth_rounded,
             label: l.zonesOutputBluetooth,
             subtitle: Platform.isAndroid
-                ? 'Sorties Bluetooth connectées'
-                : 'Utilise la sortie système (Centre de contrôle)',
+                ? l.znBtConnectedOutputs
+                : l.znBtSystemOutput,
             isSelected: currentType == OutputType.bluetooth,
             onTap: () async {
               if (Platform.isAndroid) {
@@ -1007,6 +1006,7 @@ class _OutputPickerSheet extends StatelessWidget {
   }
 
   Future<void> _showBluetoothDevicesSheet(BuildContext context, ZoneWithState zone) async {
+    final l = AppLocalizations.of(context);
     final svc = BluetoothService();
     final devices = await svc.listDevices();
     if (!context.mounted) return;
@@ -1025,13 +1025,13 @@ class _OutputPickerSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Sorties Bluetooth', style: TuneFonts.title3),
+                Text(l.znBtOutputsTitle, style: TuneFonts.title3),
                 const SizedBox(height: 12),
                 if (devices.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      'Aucun périphérique Bluetooth connecté. Jumelle un appareil dans les paramètres système.',
+                      l.znBtNoDevice,
                       style: TuneFonts.footnote,
                     ),
                   )
@@ -1051,7 +1051,7 @@ class _OutputPickerSheet extends StatelessWidget {
                       )),
                 const SizedBox(height: 8),
                 Text(
-                  'Le routage actif dépend des paramètres système Android.',
+                  l.znBtAndroidRouting,
                   style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
                 ),
               ],
@@ -2151,6 +2151,7 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -2171,13 +2172,13 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
             Text(widget.zone.name,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
             const SizedBox(height: 16),
-            const Text('DSD Mode', style: TextStyle(color: TuneColors.textSecondary, fontSize: 13)),
+            Text(l.znDsdMode, style: const TextStyle(color: TuneColors.textSecondary, fontSize: 13)),
             const SizedBox(height: 8),
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'auto', label: Text('Auto')),
-                ButtonSegment(value: 'native', label: Text('Native')),
-                ButtonSegment(value: 'pcm', label: Text('PCM')),
+              segments: [
+                ButtonSegment(value: 'auto', label: Text(l.znDsdAuto)),
+                ButtonSegment(value: 'native', label: Text(l.znDsdNative)),
+                const ButtonSegment(value: 'pcm', label: Text('PCM')),
               ],
               selected: {_dsdMode},
               onSelectionChanged: (v) {
@@ -2187,8 +2188,8 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Gapless', style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Enchaînement sans coupure (DLNA)', style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+              title: Text(l.gapless, style: const TextStyle(color: Colors.white)),
+              subtitle: Text(l.znGaplessDlnaDesc, style: const TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
               value: _gapless,
               onChanged: (v) {
                 setState(() => _gapless = v);
@@ -2197,8 +2198,8 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
               contentPadding: EdgeInsets.zero,
             ),
             SwitchListTile(
-              title: const Text('Volume fixe', style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Désactive le contrôle de volume logiciel', style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+              title: Text(l.znFixedVolume, style: const TextStyle(color: Colors.white)),
+              subtitle: Text(l.znFixedVolumeDesc, style: const TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
               value: _fixedVolume,
               onChanged: (v) {
                 setState(() => _fixedVolume = v);
@@ -2211,9 +2212,9 @@ class _ZoneSettingsSheetState extends State<_ZoneSettingsSheet> {
             if (widget.zone.outputType == OutputType.dlna ||
                 widget.zone.outputType == OutputType.openhome)
               SwitchListTile(
-                title: const Text('Limiter à 16 bits', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('À activer si le hi-res (24 bits) reste muet alors que le 16 bits fonctionne (Ruark R3). Reconvertit en FLAC 16 bits.',
-                    style: TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
+                title: Text(l.znCap16Bit, style: const TextStyle(color: Colors.white)),
+                subtitle: Text(l.znCap16BitDesc,
+                    style: const TextStyle(color: TuneColors.textSecondary, fontSize: 12)),
                 value: _cap16bit,
                 onChanged: (v) {
                   setState(() => _cap16bit = v);
@@ -2418,10 +2419,10 @@ class _AirplayPairingDialogState extends State<_AirplayPairingDialog> {
         ];
       case _PairPhase.connected:
         return [
-          const Row(children: [
-            Icon(Icons.check_circle_rounded, color: TuneColors.accent),
-            SizedBox(width: 8),
-            Text('OK', style: TextStyle(color: TuneColors.textPrimary)),
+          Row(children: [
+            const Icon(Icons.check_circle_rounded, color: TuneColors.accent),
+            const SizedBox(width: 8),
+            Text(l.btnOk, style: const TextStyle(color: TuneColors.textPrimary)),
           ]),
         ];
       case _PairPhase.failed:

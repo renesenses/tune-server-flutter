@@ -27,7 +27,7 @@ class BarreOnglets extends StatelessWidget {
       (icon: Icons.cloud_outlined, activeIcon: Icons.cloud_rounded, label: l.navStreaming),
       (icon: Icons.speaker_group_outlined, activeIcon: Icons.speaker_group_rounded, label: l.navZones),
       (icon: Icons.radio_outlined, activeIcon: Icons.radio_rounded, label: l.navRadios),
-      (icon: Icons.more_horiz_rounded, activeIcon: Icons.more_horiz_rounded, label: 'More'),
+      (icon: Icons.more_horiz_rounded, activeIcon: Icons.more_horiz_rounded, label: l.npTabMore),
     ];
 
     return Stack(

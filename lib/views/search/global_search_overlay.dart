@@ -29,7 +29,7 @@ void showGlobalSearch(BuildContext context) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Search',
+    barrierLabel: AppLocalizations.of(context).searchTitle,
     barrierColor: Colors.black.withValues(alpha: 0.72),
     transitionDuration: const Duration(milliseconds: 220),
     transitionBuilder: (ctx, anim, secondaryAnim, child) {

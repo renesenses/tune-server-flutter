@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/library/duplicate_detector.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -70,7 +71,8 @@ class _DuplicatesViewState extends State<DuplicatesView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Duplicate Scanner', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).libDuplicateScanner,
+            style: TuneFonts.title3),
       ),
       body: _buildBody(),
     );
@@ -99,6 +101,7 @@ class _DuplicatesViewState extends State<DuplicatesView> {
       return _NoDuplicates(onRescan: _startScan);
     }
 
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
         // Summary bar
@@ -113,15 +116,17 @@ class _DuplicatesViewState extends State<DuplicatesView> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${groups.length} duplicate group${groups.length > 1 ? 's' : ''} found '
-                  '(${groups.fold<int>(0, (sum, g) => sum + g.tracks.length)} tracks total)',
+                  l.libDuplicateGroupsFound(
+                    groups.length,
+                    groups.fold<int>(0, (sum, g) => sum + g.tracks.length),
+                  ),
                   style: TuneFonts.footnote,
                 ),
               ),
               TextButton(
                 onPressed: _startScan,
-                child: const Text('Rescan',
-                    style: TextStyle(color: TuneColors.accent, fontSize: 13)),
+                child: Text(l.sourcesRescanBtn,
+                    style: const TextStyle(color: TuneColors.accent, fontSize: 13)),
               ),
             ],
           ),
@@ -360,6 +365,7 @@ class _InitialState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -367,14 +373,13 @@ class _InitialState extends StatelessWidget {
           const Icon(Icons.find_replace_rounded,
               size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 16),
-          Text('Find duplicate tracks',
+          Text(l.libFindDuplicatesTitle,
               style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Scans audio content hashes to find identical tracks '
-              'in your library.',
+              l.libFindDuplicatesBody,
               style: TuneFonts.caption,
               textAlign: TextAlign.center,
             ),
@@ -383,7 +388,7 @@ class _InitialState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onScan,
             icon: const Icon(Icons.search_rounded),
-            label: const Text('Start Scan'),
+            label: Text(l.libStartScan),
             style: FilledButton.styleFrom(
               backgroundColor: TuneColors.accent,
               minimumSize: const Size(180, 48),
@@ -409,6 +414,7 @@ class _ScanningState extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = total > 0 ? processed / total : 0.0;
     final pct = (progress * 100).round();
+    final l = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -424,12 +430,12 @@ class _ScanningState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Scanning...', style: TuneFonts.title3),
+          Text(l.scanning, style: TuneFonts.title3),
           const SizedBox(height: 8),
           Text(
             total > 0
-                ? '$processed / $total tracks ($pct%)'
-                : 'Loading tracks...',
+                ? l.libScanProgress(processed, total, pct)
+                : l.libLoadingTracks,
             style: TuneFonts.footnote,
           ),
         ],
@@ -455,15 +461,16 @@ class _NoDuplicates extends StatelessWidget {
           const Icon(Icons.check_circle_outline_rounded,
               size: 56, color: TuneColors.success),
           const SizedBox(height: 12),
-          Text('No duplicates found', style: TuneFonts.subheadline),
+          Text(AppLocalizations.of(context).libNoDuplicatesFound,
+              style: TuneFonts.subheadline),
           const SizedBox(height: 4),
-          Text('Your library is clean.',
+          Text(AppLocalizations.of(context).libLibraryClean,
               style: TuneFonts.caption),
           const SizedBox(height: 20),
           TextButton(
             onPressed: onRescan,
-            child: const Text('Scan Again',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(AppLocalizations.of(context).libScanAgain,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -490,7 +497,8 @@ class _ErrorState extends StatelessWidget {
           const Icon(Icons.error_outline,
               size: 48, color: TuneColors.error),
           const SizedBox(height: 12),
-          Text('Scan failed', style: TuneFonts.subheadline),
+          Text(AppLocalizations.of(context).libScanFailed,
+              style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -502,7 +510,7 @@ class _ErrorState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(AppLocalizations.of(context).btnRetry),
             style: FilledButton.styleFrom(
               backgroundColor: TuneColors.accent,
             ),

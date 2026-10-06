@@ -128,7 +128,7 @@ class _CompletenessCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '$pct% complet',
+              AppLocalizations.of(context).cfgMetaPercentComplete(pct),
               style: TuneFonts.caption.copyWith(color: color),
             ),
           ],

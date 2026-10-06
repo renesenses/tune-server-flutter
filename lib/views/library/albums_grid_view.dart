@@ -246,13 +246,14 @@ class _AlbumFilterChips extends StatelessWidget {
   const _AlbumFilterChips({required this.lib});
 
   static const _sampleRateThresholds = [
-    (label: '44.1kHz+', minRate: 44100),
-    (label: '96kHz+', minRate: 96000),
-    (label: '192kHz+', minRate: 192000),
+    (label: '44.1kHz+', minRate: 44100),  // i18n-ok
+    (label: '96kHz+', minRate: 96000),  // i18n-ok
+    (label: '192kHz+', minRate: 192000),  // i18n-ok
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final formats = lib.availableFormats;
     final hasFilters = lib.hasActiveFilters;
 
@@ -271,7 +272,7 @@ class _AlbumFilterChips extends StatelessWidget {
                 if (hasFilters) ...[
                   ActionChip(
                     avatar: const Icon(Icons.clear_rounded, size: 16),
-                    label: const Text('Clear'),
+                    label: Text(l.btnClear),
                     labelStyle: const TextStyle(
                       fontSize: 12,
                       color: TuneColors.textSecondary,
@@ -330,7 +331,8 @@ class _AlbumFilterChips extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 12, bottom: 6),
               child: Text(
-                '${lib.filteredAlbums.length} / ${lib.albums.length} albums',
+                l.libAlbumsFilteredCount(
+                    lib.filteredAlbums.length, lib.albums.length),
                 style: TuneFonts.caption,
               ),
             ),
@@ -526,13 +528,14 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
       if (mounted) {
         setState(() => _isFav = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Added to favorites')),
+          SnackBar(content: Text(AppLocalizations.of(context).favoriteAdded)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Favorite error: $e')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context).favError(e.toString()))),
         );
       }
     }
@@ -541,7 +544,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
   void _showAddToCollection() {
     if (_collections == null || _collections!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No collections yet')),
+        SnackBar(content: Text(AppLocalizations.of(context).libNoCollectionsYet)),
       );
       return;
     }
@@ -577,7 +580,9 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rating error: $e')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).libRatingError(e.toString()))),
         );
       }
     }
@@ -601,6 +606,7 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
     if (_tracks == null || _tracks!.isEmpty) return [];
 
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     final hasMultipleDiscs =
         _tracks!.map((t) => t.discNumber ?? 1).toSet().length > 1;
 
@@ -667,8 +673,8 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
 
         final subtitle = track.discSubtitle;
         final label = subtitle != null && subtitle.isNotEmpty
-            ? 'Disc $disc — $subtitle'
-            : 'Disc $disc';
+            ? l.libDiscWithSubtitle(disc, subtitle)
+            : l.libDisc(disc);
         slivers.add(SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -728,18 +734,18 @@ class _AlbumDetailViewState extends State<AlbumDetailView> {
               _isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
               color: _isFav ? TuneColors.accent : null,
             ),
-            tooltip: 'Quick Favorite',
+            tooltip: AppLocalizations.of(context).libQuickFavorite,
             onPressed: _quickFavAlbum,
           ),
           // Add to Collection
           IconButton(
             icon: const Icon(Icons.collections_bookmark_rounded),
-            tooltip: 'Add to Collection',
+            tooltip: AppLocalizations.of(context).libAddToCollection,
             onPressed: _showAddToCollection,
           ),
           IconButton(
             icon: const Icon(Icons.notes_rounded),
-            tooltip: 'Album notes',
+            tooltip: AppLocalizations.of(context).libAlbumNotes,
             onPressed: () => _showAlbumBio(context, album),
           ),
           IconButton(
@@ -1017,7 +1023,7 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
                     size: 16,
                     color: _showCredits ? TuneColors.accent : TuneColors.textTertiary),
                 onPressed: _toggleCredits,
-                tooltip: 'Crédits',
+                tooltip: AppLocalizations.of(context).libCredits,
               ),
               IconButton(
                 icon: const Icon(Icons.more_vert_rounded,
@@ -1053,9 +1059,10 @@ class _AlbumTrackTileState extends State<_AlbumTrackTile> {
             ),
           ),
         if (_showCredits && _credits != null && _credits!.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(left: 64, bottom: 8),
-            child: Text('Aucun crédit', style: TextStyle(fontSize: 11, color: TuneColors.textTertiary)),
+          Padding(
+            padding: const EdgeInsets.only(left: 64, bottom: 8),
+            child: Text(AppLocalizations.of(context).libNoCredits,
+                style: const TextStyle(fontSize: 11, color: TuneColors.textTertiary)),
           ),
       ],
     );
@@ -1079,6 +1086,8 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
   String? _bio;
   Map<String, dynamic>? _provenance;
   bool _loading = true;
+  /// Error code resolved to a localized message in build():
+  /// 'not_connected' or 'no_notes'.
   String? _error;
 
   @override
@@ -1090,7 +1099,7 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
   Future<void> _loadBio() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) {
-      if (mounted) setState(() { _loading = false; _error = 'Not connected'; });
+      if (mounted) setState(() { _loading = false; _error = 'not_connected'; });
       return;
     }
     try {
@@ -1102,12 +1111,13 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
         _loading = false;
       });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'No album notes available'; });
+      if (mounted) setState(() { _loading = false; _error = 'no_notes'; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
       minChildSize: 0.3,
@@ -1137,9 +1147,14 @@ class _AlbumBioSheetState extends State<_AlbumBioSheet> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(child: Text(_error!, style: TuneFonts.subheadline))
+                    ? Center(
+                        child: Text(
+                            _error == 'not_connected'
+                                ? l.streamingNotConnected
+                                : l.libNoAlbumNotes,
+                            style: TuneFonts.subheadline))
                     : _bio == null || _bio!.isEmpty
-                        ? Center(child: Text('No notes available',
+                        ? Center(child: Text(l.libNoNotes,
                             style: TuneFonts.subheadline))
                         : SingleChildScrollView(
                             controller: scrollController,
@@ -1174,10 +1189,10 @@ class BioProvenanceLine extends StatelessWidget {
   final Map<String, dynamic> provenance;
   const BioProvenanceLine({super.key, required this.provenance});
 
-  static String labelFor(String source) {
+  static String labelFor(String source, AppLocalizations l) {
     switch (source) {
       case 'wikipedia':
-        return 'Wikipédia';
+        return 'Wikipedia';
       case 'lastfm':
         return 'Last.fm';
       case 'theaudiodb':
@@ -1185,7 +1200,7 @@ class BioProvenanceLine extends StatelessWidget {
       case 'qobuz':
         return 'Qobuz';
       case 'community':
-        return 'Communauté Tune';
+        return l.libSourceCommunity;
       default:
         return source;
     }
@@ -1196,10 +1211,11 @@ class BioProvenanceLine extends StatelessWidget {
     final source = provenance['source'] as String?;
     if (source == null || source.isEmpty) return const SizedBox.shrink();
     final license = provenance['license'] as String?;
-    final label = labelFor(source);
+    final l = AppLocalizations.of(context);
+    final label = labelFor(source, l);
     final text = (license != null && license.isNotEmpty)
-        ? 'Source : $label · $license'
-        : 'Source : $label';
+        ? l.libBioSourceWithLicense(label, license)
+        : l.libBioSource(label);
     return Text(
       text,
       style: TuneFonts.subheadline.copyWith(color: TuneColors.textTertiary),
@@ -1253,6 +1269,7 @@ class _AddToCollectionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1269,7 +1286,7 @@ class _AddToCollectionSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Add to Collection', style: TuneFonts.title3),
+          Text(l.libAddToCollection, style: TuneFonts.title3),
           const SizedBox(height: 12),
           ...collections.map((c) {
             final col = c as Map<String, dynamic>;
@@ -1291,13 +1308,13 @@ class _AddToCollectionSheet extends StatelessWidget {
                   await app.apiClient!.addAlbumToCollection(colId, albumId);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added to $name')),
+                      SnackBar(content: Text(l.playlistTrackAdded(name))),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
+                      SnackBar(content: Text(l.errorWith(e.toString()))),
                     );
                   }
                 }
