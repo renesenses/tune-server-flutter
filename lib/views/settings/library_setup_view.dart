@@ -229,7 +229,7 @@ class _ConfigPageState extends State<_ConfigPage> {
             const SizedBox(height: 12),
             Text(
               isRemote
-                  ? 'Connectez-vous a un serveur Tune sur votre reseau pour profiter de toutes les fonctionnalites.'
+                  ? l.srvRemoteConfigBody
                   : l.onboardingConfigBody,
               style: TuneFonts.body,
               textAlign: TextAlign.center,
@@ -238,13 +238,13 @@ class _ConfigPageState extends State<_ConfigPage> {
             // Mode picker
             SegmentedButton<String>(
               expandedInsets: EdgeInsets.zero,
-              segments: const [
+              segments: [
                 ButtonSegment(value: 'remote',
-                    icon: Icon(Icons.wifi_tethering_rounded, size: 16),
-                    label: Text('Serveur distant')),
+                    icon: const Icon(Icons.wifi_tethering_rounded, size: 16),
+                    label: Text(l.onboardingConfigModeRemote)),
                 ButtonSegment(value: 'server',
-                    icon: Icon(Icons.dns_rounded, size: 16),
-                    label: Text('Autonome')),
+                    icon: const Icon(Icons.dns_rounded, size: 16),
+                    label: Text(l.srvModeStandalone)),
               ],
               selected: {settings.appMode},
               onSelectionChanged: (v) => settings.setAppMode(v.first),
@@ -269,7 +269,7 @@ class _ConfigPageState extends State<_ConfigPage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Mode autonome — Party, DJ, paroles synchronisees, EQ, recommandations sont absents. Recommande : utiliser un serveur Tune distant.',
+                        l.srvStandaloneWarning,
                         style: TuneFonts.caption.copyWith(
                             color: TuneColors.textSecondary),
                       ),
@@ -397,6 +397,7 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final settings = context.read<SettingsState>();
     return Column(
       children: [
@@ -406,13 +407,13 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
           keyboardType: TextInputType.url,
           autocorrect: false,
           onChanged: (v) => settings.setRemoteHost(v.trim()),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             filled: true,
             fillColor: TuneColors.surface,
-            labelText: 'Adresse du serveur',
+            labelText: l.srvServerAddress,
             hintText: '192.168.1.50',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.network_check_rounded),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.network_check_rounded),
           ),
         ),
         const SizedBox(height: 8),
@@ -424,12 +425,12 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
             final p = int.tryParse(v.trim());
             if (p != null) settings.setRemotePort(p);
           },
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             filled: true,
             fillColor: TuneColors.surface,
-            labelText: 'Port',
+            labelText: l.port,
             hintText: '8888',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
@@ -450,13 +451,13 @@ class _RemoteSetupBlockState extends State<_RemoteSetupBlock> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Pas encore de serveur ?',
+                    Text(l.srvNoServerYet,
                         style: TuneFonts.caption.copyWith(
                             fontWeight: FontWeight.w600,
                             color: TuneColors.textPrimary)),
                     const SizedBox(height: 2),
                     SelectableText(
-                      'Telechargez Tune Server : mozaiklabs.fr/download (Mac, Linux, Windows, Raspberry Pi, Docker NAS).',
+                      l.srvDownloadServer,
                       style: TuneFonts.caption.copyWith(
                           color: TuneColors.textSecondary),
                     ),
@@ -524,6 +525,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
   Future<void> _toggleService(String name, bool enable) async {
     final api = context.read<AppState>().apiClient;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     try {
       if (enable) {
         await api.enableStreamingService(name);
@@ -534,7 +536,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -554,6 +556,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isRemote = context.watch<SettingsState>().isRemoteMode;
 
     return Padding(
@@ -565,10 +568,10 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
             const SizedBox(height: 24),
             const Icon(Icons.cloud_rounded, size: 64, color: TuneColors.accent),
             const SizedBox(height: 24),
-            const Text('Services de streaming', style: TuneFonts.title1),
+            Text(l.streamingServices, style: TuneFonts.title1),
             const SizedBox(height: 12),
             Text(
-              'Activez les services de streaming que vous souhaitez utiliser avec Tune.',
+              l.srvStreamingBody,
               style: TuneFonts.body,
               textAlign: TextAlign.center,
             ),
@@ -589,7 +592,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'En mode autonome, les services de streaming ne sont pas disponibles. Passez en mode serveur distant pour les activer.',
+                        l.srvStreamingStandaloneWarning,
                         style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                       ),
                     ),
@@ -604,7 +607,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
               )
             else if (_services.isEmpty && isRemote)
               Text(
-                'Aucun service disponible. Verifiez la connexion au serveur.',
+                l.srvNoServiceAvailable,
                 style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
                 textAlign: TextAlign.center,
               )
@@ -620,7 +623,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
                     for (var i = 0; i < _serviceNames.length; i++) ...[
                       if (i > 0)
                         const Divider(height: 1, indent: 56, color: TuneColors.divider),
-                      _buildServiceRow(_serviceNames[i]),
+                      _buildServiceRow(l, _serviceNames[i]),
                     ],
                   ],
                 ),
@@ -630,8 +633,9 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
               // Summary
               if (_enabledCount > 0)
                 Text(
-                  '$_enabledCount service${_enabledCount > 1 ? "s" : ""} active${_enabledCount > 1 ? "s" : ""}'
-                  '${_authenticatedCount > 0 ? ", $_authenticatedCount connecte${_authenticatedCount > 1 ? "s" : ""}" : ""}',
+                  _authenticatedCount > 0
+                      ? '${l.srvServicesEnabled(_enabledCount)}, ${l.srvServicesConnected(_authenticatedCount)}'
+                      : l.srvServicesEnabled(_enabledCount),
                   style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
                 ),
             ],
@@ -645,7 +649,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
                   backgroundColor: TuneColors.accent,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+                child: Text(l.btnNext, style: const TextStyle(fontSize: 16)),
               ),
             ),
           ],
@@ -654,7 +658,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
     );
   }
 
-  Widget _buildServiceRow(String name) {
+  Widget _buildServiceRow(AppLocalizations l, String name) {
     final serviceData = _services[name];
     final enabled = serviceData is Map ? serviceData['enabled'] == true : false;
     final authenticated = serviceData is Map ? serviceData['authenticated'] == true : false;
@@ -683,7 +687,7 @@ class _StreamingAuthPageState extends State<_StreamingAuthPage> {
       ),
       subtitle: enabled
           ? Text(
-              authenticated ? 'Connecte' : 'Active, non connecte',
+              authenticated ? l.streamingConnected : l.srvServiceEnabledNotConnected,
               style: TuneFonts.caption.copyWith(
                 color: authenticated ? TuneColors.success : TuneColors.textTertiary,
               ),
@@ -900,6 +904,7 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final zoneState = context.watch<ZoneState>();
     final zones = zoneState.zones;
     final devices = zoneState.devices;
@@ -920,10 +925,10 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
             const SizedBox(height: 24),
             const Icon(Icons.tune_rounded, size: 64, color: TuneColors.accent),
             const SizedBox(height: 24),
-            Text('Diagnostic audio', style: TuneFonts.title1),
+            Text(l.srvAudioCheckTitle, style: TuneFonts.title1),
             const SizedBox(height: 12),
             Text(
-              'Verification de la configuration audio de votre systeme.',
+              l.srvAudioCheckBody,
               style: TuneFonts.body,
               textAlign: TextAlign.center,
             ),
@@ -946,7 +951,7 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
                     // Zones
                     _DiagRow(
                       icon: Icons.speaker_group_rounded,
-                      label: 'Zones configurees',
+                      label: l.srvDiagZones,
                       value: '${zones.length}',
                       status: zones.isNotEmpty
                           ? _DiagStatus.ok
@@ -956,24 +961,24 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
                     // Audio outputs
                     _DiagRow(
                       icon: Icons.headphones_rounded,
-                      label: 'Sorties audio',
+                      label: l.srvDiagOutputs,
                       value: outputs.isNotEmpty
-                          ? '${outputs.length} detectee${outputs.length != 1 ? "s" : ""}'
-                          : 'Local',
+                          ? l.srvDiagOutputsDetected(outputs.length)
+                          : l.zonesOutputLocal,
                       status: _DiagStatus.ok,
                     ),
                     const Divider(height: 1, indent: 56, color: TuneColors.divider),
                     // Network devices
                     _DiagRow(
                       icon: Icons.cast_rounded,
-                      label: 'Appareils reseau',
+                      label: l.srvDiagNetworkDevices,
                       value: networkDeviceCount > 0
                           ? [
                               if (dlnaDevices.isNotEmpty) '${dlnaDevices.length} DLNA',
                               if (bluosDevices.isNotEmpty) '${bluosDevices.length} BluOS',
                               if (chromecastDevices.isNotEmpty) '${chromecastDevices.length} Chromecast',
                             ].join(', ')
-                          : 'Aucun',
+                          : l.srvDiagNone,
                       status: networkDeviceCount > 0
                           ? _DiagStatus.ok
                           : _DiagStatus.warning,
@@ -986,13 +991,13 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
               if (zones.isEmpty) ...[
                 const SizedBox(height: 12),
                 _WarningCard(
-                  text: 'Aucune zone configuree. Vous pouvez en creer une depuis les parametres Zones.',
+                  text: l.srvDiagNoZoneWarning,
                 ),
               ],
 
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                _WarningCard(text: 'Audio-check indisponible : $_error'),
+                _WarningCard(text: l.srvAudioCheckUnavailable(_error!)),
               ],
             ],
 
@@ -1005,7 +1010,7 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
                   backgroundColor: TuneColors.accent,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+                child: Text(l.btnNext, style: const TextStyle(fontSize: 16)),
               ),
             ),
             if (!_loading) ...[
@@ -1013,7 +1018,7 @@ class _AudioCheckPageState extends State<_AudioCheckPage> {
               TextButton.icon(
                 onPressed: _loadAudioCheck,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reverifier'),
+                label: Text(l.srvRecheck),
               ),
             ],
           ],
@@ -1132,6 +1137,7 @@ class _ScanPageState extends State<_ScanPage> {
 
   Future<void> _startScan() async {
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     setState(() {
       _scanning = true;
       _scanComplete = false;
@@ -1165,7 +1171,7 @@ class _ScanPageState extends State<_ScanPage> {
     // Remote mode: trigger scan via API and poll for progress
     final api = app.apiClient;
     if (api == null) {
-      setState(() { _scanning = false; _scanError = 'Non connecte'; });
+      setState(() { _scanning = false; _scanError = l.streamingNotConnected; });
       return;
     }
 
@@ -1205,6 +1211,7 @@ class _ScanPageState extends State<_ScanPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
@@ -1214,10 +1221,10 @@ class _ScanPageState extends State<_ScanPage> {
             // Pre-scan state
             const Icon(Icons.library_music_rounded, size: 64, color: TuneColors.accent),
             const SizedBox(height: 24),
-            const Text('Analyser la bibliotheque', style: TuneFonts.title1),
+            Text(l.metadataScanBtn, style: TuneFonts.title1),
             const SizedBox(height: 12),
             Text(
-              'Lancez une analyse pour indexer vos fichiers musicaux et recuperer les metadonnees.',
+              l.srvScanBody,
               style: TuneFonts.body,
               textAlign: TextAlign.center,
             ),
@@ -1227,7 +1234,7 @@ class _ScanPageState extends State<_ScanPage> {
               child: FilledButton.icon(
                 onPressed: _startScan,
                 icon: const Icon(Icons.search_rounded, size: 18),
-                label: const Text('Lancer l\'analyse', style: TextStyle(fontSize: 16)),
+                label: Text(l.srvScanStart, style: const TextStyle(fontSize: 16)),
                 style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.accent,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1237,7 +1244,7 @@ class _ScanPageState extends State<_ScanPage> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: widget.onNext,
-              child: Text('Passer', style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary)),
+              child: Text(l.btnSkip, style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary)),
             ),
           ] else if (_scanning) ...[
             // Scanning in progress
@@ -1246,16 +1253,16 @@ class _ScanPageState extends State<_ScanPage> {
               child: CircularProgressIndicator(strokeWidth: 3, color: TuneColors.accent),
             ),
             const SizedBox(height: 24),
-            const Text('Analyse en cours...', style: TuneFonts.title2),
+            Text(l.scanning, style: TuneFonts.title2),
             const SizedBox(height: 24),
             // Progress stats
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _ScanStat(label: 'Analyses', value: _scannedCount),
-                _ScanStat(label: 'Ajoutees', value: _addedCount),
+                _ScanStat(label: l.srvScanStatScanned, value: _scannedCount),
+                _ScanStat(label: l.srvScanStatAdded, value: _addedCount),
                 if (_updatedCount > 0)
-                  _ScanStat(label: 'Mises a jour', value: _updatedCount),
+                  _ScanStat(label: l.srvScanStatUpdated, value: _updatedCount),
               ],
             ),
             const SizedBox(height: 24),
@@ -1270,7 +1277,7 @@ class _ScanPageState extends State<_ScanPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Cela peut prendre quelques minutes...',
+              l.srvScanMayTakeMinutes,
               style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
             ),
           ] else if (_scanComplete) ...[
@@ -1278,7 +1285,7 @@ class _ScanPageState extends State<_ScanPage> {
             const Icon(Icons.check_circle_outline_rounded,
                 size: 72, color: TuneColors.success),
             const SizedBox(height: 24),
-            const Text('Analyse terminee !', style: TuneFonts.title1),
+            Text(l.srvScanComplete, style: TuneFonts.title1),
             const SizedBox(height: 16),
             // Final stats
             Container(
@@ -1290,9 +1297,9 @@ class _ScanPageState extends State<_ScanPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _ScanStat(label: 'Ajoutees', value: _addedCount, color: TuneColors.success),
+                  _ScanStat(label: l.srvScanStatAdded, value: _addedCount, color: TuneColors.success),
                   if (_updatedCount > 0)
-                    _ScanStat(label: 'Mises a jour', value: _updatedCount, color: TuneColors.success),
+                    _ScanStat(label: l.srvScanStatUpdated, value: _updatedCount, color: TuneColors.success),
                 ],
               ),
             ),
@@ -1305,7 +1312,7 @@ class _ScanPageState extends State<_ScanPage> {
                   backgroundColor: TuneColors.accent,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+                child: Text(l.btnNext, style: const TextStyle(fontSize: 16)),
               ),
             ),
           ],
@@ -1316,7 +1323,7 @@ class _ScanPageState extends State<_ScanPage> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: widget.onNext,
-              child: const Text('Passer'),
+              child: Text(l.btnSkip),
             ),
           ],
         ],

@@ -116,7 +116,7 @@ class _TracksListViewState extends State<TracksListView> {
         Expanded(
           child: filtered.isEmpty
               ? Center(
-                  child: Text('Aucune piste avec ce filtre',
+                  child: Text(l.libNoTracksForFilter,
                       style: TuneFonts.subheadline))
               : ListView.separated(
                   itemCount: filtered.length,
@@ -180,6 +180,7 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasFilter = selectedFormat != null || selectedQuality != null;
+    final l = AppLocalizations.of(context);
 
     return Container(
       color: TuneColors.surface,
@@ -192,13 +193,13 @@ class _FilterBar extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _chip('Tous', null, selectedQuality, onQualityChanged,
+                _chip(l.filterAll, null, selectedQuality, onQualityChanged,
                     alsoReset: onFormatChanged),
                 _chip('Hi-Res', 'hires', selectedQuality, onQualityChanged,
                     color: TuneColors.accent),
-                _chip('Lossless', 'lossless', selectedQuality, onQualityChanged,
+                _chip(l.libQualityLossless, 'lossless', selectedQuality, onQualityChanged,
                     color: Colors.tealAccent),
-                _chip('Lossy', 'lossy', selectedQuality, onQualityChanged,
+                _chip(l.libQualityLossy, 'lossy', selectedQuality, onQualityChanged,
                     color: Colors.orangeAccent),
                 const SizedBox(width: 12),
                 // Chips format
@@ -216,7 +217,7 @@ class _FilterBar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '$trackCount / $totalCount pistes',
+                l.libTracksFilteredCount(trackCount, totalCount),
                 style: TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
               ),
             ),

@@ -126,11 +126,11 @@ class _SettingsList extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Mise à jour disponible : v${updateInfo.latestVersion}',
+                        l.stgUpdateAvailable(updateInfo.latestVersion ?? ''),
                         style: TuneFonts.body.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        'Version actuelle : v${updateInfo.currentVersion}',
+                        l.stgCurrentVersion(updateInfo.currentVersion),
                         style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
                       ),
                     ],
@@ -144,7 +144,7 @@ class _SettingsList extends StatelessWidget {
                         await launchUrl(url, mode: LaunchMode.externalApplication);
                       }
                     },
-                    child: const Text('Ouvrir'),
+                    child: Text(l.stgOpen),
                   ),
               ],
             ),
@@ -154,7 +154,7 @@ class _SettingsList extends StatelessWidget {
         const _AudioDiagnosticSection(),
 
         // ---- Mode ----
-        const _SectionHeader('Mode'),
+        _SectionHeader(l.stgMode),
         Container(
           color: TuneColors.surface,
           child: Column(
@@ -164,14 +164,15 @@ class _SettingsList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mode', style: TuneFonts.body),
+                    Text(l.stgMode, style: TuneFonts.body),
                     const SizedBox(height: 4),
                     Text(
                       settings.isRemoteMode
                           ? app.isRemoteConnected
-                              ? 'Connecté à ${settings.remoteHost}:${settings.remotePort}'
-                              : 'Non connecté'
-                          : 'Serveur embarqué',
+                              ? l.stgConnectedTo(
+                                  '${settings.remoteHost}:${settings.remotePort}')
+                              : l.streamingNotConnected
+                          : l.onboardingConfigModeLocal,
                       style: TuneFonts.footnote.copyWith(
                         color: settings.isRemoteMode && app.isRemoteConnected
                             ? TuneColors.accent
@@ -181,9 +182,9 @@ class _SettingsList extends StatelessWidget {
                     const SizedBox(height: 10),
                     SegmentedButton<String>(
                       expandedInsets: EdgeInsets.zero,
-                      segments: const [
-                        ButtonSegment(value: 'server', icon: Icon(Icons.dns_rounded, size: 16), label: Text('Serveur')),
-                        ButtonSegment(value: 'remote', icon: Icon(Icons.wifi_tethering_rounded, size: 16), label: Text('Remote')),
+                      segments: [
+                        ButtonSegment(value: 'server', icon: const Icon(Icons.dns_rounded, size: 16), label: Text(l.server)),
+                        ButtonSegment(value: 'remote', icon: const Icon(Icons.wifi_tethering_rounded, size: 16), label: Text(l.stgModeRemote)),
                       ],
                       selected: {settings.appMode},
                       onSelectionChanged: (v) => app.switchMode(v.first),
@@ -214,13 +215,13 @@ class _SettingsList extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Mode standalone — fonctionnalités limitées',
+                                  Text(l.stgStandaloneTitle,
                                       style: TuneFonts.caption.copyWith(
                                           fontWeight: FontWeight.w600,
                                           color: TuneColors.textPrimary)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Party, DJ, paroles synchronisées, EQ, bios d\'album, recommandations… requièrent un serveur Tune distant.',
+                                    l.stgStandaloneBody,
                                     style: TuneFonts.caption.copyWith(
                                         color: TuneColors.textSecondary),
                                   ),
@@ -237,16 +238,16 @@ class _SettingsList extends StatelessWidget {
               if (settings.isRemoteMode) ...[
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Adresse serveur',
+                  title: l.stgServerAddress,
                   trailing: Text(
-                    settings.remoteHost.isEmpty ? 'Non configuré' : settings.remoteHost,
+                    settings.remoteHost.isEmpty ? l.stgNotConfigured : settings.remoteHost,
                     style: const TextStyle(color: TuneColors.textSecondary),
                   ),
                   onTap: app.isRemoteConnected ? null : () => _editRemoteHost(context, settings),
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Port',
+                  title: l.port,
                   trailing: Text(
                     settings.remotePort.toString(),
                     style: const TextStyle(color: TuneColors.textSecondary),
@@ -256,7 +257,7 @@ class _SettingsList extends StatelessWidget {
                 if (!app.isRemoteConnected) ...[
                   const Divider(height: 1, indent: 16, color: TuneColors.divider),
                   _SettingsTile(
-                    title: 'Scanner le réseau',
+                    title: l.stgScanNetwork,
                     trailing: const Icon(Icons.radar_rounded, color: TuneColors.accent),
                     onTap: () => _scanForServers(context, settings),
                   ),
@@ -268,7 +269,7 @@ class _SettingsList extends StatelessWidget {
                       ? FilledButton.icon(
                           onPressed: () => app.disconnectRemote(),
                           icon: const Icon(Icons.link_off_rounded, size: 16),
-                          label: const Text('Déconnecter'),
+                          label: Text(l.btnDisconnect),
                           style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.error,
                             minimumSize: const Size.fromHeight(40),
@@ -279,7 +280,7 @@ class _SettingsList extends StatelessWidget {
                               ? null
                               : () => app.connectRemote(),
                           icon: const Icon(Icons.link_rounded, size: 16),
-                          label: const Text('Connecter'),
+                          label: Text(l.btnConnect),
                           style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent,
                             minimumSize: const Size.fromHeight(40),
@@ -325,6 +326,7 @@ class _SettingsList extends StatelessWidget {
                   items: [
                     DropdownMenuItem<String?>(value: null, child: Text(l.settingsLangSystem)),
                     // Les noms de langues restent dans leur propre langue (pas localisés)
+                    // i18n-ok-debut
                     const DropdownMenuItem(value: 'fr', child: Text('Français')),
                     const DropdownMenuItem(value: 'en', child: Text('English')),
                     const DropdownMenuItem(value: 'de', child: Text('Deutsch')),
@@ -334,6 +336,7 @@ class _SettingsList extends StatelessWidget {
                     const DropdownMenuItem(value: 'ja', child: Text('日本語')),
                     const DropdownMenuItem(value: 'ko', child: Text('한국어')),
                     const DropdownMenuItem(value: 'hu', child: Text('Magyar')),
+                    // i18n-ok-fin
                   ],
                   onChanged: (v) => settings.setLanguage(v),
                 ),
@@ -371,13 +374,13 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- Lecture ----
-        const _SectionHeader('LECTURE'),
+        _SectionHeader(l.stgSectionPlayback),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _SettingsTile(
-                title: 'Crossfade',
+                title: l.stgCrossfade,
                 trailing: Switch(
                   value: settings.crossfadeEnabled,
                   onChanged: (v) => settings.setCrossfadeEnabled(v),
@@ -386,7 +389,7 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Lire en boucle par défaut',
+                title: l.stgRepeatOneByDefault,
                 trailing: Switch(
                   value: settings.repeatOneByDefault,
                   onChanged: (v) => settings.setRepeatOneByDefault(v),
@@ -422,8 +425,8 @@ class _SettingsList extends StatelessWidget {
         Container(
           color: TuneColors.surface,
           child: _SettingsTile(
-            title: 'Mode Exclusif (bit-perfect)',
-            subtitle: 'WASAPI Exclusive — acces direct au DAC USB',
+            title: l.stgExclusiveMode,
+            subtitle: l.stgExclusiveModeDesc,
             trailing: Switch(
               value: settings.exclusiveModeEnabled,
               onChanged: (v) => settings.setExclusiveModeEnabled(v),
@@ -433,12 +436,12 @@ class _SettingsList extends StatelessWidget {
         ),
 
         // ---- Champs métadonnées ----
-        const _SectionHeader('CHAMPS METADONNEES'),
+        _SectionHeader(l.stgSectionMetadataFields),
         const _MetadataFieldsToggleSection(),
 
         // ---- Audiophile / Qualite / EQ ----
         if (app.apiClient != null) ...[
-          const _SectionHeader('AUDIO AVANCE'),
+          _SectionHeader(l.stgSectionAdvancedAudio),
           Container(
             color: TuneColors.surface,
             child: Column(
@@ -448,8 +451,8 @@ class _SettingsList extends StatelessWidget {
                 const _StreamingQualitySelector(),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Equalizer',
-                  subtitle: 'Assistant de calibration + EQ 10 bandes expert',
+                  title: l.stgEqualizer,
+                  subtitle: l.stgEqualizerDesc,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -491,8 +494,8 @@ class _SettingsList extends StatelessWidget {
               if (app.apiClient != null) ...[
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Champs de metadonnees',
-                  subtitle: 'Configurer les champs etendus (compositeur, chef...)',
+                  title: l.metadataFields,
+                  subtitle: l.stgMetadataFieldsDesc,
                   trailing: const Icon(Icons.chevron_right_rounded,
                       color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
@@ -527,7 +530,7 @@ class _SettingsList extends StatelessWidget {
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
                 title: 'Spotify Connect',
-                subtitle: 'Tune comme récepteur (Premium requis côté client)',
+                subtitle: l.stgSpotifyConnectDesc,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -539,7 +542,7 @@ class _SettingsList extends StatelessWidget {
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
                 title: 'Last.fm Scrobble',
-                subtitle: 'Scrobble listening history',
+                subtitle: l.stgLastfmDesc,
                 trailing: const _LastfmStatusIndicator(),
                 onTap: () => Navigator.push(
                   context,
@@ -549,7 +552,7 @@ class _SettingsList extends StatelessWidget {
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
                 title: 'ListenBrainz',
-                subtitle: 'Scrobble to ListenBrainz',
+                subtitle: l.stgListenBrainzDesc,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -559,8 +562,8 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Auto Fix Metadata',
-                subtitle: 'Fix missing genre, year, MBID via MusicBrainz',
+                title: l.stgAutoFixMetadata,
+                subtitle: l.stgAutoFixMetadataDesc,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -570,8 +573,8 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Base de données',
-                subtitle: 'Import / Export',
+                title: l.stgDatabase,
+                subtitle: l.stgImportExport,
                 trailing: const Icon(Icons.chevron_right_rounded,
                     color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
@@ -585,20 +588,20 @@ class _SettingsList extends StatelessWidget {
 
         // ---- Profiles ----
         if (app.apiClient != null) ...[
-          const _SectionHeader('PROFILES'),
+          _SectionHeader(l.stgSectionProfiles),
           _ProfilesSection(api: app.apiClient!),
         ],
 
         // ---- Systeme (Network Diagnostics, Config, Plugins) ----
         if (app.apiClient != null) ...[
-          const _SectionHeader('SYSTEME'),
+          _SectionHeader(l.stgSectionSystem),
           Container(
             color: TuneColors.surface,
             child: Column(
               children: [
                 _SettingsTile(
-                  title: 'Configuration serveur',
-                  subtitle: 'Dossiers musicaux, scan, redemarrage',
+                  title: l.stgServerConfig,
+                  subtitle: l.stgServerConfigDesc,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -607,8 +610,8 @@ class _SettingsList extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Diagnostics reseau',
-                  subtitle: 'Multicast, DNS, connectivite',
+                  title: l.stgNetworkDiagnostics,
+                  subtitle: l.stgNetworkDiagnosticsDesc,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -617,8 +620,8 @@ class _SettingsList extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Configuration',
-                  subtitle: 'Exporter / Importer',
+                  title: l.stgConfiguration,
+                  subtitle: l.stgExportImport,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -627,8 +630,8 @@ class _SettingsList extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Plugins',
-                  subtitle: 'Extensions installees',
+                  title: l.stgPlugins,
+                  subtitle: l.stgPluginsDesc,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -637,8 +640,8 @@ class _SettingsList extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 16, color: TuneColors.divider),
                 _SettingsTile(
-                  title: 'Partages reseau (SMB)',
-                  subtitle: 'Decouvrir et monter des partages',
+                  title: l.stgNetworkShares,
+                  subtitle: l.stgNetworkSharesDesc,
                   trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                   onTap: () => Navigator.push(
                     context,
@@ -652,19 +655,19 @@ class _SettingsList extends StatelessWidget {
 
         // ---- Cloud ----
         if (app.apiClient != null) ...[
-          const _SectionHeader('CLOUD'),
+          _SectionHeader(l.stgSectionCloud),
           _CloudSection(api: app.apiClient!),
         ],
 
         // ---- Aide ----
-        const _SectionHeader('AIDE'),
+        _SectionHeader(l.stgSectionHelp),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _SettingsTile(
-                title: 'Depannage',
-                subtitle: 'Questions frequentes et solutions',
+                title: l.stgTroubleshooting,
+                subtitle: l.stgTroubleshootingDesc,
                 trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
                   context,
@@ -673,8 +676,8 @@ class _SettingsList extends StatelessWidget {
               ),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               _SettingsTile(
-                title: 'Envoyer un rapport de bug',
-                subtitle: 'Generer et copier un rapport technique',
+                title: l.stgSendBugReport,
+                subtitle: l.stgSendBugReportDesc,
                 trailing: const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
                 onTap: () => Navigator.push(
                   context,
@@ -735,8 +738,8 @@ class _SettingsList extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('OK',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(AppLocalizations.of(context).btnOk,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -751,27 +754,28 @@ class _SettingsList extends StatelessWidget {
 
   Future<void> _editRemoteHost(
       BuildContext context, SettingsState settings) async {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController(text: settings.remoteHost);
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Adresse serveur', style: TuneFonts.title3),
+        title: Text(l.stgServerAddress, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.url,
-          decoration: const InputDecoration(
-              labelText: 'IP ou hostname (ex: 192.168.1.18)'),
+          decoration: InputDecoration(
+              labelText: l.stgServerAddressHint),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annuler')),
+              child: Text(l.btnCancel)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('OK',
-                  style: TextStyle(color: TuneColors.accent))),
+              child: Text(l.btnOk,
+                  style: const TextStyle(color: TuneColors.accent))),
         ],
       ),
     );
@@ -782,26 +786,27 @@ class _SettingsList extends StatelessWidget {
 
   Future<void> _editRemotePort(
       BuildContext context, SettingsState settings) async {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController(text: settings.remotePort.toString());
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Port serveur', style: TuneFonts.title3),
+        title: Text(l.stgServerPort, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Port (défaut: 8888)'),
+          decoration: InputDecoration(labelText: l.stgPortDefaultHint),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annuler')),
+              child: Text(l.btnCancel)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('OK',
-                  style: TextStyle(color: TuneColors.accent))),
+              child: Text(l.btnOk,
+                  style: const TextStyle(color: TuneColors.accent))),
         ],
       ),
     );
@@ -899,19 +904,20 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
 
     // Audio outputs from audio-check response
     final outputs = _audioData?['outputs'] as List<dynamic>? ?? [];
+    final l = AppLocalizations.of(context);
     final warnings = <String>[];
 
     if (zones.isEmpty) {
-      warnings.add('Aucune zone configuree. Creez-en une pour commencer la lecture.');
+      warnings.add(l.stgWarnNoZones);
     }
     if (networkDeviceCount == 0 && !app.isRemoteMode) {
-      warnings.add('Aucun appareil reseau detecte (DLNA/BluOS/Chromecast).');
+      warnings.add(l.stgWarnNoNetworkDevices);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('AUDIO'),
+        _SectionHeader(l.stgSectionAudio),
         Container(
           color: TuneColors.surface,
           child: Column(
@@ -923,7 +929,7 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
                   color: zones.isNotEmpty ? TuneColors.success : TuneColors.warning,
                   size: 22,
                 ),
-                title: Text('Zones', style: TuneFonts.body),
+                title: Text(l.zonesTitle, style: TuneFonts.body),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -947,7 +953,7 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Creer',
+                            l.btnCreate,
                             style: TuneFonts.caption.copyWith(
                               color: TuneColors.accent,
                               fontWeight: FontWeight.w600,
@@ -969,7 +975,7 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
                       : TuneColors.warning,
                   size: 22,
                 ),
-                title: Text('Sorties audio', style: TuneFonts.body),
+                title: Text(l.stgAudioOutputs, style: TuneFonts.body),
                 trailing: _loading
                     ? const SizedBox(
                         width: 16, height: 16,
@@ -978,8 +984,8 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
                       )
                     : Text(
                         app.isRemoteConnected
-                            ? '${outputs.length} detectee${outputs.length != 1 ? "s" : ""}'
-                            : 'Local',
+                            ? l.stgOutputsDetected(outputs.length)
+                            : l.zonesOutputLocal,
                         style: TuneFonts.callout.copyWith(
                           color: TuneColors.textSecondary,
                           fontWeight: FontWeight.w500,
@@ -994,7 +1000,7 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
                   color: networkDeviceCount > 0 ? TuneColors.success : TuneColors.textTertiary,
                   size: 22,
                 ),
-                title: Text('Appareils reseau', style: TuneFonts.body),
+                title: Text(l.stgNetworkDevices, style: TuneFonts.body),
                 subtitle: networkDeviceCount > 0
                     ? Text(
                         [
@@ -1051,31 +1057,32 @@ class _AudioDiagnosticSectionState extends State<_AudioDiagnosticSection> {
   }
 
   Future<void> _showCreateZoneDialog(BuildContext context, AppState app) async {
+    final l = AppLocalizations.of(context);
     final nameCtrl = TextEditingController(text: 'Zone 1');
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Nouvelle zone', style: TuneFonts.title3),
+        title: Text(l.zonesNew, style: TuneFonts.title3),
         content: TextField(
           controller: nameCtrl,
           autofocus: true,
           style: TuneFonts.body,
-          decoration: const InputDecoration(
-            labelText: 'Nom de la zone',
-            hintText: 'ex: Salon, Bureau',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            labelText: l.zonesNewName,
+            hintText: l.stgZoneNameHint,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Creer'),
+            child: Text(l.btnCreate),
           ),
         ],
       ),
@@ -1185,14 +1192,15 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
   }
 
   Future<void> _selectProfile(int id) async {
+    final l = AppLocalizations.of(context);
     try {
       await widget.api.updateProfile(id, {'active': true});
       widget.api.activeProfileId = id.toString();
       setState(() => _activeProfileId = id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile activated'),
+          SnackBar(
+            content: Text(l.stgProfileActivated),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -1201,7 +1209,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(l.errorWith(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -1210,31 +1218,32 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
   }
 
   Future<void> _createProfile() async {
+    final l = AppLocalizations.of(context);
     final nameCtrl = TextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('New profile', style: TuneFonts.title3),
+        title: Text(l.stgNewProfile, style: TuneFonts.title3),
         content: TextField(
           controller: nameCtrl,
           autofocus: true,
           style: TuneFonts.body,
-          decoration: const InputDecoration(
-            labelText: 'Profile name',
-            hintText: 'e.g. Evening, Morning',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            labelText: l.stgProfileName,
+            hintText: l.stgProfileNameHint,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Create'),
+            child: Text(l.btnCreate),
           ),
         ],
       ),
@@ -1246,7 +1255,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+            SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
           );
         }
       }
@@ -1254,13 +1263,14 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
   }
 
   Future<void> _deleteProfile(int id) async {
+    final l = AppLocalizations.of(context);
     try {
       await widget.api.deleteProfile(id);
       _loadProfiles();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -1270,6 +1280,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
     final id = profile['id'] as int? ?? 0;
     final currentName = profile['name'] as String? ?? '';
     final currentColor = profile['avatar_color'] as String? ?? '#6366f1';
+    final l = AppLocalizations.of(context);
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -1288,8 +1299,8 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
       _loadProfiles();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated'),
+          SnackBar(
+            content: Text(l.stgProfileUpdated),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -1297,7 +1308,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -1305,6 +1316,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       color: TuneColors.surface,
       child: Column(
@@ -1325,7 +1337,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'No profiles',
+                l.stgNoProfiles,
                 style: TuneFonts.footnote
                     .copyWith(color: TuneColors.textTertiary),
               ),
@@ -1335,7 +1347,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
               final idx = entry.key;
               final p = entry.value as Map<String, dynamic>;
               final id = p['id'] as int? ?? 0;
-              final name = p['name'] as String? ?? 'Profile';
+              final name = p['name'] as String? ?? l.stgProfile;
               final colorHex = p['avatar_color'] as String? ?? '#6366f1';
               final avatarColor = _hexToColor(colorHex);
               final isActive = id == _activeProfileId;
@@ -1381,13 +1393,13 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
                           icon: const Icon(Icons.edit_outlined,
                               size: 18, color: TuneColors.textSecondary),
                           onPressed: () => _editProfile(p),
-                          tooltip: 'Edit',
+                          tooltip: l.btnEdit,
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline_rounded,
                               size: 18, color: TuneColors.error),
                           onPressed: () => _deleteProfile(id),
-                          tooltip: 'Delete',
+                          tooltip: l.btnDelete,
                         ),
                       ],
                     ),
@@ -1399,7 +1411,7 @@ class _ProfilesSectionState extends State<_ProfilesSection> {
           const Divider(height: 1, indent: 16, color: TuneColors.divider),
           ListTile(
             leading: const Icon(Icons.add_rounded, color: TuneColors.accent),
-            title: Text('New profile',
+            title: Text(l.stgNewProfile,
                 style: TuneFonts.body.copyWith(color: TuneColors.accent)),
             onTap: _createProfile,
           ),
@@ -1487,10 +1499,11 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
     final previewName = _nameCtrl.text.trim();
     final previewInitial =
         previewName.isNotEmpty ? previewName[0].toUpperCase() : '?';
+    final l = AppLocalizations.of(context);
 
     return AlertDialog(
       backgroundColor: TuneColors.surface,
-      title: const Text('Edit profile', style: TuneFonts.title3),
+      title: Text(l.stgEditProfile, style: TuneFonts.title3),
       contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       content: SingleChildScrollView(
         child: Column(
@@ -1527,7 +1540,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             const SizedBox(height: 20),
             // Name field
             Text(
-              'Name',
+              l.stgName,
               style: TuneFonts.caption.copyWith(
                 color: TuneColors.textSecondary,
               ),
@@ -1541,7 +1554,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _save(),
               decoration: InputDecoration(
-                hintText: 'Profile name',
+                hintText: l.stgProfileName,
                 hintStyle: const TextStyle(color: TuneColors.textTertiary),
                 filled: true,
                 fillColor: TuneColors.surfaceVariant,
@@ -1560,7 +1573,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             const SizedBox(height: 20),
             // Color picker
             Text(
-              'Color',
+              l.stgColor,
               style: TuneFonts.caption.copyWith(
                 color: TuneColors.textSecondary,
               ),
@@ -1607,15 +1620,15 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel',
-              style: TextStyle(color: TuneColors.textSecondary)),
+          child: Text(l.btnCancel,
+              style: const TextStyle(color: TuneColors.textSecondary)),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: TuneColors.accent,
           ),
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(l.btnSave),
         ),
       ],
     );
@@ -1637,7 +1650,8 @@ class _ServerScanDialog extends StatefulWidget {
 class _ServerScanDialogState extends State<_ServerScanDialog> {
   bool _scanning = true;
   List<DiscoveredServer> _servers = [];
-  String _statusText = 'Scan du réseau en cours...';
+  // Status computed at build time so it follows the current locale.
+  String Function(AppLocalizations l) _status = (l) => l.stgScanInProgress;
 
   @override
   void initState() {
@@ -1649,7 +1663,7 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
     setState(() {
       _scanning = true;
       _servers = [];
-      _statusText = 'Scan du réseau en cours...';
+      _status = (l) => l.stgScanInProgress;
     });
 
     try {
@@ -1657,7 +1671,7 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
         onProgress: (scanned, total) {
           if (mounted) {
             setState(() {
-              _statusText = 'Vérification $scanned/$total...';
+              _status = (l) => l.stgScanChecking(scanned, total);
             });
           }
         },
@@ -1666,16 +1680,16 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
         setState(() {
           _scanning = false;
           _servers = servers;
-          _statusText = servers.isEmpty
-              ? 'Aucun serveur Tune trouvé'
-              : '${servers.length} serveur${servers.length > 1 ? "s" : ""} trouvé${servers.length > 1 ? "s" : ""}';
+          _status = servers.isEmpty
+              ? ((l) => l.stgNoServerFound)
+              : ((l) => l.stgServersFound(servers.length));
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _scanning = false;
-          _statusText = 'Erreur: $e';
+          _status = (l) => l.errorWith(e.toString());
         });
       }
     }
@@ -1689,13 +1703,15 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final statusText = _status(l);
     return AlertDialog(
       backgroundColor: TuneColors.surface,
       title: Row(
         children: [
           const Icon(Icons.radar_rounded, color: TuneColors.accent, size: 24),
           const SizedBox(width: 10),
-          Text('Serveurs Tune', style: TuneFonts.title3),
+          Text(l.stgTuneServers, style: TuneFonts.title3),
         ],
       ),
       content: SizedBox(
@@ -1718,7 +1734,7 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _statusText,
+                      statusText,
                       style: TuneFonts.footnote.copyWith(
                         color: TuneColors.textSecondary,
                       ),
@@ -1728,7 +1744,7 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
               ),
             ] else ...[
               Text(
-                _statusText,
+                statusText,
                 style: TuneFonts.footnote.copyWith(
                   color: _servers.isEmpty
                       ? TuneColors.textTertiary
@@ -1789,11 +1805,11 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
           TextButton.icon(
             onPressed: _startScan,
             icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: const Text('Rescanner'),
+            label: Text(l.sourcesRescanBtn),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Fermer'),
+          child: Text(l.btnClose),
         ),
       ],
     );
@@ -1807,22 +1823,23 @@ class _ServerScanDialogState extends State<_ServerScanDialog> {
 class _MetadataFieldsToggleSection extends StatelessWidget {
   const _MetadataFieldsToggleSection();
 
-  static const _allFields = [
-    ('format',      'Format (FLAC, MP3…)'),
-    ('sample_rate', 'Fréquence (96kHz)'),
-    ('bit_depth',   'Profondeur (24bit)'),
-    ('genre',       'Genre'),
-    ('year',        'Année'),
-    ('label',       'Label'),
-    ('composer',    'Compositeur'),
-    ('duration',    'Durée'),
-    ('source',      'Source (Tidal, Qobuz…)'),
+  static List<(String, String)> _allFields(AppLocalizations l) => [
+    ('format',      l.stgFieldFormat),
+    ('sample_rate', l.stgFieldSampleRate),
+    ('bit_depth',   l.stgFieldBitDepth),
+    ('genre',       l.metadataGenreField),
+    ('year',        l.metadataYearField),
+    ('label',       l.stgFieldLabel),
+    ('composer',    l.stgFieldComposer),
+    ('duration',    l.stgFieldDuration),
+    ('source',      l.stgFieldSource),
   ];
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsState>();
     final selected = settings.metadataDisplayFields;
+    final l = AppLocalizations.of(context);
 
     return Container(
       color: TuneColors.surface,
@@ -1832,11 +1849,11 @@ class _MetadataFieldsToggleSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Text(
-              'Champs affichés sous chaque piste (recherche, bibliothèque, file, historique)',
+              l.stgMetadataFieldsIntro,
               style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
             ),
           ),
-          ..._allFields.map((fieldDef) {
+          ..._allFields(l).map((fieldDef) {
             final (key, label) = fieldDef;
             final isEnabled = selected.contains(key);
             return Column(
@@ -1963,7 +1980,7 @@ class _AudiophileToggleState extends State<_AudiophileToggle> {
       if (mounted) {
         setState(() => _enabled = !value);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(AppLocalizations.of(context).errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -1971,11 +1988,12 @@ class _AudiophileToggleState extends State<_AudiophileToggle> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return ListTile(
       tileColor: TuneColors.surface,
-      title: Text('Mode Audiophile', style: TuneFonts.body),
+      title: Text(l.stgAudiophileMode, style: TuneFonts.body),
       subtitle: Text(
-        'Bypass DSP, EQ desactive, bit-perfect',
+        l.stgAudiophileModeDesc,
         style: TuneFonts.footnote,
       ),
       trailing: Switch(
@@ -2046,7 +2064,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(AppLocalizations.of(context).errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -2074,6 +2092,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     Widget row(String label, Widget dropdown) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
@@ -2088,7 +2107,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         row(
-          'Freq. max',
+          l.maxFrequency,
           DropdownButton<int?>(
             value: _maxSampleRate,
             dropdownColor: TuneColors.surfaceVariant,
@@ -2096,7 +2115,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
             style: TuneFonts.body,
             onChanged: _loaded ? _setRate : null,
             items: [
-              const DropdownMenuItem<int?>(value: null, child: Text('Sans limite')),
+              DropdownMenuItem<int?>(value: null, child: Text(l.noLimit)),
               for (final r in _rates)
                 DropdownMenuItem<int?>(value: r, child: Text(_rateLabel(r))),
             ],
@@ -2104,7 +2123,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
         ),
         const Divider(height: 1, indent: 16, color: TuneColors.divider),
         row(
-          'Bits max',
+          l.maxBitDepth,
           DropdownButton<int?>(
             value: _maxBitDepth,
             dropdownColor: TuneColors.surfaceVariant,
@@ -2112,7 +2131,7 @@ class _StreamingQualitySelectorState extends State<_StreamingQualitySelector> {
             style: TuneFonts.body,
             onChanged: _loaded ? _setDepth : null,
             items: [
-              const DropdownMenuItem<int?>(value: null, child: Text('Sans limite')),
+              DropdownMenuItem<int?>(value: null, child: Text(l.noLimit)),
               for (final d in _depths)
                 DropdownMenuItem<int?>(value: d, child: Text('$d-bit')),
             ],
@@ -2175,7 +2194,7 @@ class _CloudSectionState extends State<_CloudSection> {
         setState(() => _telemetryEnabled = prev);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text(AppLocalizations.of(context).errorWith(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -2187,6 +2206,7 @@ class _CloudSectionState extends State<_CloudSection> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final isConnected = auth.isLoggedIn;
+    final l = AppLocalizations.of(context);
 
     return Container(
       color: TuneColors.surface,
@@ -2202,11 +2222,13 @@ class _CloudSectionState extends State<_CloudSection> {
               color: isConnected ? TuneColors.success : TuneColors.textTertiary,
               size: 22,
             ),
-            title: Text('Compte cloud', style: TuneFonts.body),
+            title: Text(l.stgCloudAccount, style: TuneFonts.body),
             subtitle: Text(
               isConnected
-                  ? 'Connecte${auth.email != null ? " (${auth.email})" : ""}'
-                  : 'Non connecte',
+                  ? (auth.email != null
+                      ? l.stgConnectedAs(auth.email!)
+                      : l.streamingConnected)
+                  : l.streamingNotConnected,
               style: TuneFonts.footnote.copyWith(
                 color: isConnected ? TuneColors.success : TuneColors.textTertiary,
               ),
@@ -2220,7 +2242,7 @@ class _CloudSectionState extends State<_CloudSection> {
                       }
                     },
                     child: Text(
-                      'Deconnecter',
+                      l.btnDisconnect,
                       style: TuneFonts.caption.copyWith(color: TuneColors.error),
                     ),
                   )
@@ -2230,9 +2252,9 @@ class _CloudSectionState extends State<_CloudSection> {
           // Telemetry toggle
           ListTile(
             tileColor: TuneColors.surface,
-            title: Text('Telemetrie', style: TuneFonts.body),
+            title: Text(l.stgTelemetry, style: TuneFonts.body),
             subtitle: Text(
-              'Envoyer des statistiques d\'utilisation anonymes',
+              l.stgTelemetryDesc,
               style: TuneFonts.footnote,
             ),
             trailing: _loading

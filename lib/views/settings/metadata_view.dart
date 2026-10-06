@@ -129,7 +129,7 @@ class _MetadataViewState extends State<MetadataView> {
               // ================================================================
               // 1. COMPLETENESS STATS CARDS (clickable to filter)
               // ================================================================
-              const _SectionHeader('Complétude métadonnées'),
+              _SectionHeader(l.cfgMetaCompleteness),
               if (api != null) _buildCompletenessCards(),
 
               // ================================================================
@@ -174,7 +174,7 @@ class _MetadataViewState extends State<MetadataView> {
               // 3. ENRICHIR section
               // ================================================================
               if (api != null) ...[
-                const _SectionHeader('ENRICHIR'),
+                _SectionHeader(l.metadataSectionEnrich),
                 Container(
                   color: TuneColors.surface,
                   padding: const EdgeInsets.all(16),
@@ -184,51 +184,51 @@ class _MetadataViewState extends State<MetadataView> {
                     children: [
                       _ActionButton(
                         icon: Icons.auto_fix_high_rounded,
-                        label: 'Enrichir MusicBrainz',
+                        label: l.cfgMetaEnrichMusicBrainz,
                         loading: _actionLoading['autofix'] == true,
                         onPressed: () => _runAction(
                           'autofix',
-                          'Enrichissement MusicBrainz',
+                          l.cfgMetaEnrichMusicBrainzTask,
                           () => api.startAutoFix(),
                         ),
                       ),
                       _ActionButton(
                         icon: Icons.calendar_today_rounded,
-                        label: 'Fix années Tidal',
+                        label: l.cfgMetaFixYearsTidal,
                         loading: _actionLoading['yearsTidal'] == true,
                         onPressed: () => _runAction(
                           'yearsTidal',
-                          'Fix années Tidal',
+                          l.cfgMetaFixYearsTidal,
                           () => api.fixYearsTidal(),
                         ),
                       ),
                       _ActionButton(
                         icon: Icons.album_rounded,
-                        label: 'Fix années Discogs',
+                        label: l.cfgMetaFixYearsDiscogs,
                         loading: _actionLoading['yearsDiscogs'] == true,
                         onPressed: () => _runAction(
                           'yearsDiscogs',
-                          'Fix années Discogs',
+                          l.cfgMetaFixYearsDiscogs,
                           () => api.fixYearsDiscogs(),
                         ),
                       ),
                       _ActionButton(
                         icon: Icons.category_rounded,
-                        label: 'Fix genres',
+                        label: l.cfgMetaFixGenres,
                         loading: _actionLoading['genres'] == true,
                         onPressed: () => _runAction(
                           'genres',
-                          'Fix genres',
+                          l.cfgMetaFixGenres,
                           () => api.fixGenres(),
                         ),
                       ),
                       _ActionButton(
                         icon: Icons.auto_awesome_rounded,
-                        label: 'Auto-fix albums',
+                        label: l.cfgMetaAutoFixAlbums,
                         loading: _actionLoading['autofixAlbums'] == true,
                         onPressed: () => _runAction(
                           'autofixAlbums',
-                          'Auto-fix albums',
+                          l.cfgMetaAutoFixAlbums,
                           () => api.autoFixAlbums(),
                         ),
                       ),
@@ -255,20 +255,18 @@ class _MetadataViewState extends State<MetadataView> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                _suggestionsCount > 0
-                                    ? '$_suggestionsCount suggestion${_suggestionsCount > 1 ? 's' : ''} en attente'
-                                    : 'Aucune suggestion en attente',
+                                l.cfgMetaSuggestionsPending(_suggestionsCount),
                                 style: TuneFonts.body,
                               ),
                             ),
                             if (_suggestionsCount > 0)
                               _ActionButton(
                                 icon: Icons.check_circle_rounded,
-                                label: 'Accepter tout',
+                                label: l.cfgMetaAcceptAll,
                                 loading: _actionLoading['acceptAll'] == true,
                                 onPressed: () => _runAction(
                                   'acceptAll',
-                                  'Suggestions',
+                                  l.cfgMetaSuggestions,
                                   () => api.acceptAllSuggestions(),
                                 ),
                               ),
@@ -279,7 +277,7 @@ class _MetadataViewState extends State<MetadataView> {
                 // ================================================================
                 // 4. DOUBLONS section
                 // ================================================================
-                const _SectionHeader('DOUBLONS'),
+                _SectionHeader(l.metadataSectionDuplicates),
                 Container(
                   color: TuneColors.surface,
                   padding: const EdgeInsets.all(16),
@@ -290,22 +288,22 @@ class _MetadataViewState extends State<MetadataView> {
                         children: [
                           _ActionButton(
                             icon: Icons.find_replace_rounded,
-                            label: 'Scan doublons',
+                            label: l.cfgMetaScanDuplicates,
                             loading: _actionLoading['scanDupes'] == true,
                             onPressed: () => _runAction(
                               'scanDupes',
-                              'Scan doublons',
+                              l.cfgMetaScanDuplicates,
                               () => api.scanDuplicates(),
                             ),
                           ),
                           const SizedBox(width: 10),
                           _ActionButton(
                             icon: Icons.merge_rounded,
-                            label: 'Fusionner auto',
+                            label: l.cfgMetaAutoMerge,
                             loading: _actionLoading['merge'] == true,
                             onPressed: () => _runAction(
                               'merge',
-                              'Fusion doublons',
+                              l.cfgMetaMergeDuplicatesTask,
                               () => api.mergeAlbumDuplicates(),
                             ),
                           ),
@@ -314,7 +312,8 @@ class _MetadataViewState extends State<MetadataView> {
                       if (_duplicateGroups.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Text(
-                          '$_duplicateCount albums en double (${_duplicateGroups.length} groupes)',
+                          l.cfgMetaDuplicatesSummary(
+                              _duplicateCount, _duplicateGroups.length),
                           style: TuneFonts.footnote
                               .copyWith(color: TuneColors.textSecondary),
                         ),
@@ -326,7 +325,7 @@ class _MetadataViewState extends State<MetadataView> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              '... et ${_duplicateGroups.length - 20} autres groupes',
+                              l.cfgMetaMoreGroups(_duplicateGroups.length - 20),
                               style: TuneFonts.caption,
                             ),
                           ),
@@ -338,7 +337,7 @@ class _MetadataViewState extends State<MetadataView> {
                 // ================================================================
                 // 5. CORRIGER section
                 // ================================================================
-                const _SectionHeader('CORRIGER'),
+                _SectionHeader(l.metadataSectionCorrect),
                 _buildFilterChips(),
                 _buildSearchAndDropdowns(),
                 _buildAlbumList(),
@@ -348,7 +347,7 @@ class _MetadataViewState extends State<MetadataView> {
               // 6. STATUS MESSAGE
               // ================================================================
               if (_statusMessage != null) ...[
-                const _SectionHeader('Dernier résultat'),
+                _SectionHeader(l.cfgMetaLastResult),
                 Container(
                   color: TuneColors.surface,
                   padding: const EdgeInsets.all(16),

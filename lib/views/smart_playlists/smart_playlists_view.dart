@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
@@ -46,7 +47,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading smart playlists: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).plSmartLoadError(e.toString()))),
         );
       }
     }
@@ -63,7 +64,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).plDeleteError(e.toString()))),
         );
       }
     }
@@ -79,11 +80,12 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('Smart Playlists', style: TuneFonts.title2),
+        title: Text(l.plSmartTitle, style: TuneFonts.title2),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: TuneColors.accent,
@@ -100,13 +102,13 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                       const Icon(Icons.auto_awesome_rounded,
                           size: 56, color: TuneColors.textTertiary),
                       const SizedBox(height: 12),
-                      Text('No smart playlists',
+                      Text(l.plSmartEmpty,
                           style: TuneFonts.subheadline),
                       const SizedBox(height: 16),
                       FilledButton.icon(
                         onPressed: () => _openEditor(),
                         icon: const Icon(Icons.add),
-                        label: const Text('Create'),
+                        label: Text(l.btnCreate),
                         style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
                       ),
                     ],
@@ -120,7 +122,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                     itemBuilder: (_, i) {
                       final pl = _playlists[i];
                       final id = pl['id'] as int;
-                      final name = pl['name'] as String? ?? 'Untitled';
+                      final name = pl['name'] as String? ?? l.plUntitled;
                       final rules = pl['rules'] as List? ?? [];
                       final trackCount = pl['track_count'] as int? ?? 0;
 
@@ -139,17 +141,17 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                             context: context,
                             builder: (ctx) => AlertDialog(
                               backgroundColor: TuneColors.surface,
-                              title: const Text('Delete smart playlist?'),
-                              content: Text('Delete "$name"?'),
+                              title: Text(l.plSmartDeleteTitle),
+                              content: Text(l.plDeleteNamed(name)),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
+                                  child: Text(l.btnCancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: TuneColors.error)),
+                                  child: Text(l.btnDelete,
+                                      style: const TextStyle(color: TuneColors.error)),
                                 ),
                               ],
                             ),
@@ -175,7 +177,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                             spacing: 4,
                             runSpacing: 2,
                             children: [
-                              Text('$trackCount tracks',
+                              Text(l.plTracksCount(trackCount),
                                   style: TuneFonts.caption),
                               for (final rule in rules.take(3))
                                 Chip(
@@ -183,7 +185,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                                       MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                   label: Text(
-                                    _ruleLabel(rule),
+                                    _ruleLabel(l, rule),
                                     style: const TextStyle(fontSize: 10),
                                   ),
                                   backgroundColor:
@@ -199,7 +201,7 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.edit_rounded, size: 18, color: TuneColors.textSecondary),
-                                tooltip: 'Edit',
+                                tooltip: l.btnEdit,
                                 onPressed: () => _openEditor(playlist: pl),
                               ),
                               const Icon(Icons.chevron_right_rounded,
@@ -223,16 +225,44 @@ class _SmartPlaylistsViewState extends State<SmartPlaylistsView> {
     );
   }
 
-  String _ruleLabel(dynamic rule) {
+  String _ruleLabel(AppLocalizations l, dynamic rule) {
     if (rule is Map<String, dynamic>) {
       final field = rule['field'] as String? ?? '';
       final op = rule['operator'] as String? ?? '';
       final value = rule['value']?.toString() ?? '';
-      return '$field $op $value';
+      return '${_fieldLabel(l, field)} ${_operatorLabel(l, op)} $value';
     }
     return rule.toString();
   }
 }
+
+/// Libellé affiché d'un champ de règle (la valeur envoyée au serveur reste l'identifiant).
+String _fieldLabel(AppLocalizations l, String field) => switch (field) {
+      'genre' => l.plFieldGenre,
+      'artist' => l.plFieldArtist,
+      'album' => l.plFieldAlbum,
+      'title' => l.plFieldTitle,
+      'year' => l.plFieldYear,
+      'rating' => l.plFieldRating,
+      'play_count' => l.plFieldPlayCount,
+      'duration_ms' => l.plFieldDuration,
+      'date_added' => l.plFieldDateAdded,
+      'favorite' => l.plFieldFavorite,
+      _ => field,
+    };
+
+/// Libellé affiché d'un opérateur de règle (la valeur envoyée au serveur reste l'identifiant).
+String _operatorLabel(AppLocalizations l, String op) => switch (op) {
+      'contains' => l.plOpContains,
+      'equals' => l.plOpEquals,
+      'starts_with' => l.plOpStartsWith,
+      'ends_with' => l.plOpEndsWith,
+      'greater_than' => l.plOpGreaterThan,
+      'less_than' => l.plOpLessThan,
+      'is' => l.plOpIs,
+      'is_not' => l.plOpIsNot,
+      _ => op,
+    };
 
 // ---------------------------------------------------------------------------
 // Smart Playlist Editor — create/edit with rules builder + preview
@@ -318,7 +348,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
       if (!mounted) return;
       setState(() => _previewing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Preview error: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context).plPreviewError(e.toString()))),
       );
     }
   }
@@ -327,7 +357,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a name')),
+        SnackBar(content: Text(AppLocalizations.of(context).plEnterName)),
       );
       return;
     }
@@ -353,24 +383,25 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save error: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context).plSaveError(e.toString()))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text(_isEditing ? 'Edit Smart Playlist' : 'New Smart Playlist', style: TuneFonts.title3),
+        title: Text(_isEditing ? l.plSmartEditTitle : l.plSmartNewTitle, style: TuneFonts.title3),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
             child: _saving
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
-                : const Text('Save', style: TextStyle(color: TuneColors.accent, fontWeight: FontWeight.w600)),
+                : Text(l.btnSave, style: const TextStyle(color: TuneColors.accent, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -382,7 +413,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
             controller: _nameCtrl,
             style: TuneFonts.body,
             decoration: InputDecoration(
-              labelText: 'Name',
+              labelText: l.plNameLabel,
               filled: true,
               fillColor: TuneColors.surface,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: TuneColors.divider)),
@@ -395,12 +426,12 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
           // Match mode
           Row(
             children: [
-              Text('Match', style: TuneFonts.body),
+              Text(l.plMatchLabel, style: TuneFonts.body),
               const SizedBox(width: 12),
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'all', label: Text('All rules')),
-                  ButtonSegment(value: 'any', label: Text('Any rule')),
+                segments: [
+                  ButtonSegment(value: 'all', label: Text(l.plMatchAll)),
+                  ButtonSegment(value: 'any', label: Text(l.plMatchAny)),
                 ],
                 selected: {_matchMode},
                 onSelectionChanged: (v) => setState(() => _matchMode = v.first),
@@ -414,7 +445,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
           const SizedBox(height: 16),
 
           // Rules
-          const Text('RULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionRules, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 8),
           for (int i = 0; i < _rules.length; i++) _RuleRow(
             rule: _rules[i],
@@ -428,7 +459,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
             child: TextButton.icon(
               onPressed: _addRule,
               icon: const Icon(Icons.add_circle_outline, size: 18, color: TuneColors.accent),
-              label: const Text('Add rule', style: TextStyle(color: TuneColors.accent)),
+              label: Text(l.plAddRule, style: const TextStyle(color: TuneColors.accent)),
             ),
           ),
           const SizedBox(height: 16),
@@ -438,8 +469,8 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
             style: TuneFonts.body,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: 'Max tracks (optional)',
-              hintText: 'No limit',
+              labelText: l.plMaxTracksLabel,
+              hintText: l.plNoLimit,
               filled: true,
               fillColor: TuneColors.surface,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: TuneColors.divider)),
@@ -457,7 +488,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
               icon: _previewing
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
                   : const Icon(Icons.visibility_rounded, size: 18),
-              label: Text(_previewing ? 'Loading...' : 'Preview matching tracks'),
+              label: Text(_previewing ? l.loading : l.plPreviewMatching),
               style: OutlinedButton.styleFrom(
                 foregroundColor: TuneColors.accent,
                 side: const BorderSide(color: TuneColors.accent),
@@ -469,7 +500,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
           // Preview results
           if (_previewTracks.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('${_previewTracks.length} matching tracks', style: TuneFonts.footnote),
+            Text(l.plMatchingTracks(_previewTracks.length), style: TuneFonts.footnote),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -485,7 +516,7 @@ class _SmartPlaylistEditorState extends State<_SmartPlaylistEditor> {
                   if (_previewTracks.length > 20)
                     Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Text('+ ${_previewTracks.length - 20} more', style: TuneFonts.caption),
+                      child: Text(l.plMoreCount(_previewTracks.length - 20), style: TuneFonts.caption),
                     ),
                 ],
               ),
@@ -516,6 +547,7 @@ class _RuleRow extends StatelessWidget {
     final field = rule['field'] as String? ?? 'genre';
     final operator = rule['operator'] as String? ?? 'contains';
     final value = rule['value']?.toString() ?? '';
+    final l = AppLocalizations.of(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -535,7 +567,7 @@ class _RuleRow extends StatelessWidget {
               dropdownColor: TuneColors.surfaceVariant,
               underline: const SizedBox(),
               style: TuneFonts.caption.copyWith(color: TuneColors.textPrimary),
-              items: _availableFields.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+              items: _availableFields.map((f) => DropdownMenuItem(value: f, child: Text(_fieldLabel(l, f)))).toList(),
               onChanged: (v) => onChanged({...rule, 'field': v}),
             ),
           ),
@@ -548,7 +580,7 @@ class _RuleRow extends StatelessWidget {
               dropdownColor: TuneColors.surfaceVariant,
               underline: const SizedBox(),
               style: TuneFonts.caption.copyWith(color: TuneColors.textPrimary),
-              items: _availableOperators.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+              items: _availableOperators.map((o) => DropdownMenuItem(value: o, child: Text(_operatorLabel(l, o)))).toList(),
               onChanged: (v) => onChanged({...rule, 'operator': v}),
             ),
           ),
@@ -560,7 +592,7 @@ class _RuleRow extends StatelessWidget {
                 ..selection = TextSelection.collapsed(offset: value.length),
               style: TuneFonts.caption.copyWith(color: TuneColors.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Value',
+                hintText: l.plValueHint,
                 hintStyle: TuneFonts.caption,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -599,7 +631,7 @@ class _PreviewTrackTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  track['title'] as String? ?? 'Unknown',
+                  track['title'] as String? ?? AppLocalizations.of(context).plUnknownTitle,
                   style: TuneFonts.body,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -664,7 +696,7 @@ class _SmartPlaylistDetailViewState extends State<_SmartPlaylistDetailView> {
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading tracks: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).plTracksLoadError(e.toString()))),
         );
       }
     }
@@ -681,6 +713,7 @@ class _SmartPlaylistDetailViewState extends State<_SmartPlaylistDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -701,14 +734,14 @@ class _SmartPlaylistDetailViewState extends State<_SmartPlaylistDetailView> {
           ? const Center(child: CircularProgressIndicator())
           : _tracks.isEmpty
               ? Center(
-                  child: Text('No tracks match this playlist',
+                  child: Text(l.plSmartNoTracks,
                       style: TuneFonts.subheadline),
                 )
               : ListView.builder(
                   itemCount: _tracks.length,
                   itemBuilder: (_, i) {
                     final t = _tracks[i] as Map<String, dynamic>;
-                    final title = t['title'] as String? ?? 'Unknown';
+                    final title = t['title'] as String? ?? l.plUnknownTitle;
                     final artist = t['artist_name'] as String?;
                     final cover = t['cover_path'] as String?;
 

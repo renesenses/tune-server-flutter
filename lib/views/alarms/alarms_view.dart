@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -32,13 +33,15 @@ class _AlarmsViewState extends State<AlarmsView> {
     _load();
   }
 
+  static const _kNotConnected = '__not_connected__';
+
   TuneApiClient? get _api => context.read<AppState>().apiClient;
 
   Future<void> _load() async {
     final api = _api;
     if (api == null) {
       setState(() {
-        _error = 'Non connecte a un serveur distant';
+        _error = _kNotConnected;
         _loading = false;
       });
       return;
@@ -68,13 +71,14 @@ class _AlarmsViewState extends State<AlarmsView> {
     if (api == null) return;
     final id = alarm['id'] as int;
     final current = alarm['enabled'] == 1 || alarm['enabled'] == true;
+    final l = AppLocalizations.of(context);
     try {
       await api.updateAlarm(id, {'enabled': !current});
       await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     }
@@ -83,13 +87,14 @@ class _AlarmsViewState extends State<AlarmsView> {
   Future<void> _deleteAlarm(int id) async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     try {
       await api.deleteAlarm(id);
       await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     }
@@ -98,12 +103,13 @@ class _AlarmsViewState extends State<AlarmsView> {
   Future<void> _snoozeAlarm(int id) async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     try {
       await api.snoozeAlarm(id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Alarme reportee de 5 min'),
+          SnackBar(
+            content: Text(l.npAlarmSnoozed),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -111,7 +117,7 @@ class _AlarmsViewState extends State<AlarmsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     }
@@ -138,7 +144,7 @@ class _AlarmsViewState extends State<AlarmsView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Alarmes', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).npAlarmsTitle, style: TuneFonts.title3),
       ),
       floatingActionButton: _api != null
           ? FloatingActionButton(
@@ -152,6 +158,7 @@ class _AlarmsViewState extends State<AlarmsView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(
         child: CircularProgressIndicator(color: TuneColors.accent),
@@ -167,9 +174,10 @@ class _AlarmsViewState extends State<AlarmsView> {
               const Icon(Icons.error_outline_rounded,
                   size: 48, color: TuneColors.error),
               const SizedBox(height: 12),
-              Text(_error!, style: TuneFonts.footnote, textAlign: TextAlign.center),
+              Text(_error == _kNotConnected ? l.npAlarmsNotConnected : _error!,
+                  style: TuneFonts.footnote, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: const Text('Reessayer')),
+              FilledButton(onPressed: _load, child: Text(l.btnRetry)),
             ],
           ),
         ),
@@ -183,7 +191,7 @@ class _AlarmsViewState extends State<AlarmsView> {
             const Icon(Icons.alarm_rounded,
                 size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('Aucune alarme', style: TuneFonts.subheadline),
+            Text(l.npAlarmsEmpty, style: TuneFonts.subheadline),
           ],
         ),
       );
@@ -238,6 +246,7 @@ class _AlarmTile extends StatelessWidget {
     final fadeIn = alarm['fade_in_seconds'] as num?;
     final zoneName = alarm['zone_name'] as String?;
     final zoneId = alarm['zone_id'];
+    final l = AppLocalizations.of(context);
 
     return Dismissible(
       key: ValueKey(alarm['id']),
@@ -314,7 +323,7 @@ class _AlarmTile extends StatelessWidget {
                         Icon(Icons.speaker_rounded, size: 12,
                             color: enabled ? TuneColors.textTertiary : TuneColors.textTertiary),
                         const SizedBox(width: 2),
-                        Text(zoneName ?? 'Zone $zoneId',
+                        Text(zoneName ?? l.npZoneNumbered('$zoneId'),
                             style: TuneFonts.caption),
                       ],
                     ],
@@ -322,7 +331,7 @@ class _AlarmTile extends StatelessWidget {
                   if (skipHolidays)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text('Hors jours feries', style: TuneFonts.caption),
+                      child: Text(l.npAlarmSkipsHolidays, style: TuneFonts.caption),
                     ),
                 ],
               ),
@@ -346,7 +355,7 @@ class _AlarmTile extends StatelessWidget {
                     color: TuneColors.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Snooze',
+                  child: Text(l.npAlarmSnooze,
                       style: TuneFonts.caption.copyWith(
                         color: TuneColors.accent,
                         fontWeight: FontWeight.w600,
@@ -453,7 +462,9 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
       '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}';
 
   Map<String, dynamic> _toJson() => {
-        'name': _nameCtrl.text.trim().isEmpty ? 'Alarme' : _nameCtrl.text.trim(),
+        'name': _nameCtrl.text.trim().isEmpty
+            ? AppLocalizations.of(context).npAlarmDefaultName
+            : _nameCtrl.text.trim(),
         'time': _formatTime(),
         'days': _selectedDays.toList()..sort(),
         'skip_holidays': _skipHolidays,
@@ -468,6 +479,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
       };
 
   Future<void> _save() async {
+    final l = AppLocalizations.of(context);
     setState(() => _saving = true);
     try {
       final body = _toJson();
@@ -483,7 +495,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     } finally {
@@ -512,12 +524,13 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
         title: Text(
-          _isEdit ? 'Modifier l\'alarme' : 'Nouvelle alarme',
+          _isEdit ? l.npAlarmEdit : l.npAlarmNew,
           style: TuneFonts.title3,
         ),
         actions: [
@@ -530,8 +543,8 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: TuneColors.accent),
                   )
-                : const Text('Enregistrer',
-                    style: TextStyle(color: TuneColors.accent, fontWeight: FontWeight.w600)),
+                : Text(l.btnSave,
+                    style: const TextStyle(color: TuneColors.accent, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -539,7 +552,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
         padding: const EdgeInsets.all(16),
         children: [
           // ---- Time ----
-          _SectionHeader('Heure'),
+          _SectionHeader(l.npAlarmTime),
           InkWell(
             onTap: _pickTime,
             borderRadius: BorderRadius.circular(12),
@@ -565,13 +578,13 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           const SizedBox(height: 20),
 
           // ---- Name ----
-          _SectionHeader('Nom'),
-          _Field(controller: _nameCtrl, hint: 'Reveil'),
+          _SectionHeader(l.radiosName),
+          _Field(controller: _nameCtrl, hint: l.npAlarmNameHint),
 
           const SizedBox(height: 20),
 
           // ---- Days ----
-          _SectionHeader('Jours'),
+          _SectionHeader(l.npAlarmDays),
           _DaySelector(
             selected: _selectedDays,
             onChanged: (days) => setState(() => _selectedDays = days),
@@ -581,7 +594,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
 
           // ---- Skip holidays ----
           _SwitchRow(
-            label: 'Ignorer les jours feries',
+            label: l.npAlarmSkipHolidays,
             value: _skipHolidays,
             onChanged: (v) => setState(() => _skipHolidays = v),
           ),
@@ -590,19 +603,19 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
               padding: const EdgeInsets.only(left: 16, top: 8),
               child: Row(
                 children: [
-                  const Text('Pays : ', style: TuneFonts.footnote),
+                  Text('${l.npAlarmCountry} ', style: TuneFonts.footnote),
                   DropdownButton<String>(
                     value: _holidayCountry,
                     dropdownColor: TuneColors.surface,
                     style: TuneFonts.body,
-                    items: const [
-                      DropdownMenuItem(value: 'FR', child: Text('France')),
-                      DropdownMenuItem(value: 'BE', child: Text('Belgique')),
-                      DropdownMenuItem(value: 'CH', child: Text('Suisse')),
-                      DropdownMenuItem(value: 'CA', child: Text('Canada')),
-                      DropdownMenuItem(value: 'US', child: Text('USA')),
-                      DropdownMenuItem(value: 'DE', child: Text('Allemagne')),
-                      DropdownMenuItem(value: 'GB', child: Text('UK')),
+                    items: [
+                      DropdownMenuItem(value: 'FR', child: Text(l.npCountryFR)),
+                      DropdownMenuItem(value: 'BE', child: Text(l.npCountryBE)),
+                      DropdownMenuItem(value: 'CH', child: Text(l.npCountryCH)),
+                      DropdownMenuItem(value: 'CA', child: Text(l.npCountryCA)),
+                      DropdownMenuItem(value: 'US', child: Text(l.npCountryUS)),
+                      DropdownMenuItem(value: 'DE', child: Text(l.npCountryDE)),
+                      DropdownMenuItem(value: 'GB', child: Text(l.npCountryGB)),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => _holidayCountry = v);
@@ -615,19 +628,19 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           const SizedBox(height: 20),
 
           // ---- Source ----
-          _SectionHeader('Source'),
+          _SectionHeader(l.npAlarmSource),
           DropdownButtonFormField<String>(
             initialValue: _sourceType,
             dropdownColor: TuneColors.surface,
             style: TuneFonts.body,
-            decoration: const InputDecoration(
-              labelText: 'Type',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l.npAlarmSourceType,
+              border: const OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: 'radio', child: Text('Radio')),
-              DropdownMenuItem(value: 'playlist', child: Text('Playlist')),
-              DropdownMenuItem(value: 'album', child: Text('Album')),
+            items: [
+              DropdownMenuItem(value: 'radio', child: Text(l.npSourceRadio)),
+              DropdownMenuItem(value: 'playlist', child: Text(l.npSourcePlaylist)),
+              DropdownMenuItem(value: 'album', child: Text(l.npSourceAlbum)),
             ],
             onChanged: (v) {
               if (v != null) setState(() => _sourceType = v);
@@ -636,8 +649,8 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           const SizedBox(height: 12),
           _Field(
             controller: _sourceNameCtrl,
-            hint: _sourceType == 'radio' ? 'FIP' : 'Nom',
-            label: 'Nom de la source',
+            hint: _sourceType == 'radio' ? 'FIP' : l.radiosName,
+            label: l.npAlarmSourceName,
           ),
           const SizedBox(height: 12),
           _Field(
@@ -645,29 +658,31 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
             hint: _sourceType == 'radio'
                 ? 'https://stream.fip.fr/fip-hifi.aac'
                 : _sourceType == 'playlist'
-                    ? 'ID de la playlist'
-                    : 'ID de l\'album',
-            label: _sourceType == 'radio' ? 'URL du stream' : 'Identifiant',
+                    ? l.npAlarmPlaylistId
+                    : l.npAlarmAlbumId,
+            label: _sourceType == 'radio' ? l.radiosStreamUrl : l.npAlarmIdentifier,
           ),
 
           const SizedBox(height: 20),
 
           // ---- Zone ----
           if (_availableZones.isNotEmpty) ...[
-            _SectionHeader('Zone'),
+            _SectionHeader(l.npZoneFallback),
             DropdownButtonFormField<int?>(
               initialValue: _zoneId,
               dropdownColor: TuneColors.surface,
               style: TuneFonts.body,
-              decoration: const InputDecoration(
-                labelText: 'Zone de lecture',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.npAlarmPlaybackZone,
+                border: const OutlineInputBorder(),
               ),
               items: [
-                const DropdownMenuItem<int?>(value: null, child: Text('Defaut')),
+                DropdownMenuItem<int?>(value: null, child: Text(l.npAlarmDefaultZone)),
                 ..._availableZones.map((z) {
                   final id = z is Map ? z['id'] as int : z as int;
-                  final name = z is Map ? (z['name'] as String? ?? 'Zone $id') : 'Zone $id';
+                  final name = z is Map
+                      ? (z['name'] as String? ?? l.npZoneNumbered('$id'))
+                      : l.npZoneNumbered('$id');
                   return DropdownMenuItem<int?>(value: id, child: Text(name));
                 }),
               ],
@@ -677,7 +692,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           ],
 
           // ---- Volume ----
-          _SectionHeader('Volume : ${_volume.round()}%'),
+          _SectionHeader(l.npAlarmVolume(_volume.round())),
           Slider(
             value: _volume,
             min: 0,
@@ -691,7 +706,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
           const SizedBox(height: 12),
 
           // ---- Fade-in ----
-          _SectionHeader('Fondu : ${_fadeIn.round()}s'),
+          _SectionHeader(l.npAlarmFadeIn(_fadeIn.round())),
           Slider(
             value: _fadeIn,
             min: 0,
@@ -706,7 +721,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
 
           // ---- Enabled ----
           _SwitchRow(
-            label: 'Active',
+            label: l.npAlarmEnabled,
             value: _enabled,
             onChanged: (v) => setState(() => _enabled = v),
           ),
@@ -718,24 +733,24 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
             Center(
               child: TextButton.icon(
                 icon: const Icon(Icons.delete_rounded, color: TuneColors.error),
-                label: const Text('Supprimer',
-                    style: TextStyle(color: TuneColors.error)),
+                label: Text(l.btnDelete,
+                    style: const TextStyle(color: TuneColors.error)),
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (_) => AlertDialog(
                       backgroundColor: TuneColors.surface,
-                      title: const Text('Supprimer l\'alarme ?', style: TuneFonts.title3),
+                      title: Text(l.npAlarmDeleteTitle, style: TuneFonts.title3),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Annuler'),
+                          child: Text(l.btnCancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Supprimer',
-                              style: TextStyle(color: TuneColors.error)),
+                          child: Text(l.btnDelete,
+                              style: const TextStyle(color: TuneColors.error)),
                         ),
                       ],
                     ),
@@ -747,7 +762,7 @@ class _AlarmEditorViewState extends State<_AlarmEditorView> {
                     } catch (e) {
                       if (mounted) {
                         messenger.showSnackBar(
-                          SnackBar(content: Text('Erreur: $e')),
+                          SnackBar(content: Text(l.errorWith(e.toString()))),
                         );
                       }
                     }
@@ -845,10 +860,10 @@ class _DayChips extends StatelessWidget {
 
   const _DayChips({required this.daysStr, required this.enabled});
 
-  static const _labels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-
   @override
   Widget build(BuildContext context) {
+    // narrowWeekdays commence au dimanche ; ici l'index 0 est le lundi.
+    final narrow = MaterialLocalizations.of(context).narrowWeekdays;
     final nums = daysStr
         .split(',')
         .map((s) => int.tryParse(s.trim()))
@@ -880,7 +895,7 @@ class _DayChips extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              _labels[i],
+              narrow[(i + 1) % 7],
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
@@ -906,10 +921,13 @@ class _DaySelector extends StatelessWidget {
 
   const _DaySelector({required this.selected, required this.onChanged});
 
-  static const _labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final labels = [
+      l.npDayMon, l.npDayTue, l.npDayWed, l.npDayThu,
+      l.npDayFri, l.npDaySat, l.npDaySun,
+    ];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
@@ -934,7 +952,7 @@ class _DaySelector extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              _labels[i],
+              labels[i],
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/metadata/listenbrainz_scrobbler.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -44,15 +45,16 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
   String? get _username => _scrobbler?.username;
 
   Future<void> _authenticate() async {
+    final l = AppLocalizations.of(context);
     final token = _tokenCtrl.text.trim();
     if (token.isEmpty) {
-      setState(() => _error = 'Please enter your user token');
+      setState(() => _error = l.cfgTokenRequired);
       return;
     }
 
     final scrobbler = _scrobbler;
     if (scrobbler == null) {
-      setState(() => _error = 'Scrobbler not available');
+      setState(() => _error = l.cfgScrobblerUnavailable);
       return;
     }
 
@@ -69,13 +71,13 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Connected as ${scrobbler.username ?? "unknown"}'),
+            content: Text(l.cfgConnectedAs(scrobbler.username ?? l.cfgUnknown)),
           ),
         );
       } else {
         setState(() {
           _busy = false;
-          _error = result.error ?? 'Authentication failed';
+          _error = result.error ?? l.streamingAuthError;
         });
       }
     } catch (e) {
@@ -88,12 +90,15 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
     _scrobbler?.logout();
     setState(() { _error = null; });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ListenBrainz disconnected.')),
+      SnackBar(
+          content: Text(AppLocalizations.of(context)
+              .cfgServiceDisconnected('ListenBrainz'))),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -135,8 +140,7 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
                               color: TuneColors.textPrimary)),
                       const SizedBox(height: 4),
                       Text(
-                        'Scrobble your listening history to ListenBrainz. '
-                        'Get your user token from listenbrainz.org/settings.',
+                        l.cfgListenbrainzDesc,
                         style: TuneFonts.footnote,
                       ),
                     ],
@@ -158,7 +162,7 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
               child: FilledButton.icon(
                 onPressed: _busy ? null : _disconnect,
                 icon: const Icon(Icons.link_off_rounded),
-                label: const Text('Disconnect'),
+                label: Text(l.btnDisconnect),
                 style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.error,
                   minimumSize: const Size.fromHeight(48),
@@ -167,8 +171,8 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
             ),
           ] else ...[
             // Token input
-            const Text('CONNECT',
-                style: TextStyle(
+            Text(l.cfgConnectHeader,
+                style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: TuneColors.textTertiary,
@@ -181,7 +185,7 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
               autocorrect: false,
               obscureText: _obscureToken,
               decoration: InputDecoration(
-                labelText: 'User Token',
+                labelText: l.cfgUserToken,
                 prefixIcon: const Icon(Icons.key_rounded,
                     color: TuneColors.textSecondary),
                 suffixIcon: IconButton(
@@ -222,7 +226,7 @@ class _ListenBrainzViewState extends State<ListenBrainzView> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.link_rounded),
-                label: Text(_busy ? 'Validating...' : 'Save & Connect'),
+                label: Text(_busy ? l.cfgValidating : l.cfgSaveAndConnect),
                 style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.accent,
                   minimumSize: const Size.fromHeight(48),
@@ -270,6 +274,7 @@ class _StatusSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -290,8 +295,8 @@ class _StatusSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('Connected',
-                  style: TextStyle(
+              Text(l.streamingConnected,
+                  style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: TuneColors.success)),
@@ -312,7 +317,7 @@ class _StatusSection extends StatelessWidget {
               const Icon(Icons.hearing_rounded,
                   size: 18, color: TuneColors.textSecondary),
               const SizedBox(width: 8),
-              Text('Tracks will be scrobbled automatically',
+              Text(l.cfgScrobbleAuto,
                   style: TuneFonts.footnote),
             ],
           ),

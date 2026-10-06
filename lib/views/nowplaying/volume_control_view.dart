@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -69,6 +70,7 @@ class _VolumeControlViewState extends State<VolumeControlView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final zoneVolume =
         context.select<ZoneState, double>((z) => z.currentZone?.volume ?? 0.5);
     // Fixed-volume outputs (e.g. line-out at unity gain) ignore volume
@@ -85,7 +87,7 @@ class _VolumeControlViewState extends State<VolumeControlView> {
         IconButton(
           icon: Icon(_volumeIcon(displayVolume),
               size: 22, color: TuneColors.textSecondary),
-          tooltip: 'Mute',
+          tooltip: l.znMute,
           onPressed: fixedVolume ? null : _toggleMute,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -94,7 +96,7 @@ class _VolumeControlViewState extends State<VolumeControlView> {
         Expanded(
           child: fixedVolume
               ? Text(
-                  'Volume fixe',
+                  l.znFixedVolume,
                   style: TuneFonts.caption
                       .copyWith(color: TuneColors.textTertiary),
                 )

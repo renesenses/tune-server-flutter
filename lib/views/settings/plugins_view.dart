@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -23,6 +24,7 @@ class _PluginsViewState extends State<PluginsView>
   List<Map<String, dynamic>> _plugins = [];
   bool _loading = true;
   String? _error;
+  bool _notConnected = false;
   String _searchQuery = '';
   String _selectedCategory = '';
   late TabController _tabController;
@@ -51,7 +53,8 @@ class _PluginsViewState extends State<PluginsView>
     if (api == null) {
       setState(() {
         _loading = false;
-        _error = 'Non connecte au serveur';
+        _notConnected = true;
+        _error = '';
       });
       return;
     }
@@ -63,10 +66,11 @@ class _PluginsViewState extends State<PluginsView>
           _plugins = data.map((p) => p as Map<String, dynamic>).toList();
           _loading = false;
           _error = null;
+          _notConnected = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = '$e'; });
+      if (mounted) setState(() { _loading = false; _notConnected = false; _error = '$e'; });
     }
   }
 
@@ -104,6 +108,7 @@ class _PluginsViewState extends State<PluginsView>
       _installing.contains(name) || _uninstalling.contains(name) || _updating.contains(name);
 
   Future<void> _installPlugin(Map<String, dynamic> plugin) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final name = plugin['name'] as String? ?? '';
     if (api == null || name.isEmpty) return;
@@ -115,7 +120,7 @@ class _PluginsViewState extends State<PluginsView>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${plugin['display_name'] ?? name} installed'),
+            content: Text(l.srvPluginInstalled('${plugin['display_name'] ?? name}')),
             backgroundColor: TuneColors.success,
           ),
         );
@@ -124,7 +129,7 @@ class _PluginsViewState extends State<PluginsView>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Install failed: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.srvPluginInstallFailed(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -132,6 +137,7 @@ class _PluginsViewState extends State<PluginsView>
   }
 
   Future<void> _uninstallPlugin(Map<String, dynamic> plugin) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final name = plugin['name'] as String? ?? '';
     if (api == null || name.isEmpty) return;
@@ -143,7 +149,7 @@ class _PluginsViewState extends State<PluginsView>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${plugin['display_name'] ?? name} uninstalled'),
+            content: Text(l.srvPluginUninstalled('${plugin['display_name'] ?? name}')),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -152,7 +158,7 @@ class _PluginsViewState extends State<PluginsView>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Uninstall failed: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.srvPluginUninstallFailed(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -160,6 +166,7 @@ class _PluginsViewState extends State<PluginsView>
   }
 
   Future<void> _updatePlugin(Map<String, dynamic> plugin) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final name = plugin['name'] as String? ?? '';
     if (api == null || name.isEmpty) return;
@@ -171,7 +178,7 @@ class _PluginsViewState extends State<PluginsView>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${plugin['display_name'] ?? name} updated'),
+            content: Text(l.srvPluginUpdated('${plugin['display_name'] ?? name}')),
             backgroundColor: TuneColors.success,
           ),
         );
@@ -180,7 +187,7 @@ class _PluginsViewState extends State<PluginsView>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Update failed: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.srvPluginUpdateFailed(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -188,6 +195,7 @@ class _PluginsViewState extends State<PluginsView>
   }
 
   Future<void> _togglePlugin(Map<String, dynamic> plugin) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final name = plugin['name'] as String? ?? '';
     if (api == null || name.isEmpty) return;
@@ -202,7 +210,9 @@ class _PluginsViewState extends State<PluginsView>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${plugin['display_name'] ?? name} ${isActive ? "disabled" : "enabled"}'),
+            content: Text(isActive
+                ? l.srvPluginDisabled('${plugin['display_name'] ?? name}')
+                : l.srvPluginEnabled('${plugin['display_name'] ?? name}')),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -211,7 +221,7 @@ class _PluginsViewState extends State<PluginsView>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -253,11 +263,12 @@ class _PluginsViewState extends State<PluginsView>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Plugins', style: TuneFonts.title3),
+        title: Text(l.srvPluginsTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.accent),
@@ -270,12 +281,12 @@ class _PluginsViewState extends State<PluginsView>
           labelColor: TuneColors.accent,
           unselectedLabelColor: TuneColors.textSecondary,
           tabs: [
-            const Tab(text: 'Store'),
+            Tab(text: l.srvPluginsTabStore),
             Tab(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Installed'),
+                  Text(l.srvPluginsTabInstalled),
                   if (_installedPlugins.isNotEmpty) ...[
                     const SizedBox(width: 6),
                     Container(
@@ -315,7 +326,7 @@ class _PluginsViewState extends State<PluginsView>
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Redemarrage requis pour appliquer les changements',
+                      l.srvRestartRequired,
                       style: TuneFonts.caption.copyWith(
                         fontWeight: FontWeight.w500, color: Colors.orange),
                     ),
@@ -340,13 +351,13 @@ class _PluginsViewState extends State<PluginsView>
                             const Icon(Icons.extension_off_rounded,
                                 color: TuneColors.textTertiary, size: 48),
                             const SizedBox(height: 16),
-                            Text(_error!,
+                            Text(_notConnected ? l.srvNotConnectedToServer : _error!,
                                 style: TuneFonts.body.copyWith(
                                     color: TuneColors.textSecondary)),
                             const SizedBox(height: 16),
                             FilledButton(
                               onPressed: _load,
-                              child: const Text('Reessayer'),
+                              child: Text(l.btnRetry),
                             ),
                           ],
                         ),
@@ -354,8 +365,8 @@ class _PluginsViewState extends State<PluginsView>
                     : TabBarView(
                         controller: _tabController,
                         children: [
-                          _buildStoreTab(),
-                          _buildInstalledTab(),
+                          _buildStoreTab(l),
+                          _buildInstalledTab(l),
                         ],
                       ),
           ),
@@ -364,7 +375,7 @@ class _PluginsViewState extends State<PluginsView>
     );
   }
 
-  Widget _buildStoreTab() {
+  Widget _buildStoreTab(AppLocalizations l) {
     final filtered = _filteredPlugins;
     return CustomScrollView(
       slivers: [
@@ -376,7 +387,7 @@ class _PluginsViewState extends State<PluginsView>
               onChanged: (v) => setState(() => _searchQuery = v),
               style: TuneFonts.body,
               decoration: InputDecoration(
-                hintText: 'Rechercher un plugin...',
+                hintText: l.srvPluginsSearchHint,
                 hintStyle: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
                 filled: true,
                 fillColor: TuneColors.surface,
@@ -415,7 +426,7 @@ class _PluginsViewState extends State<PluginsView>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _CategoryChip(
-                    label: 'Tous',
+                    label: l.filterAll,
                     selected: _selectedCategory.isEmpty,
                     onTap: () => setState(() => _selectedCategory = ''),
                   ),
@@ -447,7 +458,7 @@ class _PluginsViewState extends State<PluginsView>
                   const Icon(Icons.extension_rounded,
                       color: TuneColors.textTertiary, size: 48),
                   const SizedBox(height: 16),
-                  Text('Aucun plugin trouve',
+                  Text(l.srvPluginsNoneFound,
                       style: TuneFonts.body.copyWith(color: TuneColors.textSecondary)),
                 ],
               ),
@@ -482,7 +493,7 @@ class _PluginsViewState extends State<PluginsView>
     );
   }
 
-  Widget _buildInstalledTab() {
+  Widget _buildInstalledTab(AppLocalizations l) {
     final installed = _installedPlugins;
     if (installed.isEmpty) {
       return Center(
@@ -492,13 +503,13 @@ class _PluginsViewState extends State<PluginsView>
             const Icon(Icons.extension_rounded,
                 color: TuneColors.textTertiary, size: 48),
             const SizedBox(height: 16),
-            Text('Aucun plugin installe',
+            Text(l.srvPluginsNoneInstalled,
                 style: TuneFonts.body.copyWith(color: TuneColors.textSecondary)),
             const SizedBox(height: 16),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
               onPressed: () => _tabController.animateTo(0),
-              child: const Text('Parcourir le Store'),
+              child: Text(l.srvPluginsBrowseStore),
             ),
           ],
         ),
@@ -600,6 +611,7 @@ class _StorePluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final name = plugin['display_name'] as String? ??
         plugin['name'] as String? ?? 'Plugin';
     final description = plugin['description'] as String? ?? '';
@@ -683,11 +695,11 @@ class _StorePluginCard extends StatelessWidget {
               spacing: 6,
               children: [
                 if (isFeatured)
-                  _Badge(label: 'Featured', color: const Color(0xFFF59E0B)),
+                  _Badge(label: l.srvPluginBadgeFeatured, color: const Color(0xFFF59E0B)),
                 if (updateAvailable)
-                  _Badge(label: 'Update', color: const Color(0xFF10B981)),
+                  _Badge(label: l.srvPluginBadgeUpdate, color: const Color(0xFF10B981)),
                 if (!compatible)
-                  _Badge(label: 'Incompatible', color: const Color(0xFFEF4444)),
+                  _Badge(label: l.srvPluginBadgeIncompatible, color: const Color(0xFFEF4444)),
               ],
             ),
           ],
@@ -709,7 +721,7 @@ class _StorePluginCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (author.isNotEmpty)
-                      Text('par $author',
+                      Text(l.srvPluginByAuthor(author),
                           style: TuneFonts.caption.copyWith(
                             color: TuneColors.textTertiary, fontStyle: FontStyle.italic)),
                   ],
@@ -719,7 +731,7 @@ class _StorePluginCard extends StatelessWidget {
               if (installed) ...[
                 if (updateAvailable) ...[
                   _ActionButton(
-                    label: isUpdating ? null : 'Update',
+                    label: isUpdating ? null : l.srvPluginActionUpdate,
                     color: const Color(0xFF10B981),
                     loading: isUpdating,
                     disabled: isBusy,
@@ -728,7 +740,7 @@ class _StorePluginCard extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 _ActionButton(
-                  label: status == 'active' ? 'Disable' : 'Enable',
+                  label: status == 'active' ? l.streamingDisable : l.streamingEnable,
                   color: status == 'active'
                       ? const Color(0xFFEF4444)
                       : TuneColors.accent,
@@ -738,7 +750,7 @@ class _StorePluginCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 _ActionButton(
-                  label: isUninstalling ? null : 'Uninstall',
+                  label: isUninstalling ? null : l.srvPluginActionUninstall,
                   color: const Color(0xFFEF4444),
                   outlined: true,
                   loading: isUninstalling,
@@ -747,7 +759,7 @@ class _StorePluginCard extends StatelessWidget {
                 ),
               ] else
                 _ActionButton(
-                  label: isInstalling ? null : 'Install',
+                  label: isInstalling ? null : l.srvPluginActionInstall,
                   color: TuneColors.accent,
                   loading: isInstalling,
                   disabled: !compatible || isBusy,
@@ -806,6 +818,7 @@ class _InstalledPluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final name = plugin['display_name'] as String? ??
         plugin['name'] as String? ?? 'Plugin';
     final description = plugin['description'] as String? ?? '';
@@ -863,8 +876,8 @@ class _InstalledPluginCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            status == 'active' ? 'Active' :
-                            status == 'error' ? 'Error' : 'Disabled',
+                            status == 'active' ? l.srvPluginStatusActive :
+                            status == 'error' ? l.srvPluginStatusError : l.disabled,
                             style: TextStyle(
                               fontSize: 10, fontWeight: FontWeight.w600,
                               color: status == 'active'
@@ -877,7 +890,7 @@ class _InstalledPluginCard extends StatelessWidget {
                         ),
                         if (updateAvailable) ...[
                           const SizedBox(width: 6),
-                          _Badge(label: 'Update', color: const Color(0xFF10B981)),
+                          _Badge(label: l.srvPluginBadgeUpdate, color: const Color(0xFF10B981)),
                         ],
                       ],
                     ),
@@ -904,7 +917,7 @@ class _InstalledPluginCard extends StatelessWidget {
             children: [
               if (updateAvailable) ...[
                 _ActionButton(
-                  label: isUpdating ? null : 'Update',
+                  label: isUpdating ? null : l.srvPluginActionUpdate,
                   color: const Color(0xFF10B981),
                   loading: isUpdating,
                   disabled: isBusy,
@@ -914,7 +927,7 @@ class _InstalledPluginCard extends StatelessWidget {
                 const SizedBox(width: 6),
               ],
               _ActionButton(
-                label: status == 'active' ? 'Disable' : 'Enable',
+                label: status == 'active' ? l.streamingDisable : l.streamingEnable,
                 color: status == 'active'
                     ? const Color(0xFFEF4444)
                     : TuneColors.accent,
@@ -925,7 +938,7 @@ class _InstalledPluginCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               _ActionButton(
-                label: isUninstalling ? null : 'Uninstall',
+                label: isUninstalling ? null : l.srvPluginActionUninstall,
                 color: const Color(0xFFEF4444),
                 outlined: true,
                 loading: isUninstalling,

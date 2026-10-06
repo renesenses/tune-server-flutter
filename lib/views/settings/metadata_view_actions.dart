@@ -42,7 +42,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
       }
     } catch (e) {
       if (mounted) {
-        final msg = '$label : erreur - $e';
+        final msg = AppLocalizations.of(context)
+            .cfgMetaActionError(label, e.toString());
         setState(() => _statusMessage = msg);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,14 +58,15 @@ extension _MetadataViewStateActions on _MetadataViewState {
   }
 
   String _formatResult(String label, Map<String, dynamic> result) {
+    final l = AppLocalizations.of(context);
     final fixed = result['fixed'] ?? result['updated'] ?? result['merged'];
     final total = result['total'] ?? result['scanned'];
     final accepted = result['accepted'];
-    if (accepted != null) return '$label : $accepted acceptées';
-    if (fixed != null && total != null) return '$label : $fixed/$total corrigés';
-    if (fixed != null) return '$label : $fixed corrigés';
-    if (total != null) return '$label : $total traités';
-    return '$label : terminé';
+    if (accepted != null) return l.cfgMetaResultAccepted(label, '$accepted');
+    if (fixed != null && total != null) return l.cfgMetaResultFixedOfTotal(label, '$fixed', '$total');
+    if (fixed != null) return l.cfgMetaResultFixed(label, '$fixed');
+    if (total != null) return l.cfgMetaResultProcessed(label, '$total');
+    return l.cfgMetaResultDone(label);
   }
 
   // ---------------------------------------------------------------------------
@@ -144,8 +146,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
         _loadCompleteness();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Album enregistré'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).metadataAlbumSaved),
               backgroundColor: TuneColors.surfaceHigh,
             ),
           );
@@ -154,7 +156,7 @@ extension _MetadataViewStateActions on _MetadataViewState {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erreur : $e'),
+              content: Text(AppLocalizations.of(context).errorWith(e.toString())),
               backgroundColor: TuneColors.error,
             ),
           );
@@ -174,7 +176,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tags gravés : $count fichiers'),
+            content: Text(AppLocalizations.of(context)
+                .metadataWriteTagsSuccess(int.tryParse('$count') ?? 0)),
             backgroundColor: TuneColors.surfaceHigh,
           ),
         );
@@ -187,7 +190,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur gravure : $e'),
+            content: Text(AppLocalizations.of(context)
+                .cfgMetaWriteTagsError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -229,8 +233,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
       _loadCompleteness();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cover uploadée'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).metadataCoverUploaded),
             backgroundColor: TuneColors.surfaceHigh,
           ),
         );
@@ -239,7 +243,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur upload : $e'),
+            content: Text(AppLocalizations.of(context)
+                .cfgMetaUploadError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -256,24 +261,26 @@ extension _MetadataViewStateActions on _MetadataViewState {
     if (api == null) return;
 
     final ids = group.map((a) => a['id'] as int).toList();
+    final l = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Fusionner ${group.length} albums ?', style: TuneFonts.title3),
+        title: Text(l.cfgMetaMergeTitle(group.length),
+            style: TuneFonts.title3),
         content: Text(
-          "L'album avec le plus de pistes sera conservé, les autres seront supprimés.",
+          l.cfgMetaMergeBody,
           style: TuneFonts.body,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Fusionner',
-                style: TextStyle(color: TuneColors.warning)),
+            child: Text(l.metadataMergeGroup,
+                style: const TextStyle(color: TuneColors.warning)),
           ),
         ],
       ),
@@ -300,7 +307,8 @@ extension _MetadataViewStateActions on _MetadataViewState {
         final total = result['total_tracks'] ?? 0;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Fusionné : $moved pistes déplacées, $total au total'),
+            content: Text(l.metadataMergeSuccess(
+                int.tryParse('$moved') ?? 0, int.tryParse('$total') ?? 0)),
             backgroundColor: TuneColors.surfaceHigh,
           ),
         );
@@ -309,7 +317,7 @@ extension _MetadataViewStateActions on _MetadataViewState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur fusion : $e'),
+            content: Text(l.cfgMetaMergeError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -472,11 +480,12 @@ extension _MetadataViewStateActions on _MetadataViewState {
   }
 
   String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes o';
+    final l = AppLocalizations.of(context);
+    if (bytes < 1024) return l.cfgSizeBytes('$bytes');
     if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} Ko';
+      return l.cfgSizeKilobytes((bytes / 1024).toStringAsFixed(1));
     }
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} Mo';
+    return l.cfgSizeMegabytes((bytes / (1024 * 1024)).toStringAsFixed(1));
   }
 
   String _formatDate(String iso) {

@@ -141,7 +141,7 @@ class _RadiosViewState extends State<RadiosView>
           style: TuneFonts.footnote,
           maxLines: 8,
           decoration: const InputDecoration(
-            hintText: '#EXTM3U\n#EXTINF:-1,Radio Name\nhttp://...',
+            hintText: '#EXTM3U\n#EXTINF:-1,Radio Name\nhttp://...',  // i18n-ok
             border: OutlineInputBorder(),
           ),
         ),
@@ -185,7 +185,7 @@ class _RadiosViewState extends State<RadiosView>
           controller: ctrl,
           style: TuneFonts.body,
           decoration: InputDecoration(
-            hintText: 'https://example.com/radios.m3u',
+            hintText: 'https://example.com/radios.m3u',  // i18n-ok
             labelText: l.radiosImportUrlLabel,
           ),
           keyboardType: TextInputType.url,
@@ -339,7 +339,9 @@ class _RadioList extends StatelessWidget {
                 size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
             Text(
-              favoritesOnly ? 'Aucune radio favorite' : 'Aucune radio',
+              favoritesOnly
+                  ? AppLocalizations.of(context).radiosFavNone
+                  : AppLocalizations.of(context).radiosNone,
               style: TuneFonts.subheadline,
             ),
           ],
@@ -459,7 +461,7 @@ class _RadioTileState extends State<_RadioTile> {
               IconButton(
                 icon: const Icon(Icons.bookmark_add_rounded,
                     size: 20, color: TuneColors.textTertiary),
-                tooltip: 'Sauvegarder le morceau',
+                tooltip: AppLocalizations.of(context).radioSaveFavorite,
                 onPressed: () => _saveFavorite(app),
               ),
           ],

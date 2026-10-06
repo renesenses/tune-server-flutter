@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -84,6 +85,9 @@ class _BugReportViewState extends State<BugReportView> {
     final albumCount = app.libraryState.albums.length;
     final artistCount = app.libraryState.artists.length;
 
+    // Le rapport est un document technique destiné au forum de support :
+    // il reste rédigé en français quelle que soit la langue de l'appareil.
+    // i18n-ok-debut
     final buf = StringBuffer();
     buf.writeln('# Tune Bug Report');
     buf.writeln();
@@ -145,6 +149,7 @@ class _BugReportViewState extends State<BugReportView> {
     buf.writeln('---');
     buf.writeln('*Genere par Tune v${info.version}*');
 
+    // i18n-ok-fin
     return buf.toString();
   }
 
@@ -153,8 +158,8 @@ class _BugReportViewState extends State<BugReportView> {
     Clipboard.setData(ClipboardData(text: _report!));
     setState(() => _copied = true);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rapport copie dans le presse-papiers'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).miscBugReportCopied),
         backgroundColor: TuneColors.accent,
       ),
     );
@@ -165,6 +170,7 @@ class _BugReportViewState extends State<BugReportView> {
   /// copy on any failure.
   Future<void> _submit() async {
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     setState(() => _submitting = true);
     try {
       final res = await app.apiClient?.submitBugReport();
@@ -175,8 +181,8 @@ class _BugReportViewState extends State<BugReportView> {
         _submitting = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bug envoye, merci !'),
+        SnackBar(
+          content: Text(l.miscBugReportSent),
           backgroundColor: TuneColors.success,
         ),
       );
@@ -184,8 +190,8 @@ class _BugReportViewState extends State<BugReportView> {
       if (!mounted) return;
       setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Echec de l'envoi. Copie le rapport dans le forum."),
+        SnackBar(
+          content: Text(l.miscBugReportSendFailed),
           backgroundColor: TuneColors.error,
         ),
       );
@@ -194,16 +200,17 @@ class _BugReportViewState extends State<BugReportView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Rapport de bug', style: TuneFonts.title3),
+        title: Text(l.miscBugReportTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.accent),
             onPressed: _generate,
-            tooltip: 'Regenerer',
+            tooltip: l.miscRegenerate,
           ),
         ],
       ),
@@ -222,7 +229,7 @@ class _BugReportViewState extends State<BugReportView> {
                             color: TuneColors.error, size: 48),
                         const SizedBox(height: 16),
                         Text(
-                          'Impossible de generer le rapport',
+                          l.miscBugReportGenerateFailed,
                           style: TuneFonts.body
                               .copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -236,7 +243,7 @@ class _BugReportViewState extends State<BugReportView> {
                         FilledButton.icon(
                           onPressed: _generate,
                           icon: const Icon(Icons.refresh_rounded, size: 16),
-                          label: const Text('Reessayer'),
+                          label: Text(l.btnRetry),
                           style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent,
                           ),
@@ -277,8 +284,8 @@ class _BugReportViewState extends State<BugReportView> {
                                         size: 16,
                                       ),
                                 label: Text(_submitted
-                                    ? 'Envoye !'
-                                    : (_submitting ? 'Envoi...' : 'Soumettre')),
+                                    ? l.miscSent
+                                    : (_submitting ? l.miscSending : l.miscSubmit)),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: _submitted
                                       ? TuneColors.success
@@ -299,7 +306,7 @@ class _BugReportViewState extends State<BugReportView> {
                                 size: 16,
                               ),
                               label: Text(
-                                  _copied ? 'Copie !' : 'Copier le rapport'),
+                                  _copied ? l.miscCopied : l.miscCopyReport),
                               style: FilledButton.styleFrom(
                                 backgroundColor: _copied
                                     ? TuneColors.success
