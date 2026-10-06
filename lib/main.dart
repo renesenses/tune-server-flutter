@@ -165,6 +165,9 @@ class TuneServerApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      // Langue du téléphone si elle est prise en charge, l'anglais sinon —
+      // pas la première de la liste (voir `resoudreLocale`).
+      localeListResolutionCallback: resoudreLocale,
       // Mount the player sheet ABOVE the Navigator so the mini-player stays
       // visible while browsing into sub-pages / folders — pushing a full-screen
       // route no longer hides it (Rhorn, #1088). Phone only: the iPad layout has
