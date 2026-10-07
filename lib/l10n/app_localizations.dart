@@ -6424,65 +6424,11 @@ abstract class AppLocalizations {
   /// **'Local'**
   String get plLocal;
 
-  /// No description provided for @plSourceLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Source'**
-  String get plSourceLabel;
-
-  /// No description provided for @plRestoreSnapshotTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore snapshot'**
-  String get plRestoreSnapshotTitle;
-
-  /// No description provided for @plLocalPlaylistNameLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Local playlist name:'**
-  String get plLocalPlaylistNameLabel;
-
   /// No description provided for @plRestore.
   ///
   /// In en, this message translates to:
   /// **'Restore'**
   String get plRestore;
-
-  /// No description provided for @plRestoreDone.
-  ///
-  /// In en, this message translates to:
-  /// **'“{name}” restored: {matched} found, {notFound} not found.'**
-  String plRestoreDone(String name, String matched, String notFound);
-
-  /// No description provided for @plRestoreReplaced.
-  ///
-  /// In en, this message translates to:
-  /// **'“{name}” replaced: {matched} found, {notFound} not found.'**
-  String plRestoreReplaced(String name, String matched, String notFound);
-
-  /// No description provided for @plExistingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Playlist already exists'**
-  String get plExistingTitle;
-
-  /// No description provided for @plExistingBody.
-  ///
-  /// In en, this message translates to:
-  /// **'A playlist named “{name}” already exists. Replace it?'**
-  String plExistingBody(String name);
-
-  /// No description provided for @plReplace.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace'**
-  String get plReplace;
-
-  /// No description provided for @plDeleteSnapshotBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the snapshot of “{name}”?'**
-  String plDeleteSnapshotBody(String name);
 
   /// No description provided for @plSyncIntervalTitle.
   ///
@@ -6520,34 +6466,11 @@ abstract class AppLocalizations {
   /// **'Create links from a transfer'**
   String get plNoSyncLinksHint;
 
-  /// No description provided for @plPlaylistNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Playlist #{id}'**
-  String plPlaylistNumber(String id);
-
   /// No description provided for @plAutoEveryMinutes.
   ///
   /// In en, this message translates to:
   /// **'auto {minutes} min'**
   String plAutoEveryMinutes(String minutes);
-
-  /// No description provided for @plSyncDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync OK: +{addedLocal}/-{removedLocal} local, +{addedRemote}/-{removedRemote} remote'**
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  );
-
-  /// No description provided for @plSyncConflicts.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{, 1 conflict} other{, {count} conflicts}}'**
-  String plSyncConflicts(int count);
 
   /// No description provided for @plSyncError.
   ///
@@ -6573,12 +6496,6 @@ abstract class AppLocalizations {
   /// **'Back up all playlists'**
   String get plBackupAll;
 
-  /// No description provided for @plBackupResult.
-  ///
-  /// In en, this message translates to:
-  /// **'{playlists} playlists · {tracks} tracks'**
-  String plBackupResult(String playlists, String tracks);
-
   /// No description provided for @plSectionSnapshots.
   ///
   /// In en, this message translates to:
@@ -6590,36 +6507,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No snapshots. Run a backup to create one.'**
   String get plNoSnapshots;
-
-  /// No description provided for @plSectionBatchTransfer.
-  ///
-  /// In en, this message translates to:
-  /// **'BATCH TRANSFER'**
-  String get plSectionBatchTransfer;
-
-  /// No description provided for @plBatchTransferHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer every playlist from a service'**
-  String get plBatchTransferHint;
-
-  /// No description provided for @plTransferring.
-  ///
-  /// In en, this message translates to:
-  /// **'Transferring…'**
-  String get plTransferring;
-
-  /// No description provided for @plTransferAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer all'**
-  String get plTransferAll;
-
-  /// No description provided for @plBatchResult.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} playlists — {status}'**
-  String plBatchResult(String count, String status);
 
   /// No description provided for @plMergeDone.
   ///
@@ -9260,6 +9147,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{size} MB'**
   String cfgSizeMegabytes(String size);
+
+  /// No description provided for @plPremiumTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transferring a playlist between services, or from a service to the library, is part of Tune Premium. Duplicating a library playlist stays free.'**
+  String get plPremiumTransfer;
+
+  /// No description provided for @plPremiumConverter.
+  ///
+  /// In en, this message translates to:
+  /// **'Dated playlist copies and playlist sync links are part of Tune Premium.'**
+  String get plPremiumConverter;
+
+  /// No description provided for @plConverterMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The Playlists converter plugin is not loaded on this server.'**
+  String get plConverterMissing;
+
+  /// No description provided for @plSeeOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'See the offer'**
+  String get plSeeOffer;
+
+  /// No description provided for @plSnapshotsNoDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'The last 10 copies of each playlist are kept; the oldest one is replaced automatically.'**
+  String get plSnapshotsNoDelete;
+
+  /// No description provided for @plBackupAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{ok} playlists backed up, {failed} failed.'**
+  String plBackupAllDone(int ok, int failed);
+
+  /// No description provided for @plRestoreRecreateAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Recreate “{name}” from its most recent copy? The current playlist is neither changed nor deleted.'**
+  String plRestoreRecreateAsk(String name);
+
+  /// No description provided for @plRestoreRecreated.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” recreated from its most recent copy.'**
+  String plRestoreRecreated(String name);
+
+  /// No description provided for @plSnapshotCopies.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 copy} other{{count} copies}}'**
+  String plSnapshotCopies(int count);
+
+  /// No description provided for @plIntervalAdjusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval set to {minutes} min (15 min to one week, or 0 for on demand).'**
+  String plIntervalAdjusted(int minutes);
+
+  /// No description provided for @plLinkSyncDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync done: {count, plural, =0{no track added} =1{1 track added} other{{count} tracks added}}.'**
+  String plLinkSyncDone(int count);
 }
 
 class _AppLocalizationsDelegate

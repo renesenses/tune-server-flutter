@@ -3483,42 +3483,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get plLocal => '本地';
 
   @override
-  String get plSourceLabel => '来源';
-
-  @override
-  String get plRestoreSnapshotTitle => '恢复快照';
-
-  @override
-  String get plLocalPlaylistNameLabel => '本地播放列表名称：';
-
-  @override
   String get plRestore => '恢复';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '“$name”已恢复：找到 $matched 首，$notFound 首未找到。';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '“$name”已替换：找到 $matched 首，$notFound 首未找到。';
-  }
-
-  @override
-  String get plExistingTitle => '播放列表已存在';
-
-  @override
-  String plExistingBody(String name) {
-    return '已存在名为“$name”的播放列表。要替换吗？';
-  }
-
-  @override
-  String get plReplace => '替换';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return '删除“$name”的快照？';
-  }
 
   @override
   String get plSyncIntervalTitle => '自动同步间隔';
@@ -3539,33 +3504,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get plNoSyncLinksHint => '可在转移时创建链接';
 
   @override
-  String plPlaylistNumber(String id) {
-    return '播放列表 #$id';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return '自动 $minutes 分钟';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return '同步完成：本地 +$addedLocal/-$removedLocal，远程 +$addedRemote/-$removedRemote';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '，$count 个冲突',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3583,32 +3523,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get plBackupAll => '备份所有播放列表';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '$playlists 个播放列表 · $tracks 首';
-  }
-
-  @override
   String get plSectionSnapshots => '快照';
 
   @override
   String get plNoSnapshots => '没有快照。运行备份即可创建。';
-
-  @override
-  String get plSectionBatchTransfer => '批量转移';
-
-  @override
-  String get plBatchTransferHint => '转移某个服务的全部播放列表';
-
-  @override
-  String get plTransferring => '正在转移…';
-
-  @override
-  String get plTransferAll => '全部转移';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '$count 个播放列表 — $status';
-  }
 
   @override
   String get plMergeDone => '播放列表已合并。';
@@ -5174,5 +5092,61 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size MB';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      '在服务之间或从服务向资料库转移播放列表属于 Tune Premium。复制资料库中的播放列表仍然免费。';
+
+  @override
+  String get plPremiumConverter => '播放列表的带日期副本和同步链接属于 Tune Premium。';
+
+  @override
+  String get plConverterMissing => '此服务器未加载 Playlists converter 插件。';
+
+  @override
+  String get plSeeOffer => '查看方案';
+
+  @override
+  String get plSnapshotsNoDelete => '每个播放列表保留最近 10 份副本，最旧的一份会自动被替换。';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '已备份 $ok 个播放列表，$failed 个失败。';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return '要从最新副本重新创建“$name”吗？当前播放列表不会被修改或删除。';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '已从最新副本重新创建“$name”。';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 份副本',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return '间隔已调整为 $minutes 分钟（15 分钟至一周，或 0 表示按需）。';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已添加 $count 首',
+    );
+    return '同步完成：$_temp0。';
   }
 }

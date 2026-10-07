@@ -11,10 +11,68 @@ part 'tune_api_client.streaming.dart';
 class TuneHttpException implements Exception {
   final String message;
   final int statusCode;
-  const TuneHttpException(this.message, this.statusCode);
+
+  /// Le champ `error` du corps JSON de la réponse, s'il y en a un
+  /// (`premium_required`, `plugin not found`, `wasm plugins not loaded`…).
+  final String? error;
+  const TuneHttpException(this.message, this.statusCode, {this.error});
   bool get isNotFound => statusCode == 404;
+
+  /// Le greffon visé n'est pas chargé sur ce serveur : l'hôte répond 404
+  /// `plugin not found` (greffon absent ou désactivé) ou `wasm plugins not
+  /// loaded` (serveur sans greffons WASM).
+  bool get greffonAbsent =>
+      statusCode == 404 &&
+      (error == 'plugin not found' || error == 'wasm plugins not loaded');
   @override
   String toString() => message;
+}
+
+/// Refus Premium du serveur : HTTP 402, `{error: "premium_required", code,
+/// message, upgrade_url}`.
+///
+/// `code` dit QUELLE garde a refusé : `playlist_transfer` sur
+/// `POST /playlist-manager/transfer`, `plugin_marketplace` sur les routes
+/// d'un greffon premium comme « Playlists converter ».
+class TunePremiumRequiredException extends TuneHttpException {
+  final String? code;
+  final String? serverMessage;
+  final String? upgradeUrl;
+  const TunePremiumRequiredException(
+    String message, {
+    this.code,
+    this.serverMessage,
+    this.upgradeUrl,
+  }) : super(message, 402, error: 'premium_required');
+
+  /// L'adresse de l'offre, seulement si c'est un lien web (`http://` ou
+  /// `https://`) : une autre forme n'est jamais ouverte.
+  String? get upgradeUrlSure {
+    final u = upgradeUrl?.trim();
+    if (u == null) return null;
+    final bas = u.toLowerCase();
+    return (bas.startsWith('https://') || bas.startsWith('http://')) ? u : null;
+  }
+}
+
+/// L'exception à lever pour une réponse en échec : lit le corps JSON pour
+/// distinguer un refus Premium (402) ou un greffon absent (404) d'une panne.
+TuneHttpException tuneHttpErreur(String message, int statusCode, String body) {
+  Map<String, dynamic>? corps;
+  try {
+    final d = jsonDecode(body);
+    if (d is Map<String, dynamic>) corps = d;
+  } catch (_) {}
+  final error = corps?['error'] is String ? corps!['error'] as String : null;
+  if (statusCode == 402 && error == 'premium_required') {
+    return TunePremiumRequiredException(
+      message,
+      code: corps?['code'] as String?,
+      serverMessage: corps?['message'] as String?,
+      upgradeUrl: corps?['upgrade_url'] as String?,
+    );
+  }
+  return TuneHttpException(message, statusCode, error: error);
 }
 
 /// Callback invoked on 401 Unauthorized — lets the app clear auth state.
@@ -75,7 +133,7 @@ class TuneApiClient {
     ).timeout(const Duration(seconds: 60));
     _check401(resp.statusCode);
     if (resp.statusCode != 200) {
-      throw TuneHttpException('GET $path failed: ${resp.statusCode}', resp.statusCode);
+      throw tuneHttpErreur('GET $path failed: ${resp.statusCode}', resp.statusCode, resp.body);
     }
     final body = resp.body;
     if (body.trimLeft().startsWith('<!') || body.trimLeft().startsWith('<html')) {
@@ -114,7 +172,7 @@ class TuneApiClient {
         .timeout(timeout);
     _check401(resp.statusCode);
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw TuneHttpException('POST $path failed: ${resp.statusCode}', resp.statusCode);
+      throw tuneHttpErreur('POST $path failed: ${resp.statusCode}', resp.statusCode, resp.body);
     }
     return resp.body.isNotEmpty ? jsonDecode(resp.body) : null;
   }
@@ -353,14 +411,6 @@ class TuneApiClient {
     'create_on_target': createOnTarget, 'include_approximate': includeApproximate,
   });
 
-  Future<dynamic> batchTransfer({
-    required String sourceService, String targetService = 'local',
-    List<String>? playlistIds, double matchThreshold = 0.6,
-  }) => _post('/playlist-manager/batch-transfer', body: {
-    'source_service': sourceService, 'target_service': targetService,
-    'playlist_ids': playlistIds, 'match_threshold': matchThreshold,
-  });
-
   Future<dynamic> mergePlaylists({
     required List<Map<String, String>> playlists, required String targetName,
     bool deduplicate = true, String targetService = 'local',
@@ -368,29 +418,6 @@ class TuneApiClient {
     'playlists': playlists, 'target_name': targetName,
     'deduplicate': deduplicate, 'target_service': targetService,
   });
-
-  Future<dynamic> backupPlaylists({List<String>? services}) =>
-      _post('/playlist-manager/backup', body: {'services': services, 'include_tracks': true});
-
-  Future<List<dynamic>> listPlaylistSnapshots({String? service}) {
-    final q = service != null ? '?service=${Uri.encodeQueryComponent(service)}' : '';
-    return _get('/playlist-manager/backups$q').then((d) => d as List);
-  }
-
-  Future<dynamic> restorePlaylistSnapshot(int id, {String? targetName, bool overwriteExisting = false}) =>
-      _post('/playlist-manager/backups/$id/restore', body: {
-        if (targetName != null) 'target_name': targetName,
-        'overwrite_existing': overwriteExisting,
-      });
-
-  Future<void> deletePlaylistSnapshot(int id) =>
-      _delete('/playlist-manager/backups/$id');
-
-  Future<dynamic> updatePlaylistLink(int id, {String? syncDirection, int? syncIntervalMinutes}) =>
-      _patch('/playlist-manager/links/$id', body: {
-        if (syncDirection != null) 'sync_direction': syncDirection,
-        if (syncIntervalMinutes != null) 'sync_interval_minutes': syncIntervalMinutes,
-      });
 
   String databaseExportUrl() => '$baseUrl/system/database/export';
 
@@ -432,33 +459,144 @@ class TuneApiClient {
   Future<dynamic> exportPlaylist(String service, String playlistId, String format) =>
       _post('/playlist-manager/export', body: {'service': service, 'playlist_id': playlistId, 'format': format});
 
-  Future<List<dynamic>> getPlaylistLinks() =>
-      _get('/playlist-manager/links').then((d) => d as List);
-
-  Future<dynamic> createPlaylistLink({
-    required int localPlaylistId, required String service,
-    required String servicePlaylistId, String syncDirection = 'pull',
-  }) => _post('/playlist-manager/links', body: {
-    'local_playlist_id': localPlaylistId, 'service': service,
-    'service_playlist_id': servicePlaylistId, 'sync_direction': syncDirection,
-  });
-
-  Future<Map<String, dynamic>> triggerPlaylistSync(int linkId) =>
-      _post('/playlist-manager/links/$linkId/sync')
-          .then((d) => d as Map<String, dynamic>);
-
-  /// Alias for [triggerPlaylistSync] — matches `SyncResult` naming from Linux API.
-  Future<Map<String, dynamic>> syncPlaylistLink(int linkId) =>
-      triggerPlaylistSync(linkId);
-
-  Future<void> deletePlaylistLink(int linkId) =>
-      _delete('/playlist-manager/links/$linkId');
-
   Future<List<dynamic>> getTransferHistory({int limit = 50}) =>
       _get('/playlist-manager/history?limit=$limit').then((d) => d as List);
 
   Future<dynamic> getTransferDetail(int transferId) =>
       _get('/playlist-manager/history/$transferId');
+
+  // ---------------------------------------------------------------------------
+  // Greffon « Playlists converter » : liens de synchronisation et copies datées
+  //
+  // Les anciennes routes `/playlist-manager/links*` et `/playlist-manager/
+  // backup(s)*` font double emploi avec celles du greffon, qui est le seul
+  // moteur de transfert du serveur (renesenses/tune-server-rust#5954). Elles
+  // ne sont plus appelées d'ici. Le greffon est premium : sans licence,
+  // l'hôte répond 402 (`TunePremiumRequiredException`, code
+  // `plugin_marketplace`) ; sans greffon chargé, 404 (`greffonAbsent`).
+  // ---------------------------------------------------------------------------
+
+  static const String convertisseur = '/plugins/playlists-converter';
+
+  /// Bornes de la cadence d'un lien côté greffon : 0 (à la demande) ou
+  /// 15 à 10 080 minutes. Une valeur hors bornes est refusée (400) par le
+  /// greffon ; on la ramène ici, et l'écran le dit.
+  static int cadenceDuLien(int minutes) {
+    if (minutes <= 0) return 0;
+    if (minutes < 15) return 15;
+    if (minutes > 10080) return 10080;
+    return minutes;
+  }
+
+  /// Le corps de `POST /liens` à partir des notions de l'ancien écran :
+  /// une playlist locale, une playlist d'un service, et un sens.
+  ///
+  /// * `pull` (le service alimente la bibliothèque) : a = service, b = local,
+  ///   `a_vers_b` ;
+  /// * `push` (la bibliothèque alimente le service) : a = local, b = service,
+  ///   `a_vers_b` ;
+  /// * `bidirectional` : a = service, b = local, `deux_sens`.
+  static Map<String, dynamic> corpsDuLien({
+    required int localPlaylistId,
+    required String service,
+    required String servicePlaylistId,
+    String syncDirection = 'pull',
+    int syncIntervalMinutes = 0,
+  }) {
+    final local = {'service': 'local', 'playlist_id': '$localPlaylistId'};
+    final distant = {'service': service, 'playlist_id': servicePlaylistId};
+    final push = syncDirection == 'push';
+    return {
+      'a': push ? local : distant,
+      'b': push ? distant : local,
+      'sens': syncDirection == 'bidirectional' ? 'deux_sens' : 'a_vers_b',
+      'cadence_minutes': cadenceDuLien(syncIntervalMinutes),
+    };
+  }
+
+  /// `GET /liens` → la liste `liens` (supprimés exclus).
+  Future<List<Map<String, dynamic>>> getPlaylistLinks() =>
+      _get('$convertisseur/liens').then((d) =>
+          ((d as Map<String, dynamic>)['liens'] as List? ?? const [])
+              .cast<Map<String, dynamic>>());
+
+  Future<Map<String, dynamic>> createPlaylistLink({
+    required int localPlaylistId,
+    required String service,
+    required String servicePlaylistId,
+    String syncDirection = 'pull',
+    int syncIntervalMinutes = 0,
+  }) =>
+      _post('$convertisseur/liens', body: corpsDuLien(
+        localPlaylistId: localPlaylistId,
+        service: service,
+        servicePlaylistId: servicePlaylistId,
+        syncDirection: syncDirection,
+        syncIntervalMinutes: syncIntervalMinutes,
+      )).then((d) => d as Map<String, dynamic>);
+
+  /// Synchroniser maintenant : aperçu (rien n'est écrit), puis synchro avec
+  /// accord — le geste de l'utilisateur vaut accord. Rend `{lien, entree}`.
+  Future<Map<String, dynamic>> syncPlaylistLink(String lienId) async {
+    await _post('$convertisseur/lien/apercu', body: {'lien_id': lienId});
+    final d = await _post('$convertisseur/lien/synchroniser',
+        body: {'lien_id': lienId, 'accord': true});
+    return d as Map<String, dynamic>;
+  }
+
+  /// Retire le lien. Aucune des deux playlists n'est touchée.
+  Future<void> deletePlaylistLink(String lienId) =>
+      _post('$convertisseur/lien/supprimer', body: {'lien_id': lienId});
+
+  /// Change la cadence d'un lien (remplace un `PATCH /playlist-manager/
+  /// links/{id}` que le serveur n'a jamais servi).
+  Future<Map<String, dynamic>> setPlaylistLinkInterval(String lienId, int minutes) =>
+      _post('$convertisseur/lien/reglages', body: {
+        'lien_id': lienId,
+        'cadence_minutes': cadenceDuLien(minutes),
+      }).then((d) => d as Map<String, dynamic>);
+
+  /// `GET /snapshots` → une ligne par playlist gardée :
+  /// `{service, playlist_id, nom, snapshots, dernier_le_ms}`.
+  Future<List<Map<String, dynamic>>> listPlaylistSnapshots() =>
+      _get('$convertisseur/snapshots').then((d) =>
+          ((d as Map<String, dynamic>)['playlists'] as List? ?? const [])
+              .cast<Map<String, dynamic>>());
+
+  /// Prend une copie datée d'UNE playlist (lecture seule chez le service).
+  Future<Map<String, dynamic>> snapshotPlaylist({
+    required String service,
+    required String playlistId,
+    String? name,
+  }) =>
+      _post('$convertisseur/snapshot', body: {
+        'service': service,
+        'playlist_id': playlistId,
+        if (name != null) 'nom': name,
+      }).then((d) => d as Map<String, dynamic>);
+
+  /// Recrée une playlist depuis sa copie la plus récente, chez son service
+  /// d'origine (mode `recreer` : l'ancienne n'est ni modifiée ni supprimée).
+  /// Aperçu, puis exécution avec accord. Rend `{plan, a_retirer_par_vous}`.
+  Future<Map<String, dynamic>> restoreLatestSnapshot({
+    required String service,
+    required String playlistId,
+  }) async {
+    final q = 'service=${Uri.encodeQueryComponent(service)}'
+        '&playlist_id=${Uri.encodeQueryComponent(playlistId)}';
+    final liste = await _get('$convertisseur/snapshots?$q') as Map<String, dynamic>;
+    final snaps = (liste['snapshots'] as List? ?? const []);
+    if (snaps.isEmpty) {
+      throw const TuneHttpException('no snapshot', 404);
+    }
+    final snapshotId = (snaps.first as Map<String, dynamic>)['snapshot_id'];
+    final apercu = await _post('$convertisseur/snapshot/restauration/apercu',
+        body: {'snapshot_id': snapshotId, 'mode': 'recreer'}) as Map<String, dynamic>;
+    final planId = (apercu['plan'] as Map<String, dynamic>)['plan_id'];
+    final d = await _post('$convertisseur/snapshot/restauration',
+        body: {'plan_id': planId, 'accord': true});
+    return d as Map<String, dynamic>;
+  }
 
   // ---------------------------------------------------------------------------
   // Podcasts

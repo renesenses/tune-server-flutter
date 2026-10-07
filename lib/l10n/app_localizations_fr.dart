@@ -3622,42 +3622,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get plLocal => 'Local';
 
   @override
-  String get plSourceLabel => 'Source';
-
-  @override
-  String get plRestoreSnapshotTitle => 'Restaurer l’instantané';
-
-  @override
-  String get plLocalPlaylistNameLabel => 'Nom de la playlist locale :';
-
-  @override
   String get plRestore => 'Restaurer';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '« $name » restaurée : $matched trouvées, $notFound introuvables.';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '« $name » remplacée : $matched trouvées, $notFound introuvables.';
-  }
-
-  @override
-  String get plExistingTitle => 'Playlist existante';
-
-  @override
-  String plExistingBody(String name) {
-    return 'Une playlist « $name » existe déjà. La remplacer ?';
-  }
-
-  @override
-  String get plReplace => 'Remplacer';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return 'Supprimer l’instantané de « $name » ?';
-  }
 
   @override
   String get plSyncIntervalTitle => 'Intervalle de synchro auto';
@@ -3678,34 +3643,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get plNoSyncLinksHint => 'Créez des liens depuis un transfert';
 
   @override
-  String plPlaylistNumber(String id) {
-    return 'Playlist n° $id';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return 'auto $minutes min';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return 'Synchro OK : +$addedLocal/-$removedLocal en local, +$addedRemote/-$removedRemote à distance';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', $count conflits',
-      one: ', 1 conflit',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3723,34 +3662,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get plBackupAll => 'Sauvegarder toutes les playlists';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '$playlists playlists · $tracks pistes';
-  }
-
-  @override
   String get plSectionSnapshots => 'INSTANTANÉS';
 
   @override
   String get plNoSnapshots =>
       'Aucun instantané. Lancez une sauvegarde pour en créer.';
-
-  @override
-  String get plSectionBatchTransfer => 'TRANSFERT GROUPÉ';
-
-  @override
-  String get plBatchTransferHint =>
-      'Transférer toutes les playlists d’un service';
-
-  @override
-  String get plTransferring => 'Transfert…';
-
-  @override
-  String get plTransferAll => 'Tout transférer';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '$count playlists — $status';
-  }
 
   @override
   String get plMergeDone => 'Playlists fusionnées.';
@@ -5384,5 +5300,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size Mo';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      'Transférer une playlist entre services, ou d\'un service vers la bibliothèque, fait partie de Tune Premium. Dupliquer une playlist de la bibliothèque reste gratuit.';
+
+  @override
+  String get plPremiumConverter =>
+      'Les copies datées et les liens de synchronisation de playlists font partie de Tune Premium.';
+
+  @override
+  String get plConverterMissing =>
+      'Le greffon Playlists converter n\'est pas chargé sur ce serveur.';
+
+  @override
+  String get plSeeOffer => 'Voir l\'offre';
+
+  @override
+  String get plSnapshotsNoDelete =>
+      'Les 10 dernières copies de chaque playlist sont gardées ; la plus ancienne est remplacée d\'elle-même.';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '$ok playlists sauvegardées, $failed en échec.';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return 'Recréer « $name » depuis sa copie la plus récente ? La playlist actuelle n\'est ni modifiée ni supprimée.';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '« $name » recréée depuis sa copie la plus récente.';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count copies',
+      one: '1 copie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return 'Cadence ramenée à $minutes min (de 15 min à une semaine, ou 0 pour « à la demande »).';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titres ajoutés',
+      one: '1 titre ajouté',
+      zero: 'aucun titre ajouté',
+    );
+    return 'Synchronisation faite : $_temp0.';
   }
 }

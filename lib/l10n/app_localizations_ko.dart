@@ -3496,42 +3496,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get plLocal => '로컬';
 
   @override
-  String get plSourceLabel => '소스';
-
-  @override
-  String get plRestoreSnapshotTitle => '스냅샷 복원';
-
-  @override
-  String get plLocalPlaylistNameLabel => '로컬 플레이리스트 이름:';
-
-  @override
   String get plRestore => '복원';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '\"$name\" 복원됨: $matched곡 찾음, $notFound곡 찾을 수 없음.';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '\"$name\" 대체됨: $matched곡 찾음, $notFound곡 찾을 수 없음.';
-  }
-
-  @override
-  String get plExistingTitle => '이미 있는 플레이리스트';
-
-  @override
-  String plExistingBody(String name) {
-    return '\"$name\" 플레이리스트가 이미 있습니다. 대체할까요?';
-  }
-
-  @override
-  String get plReplace => '대체';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return '\"$name\"의 스냅샷을 삭제할까요?';
-  }
 
   @override
   String get plSyncIntervalTitle => '자동 동기화 간격';
@@ -3552,33 +3517,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get plNoSyncLinksHint => '전송에서 링크를 만드세요';
 
   @override
-  String plPlaylistNumber(String id) {
-    return '플레이리스트 #$id';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return '자동 $minutes분';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return '동기화 완료: 로컬 +$addedLocal/-$removedLocal, 원격 +$addedRemote/-$removedRemote';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', 충돌 $count건',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3596,32 +3536,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get plBackupAll => '모든 플레이리스트 백업';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '플레이리스트 $playlists개 · $tracks곡';
-  }
-
-  @override
   String get plSectionSnapshots => '스냅샷';
 
   @override
   String get plNoSnapshots => '스냅샷이 없습니다. 백업을 실행해 만드세요.';
-
-  @override
-  String get plSectionBatchTransfer => '일괄 전송';
-
-  @override
-  String get plBatchTransferHint => '서비스의 모든 플레이리스트 전송';
-
-  @override
-  String get plTransferring => '전송 중…';
-
-  @override
-  String get plTransferAll => '모두 전송';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '플레이리스트 $count개 — $status';
-  }
 
   @override
   String get plMergeDone => '플레이리스트를 병합했습니다.';
@@ -5190,5 +5108,64 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size MB';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      '서비스 간 또는 서비스에서 라이브러리로 재생 목록을 전송하는 기능은 Tune Premium에 포함됩니다. 라이브러리 재생 목록 복제는 계속 무료입니다.';
+
+  @override
+  String get plPremiumConverter =>
+      '재생 목록의 날짜별 사본과 동기화 링크는 Tune Premium에 포함됩니다.';
+
+  @override
+  String get plConverterMissing =>
+      '이 서버에 Playlists converter 플러그인이 로드되지 않았습니다.';
+
+  @override
+  String get plSeeOffer => '요금제 보기';
+
+  @override
+  String get plSnapshotsNoDelete =>
+      '각 재생 목록의 최근 사본 10개가 보관되며, 가장 오래된 사본은 자동으로 교체됩니다.';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '재생 목록 $ok개 저장, $failed개 실패.';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return '“$name”을(를) 최신 사본에서 다시 만들까요? 현재 재생 목록은 변경되거나 삭제되지 않습니다.';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '“$name”을(를) 최신 사본에서 다시 만들었습니다.';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '사본 $count개',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return '주기를 $minutes분으로 조정했습니다(15분~1주, 또는 수동은 0).';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count곡 추가',
+    );
+    return '동기화 완료: $_temp0.';
   }
 }

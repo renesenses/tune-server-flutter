@@ -3607,42 +3607,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plLocal => 'Local';
 
   @override
-  String get plSourceLabel => 'Source';
-
-  @override
-  String get plRestoreSnapshotTitle => 'Restore snapshot';
-
-  @override
-  String get plLocalPlaylistNameLabel => 'Local playlist name:';
-
-  @override
   String get plRestore => 'Restore';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '“$name” restored: $matched found, $notFound not found.';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '“$name” replaced: $matched found, $notFound not found.';
-  }
-
-  @override
-  String get plExistingTitle => 'Playlist already exists';
-
-  @override
-  String plExistingBody(String name) {
-    return 'A playlist named “$name” already exists. Replace it?';
-  }
-
-  @override
-  String get plReplace => 'Replace';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return 'Delete the snapshot of “$name”?';
-  }
 
   @override
   String get plSyncIntervalTitle => 'Auto-sync interval';
@@ -3663,34 +3628,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plNoSyncLinksHint => 'Create links from a transfer';
 
   @override
-  String plPlaylistNumber(String id) {
-    return 'Playlist #$id';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return 'auto $minutes min';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return 'Sync OK: +$addedLocal/-$removedLocal local, +$addedRemote/-$removedRemote remote';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', $count conflicts',
-      one: ', 1 conflict',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3708,32 +3647,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plBackupAll => 'Back up all playlists';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '$playlists playlists · $tracks tracks';
-  }
-
-  @override
   String get plSectionSnapshots => 'SNAPSHOTS';
 
   @override
   String get plNoSnapshots => 'No snapshots. Run a backup to create one.';
-
-  @override
-  String get plSectionBatchTransfer => 'BATCH TRANSFER';
-
-  @override
-  String get plBatchTransferHint => 'Transfer every playlist from a service';
-
-  @override
-  String get plTransferring => 'Transferring…';
-
-  @override
-  String get plTransferAll => 'Transfer all';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '$count playlists — $status';
-  }
 
   @override
   String get plMergeDone => 'Playlists merged.';
@@ -5349,5 +5266,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size MB';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      'Transferring a playlist between services, or from a service to the library, is part of Tune Premium. Duplicating a library playlist stays free.';
+
+  @override
+  String get plPremiumConverter =>
+      'Dated playlist copies and playlist sync links are part of Tune Premium.';
+
+  @override
+  String get plConverterMissing =>
+      'The Playlists converter plugin is not loaded on this server.';
+
+  @override
+  String get plSeeOffer => 'See the offer';
+
+  @override
+  String get plSnapshotsNoDelete =>
+      'The last 10 copies of each playlist are kept; the oldest one is replaced automatically.';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '$ok playlists backed up, $failed failed.';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return 'Recreate “$name” from its most recent copy? The current playlist is neither changed nor deleted.';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '“$name” recreated from its most recent copy.';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count copies',
+      one: '1 copy',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return 'Interval set to $minutes min (15 min to one week, or 0 for on demand).';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tracks added',
+      one: '1 track added',
+      zero: 'no track added',
+    );
+    return 'Sync done: $_temp0.';
   }
 }

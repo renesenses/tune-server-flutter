@@ -3559,42 +3559,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get plLocal => 'Helyi';
 
   @override
-  String get plSourceLabel => 'Forrás';
-
-  @override
-  String get plRestoreSnapshotTitle => 'Pillanatkép visszaállítása';
-
-  @override
-  String get plLocalPlaylistNameLabel => 'Helyi lejátszási lista neve:';
-
-  @override
   String get plRestore => 'Visszaállítás';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '„$name” visszaállítva: $matched megtalálva, $notFound nem található.';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '„$name” lecserélve: $matched megtalálva, $notFound nem található.';
-  }
-
-  @override
-  String get plExistingTitle => 'A lejátszási lista már létezik';
-
-  @override
-  String plExistingBody(String name) {
-    return 'Már létezik „$name” nevű lejátszási lista. Lecseréli?';
-  }
-
-  @override
-  String get plReplace => 'Csere';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return 'Törli a(z) „$name” pillanatképét?';
-  }
 
   @override
   String get plSyncIntervalTitle => 'Automatikus szinkron gyakorisága';
@@ -3615,33 +3580,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String get plNoSyncLinksHint => 'Kapcsolatokat egy átvitelből hozhat létre';
 
   @override
-  String plPlaylistNumber(String id) {
-    return '#$id lejátszási lista';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return 'auto $minutes perc';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return 'Szinkron kész: +$addedLocal/-$removedLocal helyi, +$addedRemote/-$removedRemote távoli';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', $count ütközés',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3659,34 +3599,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get plBackupAll => 'Összes lejátszási lista mentése';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '$playlists lejátszási lista · $tracks szám';
-  }
-
-  @override
   String get plSectionSnapshots => 'PILLANATKÉPEK';
 
   @override
   String get plNoSnapshots =>
       'Nincs pillanatkép. Indítson mentést a létrehozáshoz.';
-
-  @override
-  String get plSectionBatchTransfer => 'CSOPORTOS ÁTVITEL';
-
-  @override
-  String get plBatchTransferHint =>
-      'Egy szolgáltatás összes lejátszási listájának átvitele';
-
-  @override
-  String get plTransferring => 'Átvitel…';
-
-  @override
-  String get plTransferAll => 'Összes átvitele';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '$count lejátszási lista — $status';
-  }
 
   @override
   String get plMergeDone => 'Lejátszási listák egyesítve.';
@@ -5288,5 +5205,64 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size MB';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      'Lejátszási lista átvitele szolgáltatások között, vagy egy szolgáltatásból a könyvtárba, a Tune Premium része. A könyvtár lejátszási listájának másolása továbbra is ingyenes.';
+
+  @override
+  String get plPremiumConverter =>
+      'A lejátszási listák dátumozott másolatai és szinkronizálási kapcsolatai a Tune Premium részei.';
+
+  @override
+  String get plConverterMissing =>
+      'A Playlists converter bővítmény nincs betöltve ezen a szerveren.';
+
+  @override
+  String get plSeeOffer => 'Ajánlat megtekintése';
+
+  @override
+  String get plSnapshotsNoDelete =>
+      'Minden lejátszási lista utolsó 10 másolata megmarad; a legrégebbi automatikusan lecserélődik.';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '$ok lejátszási lista mentve, $failed sikertelen.';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return 'Újra létrehozod a(z) „$name” listát a legutóbbi másolatából? A jelenlegi lista nem módosul és nem törlődik.';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '„$name” újra létrehozva a legutóbbi másolatából.';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count másolat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return 'Időköz $minutes percre állítva (15 perctől egy hétig, vagy 0 a kérésre történő szinkronhoz).';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count szám hozzáadva',
+    );
+    return 'Szinkronizálva: $_temp0.';
   }
 }
