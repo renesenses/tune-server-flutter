@@ -3500,42 +3500,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get plLocal => 'ローカル';
 
   @override
-  String get plSourceLabel => 'ソース';
-
-  @override
-  String get plRestoreSnapshotTitle => 'スナップショットを復元';
-
-  @override
-  String get plLocalPlaylistNameLabel => 'ローカルプレイリスト名:';
-
-  @override
   String get plRestore => '復元';
-
-  @override
-  String plRestoreDone(String name, String matched, String notFound) {
-    return '「$name」を復元しました: $matched 曲が見つかり、$notFound 曲が見つかりません。';
-  }
-
-  @override
-  String plRestoreReplaced(String name, String matched, String notFound) {
-    return '「$name」を置き換えました: $matched 曲が見つかり、$notFound 曲が見つかりません。';
-  }
-
-  @override
-  String get plExistingTitle => 'プレイリストは既に存在します';
-
-  @override
-  String plExistingBody(String name) {
-    return '「$name」というプレイリストは既に存在します。置き換えますか？';
-  }
-
-  @override
-  String get plReplace => '置き換え';
-
-  @override
-  String plDeleteSnapshotBody(String name) {
-    return '「$name」のスナップショットを削除しますか？';
-  }
 
   @override
   String get plSyncIntervalTitle => '自動同期の間隔';
@@ -3556,33 +3521,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get plNoSyncLinksHint => '転送からリンクを作成できます';
 
   @override
-  String plPlaylistNumber(String id) {
-    return 'プレイリスト #$id';
-  }
-
-  @override
   String plAutoEveryMinutes(String minutes) {
     return '自動 $minutes 分';
-  }
-
-  @override
-  String plSyncDone(
-    String addedLocal,
-    String removedLocal,
-    String addedRemote,
-    String removedRemote,
-  ) {
-    return '同期完了: ローカル +$addedLocal/-$removedLocal、リモート +$addedRemote/-$removedRemote';
-  }
-
-  @override
-  String plSyncConflicts(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '、競合 $count 件',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -3600,32 +3540,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get plBackupAll => 'すべてのプレイリストをバックアップ';
 
   @override
-  String plBackupResult(String playlists, String tracks) {
-    return '$playlists プレイリスト · $tracks 曲';
-  }
-
-  @override
   String get plSectionSnapshots => 'スナップショット';
 
   @override
   String get plNoSnapshots => 'スナップショットはありません。バックアップを実行して作成してください。';
-
-  @override
-  String get plSectionBatchTransfer => '一括転送';
-
-  @override
-  String get plBatchTransferHint => 'サービスのすべてのプレイリストを転送';
-
-  @override
-  String get plTransferring => '転送中…';
-
-  @override
-  String get plTransferAll => 'すべて転送';
-
-  @override
-  String plBatchResult(String count, String status) {
-    return '$count プレイリスト — $status';
-  }
 
   @override
   String get plMergeDone => 'プレイリストを結合しました。';
@@ -5195,5 +5113,63 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String cfgSizeMegabytes(String size) {
     return '$size MB';
+  }
+
+  @override
+  String get plPremiumTransfer =>
+      'サービス間、またはサービスからライブラリへのプレイリスト転送は Tune Premium の機能です。ライブラリのプレイリストの複製は引き続き無料です。';
+
+  @override
+  String get plPremiumConverter => 'プレイリストの日付付きコピーと同期リンクは Tune Premium の機能です。';
+
+  @override
+  String get plConverterMissing =>
+      'このサーバーには Playlists converter プラグインが読み込まれていません。';
+
+  @override
+  String get plSeeOffer => 'プランを見る';
+
+  @override
+  String get plSnapshotsNoDelete =>
+      '各プレイリストの最新 10 件のコピーが保存され、最も古いものは自動的に置き換えられます。';
+
+  @override
+  String plBackupAllDone(int ok, int failed) {
+    return '$ok 件のプレイリストを保存、$failed 件失敗しました。';
+  }
+
+  @override
+  String plRestoreRecreateAsk(String name) {
+    return '「$name」を最新のコピーから作り直しますか？現在のプレイリストは変更も削除もされません。';
+  }
+
+  @override
+  String plRestoreRecreated(String name) {
+    return '「$name」を最新のコピーから作り直しました。';
+  }
+
+  @override
+  String plSnapshotCopies(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 件のコピー',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plIntervalAdjusted(int minutes) {
+    return '間隔を $minutes 分に調整しました（15 分〜1 週間、または 0 で手動）。';
+  }
+
+  @override
+  String plLinkSyncDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 曲を追加',
+    );
+    return '同期しました：$_temp0。';
   }
 }
