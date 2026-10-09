@@ -30,6 +30,9 @@ dependencies:
   verrou_multicast:
     path: packages/verrou_multicast
 
+  # --- Sortie « Ce téléphone » : la zone browser jouée ici ---
+  just_audio: ^0.10.2
+
   # --- Permissions médias (READ_MEDIA_AUDIO / READ_MEDIA_IMAGES) ---
   permission_handler: ^11.3.1
 

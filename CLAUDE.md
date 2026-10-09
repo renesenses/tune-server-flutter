@@ -59,6 +59,9 @@ lib/
     ├── android.dart          # flutter_foreground_task, dossiers par défaut
     ├── demarrage.dart        # écran d'attente / d'échec
     ├── preferences.dart      # adresse 127.0.0.1 + bienvenue passée
+    ├── acces_medias.dart     # READ_MEDIA_AUDIO/IMAGES, accès par chemin
+    ├── sortie_telephone.dart # zone « Ce téléphone » (browser) suivie
+    ├── lecteur_just_audio.dart # … et jouée par just_audio
     └── tache_serveur.dart    # isolat du service : verrou multicast, arrêt
 packages/verrou_multicast/    # greffon local : WifiManager.MulticastLock
 ```
@@ -67,6 +70,13 @@ Le **verrou multicast** est pris par le service au premier plan à son
 démarrage et rendu à son arrêt (greffon, donc présent dans le moteur Flutter
 du service même sans activité). Sans lui, un téléphone filtre le multicast
 Wi-Fi : SSDP et mDNS deviennent aveugles. L'émulateur ne filtre pas.
+
+La **sortie « Ce téléphone »** est une zone `output_type = "browser"` (celle du
+client web) : l'application la crée si elle manque, lit son état chaque
+seconde (`GET /zones/{id}`), joue `stream_url` avec just_audio (adresse
+ramenée à 127.0.0.1 pour un flux `/stream/<id>` de Tune), applique le volume,
+et demande la piste suivante (`POST /zones/{id}/next`) en fin de piste, comme
+le client web.
 
 ## Bibliothèques natives Android (`libtuneserver.so`)
 

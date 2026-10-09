@@ -5,7 +5,9 @@ import 'package:tune_remote/tune_remote.dart';
 
 import 'embarque/android.dart';
 import 'embarque/demarrage.dart';
+import 'embarque/lecteur_just_audio.dart';
 import 'embarque/preferences.dart';
+import 'embarque/sortie_telephone.dart';
 
 // ---------------------------------------------------------------------------
 // Tune serveur — le serveur Tune dans le téléphone.
@@ -29,6 +31,8 @@ Future<void> main() async {
         if (dernierAccesMedias?.musique ?? false) {
           unawaited(serveur.lancerScan());
         }
+        // La zone « Ce téléphone », jouée ici par just_audio.
+        unawaited(SortieTelephone(lecteur: LecteurJustAudio()).demarrer());
         // Remplace l'écran de démarrage par l'interface de la télécommande.
         await lancerTune(paquet: 'tune_remote');
       },
