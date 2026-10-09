@@ -48,3 +48,7 @@ app.*.map.json
 /android/key.properties
 **/*.jks
 **/*.keystore
+
+# Surcharge locale de la dépendance tune_remote (Shrek et la CI n'ont pas
+# d'accès git au dépôt privé) : jamais versionnée. Voir scripts/interface-locale.sh.
+pubspec_overrides.yaml

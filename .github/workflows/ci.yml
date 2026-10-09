@@ -33,6 +33,21 @@ jobs:
           channel: stable
           cache: true
 
+      # L'interface vient de tune-remote-flutter, dépôt PRIVÉ, en dépendance
+      # git épinglée (pubspec.yaml). Le jeton par défaut de la CI ne lit que
+      # ce dépôt-ci : il faut un jeton en lecture seule sur l'autre.
+      - name: Accès en lecture à tune-remote-flutter
+        env:
+          JETON: ${{ secrets.TUNE_REMOTE_READ_TOKEN }}
+        run: |
+          if [ -z "$JETON" ]; then
+            echo "::error::Secret TUNE_REMOTE_READ_TOKEN absent : impossible de lire tune-remote-flutter (dépendance de l'interface)."
+            exit 1
+          fi
+          git config --global \
+            url."https://x-access-token:${JETON}@github.com/renesenses/tune-remote-flutter".insteadOf \
+            "https://github.com/renesenses/tune-remote-flutter"
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -41,3 +56,10 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: Greffon local verrou_multicast
+        working-directory: packages/verrou_multicast
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
