@@ -1,0 +1,23 @@
+name: verrou_multicast
+description: "Le WifiManager.MulticastLock d'Android, tenu pendant que le serveur Tune tourne."
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.3
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.mozaiklabs.verrou_multicast
+        pluginClass: VerrouMulticastPlugin
