@@ -11,8 +11,15 @@
 #
 # Ce script rend l'accident impossible côté distribution : il échoue — il
 # n'avertit pas — dès que les `.so` embarqués ne correspondent plus à la version
-# déclarée dans `pubspec.yaml`. Il est appelé par la CI, par la release et par
+# déclarée (aujourd'hui dans `tune-engine.version`). Il est appelé par la CI, par la release et par
 # `preBuild` de Gradle : aucun APK ne peut donc sortir avec un moteur périmé.
+#
+# Depuis l'application « Tune serveur » (09/10/2026), l'interface vient de la
+# télécommande (`tune-remote-flutter`) et n'a plus le numéro de version du
+# moteur : la version ATTENDUE des `.so` n'est donc plus lue dans
+# `pubspec.yaml` mais dans `tune-engine.version`, à la racine du dépôt. C'est
+# le tag de `tune-server-rust` dont la bibliothèque est construite. Seule
+# l'ABI arm64-v8a est livrée (l'émulateur ARM64 du Mac comme les téléphones).
 #
 # Usage :
 #   scripts/check-native-libs.sh            # vérifie (code de sortie 1 si dérive)
@@ -28,9 +35,13 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 JNI_DIR="$REPO_ROOT/android/app/src/main/jniLibs"
 MANIFEST="$JNI_DIR/tune-native.manifest"
-PUBSPEC="$REPO_ROOT/pubspec.yaml"
+ENGINE_VERSION_FILE="$REPO_ROOT/tune-engine.version"
 
-ABIS="arm64-v8a armeabi-v7a x86_64"
+# arm64 seulement : les .so v7a (24 Mo) et x86_64 (42 Mo) ne servaient qu'aux
+# vieux téléphones 32 bits et à l'émulateur x86. Gradle filtre les ABI
+# (`abiFilters` dans android/app/build.gradle.kts) : l'APK ne s'installe pas
+# là où la bibliothèque manquerait.
+ABIS="arm64-v8a"
 
 MODE="check"
 if [ "${1:-}" = "--update" ]; then
@@ -50,7 +61,8 @@ fail() {
     done
     echo "" >&2
     echo "   Pour repartir d'un état sain :" >&2
-    echo "     1. dans tune-server-rust : ./tune-ffi/build-android.sh --release" >&2
+    echo "     1. dans tune-server-rust, au tag de tune-engine.version :" >&2
+    echo "        cargo build -p tune-ffi --target aarch64-linux-android --release" >&2
     echo "     2. ici                   : scripts/check-native-libs.sh --update" >&2
     echo "     3. committer les .so ET android/app/src/main/jniLibs/tune-native.manifest" >&2
     echo "" >&2
@@ -78,13 +90,12 @@ so_contains_version() {
     LC_ALL=C grep -a -q -F "$2" "$1"
 }
 
-[ -f "$PUBSPEC" ] || { echo "ERREUR : $PUBSPEC introuvable" >&2; exit 2; }
+[ -f "$ENGINE_VERSION_FILE" ] || { echo "ERREUR : $ENGINE_VERSION_FILE introuvable" >&2; exit 2; }
 
-# `version: 0.9.76+497` → `0.9.76`. Le numéro de build (+N) ne concerne que les
-# stores, pas le moteur natif.
-WANT_VERSION="$(grep -E '^version:' "$PUBSPEC" | head -1 | sed -e 's/^version:[[:space:]]*//' -e 's/+.*$//' -e 's/[[:space:]]*$//')"
+# Première ligne non vide et non commentée : `1.0.0-rc3`.
+WANT_VERSION="$(grep -v -E '^[[:space:]]*(#|$)' "$ENGINE_VERSION_FILE" | head -1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 if [ -z "$WANT_VERSION" ]; then
-    echo "ERREUR : version illisible dans $PUBSPEC" >&2
+    echo "ERREUR : version illisible dans $ENGINE_VERSION_FILE" >&2
     exit 2
 fi
 
@@ -96,7 +107,7 @@ if [ "$MODE" = "update" ]; then
     {
         echo "# Empreinte des bibliothèques natives embarquées (libtuneserver.so)."
         echo "# Générée par scripts/check-native-libs.sh --update — ne pas éditer à la main."
-        echo "# Toute dérive entre cette empreinte et pubspec.yaml fait ÉCHOUER le build (#1751)."
+        echo "# Toute dérive entre cette empreinte et tune-engine.version fait ÉCHOUER le build (#1751)."
         echo "version=$WANT_VERSION"
     } > "$TMP_MANIFEST"
 
@@ -134,7 +145,7 @@ if [ -z "$HAVE_VERSION" ]; then
 fi
 
 if [ "$HAVE_VERSION" != "$WANT_VERSION" ]; then
-    fail "pubspec.yaml construit la version $WANT_VERSION," \
+    fail "tune-engine.version attend le moteur $WANT_VERSION," \
          "mais les bibliothèques natives embarquées sont celles de $HAVE_VERSION." \
          "C'est exactement l'accident du 15/08 : interface récente, moteur périmé."
 fi
@@ -166,4 +177,4 @@ for ABI in $ABIS; do
     echo "  ✓ $ABI — libtuneserver.so v$WANT_VERSION (${ACTUAL:0:16}…)"
 done
 
-echo "Bibliothèques natives conformes : v$WANT_VERSION sur les trois ABI."
+echo "Bibliothèques natives conformes : v$WANT_VERSION ($ABIS)."

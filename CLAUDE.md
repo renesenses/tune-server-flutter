@@ -71,24 +71,33 @@ ARB files in `lib/l10n/app_*.arb`, generated classes in `lib/l10n/app_localizati
 
 ## Bibliothèques natives Android (`libtuneserver.so`)
 
-Les trois `.so` du serveur Rust sont **versionnés dans ce dépôt**
-(`android/app/src/main/jniLibs/<abi>/libtuneserver.so`). Leur empreinte est
-figée dans `android/app/src/main/jniLibs/tune-native.manifest`.
+Le moteur est le serveur Rust (caisse `tune-ffi` de `tune-server-rust`),
+chargé par Dart FFI. **Une seule ABI est livrée : arm64-v8a**
+(`android/app/src/main/jniLibs/arm64-v8a/libtuneserver.so`) ; Gradle filtre
+les ABI (`abiFilters`) pour que l'APK ne s'installe pas là où elle manque.
 
-`scripts/check-native-libs.sh` **fait échouer** tout build Android dont les
-`.so` ne portent pas la version de `pubspec.yaml` — branché sur `preBuild`
-(Gradle), sur la CI et sur la release. Ce n'est pas un avertissement.
+La version attendue du moteur est le tag Rust écrit dans
+**`tune-engine.version`** (racine du dépôt), et non plus la version de
+`pubspec.yaml` : l'interface vient de `tune-remote-flutter` et suit son propre
+numéro. L'empreinte est figée dans `android/app/src/main/jniLibs/tune-native.manifest`.
 
-Après avoir reconstruit les `.so` (`./tune-ffi/build-android.sh --release`
-dans `tune-server-rust`) :
+`scripts/check-native-libs.sh` **fait échouer** tout build Android dont la
+`.so` ne porte pas cette version, ou dont l'empreinte a changé — branché sur
+`preBuild` (Gradle) et sur la CI. Ce n'est pas un avertissement (#1751).
+
+Reconstruire (sur Shrek, NDK r28c, cf. `tune-ffi/build-android.sh` pour
+l'environnement CMake/opus) :
 
 ```bash
+# dans tune-server-rust, au tag de tune-engine.version
+TUNE_VERSION=<tag sans v> cargo build -p tune-ffi --target aarch64-linux-android --release
+# ici
+cp …/libtuneserver.so android/app/src/main/jniLibs/arm64-v8a/
 scripts/check-native-libs.sh --update   # régénère l'empreinte
 ```
 
-puis committer **les `.so` ET le manifeste**. `--update` refuse de tamponner
-une bibliothèque qui ne contient pas la version attendue : un build cassé ne
-peut donc pas se faire passer pour un build à jour (#1751).
+puis committer **la `.so`, le manifeste et `tune-engine.version`**. `--update`
+refuse de tamponner une bibliothèque qui ne contient pas la version attendue.
 
 ## CRITICAL RULES
 
