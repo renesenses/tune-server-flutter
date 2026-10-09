@@ -10,6 +10,12 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <!-- Pochettes posées à côté des albums (folder.jpg, cover.jpg).
+         Pas de MANAGE_EXTERNAL_STORAGE : la politique Play le refuse pour
+         l'accès aux médias. Accès partiel aux images d'Android 14
+         (« certaines photos ») : à vérifier sur appareil, il pourrait
+         cacher des pochettes au scan. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
     <!-- Foreground service (serveur HTTP embarqué + audio en arrière-plan) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -22,7 +28,6 @@
         android:label="Tune serveur"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true"
         android:networkSecurityConfig="@xml/network_security_config">
 
         <activity

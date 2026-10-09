@@ -118,6 +118,24 @@ class ServeurEmbarque {
     return false;
   }
 
+  /// Demande un scan de la bibliothèque (`POST /system/scan`).
+  ///
+  /// Le moteur en bibliothèque ne scanne pas tout seul au démarrage (le scan
+  /// de démarrage est lancé par le binaire, pas par `tune-ffi`) : sans cet
+  /// appel, la musique du téléphone n'apparaissait qu'après un scan demandé à
+  /// la main. Le scan est incrémental : le relancer à chaque ouverture ne
+  /// relit que ce qui a changé. `false` si le serveur a refusé.
+  Future<bool> lancerScan() async {
+    try {
+      final r = await _client
+          .post(Uri.parse('$adresseLocale/api/v1/system/scan'))
+          .timeout(const Duration(seconds: 10));
+      return r.statusCode >= 200 && r.statusCode < 300;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> arreter() async {
     try {
       moteur().arreter();

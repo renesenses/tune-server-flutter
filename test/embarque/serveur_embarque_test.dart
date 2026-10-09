@@ -150,4 +150,26 @@ void main() {
     expect(moteur.arrets, 1);
     expect(service.arrets, 1);
   });
+
+  test('lancerScan poste /system/scan', () async {
+    http.Request? recue;
+    final ok = await _serveur(
+      () => _Moteur(0),
+      client: MockClient((r) async {
+        recue = r;
+        return http.Response('{"status":"scanning"}', 200);
+      }),
+    ).lancerScan();
+    expect(ok, isTrue);
+    expect(recue?.method, 'POST');
+    expect(recue?.url.toString(), '$adresseLocale/api/v1/system/scan');
+  });
+
+  test('lancerScan ne lève pas si le serveur est absent', () async {
+    final ok = await _serveur(
+      () => _Moteur(0),
+      client: MockClient((_) async => throw http.ClientException('refusé')),
+    ).lancerScan();
+    expect(ok, isFalse);
+  });
 }
