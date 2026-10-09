@@ -30,7 +30,9 @@ void main() {
         .map((d) => d.uri.pathSegments.where((s) => s.isNotEmpty).last)
         .toList();
     expect(abis, ['arm64-v8a']);
-    final gradle = File('$racine/android/app/build.gradle.kts').readAsStringSync();
+    final gradle = File(
+      '$racine/android/app/build.gradle.kts',
+    ).readAsStringSync();
     expect(gradle, contains('abiFilters += listOf("arm64-v8a")'));
   });
 
@@ -64,8 +66,9 @@ void main() {
       depot = Directory.systemTemp.createTempSync('garde_native_');
       Directory('${depot.path}/scripts').createSync();
       File(script).copySync('${depot.path}/scripts/check-native-libs.sh');
-      File('${depot.path}/tune-engine.version')
-          .writeAsStringSync('# commentaire\n1.0.0-rc3\n');
+      File(
+        '${depot.path}/tune-engine.version',
+      ).writeAsStringSync('# commentaire\n1.0.0-rc3\n');
       final dossier = Directory(
         '${depot.path}/android/app/src/main/jniLibs/arm64-v8a',
       )..createSync(recursive: true);
