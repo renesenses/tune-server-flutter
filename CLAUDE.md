@@ -58,8 +58,15 @@ lib/
     ├── serveur_embarque.dart # service + moteur + attente de /system/health
     ├── android.dart          # flutter_foreground_task, dossiers par défaut
     ├── demarrage.dart        # écran d'attente / d'échec
-    └── preferences.dart      # adresse 127.0.0.1 + bienvenue passée
+    ├── preferences.dart      # adresse 127.0.0.1 + bienvenue passée
+    └── tache_serveur.dart    # isolat du service : verrou multicast, arrêt
+packages/verrou_multicast/    # greffon local : WifiManager.MulticastLock
 ```
+
+Le **verrou multicast** est pris par le service au premier plan à son
+démarrage et rendu à son arrêt (greffon, donc présent dans le moteur Flutter
+du service même sans activité). Sans lui, un téléphone filtre le multicast
+Wi-Fi : SSDP et mDNS deviennent aveugles. L'émulateur ne filtre pas.
 
 ## Bibliothèques natives Android (`libtuneserver.so`)
 

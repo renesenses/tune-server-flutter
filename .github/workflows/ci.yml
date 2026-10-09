@@ -56,3 +56,10 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: Greffon local verrou_multicast
+        working-directory: packages/verrou_multicast
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test

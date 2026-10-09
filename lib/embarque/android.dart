@@ -7,7 +7,10 @@ import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:verrou_multicast/verrou_multicast.dart';
+
 import 'moteur_natif.dart';
+import 'tache_serveur.dart';
 import 'serveur_embarque.dart';
 
 /// Le serveur tel que l'application le lance sur un téléphone.
@@ -97,29 +100,11 @@ class ServiceAvantPlanAndroid implements ServiceAvantPlan {
 
 @pragma('vm:entry-point')
 void _rappelDuService() {
-  FlutterForegroundTask.setTaskHandler(_TacheServeur());
-}
-
-/// Tourne dans l'isolat du service. Il ne démarre rien : le moteur est lancé
-/// par l'interface. Il l'ARRÊTE quand le service s'arrête (bouton de la
-/// notification, arrêt par le système) — le serveur ne doit pas survivre à
-/// sa notification.
-class _TacheServeur extends TaskHandler {
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {}
-
-  @override
-  void onRepeatEvent(DateTime timestamp) {}
-
-  @override
-  void onNotificationButtonPressed(String id) {
-    if (id == 'arreter') FlutterForegroundTask.stopService();
-  }
-
-  @override
-  Future<void> onDestroy(DateTime timestamp) async {
-    try {
-      MoteurNatif.charger().arreter();
-    } catch (_) {}
-  }
+  FlutterForegroundTask.setTaskHandler(
+    TacheServeur(
+      verrou: const VerrouMulticast(),
+      arreterMoteur: () => MoteurNatif.charger().arreter(),
+      arreterService: FlutterForegroundTask.stopService,
+    ),
+  );
 }
