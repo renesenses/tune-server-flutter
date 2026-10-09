@@ -1,94 +1,95 @@
-# CLAUDE.md — Tune Server Flutter
+# CLAUDE.md — Tune serveur (Flutter, Android)
 
-## Project
+## Projet
 
-Flutter multiplatform app (iOS + Android) for the Tune music server. Operates as an **embedded server** with local playback — NOT a remote client. Includes full library scanning, playback, streaming services, zone management, and multi-room grouping.
+Application Android « Tune serveur » : **le serveur Tune dans le téléphone**.
+
+- **Moteur** : le serveur Rust (`libtuneserver.so`, caisse `tune-ffi` de
+  `tune-server-rust`), chargé par Dart FFI et lancé derrière un service au
+  premier plan de type `mediaPlayback` (`flutter_foreground_task`).
+- **Interface** : celle de la télécommande **`tune-remote-flutter`**, prise en
+  dépendance et **jamais recopiée**. Elle parle au moteur sur
+  `http://127.0.0.1:8888`, exactement comme à un serveur du réseau ; les autres
+  appareils joignent le téléphone sur son port 8888.
+
+Le moteur Dart historique (`lib/server`, Drift, shelf…) a été retiré le
+09/10/2026 (go de Bertrand) : le mode serveur est désormais le moteur Rust.
+
+## L'interface : `tune_remote` en dépendance git épinglée
+
+`pubspec.yaml` prend `tune_remote` par git, **épinglé sur un commit** (`ref:`).
+Pourquoi cette méthode plutôt qu'un sous-module ou un paquet extrait :
+- un seul code d'interface, aucune synchronisation à la main ;
+- la version prise est explicite et rejouable (`ref` + `pubspec.lock`), et la
+  monter est un changement d'une ligne, relu en PR et rejoué par la CI ;
+- pas d'état de sous-module à oublier (`git submodule update`), pas de nouveau
+  dépôt (interdit) ;
+- pub résout les dépendances de l'interface (Riverpod, http…) avec les nôtres.
+
+Côté télécommande, `lancerTune(paquet: 'tune_remote')` lance l'interface ;
+`Jetons.paquet` fait résoudre polices et logos sous `packages/tune_remote/`.
+
+**Monter l'interface** : changer `ref:` (et la ligne `tune_remote` de
+`pubspec.lock`), puis tests.
+
+**Machines sans accès git au dépôt privé** (Shrek) : extraire le commit épinglé
+et pointer dessus par `scripts/interface-locale.sh <copie>`, qui écrit
+`pubspec_overrides.yaml` (ignoré par git) et refuse une copie à un autre commit.
+La CI lit le dépôt privé avec le secret `TUNE_REMOTE_READ_TOKEN`.
 
 ## Build
 
 ```bash
 flutter pub get
-flutter run               # debug
-flutter build apk         # Android release
-flutter build ios         # iOS release
+flutter test
+flutter build apk --release --target-platform android-arm64
 ```
 
-- **Flutter SDK**: ^3.11.3, Dart ^3.11.3
-- **Min targets**: iOS 16.0, Android SDK 24
+Tout se compile et se teste sur Shrek (`~/sdk/flutter-3.44.9`, SDK Android
+dans `~/android/sdk`, JDK dans `~/android/jdk21`).
 
 ## Architecture
 
 ```
 lib/
-├── main.dart              # Entry point, Provider setup
-├── models/
-│   └── domain_models.dart # ZoneWithState, PlaybackState, OutputType
-├── server/
-│   ├── database/          # Drift (SQLite ORM)
-│   │   ├── schema.dart    # Tables: zones, tracks, albums, artists, playlists, play_queue
-│   │   └── repositories/  # ZoneRepository, TrackRepository, etc.
-│   ├── zones/
-│   │   ├── zone_manager.dart   # Zone lifecycle, grouping, output management
-│   │   └── zone_instance.dart  # Player + Queue + Output per zone
-│   ├── playback/          # Player, PlayQueue
-│   ├── event_bus.dart     # Async pub/sub events
-│   └── outputs/           # OutputTarget: local, DLNA, Bluetooth
-├── state/
-│   ├── app_state.dart     # Central ChangeNotifier, all actions
-│   └── zone_state.dart    # Zone list, current zone, groups
-├── views/
-│   ├── zones/zones_view.dart        # Zone management + multiroom grouping
-│   ├── library/                     # Albums, artists, tracks views
-│   ├── streaming/                   # Tidal, Qobuz, YouTube views
-│   ├── radios/                      # Radio stations
-│   ├── settings/                    # Settings view
-│   └── iphone_content_view.dart     # Tab navigation (iPhone)
-│       ipad_content_view.dart       # Sidebar navigation (iPad)
-└── l10n/                  # 8 languages: en, fr, de, es, it, zh, ko, ja
+├── main.dart                 # démarre le moteur, puis lancerTune()
+└── embarque/
+    ├── moteur_natif.dart     # liaisons FFI (5 fonctions C)
+    ├── serveur_embarque.dart # service + moteur + attente de /system/health
+    ├── android.dart          # flutter_foreground_task, dossiers par défaut
+    ├── demarrage.dart        # écran d'attente / d'échec
+    └── preferences.dart      # adresse 127.0.0.1 + bienvenue passée
 ```
-
-## Key Patterns
-
-- **State management**: Provider + ChangeNotifier (NOT Riverpod or Bloc)
-- **Database**: Drift (SQLite ORM, equivalent to GRDB on iOS)
-- **Audio**: just_audio for local playback
-- **HTTP Server**: shelf + shelf_router (embedded, not connecting to remote)
-- **Events**: EventBus with typed events (ZoneCreatedEvent, PlaybackStartedEvent, etc.)
-- **Zone grouping**: groupId + syncDelayMs fields on Zone table, ZoneGroup model in zone_state.dart
-
-## Dependencies
-
-- `drift` (2.20+) — SQLite database
-- `just_audio` (0.10+) — Audio playback
-- `shelf` + `shelf_router` — Embedded HTTP server
-- `provider` (6.1+) — State management
-- `flutter_localizations` — i18n
-
-## Localization
-
-ARB files in `lib/l10n/app_*.arb`, generated classes in `lib/l10n/app_localizations_*.dart`.
-8 languages supported. Add strings to all `.arb` files + regenerate with `flutter gen-l10n`.
 
 ## Bibliothèques natives Android (`libtuneserver.so`)
 
-Les trois `.so` du serveur Rust sont **versionnés dans ce dépôt**
-(`android/app/src/main/jniLibs/<abi>/libtuneserver.so`). Leur empreinte est
-figée dans `android/app/src/main/jniLibs/tune-native.manifest`.
+Le moteur est le serveur Rust (caisse `tune-ffi` de `tune-server-rust`),
+chargé par Dart FFI. **Une seule ABI est livrée : arm64-v8a**
+(`android/app/src/main/jniLibs/arm64-v8a/libtuneserver.so`) ; Gradle filtre
+les ABI (`abiFilters`) pour que l'APK ne s'installe pas là où elle manque.
 
-`scripts/check-native-libs.sh` **fait échouer** tout build Android dont les
-`.so` ne portent pas la version de `pubspec.yaml` — branché sur `preBuild`
-(Gradle), sur la CI et sur la release. Ce n'est pas un avertissement.
+La version attendue du moteur est le tag Rust écrit dans
+**`tune-engine.version`** (racine du dépôt), et non plus la version de
+`pubspec.yaml` : l'interface vient de `tune-remote-flutter` et suit son propre
+numéro. L'empreinte est figée dans `android/app/src/main/jniLibs/tune-native.manifest`.
 
-Après avoir reconstruit les `.so` (`./tune-ffi/build-android.sh --release`
-dans `tune-server-rust`) :
+`scripts/check-native-libs.sh` **fait échouer** tout build Android dont la
+`.so` ne porte pas cette version, ou dont l'empreinte a changé — branché sur
+`preBuild` (Gradle) et sur la CI. Ce n'est pas un avertissement (#1751).
+
+Reconstruire (sur Shrek, NDK r28c, cf. `tune-ffi/build-android.sh` pour
+l'environnement CMake/opus) :
 
 ```bash
+# dans tune-server-rust, au tag de tune-engine.version
+TUNE_VERSION=<tag sans v> cargo build -p tune-ffi --target aarch64-linux-android --release
+# ici
+cp …/libtuneserver.so android/app/src/main/jniLibs/arm64-v8a/
 scripts/check-native-libs.sh --update   # régénère l'empreinte
 ```
 
-puis committer **les `.so` ET le manifeste**. `--update` refuse de tamponner
-une bibliothèque qui ne contient pas la version attendue : un build cassé ne
-peut donc pas se faire passer pour un build à jour (#1751).
+puis committer **la `.so`, le manifeste et `tune-engine.version`**. `--update`
+refuse de tamponner une bibliothèque qui ne contient pas la version attendue.
 
 ## CRITICAL RULES
 
