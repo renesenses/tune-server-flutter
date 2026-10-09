@@ -1,0 +1,3 @@
+# Tag de tune-server-rust dont est construite libtuneserver.so (arm64-v8a).
+# Lu par scripts/check-native-libs.sh : la bibliothèque DOIT contenir cette chaîne.
+1.0.0-rc3
