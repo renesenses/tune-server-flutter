@@ -33,6 +33,7 @@
   "playbackErrorZoneNotFound": "未找到区域",
   "playbackErrorFailed": "播放失败",
   "zoneLimitReached": "免费版限制为 {limit} 个区域 — 升级到高级版可无限使用",
+  "zoneLimitOverCap": "您现有的 {current} 个区域仍可正常使用，但免费版上限为 {limit} 个 — 请删除一个区域或升级到高级版以添加新区域",
   "navLibrary": "媒体库",
   "navSearch": "搜索",
   "navStreaming": "流媒体",

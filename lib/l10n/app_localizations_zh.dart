@@ -110,6 +110,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String zoneLimitOverCap(int current, int limit) {
+    return '您现有的 $current 个区域仍可正常使用，但免费版上限为 $limit 个 — 请删除一个区域或升级到高级版以添加新区域';
+  }
+
+  @override
   String get navLibrary => '媒体库';
 
   @override

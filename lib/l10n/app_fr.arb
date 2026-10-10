@@ -33,6 +33,7 @@
   "playbackErrorZoneNotFound": "Zone introuvable",
   "playbackErrorFailed": "Échec de lecture",
   "zoneLimitReached": "Offre gratuite limitée à {limit} zones — passez à Premium pour un nombre illimité",
+  "zoneLimitOverCap": "Vos {current} zones continuent de fonctionner, mais l'offre gratuite en autorise {limit} — supprimez-en une ou passez à Premium pour en ajouter une nouvelle",
   "navLibrary": "Bibliothèque",
   "navSearch": "Recherche",
   "navStreaming": "Streaming",

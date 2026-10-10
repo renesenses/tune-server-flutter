@@ -110,6 +110,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String zoneLimitOverCap(int current, int limit) {
+    return '기존 $current개 존은 계속 사용할 수 있지만 무료 플랜의 한도는 $limit개입니다 — 새로 추가하려면 존을 삭제하거나 Premium으로 업그레이드하세요';
+  }
+
+  @override
   String get navLibrary => '라이브러리';
 
   @override

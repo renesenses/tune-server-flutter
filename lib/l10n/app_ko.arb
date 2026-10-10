@@ -33,6 +33,7 @@
   "playbackErrorZoneNotFound": "존을 찾을 수 없음",
   "playbackErrorFailed": "재생 실패",
   "zoneLimitReached": "무료 플랜은 {limit}개 존으로 제한됩니다 — 무제한을 원하면 Premium으로 업그레이드",
+  "zoneLimitOverCap": "기존 {current}개 존은 계속 사용할 수 있지만 무료 플랜의 한도는 {limit}개입니다 — 새로 추가하려면 존을 삭제하거나 Premium으로 업그레이드하세요",
   "navLibrary": "라이브러리",
   "navSearch": "검색",
   "navStreaming": "스트리밍",

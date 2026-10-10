@@ -111,6 +111,11 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String zoneLimitOverCap(int current, int limit) {
+    return 'A meglévő $current zónád továbbra is működik, az ingyenes csomag azonban $limit zónát enged — törölj egyet, vagy válts Premiumra új hozzáadásához';
+  }
+
+  @override
   String get navLibrary => 'Gyűjtemény';
 
   @override

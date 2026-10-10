@@ -103,9 +103,17 @@ class LicenseState {
 /// State is loaded once from the settings table via [load]; query accessors
 /// then read the in-memory snapshot synchronously. Mutators persist to settings.
 class LicenseManager {
-  /// Max zones on the Free tier. Kept at 10 to match the Rust server for now
-  /// (single source of truth for the freemium cap across platforms).
-  static const int freeMaxZones = 10;
+  /// Max zones on the Free tier.
+  ///
+  /// The single source of truth is **not** this file: it is
+  /// `DEFAULT_FREE_MAX_ZONES` in the Rust server (`tune-core/src/license.rs`),
+  /// which this constant mirrors. Any change there has to be replayed here.
+  ///
+  /// History (#4077): this sat at `10` while the server enforced `3`, behind a
+  /// comment that claimed the opposite. Android free installs could therefore
+  /// create up to ten zones. Lowering it to 3 only gates **new** creations —
+  /// zones already persisted above the cap are kept, see [zonesOverFreeCap].
+  static const int freeMaxZones = 3;
 
   /// Offline grace: premium is honoured this many days past the last successful
   /// server confirmation before degrading to Free.
@@ -162,9 +170,22 @@ class LicenseManager {
   /// All premium features require the effective Premium tier.
   bool checkFeature() => isPremium;
 
-  /// Whether adding a new zone is allowed given the current zone count.
+  /// Whether adding a **new** zone is allowed given the current zone count.
   /// Free: max [freeMaxZones]. Premium: unlimited.
+  ///
+  /// This is a creation gate only. It never asks the caller to remove existing
+  /// zones — see [zonesOverFreeCap] for the grandfathered case.
   bool checkZoneLimit(int currentCount) => _checkZoneLimit(_state, currentCount);
+
+  /// Whether this install already carries **more** zones than the Free cap
+  /// allows — the grandfathered state left behind when #4077 lowered the cap
+  /// from 10 to 3.
+  ///
+  /// Those zones are kept: they are instantiated at bootstrap, keep playing and
+  /// are never deleted or hidden by the licence code. Only the creation of a
+  /// further zone is refused, with a message that says so.
+  bool zonesOverFreeCap(int currentCount) =>
+      _zonesOverFreeCap(_state, currentCount);
 
   /// Snapshot for API/UI. `tier` reflects the *effective* tier.
   LicenseState get licenseState {
@@ -320,10 +341,20 @@ Tier _effectiveTier(LicenseState s) {
 }
 
 /// Pure zone-limit rule: Premium unlimited, Free capped at [LicenseManager.freeMaxZones].
+///
+/// Deliberately a *creation* gate: it compares the count at the moment a new
+/// zone is asked for. It is never applied to the persisted set, so an install
+/// that already holds more zones than the cap keeps every one of them.
 bool _checkZoneLimit(LicenseState s, int currentCount) =>
     _effectiveTier(s) == Tier.premium
         ? true
         : currentCount < LicenseManager.freeMaxZones;
+
+/// Pure grandfathering rule: a Free install holding strictly more zones than
+/// the cap. Premium is never over the cap (it has none).
+bool _zonesOverFreeCap(LicenseState s, int currentCount) =>
+    _effectiveTier(s) != Tier.premium &&
+    currentCount > LicenseManager.freeMaxZones;
 
 /// Whether the account premium (SSO) currently counts as active: flag set, its
 /// subscription not past, and last confirmed within the offline grace window.
@@ -349,13 +380,25 @@ String _nowIso() => DateTime.now().toUtc().toIso8601String();
 
 /// Thrown by the zone manager when a Free-tier user tries to exceed
 /// [LicenseManager.freeMaxZones] zones.
+///
+/// Carries [currentCount] so the UI can tell the two situations apart: a user
+/// standing exactly at the cap, and a user grandfathered *above* it by #4077,
+/// who must not be told "limited to 3 zones" while seven of them are playing.
 class ZoneLimitException implements Exception {
   final int limit;
-  const ZoneLimitException(this.limit);
+
+  /// Number of zones the install held when the creation was refused.
+  final int currentCount;
+
+  const ZoneLimitException(this.limit, this.currentCount);
+
+  /// True when the install predates the cap being lowered: existing zones are
+  /// kept, only new ones are refused.
+  bool get isGrandfathered => currentCount > limit;
 
   @override
-  String toString() =>
-      'ZoneLimitException: free tier limited to $limit zones';
+  String toString() => 'ZoneLimitException: free tier limited to $limit zones '
+      '(install holds $currentCount)';
 }
 
 /// Expose the pure helpers to tests without leaking them into the public API.
@@ -366,3 +409,6 @@ bool isExpiredForTest(String timestamp, int days) => _isExpired(timestamp, days)
 @visibleForTesting
 bool checkZoneLimitForTest(LicenseState s, int currentCount) =>
     _checkZoneLimit(s, currentCount);
+@visibleForTesting
+bool zonesOverFreeCapForTest(LicenseState s, int currentCount) =>
+    _zonesOverFreeCap(s, currentCount);
