@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -10,43 +11,45 @@ import '../helpers/tune_fonts.dart';
 // Smart AutoPlay mood picker bottom sheet
 // ---------------------------------------------------------------------------
 
-/// Mood descriptor: API key, display label, emoji, accent color.
+/// Mood descriptor: API key, emoji, accent color (label localised).
 class _Mood {
   final String key;
-  final String label;
   final String emoji;
   final Color color;
 
   const _Mood({
     required this.key,
-    required this.label,
     required this.emoji,
     required this.color,
   });
+
+  String label(AppLocalizations l) => switch (key) {
+        'calm' => l.npMoodChill,
+        'party' => l.npMoodParty,
+        'focus' => l.npMoodFocus,
+        'energetic' => l.npMoodEnergetic,
+        _ => key,
+      };
 }
 
 const _moods = [
   _Mood(
     key: 'calm',
-    label: 'Chill',
     emoji: '🌙',
     color: Color(0xFF6366f1), // indigo
   ),
   _Mood(
     key: 'party',
-    label: 'Party',
     emoji: '🎉',
     color: Color(0xFFf59e0b), // amber
   ),
   _Mood(
     key: 'focus',
-    label: 'Focus',
     emoji: '🎯',
     color: Color(0xFF8b5cf6), // purple
   ),
   _Mood(
     key: 'energetic',
-    label: 'Energetic',
     emoji: '⚡',
     color: Color(0xFFef4444), // red
   ),
@@ -77,6 +80,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
   Future<void> _selectMood(BuildContext context, _Mood mood) async {
     if (_loadingMoodKey != null) return;
 
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final zoneState = context.read<ZoneState>();
     final messenger = ScaffoldMessenger.of(context);
@@ -87,7 +91,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
 
     if (api == null || zoneId == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Aucune zone disponible')),
+        SnackBar(content: Text(l.npNoZoneAvailable)),
       );
       return;
     }
@@ -104,7 +108,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
       if (tracks.isEmpty) {
         if (mounted) {
           messenger.showSnackBar(
-            SnackBar(content: Text('Aucun titre trouvé pour ${mood.label}')),
+            SnackBar(content: Text(l.npMoodNoTracks(mood.label(l)))),
           );
         }
         return;
@@ -118,7 +122,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
       if (trackIds.isEmpty) {
         if (mounted) {
           messenger.showSnackBar(
-            const SnackBar(content: Text('Erreur : IDs de pistes invalides')),
+            SnackBar(content: Text(l.npMoodInvalidTrackIds)),
           );
         }
         return;
@@ -140,8 +144,9 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              '${mood.label} Mix : ${trackIds.length} titres '
-              '${queueIsEmpty ? "en lecture" : "ajoutés à la queue"}',
+              queueIsEmpty
+                  ? l.npMoodMixPlaying(mood.label(l), trackIds.length)
+                  : l.npMoodMixQueued(mood.label(l), trackIds.length),
             ),
             backgroundColor: mood.color,
             duration: const Duration(seconds: 3),
@@ -152,7 +157,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Erreur Smart AutoPlay : $e'),
+            content: Text(l.npSmartAutoplayError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -192,7 +197,7 @@ class _SmartAutoPlaySheetState extends State<SmartAutoPlaySheet> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Choisissez une ambiance pour générer une playlist intelligente',
+            AppLocalizations.of(context).npSmartAutoplayDesc,
             style: TuneFonts.caption.copyWith(color: TuneColors.textSecondary),
           ),
           const SizedBox(height: 20),
@@ -274,7 +279,7 @@ class _MoodButton extends StatelessWidget {
                       style: const TextStyle(fontSize: 22)),
                 const SizedBox(width: 10),
                 Text(
-                  mood.label,
+                  mood.label(AppLocalizations.of(context)),
                   style: TuneFonts.body.copyWith(
                     color: mood.color,
                     fontWeight: FontWeight.w600,

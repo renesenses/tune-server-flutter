@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/event_bus.dart';
 import '../../server/playback/sleep_timer.dart';
 import '../../state/app_state.dart';
@@ -94,6 +95,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
   }
 
   Future<void> _startTimer(int minutes) async {
+    final l = AppLocalizations.of(context);
     setState(() => _busy = true);
 
     final app = context.read<AppState>();
@@ -115,20 +117,20 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sleep timer set: $minutes min'
-              ' (fade: ${_fadeDuration.round()}s)'),
+          content: Text(l.npSleepTimerSet(minutes, _fadeDuration.round())),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sleep timer error: $e')),
+        SnackBar(content: Text(l.npSleepTimerError(e.toString()))),
       );
     }
   }
 
   Future<void> _cancelTimer() async {
+    final l = AppLocalizations.of(context);
     setState(() => _busy = true);
 
     final app = context.read<AppState>();
@@ -148,19 +150,20 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sleep timer cancelled')),
+        SnackBar(content: Text(l.npSleepTimerCancelled)),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text(l.errorWith(e.toString()))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -191,7 +194,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
               const Icon(Icons.bedtime_rounded,
                   size: 22, color: TuneColors.accent),
               const SizedBox(width: 8),
-              const Text('Sleep Timer', style: TuneFonts.title3),
+              Text(l.npSleepTimer, style: TuneFonts.title3),
             ],
           ),
           const SizedBox(height: 16),
@@ -209,8 +212,8 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
 
           // Duration presets
           if (!_timerActive) ...[
-            const Text('DURATION',
-                style: TextStyle(
+            Text(l.npSleepDuration,
+                style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: TuneColors.textTertiary,
@@ -230,7 +233,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
                       }),
                     )),
                 _DurationChip(
-                  label: 'Custom',
+                  label: l.npSleepCustom,
                   isSelected: _showCustom,
                   onTap: () => setState(() {
                     _showCustom = true;
@@ -271,8 +274,8 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
             const SizedBox(height: 16),
 
             // Fade duration
-            const Text('FADE OUT',
-                style: TextStyle(
+            Text(l.npSleepFadeOut,
+                style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: TuneColors.textTertiary,
@@ -305,7 +308,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Volume will gradually fade to zero during the last ${_fadeDuration.round()} seconds.',
+              l.npSleepFadeDesc(_fadeDuration.round()),
               style: TuneFonts.caption,
             ),
 
@@ -326,10 +329,10 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
                             strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.bedtime_rounded),
                 label: Text(_busy
-                    ? 'Starting...'
+                    ? l.npSleepStarting
                     : _selectedMinutes != null
-                        ? 'Start (${_selectedMinutes}m)'
-                        : 'Select duration'),
+                        ? l.npSleepStart('${_selectedMinutes}m')
+                        : l.npSleepSelectDuration),
                 style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.accent,
                   minimumSize: const Size.fromHeight(48),
@@ -422,8 +425,8 @@ class _ActiveTimerDisplay extends StatelessWidget {
               const Icon(Icons.bedtime_rounded,
                   size: 20, color: TuneColors.accent),
               const SizedBox(width: 8),
-              const Text('Timer Active',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context).npSleepTimerActive,
+                  style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: TuneColors.accent)),
@@ -459,7 +462,7 @@ class _ActiveTimerDisplay extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onCancel,
               icon: const Icon(Icons.timer_off_rounded, size: 18),
-              label: const Text('Cancel Timer'),
+              label: Text(AppLocalizations.of(context).npSleepCancelTimer),
               style: OutlinedButton.styleFrom(
                 foregroundColor: TuneColors.error,
                 side: const BorderSide(color: TuneColors.error),

@@ -79,7 +79,7 @@ class _PodcastsViewState extends State<PodcastsView>
               icon: _refreshingAll
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
                   : const Icon(Icons.refresh_rounded, color: TuneColors.textSecondary),
-              tooltip: 'Refresh all',
+              tooltip: l.libRefreshAll,
               onPressed: _refreshingAll ? null : _refreshAllPodcasts,
             ),
         ],
@@ -90,7 +90,7 @@ class _PodcastsViewState extends State<PodcastsView>
           unselectedLabelColor: TuneColors.textSecondary,
           onTap: (_) => setState(() {}),
           tabs: [
-            const Tab(text: 'Subscribed'),
+            Tab(text: l.libPodcastsSubscribed),
             Tab(text: l.podcastsTabRadioFrance),
             Tab(text: l.podcastsTabSearch),
           ],
@@ -278,12 +278,12 @@ class _PodcastsViewState extends State<PodcastsView>
           children: [
             const Icon(Icons.rss_feed_rounded, size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('No subscriptions yet', style: TuneFonts.subheadline),
+            Text(l.libNoSubscriptions, style: TuneFonts.subheadline),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _showSubscribeDialog,
               icon: const Icon(Icons.add),
-              label: const Text('Subscribe to RSS feed'),
+              label: Text(l.libSubscribeRssFeed),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             ),
           ],
@@ -300,7 +300,7 @@ class _PodcastsViewState extends State<PodcastsView>
         itemBuilder: (_, i) {
           final podcast = _subscribed[i];
           final id = podcast['id']?.toString() ?? '';
-          final name = podcast['name'] as String? ?? 'Unknown';
+          final name = podcast['name'] as String? ?? l.libUnknown;
           final coverUrl = podcast['cover_url'] as String? ?? '';
           final episodeCount = podcast['episode_count'] as int? ?? 0;
 
@@ -318,13 +318,13 @@ class _PodcastsViewState extends State<PodcastsView>
                 context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: TuneColors.surface,
-                  title: const Text('Unsubscribe?'),
-                  content: Text('Unsubscribe from "$name"?'),
+                  title: Text(l.libUnsubscribeTitle),
+                  content: Text(l.libUnsubscribeBody(name)),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Unsubscribe', style: TextStyle(color: TuneColors.error)),
+                      child: Text(l.libUnsubscribe, style: const TextStyle(color: TuneColors.error)),
                     ),
                   ],
                 ),
@@ -351,13 +351,13 @@ class _PodcastsViewState extends State<PodcastsView>
                 ),
               ),
               title: Text(name, style: TuneFonts.body, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: Text('$episodeCount episodes', style: TuneFonts.caption),
+              subtitle: Text(l.libEpisodeCount(episodeCount), style: TuneFonts.caption),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded, size: 20, color: TuneColors.textSecondary),
-                    tooltip: 'Refresh',
+                    tooltip: l.btnRefresh,
                     onPressed: () => _refreshPodcast(id),
                   ),
                   const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
@@ -395,32 +395,33 @@ class _PodcastsViewState extends State<PodcastsView>
   }
 
   Future<void> _showSubscribeDialog() async {
+    final l = AppLocalizations.of(context);
     final urlCtrl = TextEditingController();
     final result = await showDialog<String?>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Subscribe to podcast', style: TuneFonts.title3),
+        title: Text(l.libSubscribeToPodcast, style: TuneFonts.title3),
         content: TextField(
           controller: urlCtrl,
           style: TuneFonts.body,
           keyboardType: TextInputType.url,
           autocorrect: false,
           decoration: InputDecoration(
-            hintText: 'https://example.com/feed.xml',
+            hintText: 'https://example.com/feed.xml',  // i18n-ok
             hintStyle: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
-            labelText: 'RSS Feed URL',
+            labelText: l.libRssFeedUrl,
             filled: true,
             fillColor: TuneColors.surfaceVariant,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, urlCtrl.text.trim()),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-            child: const Text('Subscribe'),
+            child: Text(l.libSubscribe),
           ),
         ],
       ),
@@ -433,13 +434,13 @@ class _PodcastsViewState extends State<PodcastsView>
       await app.apiClient!.subscribePodcast(result);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Subscribed.')),
+        SnackBar(content: Text(l.libSubscribed)),
       );
       _loadSubscribed();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Subscribe error: $e')),
+        SnackBar(content: Text(l.libSubscribeError(e.toString()))),
       );
     }
   }
@@ -453,7 +454,9 @@ class _PodcastsViewState extends State<PodcastsView>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unsubscribe error: $e')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)
+                  .libUnsubscribeError(e.toString()))),
         );
       }
     }
@@ -466,13 +469,15 @@ class _PodcastsViewState extends State<PodcastsView>
       await app.apiClient!.refreshPodcast(podcastId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Podcast refreshed.')),
+        SnackBar(content: Text(AppLocalizations.of(context).libPodcastRefreshed)),
       );
       _loadSubscribed();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Refresh error: $e')),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).libRefreshError(e.toString()))),
       );
     }
   }
@@ -485,13 +490,16 @@ class _PodcastsViewState extends State<PodcastsView>
       await app.apiClient!.refreshAllPodcasts();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('All podcasts refreshed.')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context).libAllPodcastsRefreshed)),
       );
       _loadSubscribed();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Refresh error: $e')),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).libRefreshError(e.toString()))),
       );
     }
     if (mounted) setState(() => _refreshingAll = false);
@@ -501,7 +509,8 @@ class _PodcastsViewState extends State<PodcastsView>
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
     final id = podcast['id']?.toString() ?? '';
-    final name = podcast['name'] as String? ?? 'Unknown';
+    final name = podcast['name'] as String? ??
+        AppLocalizations.of(context).libUnknown;
     final feedUrl = podcast['feed_url'] as String? ?? '';
 
     // Build a PodcastShow from subscribed data
@@ -741,7 +750,7 @@ class _ShowHeader extends StatelessWidget {
                     style: TuneFonts.caption
                         .copyWith(color: TuneColors.textSecondary)),
                 if (show.episodeCount > 0)
-                  Text('${show.episodeCount} épisodes',
+                  Text(AppLocalizations.of(context).libEpisodeCount(show.episodeCount),
                       style: TuneFonts.caption
                           .copyWith(color: TuneColors.textSecondary)),
                 if (show.description.isNotEmpty) ...[
@@ -802,7 +811,7 @@ class _EpisodeTile extends StatelessWidget {
       subtitle: Row(
         children: [
           if (episode.published.isNotEmpty)
-            Text(_formatDate(episode.published),
+            Text(_formatDate(AppLocalizations.of(context), episode.published),
                 style: TuneFonts.caption
                     .copyWith(color: TuneColors.textSecondary)),
           if (episode.durationMs > 0) ...[
@@ -831,11 +840,11 @@ class _EpisodeTile extends StatelessWidget {
     return '${m} min';
   }
 
-  static String _formatDate(String dateStr) {
+  static String _formatDate(AppLocalizations l, String dateStr) {
     try {
       // Tente ISO 8601
       final dt = DateTime.parse(dateStr).toLocal();
-      return _relativeDate(dt);
+      return _relativeDate(l, dt);
     } catch (_) {}
     // Tente RFC 2822 simple (ex: "Mon, 01 Jan 2024 12:00:00 +0000")
     try {
@@ -849,18 +858,18 @@ class _EpisodeTile extends StatelessWidget {
         final month = months[parts[2]] ?? 1;
         final year = int.parse(parts[3]);
         final dt = DateTime(year, month, day).toLocal();
-        return _relativeDate(dt);
+        return _relativeDate(l, dt);
       }
     } catch (_) {}
     return dateStr.length > 10 ? dateStr.substring(0, 10) : dateStr;
   }
 
-  static String _relativeDate(DateTime dt) {
+  static String _relativeDate(AppLocalizations l, DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inDays == 0) return "Aujourd'hui";
-    if (diff.inDays == 1) return 'Hier';
-    if (diff.inDays < 7) return 'Il y a ${diff.inDays} j';
+    if (diff.inDays == 0) return l.libToday;
+    if (diff.inDays == 1) return l.libYesterday;
+    if (diff.inDays < 7) return l.libDaysAgo(diff.inDays);
     return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
   }
 }

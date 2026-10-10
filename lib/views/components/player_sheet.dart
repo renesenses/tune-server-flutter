@@ -586,7 +586,7 @@ class _MiniRow extends StatelessWidget {
                         _expand();
                       },
                       child: Text(
-                        track?.title ?? 'No track',
+                        track?.title ?? AppLocalizations.of(context).nowPlayingNoTrack,
                         style: TuneFonts.miniTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -623,7 +623,7 @@ class _MiniRow extends StatelessWidget {
                 color: volumeOuvert
                     ? TuneColors.accent
                     : TuneColors.textPrimary,
-                tooltip: 'Volume',
+                tooltip: AppLocalizations.of(context).npVolume,
                 onPressed: () => onVolumeChanged(!volumeOuvert),
               ),
               SkipButton(
@@ -652,7 +652,9 @@ class _MiniRow extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 32,
                   color: TuneColors.textPrimary,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
+                  tooltip: isPlaying
+                      ? AppLocalizations.of(context).npPause
+                      : AppLocalizations.of(context).libraryPlay,
                   onPressed:
                       isPlaying ? () => app.pause() : () => app.resume(),
                 ),
@@ -950,7 +952,7 @@ class _TrackInfo extends StatelessWidget {
             icon: const Icon(Icons.favorite_border_rounded),
             color: TuneColors.textSecondary,
             iconSize: 28,
-            tooltip: 'Favorite',
+            tooltip: AppLocalizations.of(context).npFavorite,
             onPressed: () {
               if (track != null) {
                 final radios = app.libraryState.radios;
@@ -964,9 +966,9 @@ class _TrackInfo extends StatelessWidget {
                     radio: radio,
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ajouté aux favoris radio'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).npRadioFavAdded),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
@@ -985,7 +987,7 @@ class _TrackInfo extends StatelessWidget {
                 color:
                     isFav ? TuneColors.accent : TuneColors.textSecondary,
                 iconSize: 28,
-                tooltip: 'Favorite',
+                tooltip: AppLocalizations.of(context).npFavorite,
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   final l = AppLocalizations.of(context);
@@ -1121,7 +1123,9 @@ class _TransportControls extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 38,
                   color: TuneColors.background,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
+                  tooltip: isPlaying
+                      ? AppLocalizations.of(context).npPause
+                      : AppLocalizations.of(context).libraryPlay,
                   onPressed:
                       isPlaying ? () => app.pause() : () => app.resume(),
                 ),
@@ -1161,7 +1165,7 @@ class _SecondaryControls extends StatelessWidget {
                   color: shuffle
                       ? TuneColors.accent
                       : TuneColors.textTertiary),
-              tooltip: 'Shuffle',
+              tooltip: AppLocalizations.of(context).btnShuffle,
               onPressed: () => app.setShuffle(enabled: !shuffle),
             ),
             // Repeat
@@ -1174,14 +1178,14 @@ class _SecondaryControls extends StatelessWidget {
                     ? TuneColors.accent
                     : TuneColors.textTertiary,
               ),
-              tooltip: 'Repeat',
+              tooltip: AppLocalizations.of(context).npRepeat,
               onPressed: () => app.cycleRepeat(),
             ),
             // Queue — drag sheet up to queue view
             IconButton(
               icon: const Icon(Icons.queue_music_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Queue',
+              tooltip: AppLocalizations.of(context).npQueue,
               onPressed: () {
                 sheetController.animateTo(
                   _kQueue,
@@ -1194,7 +1198,7 @@ class _SecondaryControls extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.speaker_group_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Zones',
+              tooltip: AppLocalizations.of(context).navZones,
               onPressed: () => showModalBottomSheet(
                 context: context,
                 backgroundColor: TuneColors.surface,
@@ -1242,7 +1246,7 @@ class _ExtraActions extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.lyrics_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Lyrics',
+          tooltip: AppLocalizations.of(context).npLyrics,
           onPressed: track?.id != null && track!.id != 0
               ? () => _showLyrics(context, track!.id)
               : null,
@@ -1250,31 +1254,31 @@ class _ExtraActions extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.alarm_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Alarm',
+          tooltip: AppLocalizations.of(context).npAlarm,
           onPressed: () => _showAlarmSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.bedtime_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Sleep Timer',
+          tooltip: AppLocalizations.of(context).npSleepTimer,
           onPressed: () => showSleepTimerSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.equalizer_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Equalizer',
+          tooltip: AppLocalizations.of(context).npEqualizer,
           onPressed: () => _showEQSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.share_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Share',
+          tooltip: AppLocalizations.of(context).npShare,
           onPressed: () => _shareNowPlaying(context),
         ),
         IconButton(
           icon: const Icon(Icons.cast_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Transfer',
+          tooltip: AppLocalizations.of(context).npTransfer,
           onPressed: () => _showTransferDialog(context),
         ),
       ],
@@ -1333,7 +1337,7 @@ class _ExtraActions extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: text));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Copied to clipboard')),
+            SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
           );
         }
       }
@@ -1346,7 +1350,7 @@ class _ExtraActions extends StatelessWidget {
       Clipboard.setData(ClipboardData(text: shareText));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
     } catch (e) {
@@ -1354,7 +1358,7 @@ class _ExtraActions extends StatelessWidget {
         final text = '${track!.title} - ${track!.artistName ?? ""}';
         Clipboard.setData(ClipboardData(text: text));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
     }
@@ -1712,12 +1716,12 @@ class _LyricsPlaceholderSheet extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Lyrics', style: TuneFonts.title3),
+            child: Text(AppLocalizations.of(context).npLyrics, style: TuneFonts.title3),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: Center(
-              child: Text('Open from Now Playing for full lyrics',
+              child: Text(AppLocalizations.of(context).npLyricsOpenFromNowPlaying,
                   style: TuneFonts.subheadline
                       .copyWith(color: TuneColors.textTertiary)),
             ),
@@ -1747,13 +1751,23 @@ class _EQSheetState extends State<_EQSheet> {
     'jazz', 'classical', 'electronic', 'hip_hop', 'acoustic',
   ];
 
-  static const _presetLabels = {
-    'flat': 'Flat', 'bass_boost': 'Bass Boost', 'treble_boost': 'Treble Boost',
-    'vocal': 'Vocal', 'rock': 'Rock', 'jazz': 'Jazz', 'classical': 'Classical',
-    'electronic': 'Electronic', 'hip_hop': 'Hip Hop', 'acoustic': 'Acoustic',
-  };
+  static String _presetLabel(AppLocalizations l, String preset) =>
+      switch (preset) {
+        'flat' => l.npEqFlat,
+        'bass_boost' => l.npEqBassBoost,
+        'treble_boost' => l.npEqTrebleBoost,
+        'vocal' => l.npEqVocal,
+        'rock' => l.npEqRock,
+        'jazz' => l.npEqJazz,
+        'classical' => l.npEqClassical,
+        'electronic' => l.npEqElectronic,
+        'hip_hop' => l.npEqHipHop,
+        'acoustic' => l.npEqAcoustic,
+        _ => preset,
+      };
 
   Future<void> _applyPreset(String preset) async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final zoneId = context.read<ZoneState>().currentZoneId;
     if (app.apiClient == null || zoneId == null) return;
@@ -1762,13 +1776,13 @@ class _EQSheetState extends State<_EQSheet> {
       if (mounted) {
         setState(() => _selectedPreset = preset);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ: ${_presetLabels[preset] ?? preset}')),
+          SnackBar(content: Text(l.npEqApplied(_presetLabel(l, preset)))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ error: $e')),
+          SnackBar(content: Text(l.npEqError(e.toString()))),
         );
       }
     }
@@ -1793,7 +1807,7 @@ class _EQSheetState extends State<_EQSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Equalizer', style: TuneFonts.title3),
+          Text(AppLocalizations.of(context).npEqualizer, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -1801,7 +1815,7 @@ class _EQSheetState extends State<_EQSheet> {
             children: _presets.map((preset) {
               final selected = _selectedPreset == preset;
               return ChoiceChip(
-                label: Text(_presetLabels[preset] ?? preset),
+                label: Text(_presetLabel(AppLocalizations.of(context), preset)),
                 selected: selected,
                 selectedColor: TuneColors.accent.withValues(alpha: 0.25),
                 backgroundColor: TuneColors.surfaceVariant,
@@ -1840,6 +1854,7 @@ class _AlarmSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1857,7 +1872,7 @@ class _AlarmSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Alarm Clock', style: TuneFonts.title3),
+          Text(l.npAlarmClock, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -1882,14 +1897,14 @@ class _AlarmSheet extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(
-                                      'Alarm set for ${opt.label}')),
+                                      l.npAlarmSetFor(opt.label))),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Alarm error: $e')),
+                                  content: Text(l.npAlarmError(e.toString()))),
                             );
                           }
                         }
@@ -1899,7 +1914,7 @@ class _AlarmSheet extends StatelessWidget {
               ActionChip(
                 avatar: const Icon(Icons.alarm_off_rounded,
                     size: 16, color: TuneColors.error),
-                label: const Text('Cancel'),
+                label: Text(l.btnCancel),
                 backgroundColor: TuneColors.surfaceVariant,
                 labelStyle:
                     const TextStyle(color: TuneColors.textSecondary),
@@ -1914,8 +1929,8 @@ class _AlarmSheet extends StatelessWidget {
                       await app.apiClient!.cancelAlarm(zoneId);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Alarm cancelled')),
+                          SnackBar(
+                              content: Text(l.npAlarmCancelled)),
                         );
                       }
                     } catch (_) {}
@@ -1944,12 +1959,13 @@ class _TransferDialog extends StatelessWidget {
     final currentZoneId = zoneState.currentZoneId;
     final zones =
         zoneState.zones.where((z) => z.id != currentZoneId).toList();
+    final l = AppLocalizations.of(context);
 
     return AlertDialog(
       backgroundColor: TuneColors.surface,
-      title: Text('Transfer playback', style: TuneFonts.title3),
+      title: Text(l.npTransferTitle, style: TuneFonts.title3),
       content: zones.isEmpty
-          ? Text('No other zones available', style: TuneFonts.subheadline)
+          ? Text(l.npNoOtherZones, style: TuneFonts.subheadline)
           : SizedBox(
               width: double.maxFinite,
               child: ListView.builder(
@@ -1972,14 +1988,14 @@ class _TransferDialog extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(
-                                      'Transferred to ${zone.name}')),
+                                      l.npTransferredTo(zone.name))),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Transfer error: $e')),
+                                  content: Text(l.npTransferError(e.toString()))),
                             );
                           }
                         }
@@ -1992,7 +2008,7 @@ class _TransferDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.btnCancel),
         ),
       ],
     );

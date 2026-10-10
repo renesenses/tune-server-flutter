@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../state/app_state.dart';
 import '../helpers/artwork_view.dart';
@@ -23,6 +24,7 @@ class CollectionsView extends StatefulWidget {
 class _CollectionsViewState extends State<CollectionsView> {
   List<dynamic>? _collections;
   bool _loading = true;
+  /// Error code, localized in build(): 'not_connected' or 'load_failed'.
   String? _error;
 
   @override
@@ -34,43 +36,44 @@ class _CollectionsViewState extends State<CollectionsView> {
   Future<void> _load() async {
     final app = context.read<AppState>();
     if (app.apiClient == null) {
-      if (mounted) setState(() { _loading = false; _error = 'Not connected'; });
+      if (mounted) setState(() { _loading = false; _error = 'not_connected'; });
       return;
     }
     try {
       final data = await app.apiClient!.getCollections();
       if (mounted) setState(() { _collections = data; _loading = false; });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'Failed to load collections'; });
+      if (mounted) setState(() { _loading = false; _error = 'load_failed'; });
     }
   }
 
   Future<void> _createCollection() async {
+    final l = AppLocalizations.of(context);
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
         final controller = TextEditingController();
         return AlertDialog(
           backgroundColor: TuneColors.surface,
-          title: Text('New Collection', style: TuneFonts.title3),
+          title: Text(l.libNewCollection, style: TuneFonts.title3),
           content: TextField(
             controller: controller,
             autofocus: true,
             style: TuneFonts.body,
-            decoration: const InputDecoration(
-              hintText: 'Collection name',
-              hintStyle: TextStyle(color: TuneColors.textTertiary),
+            decoration: InputDecoration(
+              hintText: l.libCollectionName,
+              hintStyle: const TextStyle(color: TuneColors.textTertiary),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(l.btnCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, controller.text.trim()),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-              child: const Text('Create'),
+              child: Text(l.btnCreate),
             ),
           ],
         );
@@ -86,7 +89,7 @@ class _CollectionsViewState extends State<CollectionsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Create error: $e')),
+          SnackBar(content: Text(l.libCreateError(e.toString()))),
         );
       }
     }
@@ -101,7 +104,9 @@ class _CollectionsViewState extends State<CollectionsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete error: $e')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).libDeleteError(e.toString()))),
         );
       }
     }
@@ -109,11 +114,12 @@ class _CollectionsViewState extends State<CollectionsView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('Collections', style: TuneFonts.title2),
+        title: Text(l.libCollectionsTitle, style: TuneFonts.title2),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: TuneColors.accent,
@@ -123,7 +129,12 @@ class _CollectionsViewState extends State<CollectionsView> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: TuneFonts.subheadline))
+              ? Center(
+                  child: Text(
+                      _error == 'not_connected'
+                          ? l.streamingNotConnected
+                          : l.libCollectionsLoadFailed,
+                      style: TuneFonts.subheadline))
               : _collections == null || _collections!.isEmpty
                   ? Center(
                       child: Column(
@@ -132,7 +143,7 @@ class _CollectionsViewState extends State<CollectionsView> {
                           const Icon(Icons.collections_bookmark_outlined,
                               size: 56, color: TuneColors.textTertiary),
                           const SizedBox(height: 12),
-                          Text('No collections yet',
+                          Text(l.libNoCollectionsYet,
                               style: TuneFonts.subheadline),
                         ],
                       ),
@@ -172,20 +183,20 @@ class _CollectionsViewState extends State<CollectionsView> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 backgroundColor: TuneColors.surface,
-                                title: const Text('Delete collection?'),
+                                title: Text(l.libDeleteCollectionTitle),
                                 content: Text(
-                                    'This will delete "$name" permanently.'),
+                                    l.libDeleteCollectionBody(name)),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
+                                    child: Text(l.btnCancel),
                                   ),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(ctx, true),
-                                    child: const Text('Delete',
-                                        style: TextStyle(
+                                    child: Text(l.btnDelete,
+                                        style: const TextStyle(
                                             color: TuneColors.error)),
                                   ),
                                 ],
@@ -217,7 +228,7 @@ class _CollectionsViewState extends State<CollectionsView> {
                             title: Text(name,
                                 style: TuneFonts.body),
                             subtitle: Text(
-                              '$albumCount album${albumCount != 1 ? "s" : ""}',
+                              l.libAlbumCount(albumCount),
                               style: TuneFonts.caption,
                             ),
                             trailing: const Icon(
@@ -306,7 +317,7 @@ class _CollectionDetailViewState
                           size: 56,
                           color: widget.color.withValues(alpha: 0.5)),
                       const SizedBox(height: 12),
-                      Text('No albums in this collection',
+                      Text(AppLocalizations.of(context).libNoAlbumsInCollection,
                           style: TuneFonts.subheadline),
                     ],
                   ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/metadata/lyrics_parser.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -126,7 +127,7 @@ class _LyricsViewState extends State<LyricsView> {
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
         title: Text(
-          _lyrics?.metadata['ti'] ?? 'Lyrics',
+          _lyrics?.metadata['ti'] ?? AppLocalizations.of(context).npLyrics,
           style: TuneFonts.title3,
         ),
         actions: [
@@ -134,7 +135,7 @@ class _LyricsViewState extends State<LyricsView> {
             IconButton(
               icon: const Icon(Icons.info_outline_rounded,
                   size: 22, color: TuneColors.textSecondary),
-              tooltip: 'Metadata',
+              tooltip: AppLocalizations.of(context).npLrcMetadataTooltip,
               onPressed: _showMetadata,
             ),
         ],
@@ -190,22 +191,23 @@ class _LyricsViewState extends State<LyricsView> {
   void _showMetadata() {
     final meta = _lyrics?.metadata ?? {};
     if (meta.isEmpty) return;
+    final l = AppLocalizations.of(context);
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('LRC Metadata', style: TuneFonts.title3),
+        title: Text(l.npLrcMetadataTitle, style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: meta.entries.map((e) {
             final label = switch (e.key) {
-              'ar' => 'Artist',
-              'ti' => 'Title',
-              'al' => 'Album',
-              'by' => 'Created by',
-              'offset' => 'Offset (ms)',
+              'ar' => l.metadataArtistField,
+              'ti' => l.npLrcTitle,
+              'al' => l.metadataAlbumField,
+              'by' => l.npLrcCreatedBy,
+              'offset' => l.npLrcOffset,
               _ => e.key.toUpperCase(),
             };
             return Padding(
@@ -228,7 +230,7 @@ class _LyricsViewState extends State<LyricsView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l.btnOk),
           ),
         ],
       ),
@@ -252,12 +254,12 @@ class _NoLyricsFound extends StatelessWidget {
           const Icon(Icons.lyrics_rounded,
               size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 12),
-          Text('No lyrics found', style: TuneFonts.subheadline),
+          Text(AppLocalizations.of(context).npNoLyricsFound, style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Place a .lrc file next to the audio file with the same name.',
+              AppLocalizations.of(context).npLrcHint,
               style: TuneFonts.caption,
               textAlign: TextAlign.center,
             ),
@@ -285,7 +287,7 @@ class _ErrorBody extends StatelessWidget {
           const Icon(Icons.error_outline,
               size: 48, color: TuneColors.error),
           const SizedBox(height: 12),
-          Text('Failed to load lyrics', style: TuneFonts.subheadline),
+          Text(AppLocalizations.of(context).npLyricsLoadFailed, style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),

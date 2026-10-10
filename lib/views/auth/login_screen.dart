@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../state/settings_state.dart';
 import '../helpers/tune_colors.dart';
@@ -90,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       body: Center(
@@ -112,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text('Tune', style: TuneFonts.title1),
                   const SizedBox(height: 4),
                   Text(
-                    _isRegisterMode ? 'Creer un compte' : 'Se connecter',
+                    _isRegisterMode ? l.miscCreateAccount : l.streamingSignIn,
                     style: TuneFonts.subheadline,
                   ),
                   const SizedBox(height: 40),
@@ -149,13 +151,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _usernameController,
                       style: TuneFonts.body,
                       decoration: _inputDecoration(
-                        label: 'Nom d\'utilisateur',
+                        label: l.miscUsername,
                         icon: Icons.person_outline_rounded,
                       ),
                       textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (_isRegisterMode && (v == null || v.trim().isEmpty)) {
-                          return 'Nom d\'utilisateur requis';
+                          return l.miscUsernameRequired;
                         }
                         return null;
                       },
@@ -168,15 +170,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     style: TuneFonts.body,
                     decoration: _inputDecoration(
-                      label: 'Email',
+                      label: l.streamingEmail,
                       icon: Icons.email_outlined,
                     ),
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Email requis';
-                      if (!v.contains('@')) return 'Email invalide';
+                      if (v == null || v.trim().isEmpty) return l.miscEmailRequired;
+                      if (!v.contains('@')) return l.miscEmailInvalid;
                       return null;
                     },
                   ),
@@ -187,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     style: TuneFonts.body,
                     decoration: _inputDecoration(
-                      label: 'Mot de passe',
+                      label: l.password,
                       icon: Icons.lock_outline_rounded,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -204,8 +206,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Mot de passe requis';
-                      if (v.length < 4) return 'Minimum 4 caracteres';
+                      if (v == null || v.isEmpty) return l.miscPasswordRequired;
+                      if (v.length < 4) return l.miscPasswordMinLength(4);
                       return null;
                     },
                   ),
@@ -233,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             )
                           : Text(
-                              _isRegisterMode ? 'Creer un compte' : 'Se connecter',
+                              _isRegisterMode ? l.miscCreateAccount : l.streamingSignIn,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -253,8 +255,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text(
                       _isRegisterMode
-                          ? 'Deja un compte ? Se connecter'
-                          : 'Pas de compte ? S\'inscrire',
+                          ? l.miscHaveAccountSignIn
+                          : l.miscNoAccountSignUp,
                       style: TuneFonts.footnote.copyWith(color: TuneColors.accent),
                     ),
                   ),
@@ -264,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   OutlinedButton.icon(
                     onPressed: _openMozaiklabs,
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: const Text('Connexion mozaiklabs.fr'),
+                    label: Text(l.loginTo('mozaiklabs.fr')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: TuneColors.textSecondary,
                       side: const BorderSide(color: TuneColors.divider),

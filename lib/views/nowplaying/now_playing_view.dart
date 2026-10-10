@@ -159,7 +159,7 @@ class NowPlayingView extends StatelessWidget {
                   color: shuffle
                       ? TuneColors.accent
                       : TuneColors.textTertiary),
-              tooltip: 'Shuffle',
+              tooltip: AppLocalizations.of(ctx).btnShuffle,
               onPressed: () =>
                   app.setShuffle(enabled: !shuffle),
             ),
@@ -173,14 +173,14 @@ class NowPlayingView extends StatelessWidget {
                     ? TuneColors.accent
                     : TuneColors.textTertiary,
               ),
-              tooltip: 'Repeat',
+              tooltip: AppLocalizations.of(ctx).npRepeat,
               onPressed: () => app.cycleRepeat(),
             ),
             // Queue
             IconButton(
               icon: const Icon(Icons.queue_music_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Queue',
+              tooltip: AppLocalizations.of(ctx).npQueue,
               onPressed: () => showModalBottomSheet(
                 context: ctx,
                 backgroundColor: TuneColors.surface,
@@ -195,7 +195,7 @@ class NowPlayingView extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.speaker_group_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Zones',
+              tooltip: AppLocalizations.of(ctx).navZones,
               onPressed: () => showModalBottomSheet(
                 context: ctx,
                 backgroundColor: TuneColors.surface,
@@ -393,7 +393,7 @@ class _TrackInfo extends StatelessWidget {
             icon: const Icon(Icons.favorite_border_rounded),
             color: TuneColors.textSecondary,
             iconSize: 28,
-            tooltip: 'Favorite',
+            tooltip: AppLocalizations.of(context).npFavorite,
             onPressed: () {
               if (track != null) {
                 final radios = app.libraryState.radios;
@@ -407,9 +407,9 @@ class _TrackInfo extends StatelessWidget {
                     radio: radio,
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ajouté aux favoris radio'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).npRadioFavAdded),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
@@ -426,7 +426,7 @@ class _TrackInfo extends StatelessWidget {
                     : Icons.favorite_border_rounded),
                 color: isFav ? TuneColors.accent : TuneColors.textSecondary,
                 iconSize: 28,
-                tooltip: 'Favorite',
+                tooltip: AppLocalizations.of(context).npFavorite,
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   final l = AppLocalizations.of(context);
@@ -541,7 +541,7 @@ class _ExtraActions extends StatelessWidget {
         // Lyrics
         IconButton(
           icon: const Icon(Icons.lyrics_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Lyrics',
+          tooltip: AppLocalizations.of(context).npLyrics,
           onPressed: track?.id != null && track!.id != 0
               ? () => _showLyrics(context, track!.id)
               : null,
@@ -549,37 +549,37 @@ class _ExtraActions extends StatelessWidget {
         // Alarm Clock
         IconButton(
           icon: const Icon(Icons.alarm_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Alarm',
+          tooltip: AppLocalizations.of(context).npAlarm,
           onPressed: () => _showAlarmSheet(context),
         ),
         // Sleep Timer
         IconButton(
           icon: const Icon(Icons.bedtime_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Sleep Timer',
+          tooltip: AppLocalizations.of(context).npSleepTimer,
           onPressed: () => _showSleepTimerSheet(context),
         ),
         // DSP Crossfeed
         IconButton(
           icon: const Icon(Icons.headphones_rounded, color: TuneColors.textSecondary),
-          tooltip: 'DSP Crossfeed',
+          tooltip: AppLocalizations.of(context).npDspCrossfeed,
           onPressed: () => _showDSPSheet(context),
         ),
         // EQ
         IconButton(
           icon: const Icon(Icons.equalizer_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Equalizer',
+          tooltip: AppLocalizations.of(context).npEqualizer,
           onPressed: () => _showEQSheet(context),
         ),
         // Share
         IconButton(
           icon: const Icon(Icons.share_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Share',
+          tooltip: AppLocalizations.of(context).npShare,
           onPressed: () => _shareNowPlaying(context),
         ),
         // Transfer
         IconButton(
           icon: const Icon(Icons.cast_rounded, color: TuneColors.textSecondary),
-          tooltip: 'Transfer',
+          tooltip: AppLocalizations.of(context).npTransfer,
           onPressed: () => _showTransferDialog(context),
         ),
       ],
@@ -653,7 +653,7 @@ class _ExtraActions extends StatelessWidget {
         final text = '${track!.title} - ${track!.artistName ?? ""}';
         Clipboard.setData(ClipboardData(text: text));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
       return;
@@ -664,7 +664,7 @@ class _ExtraActions extends StatelessWidget {
       Clipboard.setData(ClipboardData(text: shareText));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
     } catch (e) {
@@ -674,7 +674,7 @@ class _ExtraActions extends StatelessWidget {
           final text = '${track!.title} - ${track!.artistName ?? ""}';
           Clipboard.setData(ClipboardData(text: text));
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Copied to clipboard')),
+            SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
           );
         }
       }
@@ -772,7 +772,7 @@ class _LyricsSheetState extends State<_LyricsSheet> {
   Future<void> _loadLyrics() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) {
-      if (mounted) setState(() { _loading = false; _error = 'Not connected'; });
+      if (mounted) setState(() { _loading = false; _error = 'not_connected'; });
       return;
     }
     try {
@@ -785,7 +785,7 @@ class _LyricsSheetState extends State<_LyricsSheet> {
         _loading = false;
       });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'No lyrics found'; });
+      if (mounted) setState(() { _loading = false; _error = 'not_found'; });
     }
   }
 
@@ -802,6 +802,12 @@ class _LyricsSheetState extends State<_LyricsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final errorText = switch (_error) {
+      null => null,
+      'not_connected' => l.streamingNotConnected,
+      _ => l.npNoLyricsFound,
+    };
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.4,
@@ -822,16 +828,16 @@ class _LyricsSheetState extends State<_LyricsSheet> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Lyrics', style: TuneFonts.title3),
+            child: Text(l.npLyrics, style: TuneFonts.title3),
           ),
           const SizedBox(height: 8),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(child: Text(_error!, style: TuneFonts.subheadline))
+                : errorText != null
+                    ? Center(child: Text(errorText, style: TuneFonts.subheadline))
                     : _lyrics == null || _lyrics!.isEmpty
-                        ? Center(child: Text('No lyrics available', style: TuneFonts.subheadline))
+                        ? Center(child: Text(l.npNoLyricsAvailable, style: TuneFonts.subheadline))
                         : _synced != null && _synced!.isNotEmpty
                             ? _buildKaraokeView()
                             : SingleChildScrollView(
@@ -917,20 +923,23 @@ class _EQSheetState extends State<_EQSheet> {
     'acoustic',
   ];
 
-  static const _presetLabels = {
-    'flat': 'Flat',
-    'bass_boost': 'Bass Boost',
-    'treble_boost': 'Treble Boost',
-    'vocal': 'Vocal',
-    'rock': 'Rock',
-    'jazz': 'Jazz',
-    'classical': 'Classical',
-    'electronic': 'Electronic',
-    'hip_hop': 'Hip Hop',
-    'acoustic': 'Acoustic',
-  };
+  static String _presetLabel(AppLocalizations l, String preset) =>
+      switch (preset) {
+        'flat' => l.npEqFlat,
+        'bass_boost' => l.npEqBassBoost,
+        'treble_boost' => l.npEqTrebleBoost,
+        'vocal' => l.npEqVocal,
+        'rock' => l.npEqRock,
+        'jazz' => l.npEqJazz,
+        'classical' => l.npEqClassical,
+        'electronic' => l.npEqElectronic,
+        'hip_hop' => l.npEqHipHop,
+        'acoustic' => l.npEqAcoustic,
+        _ => preset,
+      };
 
   Future<void> _applyPreset(String preset) async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final zoneId = context.read<ZoneState>().currentZoneId;
     if (app.apiClient == null || zoneId == null) return;
@@ -939,13 +948,13 @@ class _EQSheetState extends State<_EQSheet> {
       if (mounted) {
         setState(() => _selectedPreset = preset);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ: ${_presetLabels[preset] ?? preset}')),
+          SnackBar(content: Text(l.npEqApplied(_presetLabel(l, preset)))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ error: $e')),
+          SnackBar(content: Text(l.npEqError(e.toString()))),
         );
       }
     }
@@ -969,7 +978,7 @@ class _EQSheetState extends State<_EQSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Equalizer', style: TuneFonts.title3),
+          Text(AppLocalizations.of(context).npEqualizer, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -977,7 +986,7 @@ class _EQSheetState extends State<_EQSheet> {
             children: _presets.map((preset) {
               final selected = _selectedPreset == preset;
               return ChoiceChip(
-                label: Text(_presetLabels[preset] ?? preset),
+                label: Text(_presetLabel(AppLocalizations.of(context), preset)),
                 selected: selected,
                 selectedColor: TuneColors.accent.withValues(alpha: 0.25),
                 backgroundColor: TuneColors.surfaceVariant,
@@ -1015,14 +1024,18 @@ class _DSPSheet extends StatefulWidget {
 class _DSPSheetState extends State<_DSPSheet> {
   String? _selectedCrossfeed;
 
-  static const _crossfeedOptions = [
-    (label: 'Off', value: null),
-    (label: 'Light', value: 'light'),
-    (label: 'Medium', value: 'medium'),
-    (label: 'Strong', value: 'strong'),
-  ];
+  static const _crossfeedOptions = <String?>[null, 'light', 'medium', 'strong'];
+
+  static String _crossfeedLabel(AppLocalizations l, String? value) =>
+      switch (value) {
+        'light' => l.npCrossfeedLight,
+        'medium' => l.npCrossfeedMedium,
+        'strong' => l.npCrossfeedStrong,
+        _ => l.npCrossfeedOff,
+      };
 
   Future<void> _applyCrossfeed(String? value) async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final zoneId = context.read<ZoneState>().currentZoneId;
     if (app.apiClient == null || zoneId == null) return;
@@ -1031,13 +1044,13 @@ class _DSPSheetState extends State<_DSPSheet> {
       if (mounted) {
         setState(() => _selectedCrossfeed = value);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Crossfeed: ${value ?? "off"}')),
+          SnackBar(content: Text(l.npCrossfeedApplied(_crossfeedLabel(l, value)))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('DSP error: $e')),
+          SnackBar(content: Text(l.npDspError(e.toString()))),
         );
       }
     }
@@ -1061,10 +1074,10 @@ class _DSPSheetState extends State<_DSPSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('DSP Crossfeed', style: TuneFonts.title3),
+          Text(AppLocalizations.of(context).npDspCrossfeed, style: TuneFonts.title3),
           const SizedBox(height: 4),
           Text(
-            'Blends stereo channels for a more natural headphone experience',
+            AppLocalizations.of(context).npCrossfeedDesc,
             style: TuneFonts.caption,
           ),
           const SizedBox(height: 16),
@@ -1072,9 +1085,9 @@ class _DSPSheetState extends State<_DSPSheet> {
             spacing: 8,
             runSpacing: 8,
             children: _crossfeedOptions.map((opt) {
-              final selected = _selectedCrossfeed == opt.value;
+              final selected = _selectedCrossfeed == opt;
               return ChoiceChip(
-                label: Text(opt.label),
+                label: Text(_crossfeedLabel(AppLocalizations.of(context), opt)),
                 selected: selected,
                 selectedColor: TuneColors.accent.withValues(alpha: 0.25),
                 backgroundColor: TuneColors.surfaceVariant,
@@ -1085,7 +1098,7 @@ class _DSPSheetState extends State<_DSPSheet> {
                 side: selected
                     ? BorderSide(color: TuneColors.accent.withValues(alpha: 0.5))
                     : BorderSide.none,
-                onSelected: (_) => _applyCrossfeed(opt.value),
+                onSelected: (_) => _applyCrossfeed(opt),
               );
             }).toList(),
           ),
@@ -1108,12 +1121,13 @@ class _TransferDialog extends StatelessWidget {
     final zoneState = context.read<ZoneState>();
     final currentZoneId = zoneState.currentZoneId;
     final zones = zoneState.zones.where((z) => z.id != currentZoneId).toList();
+    final l = AppLocalizations.of(context);
 
     return AlertDialog(
       backgroundColor: TuneColors.surface,
-      title: Text('Transfer playback', style: TuneFonts.title3),
+      title: Text(l.npTransferTitle, style: TuneFonts.title3),
       content: zones.isEmpty
-          ? Text('No other zones available', style: TuneFonts.subheadline)
+          ? Text(l.npNoOtherZones, style: TuneFonts.subheadline)
           : SizedBox(
               width: double.maxFinite,
               child: ListView.builder(
@@ -1136,13 +1150,13 @@ class _TransferDialog extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(
-                                      'Transferred to ${zone.name}')),
+                                      l.npTransferredTo(zone.name))),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Transfer error: $e')),
+                              SnackBar(content: Text(l.npTransferError(e.toString()))),
                             );
                           }
                         }
@@ -1155,7 +1169,7 @@ class _TransferDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.btnCancel),
         ),
       ],
     );
@@ -1178,6 +1192,7 @@ class _AlarmSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1194,7 +1209,7 @@ class _AlarmSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Alarm Clock', style: TuneFonts.title3),
+          Text(l.npAlarmClock, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -1215,13 +1230,13 @@ class _AlarmSheet extends StatelessWidget {
                       await app.apiClient!.setAlarm(zoneId, opt.time);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Alarm set for ${opt.label}')),
+                          SnackBar(content: Text(l.npAlarmSetFor(opt.label))),
                         );
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Alarm error: $e')),
+                          SnackBar(content: Text(l.npAlarmError(e.toString()))),
                         );
                       }
                     }
@@ -1231,7 +1246,7 @@ class _AlarmSheet extends StatelessWidget {
               // Cancel alarm
               ActionChip(
                 avatar: const Icon(Icons.alarm_off_rounded, size: 16, color: TuneColors.error),
-                label: const Text('Cancel'),
+                label: Text(l.btnCancel),
                 backgroundColor: TuneColors.surfaceVariant,
                 labelStyle: const TextStyle(color: TuneColors.textSecondary),
                 side: BorderSide.none,
@@ -1244,7 +1259,7 @@ class _AlarmSheet extends StatelessWidget {
                       await app.apiClient!.cancelAlarm(zoneId);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Alarm cancelled')),
+                          SnackBar(content: Text(l.npAlarmCancelled)),
                         );
                       }
                     } catch (_) {}
@@ -1303,7 +1318,9 @@ class _TransportControls extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 38,
                   color: TuneColors.background,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
+                  tooltip: isPlaying
+                      ? AppLocalizations.of(context).npPause
+                      : AppLocalizations.of(context).libraryPlay,
                   onPressed: isPlaying
                       ? () => app.pause()
                       : () => app.resume(),
@@ -1325,7 +1342,7 @@ class _TransportControls extends StatelessWidget {
           icon: const Icon(Icons.stop_rounded),
           iconSize: 36,
           color: TuneColors.textSecondary,
-          tooltip: 'Stop',
+          tooltip: AppLocalizations.of(context).npStop,
           onPressed: () => app.stop(),
         ),
       ],
@@ -1494,7 +1511,18 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
     'performer', 'producer', 'mixer', 'engineer',
   ];
 
-  String _formatRole(String role) {
+  String _formatRole(AppLocalizations l, String role) {
+    switch (role) {
+      case 'composer': return l.npRoleComposer;
+      case 'lyricist': return l.npRoleLyricist;
+      case 'arranger': return l.npRoleArranger;
+      case 'conductor': return l.npRoleConductor;
+      case 'performer': return l.npRolePerformer;
+      case 'producer': return l.npRoleProducer;
+      case 'mixer': return l.npRoleMixer;
+      case 'engineer': return l.npRoleEngineer;
+    }
+    if (role.isEmpty) return role;
     return role[0].toUpperCase() + role.substring(1);
   }
 
@@ -1513,7 +1541,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
   }
 
   // Inline credits summary: "Composer: X, Y · Performer: Z"
-  String _inlineCredits() {
+  String _inlineCredits(AppLocalizations l) {
     if (_credits.isEmpty) return '';
     final unique = _dedupCredits();
     final primary = unique.where((c) =>
@@ -1535,7 +1563,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
         return name;
       }).toList();
       if (entry.value.length > 3) names.add('...');
-      parts.add('${_formatRole(entry.key)}: ${names.join(', ')}');
+      parts.add('${_formatRole(l, entry.key)}: ${names.join(', ')}');
     }
     return parts.join(' · ');
   }
@@ -1544,7 +1572,8 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
   Widget build(BuildContext context) {
     if (_credits.isEmpty) return const SizedBox.shrink();
 
-    final inline = _inlineCredits();
+    final l = AppLocalizations.of(context);
+    final inline = _inlineCredits(l);
     if (inline.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -1568,7 +1597,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
         // Expanded credits view
         if (_expanded) ...[
           const SizedBox(height: 8),
-          _buildExpandedCredits(),
+          _buildExpandedCredits(l),
           const SizedBox(height: 4),
           // Enrich button
           GestureDetector(
@@ -1587,7 +1616,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
                       size: 14, color: TuneColors.accent),
                 const SizedBox(width: 6),
                 Text(
-                  _enriching ? 'Enrichissement...' : 'Enrichir via MusicBrainz',
+                  _enriching ? l.npCreditsEnriching : l.npCreditsEnrich,
                   style: TuneFonts.caption.copyWith(color: TuneColors.accent),
                 ),
               ],
@@ -1598,7 +1627,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
     );
   }
 
-  Widget _buildExpandedCredits() {
+  Widget _buildExpandedCredits(AppLocalizations l) {
     final unique = _dedupCredits();
     final groups = <String, List<Map<String, dynamic>>>{};
     for (final c in unique) {
@@ -1628,7 +1657,7 @@ class _NowPlayingCreditsState extends State<_NowPlayingCredits> {
         children: [
           for (final entry in sortedEntries) ...[
             Text(
-              _formatRole(entry.key),
+              _formatRole(l, entry.key),
               style: TuneFonts.caption.copyWith(
                 color: TuneColors.accent,
                 fontWeight: FontWeight.w600,

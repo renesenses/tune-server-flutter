@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 
@@ -13,84 +14,85 @@ class TroubleshootingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Depannage', style: TuneFonts.title3),
+        title: Text(l.miscTroubleshootingTitle, style: TuneFonts.title3),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 80),
-        children: const [
-          _SectionHeader('QUESTIONS FREQUENTES'),
+        children: [
+          _SectionHeader(l.miscFaqHeader),
           _FaqItem(
             icon: Icons.wifi_off_rounded,
-            title: 'Je ne vois pas mon serveur',
+            title: l.miscFaq1Title,
             steps: [
-              'Verifiez que le serveur Tune est demarre et accessible.',
-              'Assurez-vous que votre appareil est connecte au meme reseau Wi-Fi que le serveur.',
-              'Si vous utilisez un VPN, desactivez-le ou activez la decouverte LAN (ex: nordvpn set lan-discovery on).',
-              'Essayez de scanner le reseau depuis Reglages > Mode > Scanner le reseau.',
-              'Verifiez que le port du serveur (par defaut 8888) n\'est pas bloque par un pare-feu.',
-              'Redemarrez le serveur et l\'application.',
+              l.miscFaq1Step1,
+              l.miscFaq1Step2,
+              l.miscFaq1Step3,
+              l.miscFaq1Step4,
+              l.miscFaq1Step5,
+              l.miscFaq1Step6,
             ],
           ),
           _FaqItem(
             icon: Icons.music_off_rounded,
-            title: 'La musique ne joue pas',
+            title: l.miscFaq2Title,
             steps: [
-              'Verifiez qu\'une zone de lecture est selectionnee (barre en bas de l\'ecran).',
-              'Si aucune zone n\'existe, creez-en une dans Reglages > Audio > Zones > Creer.',
-              'Verifiez que l\'appareil de sortie (enceinte, DAC) est allume et sur le meme reseau.',
-              'Pour les appareils DLNA, attendez quelques secondes apres la decouverte avant de lancer la lecture.',
-              'Essayez un autre fichier — le format du fichier actuel n\'est peut-etre pas supporte.',
-              'Redemarrez l\'application si le probleme persiste.',
+              l.miscFaq2Step1,
+              l.miscFaq2Step2,
+              l.miscFaq2Step3,
+              l.miscFaq2Step4,
+              l.miscFaq2Step5,
+              l.miscFaq2Step6,
             ],
           ),
           _FaqItem(
             icon: Icons.broken_image_rounded,
-            title: 'Les pochettes ne s\'affichent pas',
+            title: l.miscFaq3Title,
             steps: [
-              'Lancez un scan de la bibliotheque depuis Reglages > Bibliotheque > Sources.',
-              'Verifiez que les fichiers contiennent des pochettes embarquees (tags ID3/Vorbis).',
-              'Placez un fichier cover.jpg ou folder.jpg dans le dossier de l\'album.',
-              'Activez la recuperation automatique des pochettes dans Reglages > Bibliotheque > Metadonnees.',
-              'Purgez le cache images en redemarrant l\'application.',
+              l.miscFaq3Step1,
+              l.miscFaq3Step2,
+              l.miscFaq3Step3,
+              l.miscFaq3Step4,
+              l.miscFaq3Step5,
             ],
           ),
           _FaqItem(
             icon: Icons.hourglass_top_rounded,
-            title: 'Le scan est bloque',
+            title: l.miscFaq4Title,
             steps: [
-              'Un scan initial peut prendre plusieurs minutes selon la taille de la bibliotheque.',
-              'Verifiez que les dossiers musicaux sont accessibles (permissions, montages SMB).',
-              'Fermez et relancez l\'application pour interrompre un scan bloque.',
-              'Verifiez les logs du serveur pour identifier un fichier problematique.',
-              'Essayez de reduire le nombre de dossiers sources pour isoler le probleme.',
+              l.miscFaq4Step1,
+              l.miscFaq4Step2,
+              l.miscFaq4Step3,
+              l.miscFaq4Step4,
+              l.miscFaq4Step5,
             ],
           ),
           _FaqItem(
             icon: Icons.cast_rounded,
-            title: 'Comment connecter un appareil DLNA/AirPlay',
+            title: l.miscFaq5Title,
             steps: [
-              'DLNA : l\'appareil doit etre allume et sur le meme reseau. Il apparait automatiquement dans la liste des sorties.',
-              'Si l\'appareil n\'apparait pas, verifiez que le multicast fonctionne sur votre routeur.',
-              'Certains routeurs bloquent le trafic SSDP entre les clients Wi-Fi — activez le relais multicast.',
-              'BluOS : les enceintes Bluesound sont detectees automatiquement.',
-              'Chromecast : les appareils Google Cast apparaissent dans les sorties disponibles.',
-              'Apres la detection, creez une zone et assignez-y l\'appareil comme sortie.',
+              l.miscFaq5Step1,
+              l.miscFaq5Step2,
+              l.miscFaq5Step3,
+              l.miscFaq5Step4,
+              l.miscFaq5Step5,
+              l.miscFaq5Step6,
             ],
           ),
           _FaqItem(
             icon: Icons.cloud_off_rounded,
-            title: 'Problemes de streaming',
+            title: l.miscFaq6Title,
             steps: [
-              'Verifiez que vos identifiants de service (Tidal, Qobuz, Deezer) sont corrects dans Reglages > Streaming.',
-              'Si la session a expire, deconnectez puis reconnectez le service.',
-              'Verifiez votre connexion Internet.',
-              'Certains titres peuvent etre indisponibles dans votre region.',
-              'Pour les problemes de qualite, verifiez les reglages de qualite streaming dans Reglages > Audio avance.',
-              'Si le probleme persiste, envoyez un rapport de bug depuis Reglages > Aide.',
+              l.miscFaq6Step1,
+              l.miscFaq6Step2,
+              l.miscFaq6Step3,
+              l.miscFaq6Step4,
+              l.miscFaq6Step5,
+              l.miscFaq6Step6,
             ],
           ),
         ],

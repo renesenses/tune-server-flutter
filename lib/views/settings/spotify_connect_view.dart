@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 
 /// Spotify Connect receiver settings — drives /api/v1/spotify-connect/*.
@@ -39,7 +40,8 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Statut indisponible: $e');
+      setState(() => _error =
+          AppLocalizations.of(context).cfgStatusUnavailable(e.toString()));
     }
   }
 
@@ -70,6 +72,7 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final s = _status;
     final zones = context.watch<AppState>().zoneState.zones;
     return Scaffold(
@@ -77,11 +80,7 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Tune apparaît comme un récepteur Spotify Connect sur le réseau '
-            'local. Depuis l\'app Spotify, sélectionnez « Tune (…) » dans la '
-            'liste des appareils. Compte Spotify Premium requis côté client.',
-          ),
+          Text(l.cfgSpotifyIntro),
           const SizedBox(height: 16),
           if (s == null)
             const Center(child: CircularProgressIndicator())
@@ -92,22 +91,18 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('librespot non détecté sur le serveur',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text(
-                      'Réinstallez Tune Server depuis le tarball/zip officiel '
-                      'pour que le binaire soit livré, ou installez-le '
-                      'séparément (apt install librespot / brew install librespot).',
-                    ),
+                  children: [
+                    Text(l.cfgSpotifyNoLibrespot,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text(l.cfgSpotifyNoLibrespotHint),
                   ],
                 ),
               ),
             )
           else ...[
             DropdownButtonFormField<int?>(
-              decoration: const InputDecoration(labelText: 'Zone cible'),
+              decoration: InputDecoration(labelText: l.cfgTargetZone),
               initialValue: _zoneId,
               items: [
                 const DropdownMenuItem<int?>(value: null, child: Text('—')),
@@ -123,7 +118,7 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
             const SizedBox(height: 12),
             TextField(
               decoration: InputDecoration(
-                labelText: 'Nom du device',
+                labelText: l.cfgDeviceName,
                 hintText: (s['device_name'] as String?) ?? 'Tune (...)',
               ),
               controller: TextEditingController(text: _deviceName)
@@ -150,13 +145,16 @@ class _SpotifyConnectViewState extends State<SpotifyConnectView> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(s['enabled'] == true ? 'Désactiver' : 'Activer'),
+                      : Text(s['enabled'] == true
+                          ? l.streamingDisable
+                          : l.streamingEnable),
                 ),
                 const SizedBox(width: 12),
                 if (s['enabled'] == true && s['active'] == true)
-                  const Chip(
-                    avatar: Icon(Icons.circle, color: Colors.green, size: 12),
-                    label: Text('En lecture'),
+                  Chip(
+                    avatar: const Icon(Icons.circle,
+                        color: Colors.green, size: 12),
+                    label: Text(l.cfgPlaying),
                   ),
               ],
             ),

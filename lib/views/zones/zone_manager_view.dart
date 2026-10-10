@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -102,6 +103,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   // ---------------------------------------------------------------------------
 
   Future<void> _toggleMute(int zoneId, bool currentlyMuted) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'mute_$zoneId';
@@ -111,26 +113,28 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
       await api.muteZone(zoneId, !currentlyMuted);
       if (mounted) {
         _loadOverview();
-        _showSnackBar(!currentlyMuted ? 'Zone en sourdine' : 'Sourdine désactivée');
+        _showSnackBar(!currentlyMuted ? l.znZoneMuted : l.znZoneUnmuted);
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur mute : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrMute(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
     }
   }
 
   Future<void> _setVolume(int zoneId, double volume) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     try {
       await api.setVolume(zoneId, volume);
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur volume : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrVolume(e.toString()), isError: true);
     }
   }
 
   Future<void> _measureLatency(int zoneId) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'latency_$zoneId';
@@ -144,8 +148,8 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _latencyResults[zoneId] = 'erreur');
-        _showSnackBar('Erreur latence : $e', isError: true);
+        setState(() => _latencyResults[zoneId] = l.znLatencyError);
+        _showSnackBar(l.znErrLatency(e.toString()), isError: true);
       }
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
@@ -153,16 +157,18 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   }
 
   Future<void> _setGroupVolume(String groupId, double volume) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     try {
       await api.setGroupVolume(groupId, masterVolume: volume);
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur volume groupe : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrGroupVolume(e.toString()), isError: true);
     }
   }
 
   Future<void> _calibrateGroup(String groupId) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'calibrate_$groupId';
@@ -170,15 +176,16 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     setState(() => _actionLoading[key] = true);
     try {
       await api.calibrateGroup(groupId);
-      if (mounted) _showSnackBar('Calibration terminée');
+      if (mounted) _showSnackBar(l.znCalibrationDone);
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur calibration : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrCalibration(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
     }
   }
 
   Future<void> _dissolveGroup(String groupId) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'dissolve_$groupId';
@@ -187,41 +194,42 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     try {
       await api.deleteZoneGroup(groupId);
       if (mounted) {
-        _showSnackBar('Groupe dissous');
+        _showSnackBar(l.zonesGroupDissolved);
         _loadGroups();
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur dissolution : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrDissolve(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
     }
   }
 
   Future<void> _renameGroup(String groupId, String currentName) async {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController(text: currentName);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Renommer le groupe', style: TuneFonts.title3),
+        title: Text(l.znRenameGroupTitle, style: TuneFonts.title3),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           style: const TextStyle(color: TuneColors.textPrimary),
-          decoration: const InputDecoration(
-            hintText: 'Nouveau nom',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            hintText: l.znNewNameHint,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('Renommer'),
+            child: Text(l.znRename),
           ),
         ],
       ),
@@ -232,20 +240,21 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
       try {
         await api.renameZoneGroup(groupId, result);
         _loadGroups();
-        _showSnackBar('Groupe renommé');
+        _showSnackBar(l.znGroupRenamed);
       } catch (e) {
-        _showSnackBar('Erreur renommage : $e', isError: true);
+        _showSnackBar(l.znErrRename(e.toString()), isError: true);
       }
     }
   }
 
   Future<void> _showCreateGroupDialog() async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
 
     final zones = _overview?['zones'] as List<dynamic>? ?? [];
     if (zones.length < 2) {
-      _showSnackBar('Il faut au moins 2 zones pour créer un groupe');
+      _showSnackBar(l.znGroupNeedTwoZones);
       return;
     }
 
@@ -259,7 +268,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
         builder: (ctx, setDialogState) {
           return AlertDialog(
             backgroundColor: TuneColors.surface,
-            title: const Text('Créer un groupe', style: TuneFonts.title3),
+            title: Text(l.zonesCreateGroup, style: TuneFonts.title3),
             content: SizedBox(
               width: double.maxFinite,
               child: SingleChildScrollView(
@@ -271,29 +280,29 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                     TextField(
                       controller: nameCtrl,
                       style: const TextStyle(color: TuneColors.textPrimary),
-                      decoration: const InputDecoration(
-                        labelText: 'Nom du groupe',
-                        hintText: 'ex: Salon + Cuisine',
-                        hintStyle: TextStyle(color: TuneColors.textTertiary),
+                      decoration: InputDecoration(
+                        labelText: l.znGroupNameLabel,
+                        hintText: l.znGroupNameHint,
+                        hintStyle: const TextStyle(color: TuneColors.textTertiary),
                       ),
                     ),
                     const SizedBox(height: 16),
 
                     // Leader dropdown
-                    const Text('Leader', style: TuneFonts.subheadline),
+                    Text(l.zonesGroupLeader, style: TuneFonts.subheadline),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<int>(
                       initialValue: leaderId,
                       dropdownColor: TuneColors.surfaceVariant,
                       style: const TextStyle(color: TuneColors.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'Choisir le leader',
-                        hintStyle: TextStyle(color: TuneColors.textTertiary),
+                      decoration: InputDecoration(
+                        hintText: l.znChooseLeader,
+                        hintStyle: const TextStyle(color: TuneColors.textTertiary),
                       ),
                       items: zones.map<DropdownMenuItem<int>>((z) {
                         final zMap = z as Map<String, dynamic>;
                         final id = zMap['id'] as int;
-                        final name = zMap['name'] as String? ?? 'Zone $id';
+                        final name = zMap['name'] as String? ?? l.znZoneFallback('$id');
                         return DropdownMenuItem(value: id, child: Text(name));
                       }).toList(),
                       onChanged: (val) {
@@ -306,12 +315,12 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                     const SizedBox(height: 16),
 
                     // Members
-                    const Text('Membres', style: TuneFonts.subheadline),
+                    Text(l.znMembers, style: TuneFonts.subheadline),
                     const SizedBox(height: 8),
                     ...zones.map<Widget>((z) {
                       final zMap = z as Map<String, dynamic>;
                       final id = zMap['id'] as int;
-                      final name = zMap['name'] as String? ?? 'Zone $id';
+                      final name = zMap['name'] as String? ?? l.znZoneFallback('$id');
                       return CheckboxListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
@@ -340,7 +349,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Annuler'),
+                child: Text(l.btnCancel),
               ),
               FilledButton(
                 style:
@@ -348,7 +357,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                 onPressed: (leaderId != null && selectedIds.length >= 2)
                     ? () => Navigator.pop(ctx, true)
                     : null,
-                child: const Text('Créer'),
+                child: Text(l.btnCreate),
               ),
             ],
           );
@@ -365,15 +374,16 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                 : null,
           );
           _loadGroups();
-          _showSnackBar('Groupe créé');
+          _showSnackBar(l.zonesGroupCreated);
         } catch (e) {
-          _showSnackBar('Erreur création groupe : $e', isError: true);
+          _showSnackBar(l.znErrCreateGroup(e.toString()), isError: true);
         }
       }
     });
   }
 
   Future<void> _activateProfile(int profileId) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'activate_$profileId';
@@ -382,17 +392,18 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     try {
       await api.activateZoneProfile(profileId);
       if (mounted) {
-        _showSnackBar('Profil activé');
+        _showSnackBar(l.znProfileActivated);
         _loadOverview();
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur activation : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrActivate(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
     }
   }
 
   Future<void> _deleteProfile(int profileId) async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     final key = 'delete_$profileId';
@@ -401,17 +412,18 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     try {
       await api.deleteZoneProfile(profileId);
       if (mounted) {
-        _showSnackBar('Profil supprimé');
+        _showSnackBar(l.znProfileDeleted);
         _loadProfiles();
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur suppression : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrDelete(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading[key] = false);
     }
   }
 
   Future<void> _cleanupOfflineZones() async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
     if (_actionLoading['cleanup'] == true) return;
@@ -432,19 +444,20 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
         final count = offline.length;
         _showSnackBar(
           count == 0
-              ? 'Aucune zone hors ligne à supprimer'
-              : '$count zone${count > 1 ? 's' : ''} hors ligne supprimée${count > 1 ? 's' : ''}',
+              ? l.znNoOfflineZones
+              : l.znOfflineZonesRemoved(count),
         );
         if (count > 0) _loadOverview();
       }
     } catch (e) {
-      if (mounted) _showSnackBar('Erreur nettoyage : $e', isError: true);
+      if (mounted) _showSnackBar(l.znErrCleanup(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _actionLoading['cleanup'] = false);
     }
   }
 
   Future<void> _showSaveProfileDialog() async {
+    final l = AppLocalizations.of(context);
     final api = _api;
     if (api == null) return;
 
@@ -455,7 +468,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Sauvegarder la configuration',
+        title: Text(l.znSaveConfigTitle,
             style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -464,10 +477,10 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               controller: nameCtrl,
               autofocus: true,
               style: const TextStyle(color: TuneColors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Nom du profil',
-                hintText: 'ex: Soirée, Matin calme',
-                hintStyle: TextStyle(color: TuneColors.textTertiary),
+              decoration: InputDecoration(
+                labelText: l.znProfileNameLabel,
+                hintText: l.znProfileNameHint,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
               ),
             ),
             const SizedBox(height: 12),
@@ -475,9 +488,9 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               controller: descCtrl,
               style: const TextStyle(color: TuneColors.textPrimary),
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Description (optionnel)',
-                hintStyle: TextStyle(color: TuneColors.textTertiary),
+              decoration: InputDecoration(
+                labelText: l.znDescriptionOptional,
+                hintStyle: const TextStyle(color: TuneColors.textTertiary),
               ),
             ),
           ],
@@ -485,12 +498,12 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sauvegarder'),
+            child: Text(l.btnSave),
           ),
         ],
       ),
@@ -499,7 +512,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     if (result == true && mounted) {
       final name = nameCtrl.text.trim();
       if (name.isEmpty) {
-        _showSnackBar('Le nom est requis');
+        _showSnackBar(l.znNameRequired);
         return;
       }
       try {
@@ -510,9 +523,9 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               : null,
         );
         _loadProfiles();
-        _showSnackBar('Profil sauvegardé');
+        _showSnackBar(l.znProfileSaved);
       } catch (e) {
-        _showSnackBar('Erreur sauvegarde : $e', isError: true);
+        _showSnackBar(l.znErrSave(e.toString()), isError: true);
       }
     }
   }
@@ -532,13 +545,14 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final api = _api;
 
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Zone Manager', style: TuneFonts.title3),
+        title: Text(l.znZoneManagerTitle, style: TuneFonts.title3),
         actions: [
           _actionLoading['cleanup'] == true
               ? const Padding(
@@ -553,13 +567,13 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               : IconButton(
                   icon: const Icon(Icons.cleaning_services_rounded,
                       color: TuneColors.textSecondary),
-                  tooltip: 'Nettoyer les zones hors ligne',
+                  tooltip: l.znCleanupOffline,
                   onPressed: _cleanupOfflineZones,
                 ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Rafraîchir',
+            tooltip: l.btnRefresh,
             onPressed: () => _loadAll(),
           ),
         ],
@@ -575,7 +589,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                         size: 48, color: TuneColors.textTertiary),
                     const SizedBox(height: 16),
                     Text(
-                      'Zone Manager nécessite une connexion au serveur distant.',
+                      l.znRemoteRequired,
                       textAlign: TextAlign.center,
                       style: TuneFonts.body
                           .copyWith(color: TuneColors.textSecondary),
@@ -619,10 +633,11 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildZonesSection() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('Zones'),
+        _SectionHeader(l.zonesTitle),
         if (_loadingOverview && _overview == null)
           Container(
             color: TuneColors.surface,
@@ -636,7 +651,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
             color: TuneColors.surface,
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Données indisponibles',
+              l.znDataUnavailable,
               style: TuneFonts.footnote
                   .copyWith(color: TuneColors.textTertiary),
             ),
@@ -650,11 +665,12 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   Widget _buildZoneCards() {
     final zones = _overview!['zones'] as List<dynamic>? ?? [];
     if (zones.isEmpty) {
+      final l = AppLocalizations.of(context);
       return Container(
         color: TuneColors.surface,
         padding: const EdgeInsets.all(16),
         child: Text(
-          'Aucune zone',
+          l.zonesNone,
           style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
         ),
       );
@@ -690,10 +706,11 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildGroupsSection() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('Groupes'),
+        _SectionHeader(l.znGroups),
         if (_loadingGroups && _groups.isEmpty)
           Container(
             color: TuneColors.surface,
@@ -707,7 +724,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
             color: TuneColors.surface,
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Aucun groupe',
+              l.znNoGroups,
               style: TuneFonts.footnote
                   .copyWith(color: TuneColors.textTertiary),
             ),
@@ -738,7 +755,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               minimumSize: const Size.fromHeight(44),
             ),
             icon: const Icon(Icons.group_add_rounded, size: 20),
-            label: const Text('Créer un groupe'),
+            label: Text(l.zonesCreateGroup),
             onPressed: () => _showCreateGroupDialog(),
           ),
         ),
@@ -747,10 +764,11 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   }
 
   Widget _buildGroupTile(Map<String, dynamic> group) {
+    final l = AppLocalizations.of(context);
     final groupId = (group['id'] ?? group['group_id'] ?? '').toString();
-    final name = group['name'] as String? ?? 'Groupe';
+    final name = group['name'] as String? ?? l.znGroupFallback;
     final leaderName = group['leader_name'] as String? ??
-        'Zone ${group['leader_zone_id'] ?? '?'}';
+        l.znZoneFallback('${group['leader_zone_id'] ?? '?'}');
     final memberIds = group['zone_ids'] as List<dynamic>? ?? [];
     final masterVolume =
         (group['master_volume'] as num?)?.toDouble() ?? 0.5;
@@ -762,7 +780,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
         (z) => z?['id'] == id,
         orElse: () => null,
       );
-      return z?['name'] as String? ?? 'Zone $id';
+      return z?['name'] as String? ?? l.znZoneFallback('$id');
     }).toList();
 
     return Padding(
@@ -864,7 +882,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                         )
                       : const Icon(Icons.tune_rounded,
                           size: 18, color: TuneColors.accent),
-                  label: const Text('Calibrer', style: TuneFonts.footnote),
+                  label: Text(l.znCalibrate, style: TuneFonts.footnote),
                   onPressed: _actionLoading['calibrate_$groupId'] == true
                       ? null
                       : () => _calibrateGroup(groupId),
@@ -892,7 +910,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                       : const Icon(Icons.link_off_rounded,
                           size: 18, color: TuneColors.error),
                   label:
-                      const Text('Dissoudre', style: TuneFonts.footnote),
+                      Text(l.znDissolve, style: TuneFonts.footnote),
                   onPressed: _actionLoading['dissolve_$groupId'] == true
                       ? null
                       : () => _dissolveGroup(groupId),
@@ -910,10 +928,11 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildProfilesSection() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('Profils'),
+        _SectionHeader(l.znProfiles),
         if (_loadingProfiles && _profiles.isEmpty)
           Container(
             color: TuneColors.surface,
@@ -927,7 +946,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
             color: TuneColors.surface,
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Aucun profil sauvegardé',
+              l.znNoProfiles,
               style: TuneFonts.footnote
                   .copyWith(color: TuneColors.textTertiary),
             ),
@@ -958,7 +977,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               minimumSize: const Size.fromHeight(44),
             ),
             icon: const Icon(Icons.save_rounded, size: 20),
-            label: const Text('Sauvegarder config'),
+            label: Text(l.znSaveConfigButton),
             onPressed: () => _showSaveProfileDialog(),
           ),
         ),
@@ -967,8 +986,9 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
   }
 
   Widget _buildProfileTile(Map<String, dynamic> profile) {
+    final l = AppLocalizations.of(context);
     final profileId = profile['id'] as int? ?? 0;
-    final name = profile['name'] as String? ?? 'Profil';
+    final name = profile['name'] as String? ?? l.znProfileFallback;
     final description = profile['description'] as String?;
 
     return ListTile(
@@ -990,8 +1010,8 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
                 )
               : TextButton(
                   onPressed: () => _activateProfile(profileId),
-                  child: const Text('Activer',
-                      style: TextStyle(color: TuneColors.accent)),
+                  child: Text(l.streamingEnable,
+                      style: const TextStyle(color: TuneColors.accent)),
                 ),
           _actionLoading['delete_$profileId'] == true
               ? const SizedBox(
@@ -1003,7 +1023,7 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
               : IconButton(
                   icon: const Icon(Icons.delete_outline_rounded,
                       color: TuneColors.error, size: 20),
-                  tooltip: 'Supprimer',
+                  tooltip: l.btnDelete,
                   onPressed: () => _deleteProfile(profileId),
                 ),
         ],
@@ -1019,14 +1039,15 @@ class _ZoneManagerViewState extends State<ZoneManagerView> {
     // Only show pins if zones are available
     final zones = (_overview?['zones'] as List<dynamic>?) ?? [];
     if (zones.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('Pins'),
+        _SectionHeader(l.znPins),
         ...zones.map<Widget>((zone) {
           final zoneId = zone['id'] as int? ?? 0;
-          final zoneName = zone['name'] as String? ?? 'Zone $zoneId';
+          final zoneName = zone['name'] as String? ?? l.znZoneFallback('$zoneId');
           return _PinsCard(
             zoneId: zoneId,
             zoneName: zoneName,
@@ -1087,18 +1108,20 @@ class _PinsCardState extends State<_PinsCard> {
   }
 
   Future<void> _invokePin(int index) async {
+    final l = AppLocalizations.of(context);
     final api = widget.api;
     if (api == null) return;
     try {
       await api.invokeZonePin(widget.zoneId, index);
-      widget.onMessage('Pin ${index + 1} invoked', isError: false);
+      widget.onMessage(l.znPinInvoked(index + 1), isError: false);
     } catch (e) {
-      widget.onMessage('Pin invoke error: $e', isError: true);
+      widget.onMessage(l.znPinInvokeError(e.toString()), isError: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -1153,7 +1176,7 @@ class _PinsCardState extends State<_PinsCard> {
             else if (_pins != null && _pins!.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('No pins configured',
+                child: Text(l.znNoPins,
                     style: TuneFonts.caption
                         .copyWith(color: TuneColors.textTertiary)),
               )
@@ -1162,7 +1185,7 @@ class _PinsCardState extends State<_PinsCard> {
                 final index = entry.key;
                 final pin = entry.value as Map<String, dynamic>?;
                 if (pin == null) return const SizedBox.shrink();
-                final name = pin['name'] as String? ?? 'Pin ${index + 1}';
+                final name = pin['name'] as String? ?? l.znPinFallback(index + 1);
                 final source = pin['source'] as String? ?? '';
                 return ListTile(
                   dense: true,
@@ -1184,7 +1207,7 @@ class _PinsCardState extends State<_PinsCard> {
                   trailing: IconButton(
                     icon: const Icon(Icons.play_circle_outline_rounded,
                         color: TuneColors.accent, size: 24),
-                    tooltip: 'Play',
+                    tooltip: l.libraryPlay,
                     onPressed: () => _invokePin(index),
                   ),
                 );
@@ -1244,9 +1267,10 @@ class _ZoneCardState extends State<_ZoneCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final z = widget.zone;
     final id = z['id'] as int;
-    final name = z['name'] as String? ?? 'Zone $id';
+    final name = z['name'] as String? ?? l.znZoneFallback('$id');
     final outputType = z['output_type'] as String? ?? 'local';
     final host = z['host'] as String? ?? z['ip'] as String? ?? '';
     final muted = z['muted'] == true;
@@ -1291,7 +1315,7 @@ class _ZoneCardState extends State<_ZoneCard> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  _outputLabel(outputType),
+                  _outputLabel(l, outputType),
                   style: TuneFonts.caption
                       .copyWith(color: TuneColors.accent),
                 ),
@@ -1332,7 +1356,7 @@ class _ZoneCardState extends State<_ZoneCard> {
                             ? TuneColors.error
                             : TuneColors.textSecondary,
                       ),
-                      tooltip: muted ? 'Réactiver' : 'Sourdine',
+                      tooltip: muted ? l.znUnmute : l.znMute,
                       onPressed: widget.onToggleMute,
                     ),
               Expanded(
@@ -1375,8 +1399,8 @@ class _ZoneCardState extends State<_ZoneCard> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: widget.onMeasureLatency,
-                      child: const Text('Latence',
-                          style: TextStyle(
+                      child: Text(l.znLatency,
+                          style: const TextStyle(
                               color: TuneColors.accent, fontSize: 13)),
                     ),
               if (widget.latencyResult != null) ...[
@@ -1394,7 +1418,7 @@ class _ZoneCardState extends State<_ZoneCard> {
     );
   }
 
-  String _outputLabel(String type) {
+  String _outputLabel(AppLocalizations l, String type) {
     switch (type) {
       case 'dlna':
         return 'DLNA';
@@ -1403,7 +1427,7 @@ class _ZoneCardState extends State<_ZoneCard> {
       case 'bluetooth':
         return 'Bluetooth';
       default:
-        return 'Local';
+        return l.zonesOutputLocal;
     }
   }
 }

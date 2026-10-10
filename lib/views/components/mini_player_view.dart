@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/enums.dart';
 import '../../models/domain_models.dart';
 import '../../server/database/database.dart';
@@ -138,7 +139,7 @@ class _ExpandedControls extends StatelessWidget {
               context,
               zones,
               currentId,
-              title: 'Changer de zone',
+              title: AppLocalizations.of(context).npChangeZone,
               onPick: (id) => app.selectZone(id),
             ),
             child: Padding(
@@ -152,7 +153,7 @@ class _ExpandedControls extends StatelessWidget {
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 90),
                     child: Text(
-                      current?.name ?? 'Zone',
+                      current?.name ?? AppLocalizations.of(context).npZoneFallback,
                       style: TuneFonts.footnote,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -172,12 +173,12 @@ class _ExpandedControls extends StatelessWidget {
             icon: const Icon(Icons.move_up_rounded),
             iconSize: 20,
             color: TuneColors.textSecondary,
-            tooltip: 'Follow me',
+            tooltip: AppLocalizations.of(context).npFollowMe,
             onPressed: () => _pickZone(
               context,
               zones.where((z) => z.id != currentId).toList(),
               null,
-              title: 'Amener la lecture vers…',
+              title: AppLocalizations.of(context).npMovePlaybackTo,
               onPick: (id) => app.followMeTo(id),
             ),
           ),
@@ -208,9 +209,10 @@ class _ExpandedControls extends StatelessWidget {
               ),
             ),
             if (zones.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Aucune autre zone', style: TuneFonts.footnote),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(AppLocalizations.of(sheetCtx).npNoOtherZones,
+                    style: TuneFonts.footnote),
               ),
             for (final z in zones)
               ListTile(
@@ -251,7 +253,7 @@ class _MiniPlayerContent extends StatelessWidget {
     final isBuffering = state == PlaybackState.buffering;
 
     return Semantics(
-      label: 'Now playing',
+      label: AppLocalizations.of(context).npNowPlaying,
       child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => showNowPlaying(context),
@@ -276,7 +278,7 @@ class _MiniPlayerContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    track?.title ?? 'Aucune piste',
+                    track?.title ?? AppLocalizations.of(context).nowPlayingNoTrack,
                     style: TuneFonts.miniTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -315,7 +317,7 @@ class _MiniPlayerContent extends StatelessWidget {
               color: TuneColors.textTertiary,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              tooltip: 'Favorite',
+              tooltip: AppLocalizations.of(context).npFavorite,
               onPressed: () {
                 if (track != null && track.source == Source.radio.rawValue) {
                   final radios = app.libraryState.radios;
@@ -329,7 +331,7 @@ class _MiniPlayerContent extends StatelessWidget {
                   }
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Ajouté aux favoris'), duration: Duration(seconds: 1)),
+                  SnackBar(content: Text(AppLocalizations.of(context).favoriteAdded), duration: const Duration(seconds: 1)),
                 );
               },
             ),
@@ -362,7 +364,9 @@ class _MiniPlayerContent extends StatelessWidget {
                     : Icons.play_arrow_rounded),
                 iconSize: 32,
                 color: TuneColors.textPrimary,
-                tooltip: isPlaying ? 'Pause' : 'Play',
+                tooltip: isPlaying
+                    ? AppLocalizations.of(context).npPause
+                    : AppLocalizations.of(context).libraryPlay,
                 onPressed: isPlaying ? () => app.pause() : () => app.resume(),
               ),
 

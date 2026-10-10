@@ -93,7 +93,7 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
-                              '${_effectiveTrackIds.length} piste${_effectiveTrackIds.length != 1 ? "s" : ""}',
+                              l.plTracksCount(_effectiveTrackIds.length),
                               style: TuneFonts.caption.copyWith(
                                   color: TuneColors.textSecondary),
                             ),
@@ -128,7 +128,7 @@ class _AddToPlaylistSheetState extends State<AddToPlaylistSheet> {
                             color: TuneColors.accent),
                         title: Text(playlists[i].name, style: TuneFonts.body),
                         subtitle: Text(
-                          '${playlists[i].trackCount} piste${playlists[i].trackCount != 1 ? "s" : ""}',
+                          l.plTracksCount(playlists[i].trackCount),
                           style: TuneFonts.footnote,
                         ),
                         onTap: _adding

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -72,6 +73,8 @@ class _ServerConfigViewState extends State<ServerConfigView> {
       builder: (ctx) => _AddMusicDirDialog(api: api),
     );
     if (result == null || result.isEmpty) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
 
     setState(() => _error = null);
     try {
@@ -81,7 +84,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
         setState(() => _musicDirs = dirs.map((d) => d.toString()).toList());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dossier ajoute: $result'),
+            content: Text(l.srvFolderAdded(result)),
             backgroundColor: TuneColors.success,
           ),
         );
@@ -90,7 +93,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text(l.errorWith(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -101,22 +104,23 @@ class _ServerConfigViewState extends State<ServerConfigView> {
   Future<void> _removeMusicDir(String path) async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Supprimer ce dossier ?', style: TuneFonts.title3),
+        title: Text(l.srvRemoveFolderTitle, style: TuneFonts.title3),
         content: Text(path, style: TuneFonts.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(l.btnDelete,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),
@@ -132,7 +136,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -141,13 +145,14 @@ class _ServerConfigViewState extends State<ServerConfigView> {
   Future<void> _scanPath(String path) async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     setState(() => _scanning = true);
     try {
       await api.triggerScan(path: path);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Scan lance: $path'),
+            content: Text(l.srvScanStarted(path)),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -155,7 +160,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -165,13 +170,14 @@ class _ServerConfigViewState extends State<ServerConfigView> {
   Future<void> _scanAll() async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     setState(() => _scanning = true);
     try {
       await api.triggerScan();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Scan complet lance'),
+          SnackBar(
+            content: Text(l.srvFullScanStarted),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -179,7 +185,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -189,25 +195,26 @@ class _ServerConfigViewState extends State<ServerConfigView> {
   Future<void> _restartServer() async {
     final api = _api;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Redemarrer le serveur ?', style: TuneFonts.title3),
+        title: Text(l.srvRestartTitle, style: TuneFonts.title3),
         content: Text(
-          'Le serveur sera arrete puis relance. La lecture en cours sera interrompue.',
+          l.srvRestartBody,
           style: TuneFonts.body.copyWith(color: TuneColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Redemarrer',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(l.srvRestartBtn,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),
@@ -219,8 +226,8 @@ class _ServerConfigViewState extends State<ServerConfigView> {
       await api.restartServer();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Serveur en cours de redemarrage...'),
+          SnackBar(
+            content: Text(l.srvRestarting),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -229,8 +236,8 @@ class _ServerConfigViewState extends State<ServerConfigView> {
       // Connection error is expected after restart
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Redemarrage en cours...'),
+          SnackBar(
+            content: Text(l.srvRestartInProgress),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -241,15 +248,16 @@ class _ServerConfigViewState extends State<ServerConfigView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Configuration serveur', style: TuneFonts.title3),
+        title: Text(l.srvConfigTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.textSecondary),
-            tooltip: 'Recharger',
+            tooltip: l.btnRefresh,
             onPressed: _loadData,
           ),
         ],
@@ -266,7 +274,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                       const Icon(Icons.error_outline_rounded,
                           size: 48, color: TuneColors.error),
                       const SizedBox(height: 12),
-                      Text('Erreur de chargement',
+                      Text(l.srvLoadError,
                           style: TuneFonts.body.copyWith(color: TuneColors.textSecondary)),
                       const SizedBox(height: 8),
                       Text(_error!, style: TuneFonts.caption.copyWith(color: TuneColors.error)),
@@ -274,7 +282,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                       FilledButton.icon(
                         onPressed: _loadData,
                         icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Reessayer'),
+                        label: Text(l.btnRetry),
                         style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
                       ),
                     ],
@@ -284,23 +292,23 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                   padding: const EdgeInsets.only(bottom: 80),
                   children: [
                     // ---- Music Directories ----
-                    _buildMusicDirsSection(),
+                    _buildMusicDirsSection(l),
 
                     // ---- Server Info ----
-                    _buildServerInfoSection(),
+                    _buildServerInfoSection(l),
 
                     // ---- Actions ----
-                    _buildActionsSection(),
+                    _buildActionsSection(l),
                   ],
                 ),
     );
   }
 
-  Widget _buildMusicDirsSection() {
+  Widget _buildMusicDirsSection(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('DOSSIERS MUSICAUX'),
+        _SectionHeader(l.metadataSectionFolders),
         Container(
           color: TuneColors.surface,
           child: Column(
@@ -314,7 +322,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                           size: 40, color: TuneColors.textTertiary),
                       const SizedBox(height: 8),
                       Text(
-                        'Aucun dossier configure',
+                        l.metadataFoldersNone,
                         style: TuneFonts.body.copyWith(color: TuneColors.textSecondary),
                       ),
                     ],
@@ -361,13 +369,13 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                                     ? TuneColors.textTertiary
                                     : TuneColors.accent,
                               ),
-                              tooltip: 'Scanner ce dossier',
+                              tooltip: l.srvScanFolderTooltip,
                               onPressed: _scanning ? null : () => _scanPath(dir),
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete_outline_rounded,
                                   size: 20, color: TuneColors.error),
-                              tooltip: 'Supprimer',
+                              tooltip: l.btnDelete,
                               onPressed: _musicDirs.length <= 1
                                   ? null
                                   : () => _removeMusicDir(dir),
@@ -381,7 +389,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
               ListTile(
                 leading: const Icon(Icons.add_rounded, color: TuneColors.accent),
-                title: Text('Ajouter un dossier',
+                title: Text(l.btnAddFolder,
                     style: TuneFonts.body.copyWith(color: TuneColors.accent)),
                 onTap: _addMusicDir,
               ),
@@ -392,7 +400,7 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     );
   }
 
-  Widget _buildServerInfoSection() {
+  Widget _buildServerInfoSection(AppLocalizations l) {
     final version = _config['server_version'] ?? '—';
     final engine = _config['server_engine'] ?? '—';
     final port = _config['api_port'] ?? _config['stream_port'] ?? '—';
@@ -401,18 +409,18 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('INFORMATIONS SERVEUR'),
+        _SectionHeader(l.srvSectionServerInfo),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
-              _InfoTile(label: 'Version', value: 'v$version'),
+              _InfoTile(label: l.srvInfoVersion, value: 'v$version'),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
-              _InfoTile(label: 'Moteur', value: engine.toString()),
+              _InfoTile(label: l.srvInfoEngine, value: engine.toString()),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
-              _InfoTile(label: 'Port', value: port.toString()),
+              _InfoTile(label: l.port, value: port.toString()),
               const Divider(height: 1, indent: 16, color: TuneColors.divider),
-              _InfoTile(label: 'Base de donnees', value: dbEngine.toString()),
+              _InfoTile(label: l.srvInfoDatabase, value: dbEngine.toString()),
             ],
           ),
         ),
@@ -420,11 +428,11 @@ class _ServerConfigViewState extends State<ServerConfigView> {
     );
   }
 
-  Widget _buildActionsSection() {
+  Widget _buildActionsSection(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('ACTIONS'),
+        _SectionHeader(l.srvSectionActions),
         Container(
           color: TuneColors.surface,
           child: Column(
@@ -435,9 +443,9 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                   Icons.radar_rounded,
                   color: _scanning ? TuneColors.textTertiary : TuneColors.accent,
                 ),
-                title: Text('Scanner la bibliotheque', style: TuneFonts.body),
+                title: Text(l.metadataScanBtn, style: TuneFonts.body),
                 subtitle: Text(
-                  'Analyse tous les dossiers configures',
+                  l.metadataScanDesc,
                   style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
                 ),
                 trailing: _scanning
@@ -457,9 +465,9 @@ class _ServerConfigViewState extends State<ServerConfigView> {
                   Icons.restart_alt_rounded,
                   color: _restarting ? TuneColors.textTertiary : TuneColors.warning,
                 ),
-                title: Text('Redemarrer le serveur', style: TuneFonts.body),
+                title: Text(l.srvRestartServer, style: TuneFonts.body),
                 subtitle: Text(
-                  'Arrete et relance le processus serveur',
+                  l.srvRestartServerDesc,
                   style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
                 ),
                 trailing: _restarting
@@ -529,22 +537,23 @@ class _AddMusicDirDialogState extends State<_AddMusicDirDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return AlertDialog(
       backgroundColor: TuneColors.surface,
-      title: const Text('Ajouter un dossier', style: TuneFonts.title3),
+      title: Text(l.btnAddFolder, style: TuneFonts.title3),
       content: SizedBox(
         width: 360,
-        child: _browsing ? _buildBrowser() : _buildPathInput(),
+        child: _browsing ? _buildBrowser(l) : _buildPathInput(l),
       ),
       actions: _browsing
           ? [
               TextButton(
                 onPressed: () => setState(() => _browsing = false),
-                child: const Text('Saisie manuelle'),
+                child: Text(l.srvManualEntry),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, _currentPath),
-                child: Text('Selectionner "$_currentPath"',
+                child: Text(l.srvSelectPath(_currentPath),
                     style: const TextStyle(color: TuneColors.accent),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
@@ -553,24 +562,24 @@ class _AddMusicDirDialogState extends State<_AddMusicDirDialog> {
           : [
               TextButton(
                 onPressed: () => Navigator.pop(context, null),
-                child: const Text('Annuler'),
+                child: Text(l.btnCancel),
               ),
               TextButton(
                 onPressed: _startBrowse,
-                child: const Text('Parcourir...'),
+                child: Text(l.srvBrowse),
               ),
               TextButton(
                 onPressed: _pathCtrl.text.trim().isEmpty
                     ? null
                     : () => Navigator.pop(context, _pathCtrl.text.trim()),
-                child: const Text('Ajouter',
-                    style: TextStyle(color: TuneColors.accent)),
+                child: Text(l.btnAdd,
+                    style: const TextStyle(color: TuneColors.accent)),
               ),
             ],
     );
   }
 
-  Widget _buildPathInput() {
+  Widget _buildPathInput(AppLocalizations l) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -578,23 +587,23 @@ class _AddMusicDirDialogState extends State<_AddMusicDirDialog> {
           controller: _pathCtrl,
           autofocus: true,
           style: TuneFonts.body,
-          decoration: const InputDecoration(
-            labelText: 'Chemin du dossier',
-            hintText: '/chemin/vers/musique',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            labelText: l.metadataFolderPath,
+            hintText: l.srvFolderPathHint,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 8),
         Text(
-          'Entrez le chemin absolu du dossier sur le serveur.',
+          l.srvFolderPathHelp,
           style: TuneFonts.caption.copyWith(color: TuneColors.textTertiary),
         ),
       ],
     );
   }
 
-  Widget _buildBrowser() {
+  Widget _buildBrowser(AppLocalizations l) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -645,7 +654,7 @@ class _AddMusicDirDialogState extends State<_AddMusicDirDialog> {
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Text(
-                      'Aucun sous-dossier',
+                      l.srvNoSubfolders,
                       style: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
                       textAlign: TextAlign.center,
                     ),

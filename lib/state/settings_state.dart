@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Locale;
 
 import '../server/configuration.dart';
 
@@ -149,4 +150,30 @@ class SettingsState extends ChangeNotifier {
     await _config.setMetadataDisplayFields(fields);
     notifyListeners();
   }
+}
+
+// ---------------------------------------------------------------------------
+// Résolution de la langue
+// ---------------------------------------------------------------------------
+
+/// La langue de repli quand aucune langue du téléphone n'est prise en charge.
+///
+/// L'anglais, jamais le français ni la première de la liste : Flutter, sans
+/// rappel, retombe sur `supportedLocales.first` — `de` ici, puisque la liste
+/// générée par gen-l10n est triée par ordre alphabétique. Un téléphone réglé
+/// en néerlandais ou en portugais s'ouvrait donc en allemand.
+const Locale localeDeRepli = Locale('en');
+
+/// Choisit la langue de l'application parmi [prises] (les langues des ARB).
+///
+/// [demandees] vaut la langue choisie dans les Réglages quand il y en a une,
+/// sinon les langues du téléphone par ordre de préférence. La première dont
+/// le code de langue est pris en charge l'emporte ; l'anglais sinon.
+Locale resoudreLocale(List<Locale>? demandees, Iterable<Locale> prises) {
+  for (final d in demandees ?? const <Locale>[]) {
+    for (final p in prises) {
+      if (p.languageCode == d.languageCode) return p;
+    }
+  }
+  return localeDeRepli;
 }

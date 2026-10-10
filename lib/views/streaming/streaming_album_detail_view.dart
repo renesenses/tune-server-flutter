@@ -35,6 +35,10 @@ class _StreamingAlbumDetailViewState
   bool _loading = true;
   String? _error;
 
+  // Sentinelle : _loadAlbum() part d'initState(), où AppLocalizations n'est
+  // pas encore lisible — le texte traduit est résolu dans build().
+  static const _kServiceNotFound = '\u0000service-not-found';
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +50,15 @@ class _StreamingAlbumDetailViewState
       final app = context.read<AppState>();
       final service = app.engine.streamingManager
           .service(widget.track.serviceId);
-      if (service == null) throw Exception('Service introuvable');
+      if (service == null) {
+        if (mounted) {
+          setState(() {
+            _error = _kServiceNotFound;
+            _loading = false;
+          });
+        }
+        return;
+      }
 
       // Tente de récupérer l'album via l'id présent dans les données brutes
       final albumId = widget.track.raw['album_id']?.toString() ??
@@ -153,7 +165,12 @@ class _StreamingAlbumDetailViewState
             )
           else if (_error != null)
             SliverFillRemaining(
-              child: _ErrorState(message: _error!, onRetry: _loadAlbum),
+              child: _ErrorState(
+                message: _error == _kServiceNotFound
+                    ? AppLocalizations.of(context).miscServiceNotFound
+                    : _error!,
+                onRetry: _loadAlbum,
+              ),
             )
           else if (_tracks!.isEmpty)
             SliverFillRemaining(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -95,17 +96,18 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   @override
   Widget build(BuildContext context) {
     final api = _api;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Diagnostics', style: TuneFonts.title3),
+        title: Text(l.miscNavDiagnostics, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Rafraichir',
+            tooltip: l.btnRefresh,
             onPressed: () => _loadAll(),
           ),
         ],
@@ -121,7 +123,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                         size: 48, color: TuneColors.textTertiary),
                     const SizedBox(height: 16),
                     Text(
-                      'Diagnostics requires a remote server connection.',
+                      l.miscDiagRequiresRemote,
                       textAlign: TextAlign.center,
                       style: TuneFonts.body
                           .copyWith(color: TuneColors.textSecondary),
@@ -150,7 +152,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                             onPressed: () => _loadAll(),
                             style: FilledButton.styleFrom(
                                 backgroundColor: TuneColors.accent),
-                            child: const Text('Retry'),
+                            child: Text(l.btnRetry),
                           ),
                         ],
                       ),
@@ -184,18 +186,19 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     final uptime = system['uptime'] ?? diag['uptime'] ?? '-';
     final memory = system['memory'] ?? diag['memory'];
     final health = system['health'] ?? diag['health'] ?? diag['status'] ?? '-';
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('SYSTEM'),
+        _SectionHeader(l.miscDiagSystem),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _InfoTile(
                 icon: Icons.verified_rounded,
-                label: 'Health',
+                label: l.miscDiagHealth,
                 value: health.toString(),
                 valueColor: health.toString().toLowerCase() == 'ok' ||
                         health.toString().toLowerCase() == 'healthy'
@@ -205,13 +208,13 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
               const Divider(height: 1, indent: 56, color: TuneColors.divider),
               _InfoTile(
                 icon: Icons.info_outline_rounded,
-                label: 'Version',
+                label: l.miscVersion,
                 value: version.toString(),
               ),
               const Divider(height: 1, indent: 56, color: TuneColors.divider),
               _InfoTile(
                 icon: Icons.timer_rounded,
-                label: 'Uptime',
+                label: l.miscDiagUptime,
                 value: _formatUptime(uptime),
               ),
               if (memory != null) ...[
@@ -219,7 +222,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                     height: 1, indent: 56, color: TuneColors.divider),
                 _InfoTile(
                   icon: Icons.memory_rounded,
-                  label: 'Memory',
+                  label: l.miscDiagMemory,
                   value: _formatMemory(memory),
                 ),
               ],
@@ -241,35 +244,36 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     final artists = db['artists'] ?? db['artist_count'] ?? '-';
     final playlists = db['playlists'] ?? db['playlist_count'];
     final radios = db['radios'] ?? db['radio_count'];
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('DATABASE'),
+        _SectionHeader(l.miscDiagDatabase),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _InfoTile(
                   icon: Icons.music_note_rounded,
-                  label: 'Tracks',
+                  label: l.metadataStatTracks,
                   value: '$tracks'),
               const Divider(height: 1, indent: 56, color: TuneColors.divider),
               _InfoTile(
                   icon: Icons.album_rounded,
-                  label: 'Albums',
+                  label: l.metadataStatAlbums,
                   value: '$albums'),
               const Divider(height: 1, indent: 56, color: TuneColors.divider),
               _InfoTile(
                   icon: Icons.person_rounded,
-                  label: 'Artists',
+                  label: l.metadataStatArtists,
                   value: '$artists'),
               if (playlists != null) ...[
                 const Divider(
                     height: 1, indent: 56, color: TuneColors.divider),
                 _InfoTile(
                     icon: Icons.playlist_play_rounded,
-                    label: 'Playlists',
+                    label: l.metadataStatPlaylists,
                     value: '$playlists'),
               ],
               if (radios != null) ...[
@@ -277,7 +281,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                     height: 1, indent: 56, color: TuneColors.divider),
                 _InfoTile(
                     icon: Icons.radio_rounded,
-                    label: 'Radios',
+                    label: l.metadataStatRadios,
                     value: '$radios'),
               ],
             ],
@@ -301,10 +305,11 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   }
 
   Widget _buildStreamingFromMap(Map<String, dynamic> services) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('STREAMING SERVICES'),
+        _SectionHeader(l.streamingServices),
         Container(
           color: TuneColors.surface,
           child: Column(
@@ -317,11 +322,15 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                 connected = value['authenticated'] == true ||
                     value['enabled'] == true ||
                     value['connected'] == true;
-                status = connected ? 'Connected' : 'Disconnected';
+                status = connected
+                    ? l.streamingConnected
+                    : l.streamingNotConnected;
               } else {
                 connected = value == true ||
                     value.toString().toLowerCase() == 'connected';
-                status = connected ? 'Connected' : 'Disconnected';
+                status = connected
+                    ? l.streamingConnected
+                    : l.streamingNotConnected;
               }
               return Column(
                 children: [
@@ -348,18 +357,19 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   Widget _buildZonesSection(Map<String, dynamic> diag) {
     final zones = diag['zones'] as List<dynamic>? ?? [];
     if (zones.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('ZONES'),
+        _SectionHeader(l.navZones),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: zones.asMap().entries.map((entry) {
               final idx = entry.key;
               final z = entry.value as Map<String, dynamic>;
-              final name = z['name'] ?? 'Zone ${z['id']}';
+              final name = z['name'] ?? l.miscZoneNumbered('${z['id']}');
               final state = z['state'] ?? z['playback_state'] ?? z['status'] ?? '-';
               final output = z['output_type'] ?? z['output'] ?? 'local';
               return Column(
@@ -403,10 +413,11 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   // ---- Logs ----
 
   Widget _buildLogsSection() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('LOGS'),
+        _SectionHeader(l.miscDiagLogs),
         Container(
           color: TuneColors.surface,
           constraints: const BoxConstraints(maxHeight: 400),
@@ -422,7 +433,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                   ? Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        'No logs available',
+                        l.miscDiagNoLogs,
                         style: TuneFonts.footnote
                             .copyWith(color: TuneColors.textTertiary),
                       ),

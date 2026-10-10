@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -31,6 +32,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
   Future<void> _exportConfig() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
     setState(() { _exporting = true; _message = null; });
     try {
       final data = await api.exportConfig();
@@ -45,13 +47,13 @@ class _ConfigExportViewState extends State<ConfigExportView> {
       if (mounted) {
         setState(() {
           _exporting = false;
-          _message = 'Configuration exportee: ${file.path}';
+          _message = l.cfgConfigExported(file.path);
           _isError = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() { _exporting = false; _message = 'Erreur: $e'; _isError = true; });
+        setState(() { _exporting = false; _message = l.errorWith(e.toString()); _isError = true; });
       }
     }
   }
@@ -59,6 +61,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
   Future<void> _importConfig() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -75,23 +78,24 @@ class _ConfigExportViewState extends State<ConfigExportView> {
       final config = jsonDecode(content) as Map<String, dynamic>;
       final response = await api.importConfig(config);
       if (mounted) {
-        final msg = response['message'] as String? ?? 'Configuration importee avec succes';
+        final msg = response['message'] as String? ?? l.cfgConfigImported;
         setState(() { _importing = false; _message = msg; _isError = false; });
       }
     } catch (e) {
       if (mounted) {
-        setState(() { _importing = false; _message = 'Erreur import: $e'; _isError = true; });
+        setState(() { _importing = false; _message = l.cfgImportError(e.toString()); _isError = true; });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Configuration', style: TuneFonts.title3),
+        title: Text(l.onboardingConfigTitle, style: TuneFonts.title3),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -109,10 +113,10 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: const [
-                      Icon(Icons.upload_file_rounded, color: TuneColors.accent, size: 24),
-                      SizedBox(width: 12),
-                      Text('Exporter', style: TextStyle(
+                    children: [
+                      const Icon(Icons.upload_file_rounded, color: TuneColors.accent, size: 24),
+                      const SizedBox(width: 12),
+                      Text(l.btnExport, style: const TextStyle(
                         color: TuneColors.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -121,7 +125,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sauvegarde la configuration du serveur en fichier JSON.',
+                    l.cfgConfigExportDesc,
                     style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
@@ -133,7 +137,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
                         : const Icon(Icons.download_rounded, size: 18),
-                    label: const Text('Exporter JSON'),
+                    label: Text(l.cfgConfigExportJson),
                     style: FilledButton.styleFrom(
                       backgroundColor: TuneColors.accent,
                       minimumSize: const Size.fromHeight(44),
@@ -154,10 +158,10 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: const [
-                      Icon(Icons.file_open_rounded, color: TuneColors.warning, size: 24),
-                      SizedBox(width: 12),
-                      Text('Importer', style: TextStyle(
+                    children: [
+                      const Icon(Icons.file_open_rounded, color: TuneColors.warning, size: 24),
+                      const SizedBox(width: 12),
+                      Text(l.btnImport, style: const TextStyle(
                         color: TuneColors.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -166,7 +170,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Restaure une configuration depuis un fichier JSON.',
+                    l.cfgConfigImportDesc,
                     style: TuneFonts.footnote.copyWith(color: TuneColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
@@ -178,7 +182,7 @@ class _ConfigExportViewState extends State<ConfigExportView> {
                             child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent),
                           )
                         : const Icon(Icons.folder_open_rounded, size: 18),
-                    label: const Text('Choisir un fichier'),
+                    label: Text(l.cfgChooseFile),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: TuneColors.accent,
                       side: const BorderSide(color: TuneColors.accent),

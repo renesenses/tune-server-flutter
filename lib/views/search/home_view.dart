@@ -110,14 +110,14 @@ class _HomeViewState extends State<HomeView> {
 
         // ---- En cours d'écoute (reactive from ZoneState) ----
         if (nowListening.isNotEmpty) ...[
-          _SectionTitle(title: "En cours d'écoute"),
+          _SectionTitle(title: l.libNowListening),
           _NowListeningList(items: nowListening, zones: zones),
           const SizedBox(height: 16),
         ],
 
         // ---- Continue Listening (click to play) ----
         if (_continueListening != null && _continueListening!.isNotEmpty) ...[
-          _SectionTitle(title: "Continuer l'écoute"),
+          _SectionTitle(title: l.libContinueListening),
           _ContinueListeningList(items: _continueListening!),
           const SizedBox(height: 16),
         ],
@@ -137,28 +137,28 @@ class _HomeViewState extends State<HomeView> {
 
         // ---- Récemment ajouté ----
         if (lib.recentAlbums.isNotEmpty) ...[
-          _SectionTitle(title: 'Récemment ajouté'),
+          _SectionTitle(title: l.libRecentlyAdded),
           _RecentAlbumsList(albums: lib.recentAlbums),
           const SizedBox(height: 16),
         ],
 
         // ---- Top Tracks ----
         if (_topTracks != null && _topTracks!.isNotEmpty) ...[
-          _SectionTitle(title: 'Top Tracks'),
+          _SectionTitle(title: l.libTopTracks),
           _TopTracksList(tracks: _topTracks!),
           const SizedBox(height: 16),
         ],
 
         // ---- Top Artists ----
         if (_topArtists != null && _topArtists!.isNotEmpty) ...[
-          _SectionTitle(title: 'Top Artists'),
+          _SectionTitle(title: l.libTopArtists),
           _TopArtistsList(artists: _topArtists!),
           const SizedBox(height: 16),
         ],
 
         // ---- Recommandations ----
         if (_recommendations != null && _recommendations!.isNotEmpty) ...[
-          _SectionTitle(title: 'Recommandations'),
+          _SectionTitle(title: l.libRecommendations),
           _RecommendationsList(albums: _recommendations!),
           const SizedBox(height: 16),
         ],

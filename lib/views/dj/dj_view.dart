@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
@@ -134,11 +135,12 @@ class _DJViewState extends State<DJView> {
   }
 
   Future<void> _toggleDJ() async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No zone selected')),
+        SnackBar(content: Text(l.playbackErrorNoZone)),
       );
       return;
     }
@@ -153,13 +155,14 @@ class _DJViewState extends State<DJView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _loadTrackOnDeck(String deck) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) return;
@@ -169,7 +172,7 @@ class _DJViewState extends State<DJView> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Load track on Deck ${deck.toUpperCase()}',
+        title: Text(l.znDjLoadOnDeck(deck.toUpperCase()),
             style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -178,21 +181,21 @@ class _DJViewState extends State<DJView> {
               controller: controller,
               style: TuneFonts.body,
               decoration: InputDecoration(
-                hintText: 'Search tracks...',
+                hintText: l.znDjSearchHint,
                 hintStyle: TuneFonts.subheadline,
                 prefixIcon: const Icon(Icons.search_rounded,
                     color: TuneColors.textTertiary),
               ),
             ),
             const SizedBox(height: 12),
-            Text('Enter a track name and press Search',
+            Text(l.znDjSearchHelp,
                 style: TuneFonts.caption),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -210,18 +213,18 @@ class _DJViewState extends State<DJView> {
                 }
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('No tracks found')),
+                    SnackBar(content: Text(l.znDjNoTracksFound)),
                   );
                 }
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text('Search error: $e')),
+                    SnackBar(content: Text(l.znDjSearchError(e.toString()))),
                   );
                 }
               }
             },
-            child: const Text('Search & Load'),
+            child: Text(l.znDjSearchAndLoad),
           ),
         ],
       ),
@@ -234,7 +237,7 @@ class _DJViewState extends State<DJView> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Load error: $e')),
+            SnackBar(content: Text(l.znDjLoadError(e.toString()))),
           );
         }
       }
@@ -242,6 +245,7 @@ class _DJViewState extends State<DJView> {
   }
 
   Future<void> _playDeck(String deck) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) return;
@@ -251,13 +255,14 @@ class _DJViewState extends State<DJView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Play error: $e')),
+          SnackBar(content: Text(l.znDjPlayError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _pauseDeck(String deck) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) return;
@@ -267,13 +272,14 @@ class _DJViewState extends State<DJView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pause error: $e')),
+          SnackBar(content: Text(l.znDjPauseError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _crossfade() async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) return;
@@ -282,13 +288,14 @@ class _DJViewState extends State<DJView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Crossfade error: $e')),
+          SnackBar(content: Text(l.znDjCrossfadeError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _toggleAutoCrossfade(bool value) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     final zoneId = _zoneId;
     if (api == null || zoneId == null) return;
@@ -298,7 +305,7 @@ class _DJViewState extends State<DJView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(l.errorWith(e.toString()))),
         );
       }
     }
@@ -306,19 +313,20 @@ class _DJViewState extends State<DJView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isWide = MediaQuery.sizeOf(context).width > 600;
 
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('DJ Mode', style: TuneFonts.title2),
+        title: Text(l.znDjTitle, style: TuneFonts.title2),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton.icon(
               icon: Icon(_enabled ? Icons.stop_rounded : Icons.play_arrow_rounded),
-              label: Text(_enabled ? 'Disable' : 'Enable'),
+              label: Text(_enabled ? l.streamingDisable : l.streamingEnable),
               style: FilledButton.styleFrom(
                 backgroundColor: _enabled ? TuneColors.error : TuneColors.accent,
               ),
@@ -337,10 +345,10 @@ class _DJViewState extends State<DJView> {
                       const Icon(Icons.album_rounded,
                           size: 64, color: TuneColors.textTertiary),
                       const SizedBox(height: 16),
-                      Text('DJ Mode is disabled',
+                      Text(l.znDjDisabled,
                           style: TuneFonts.subheadline),
                       const SizedBox(height: 8),
-                      Text('Enable it to start mixing',
+                      Text(l.znDjEnableHint,
                           style: TuneFonts.caption),
                     ],
                   ),
@@ -355,7 +363,7 @@ class _DJViewState extends State<DJView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(child: _DeckCard(
-                              label: 'Deck A',
+                              label: l.znDjDeck('A'),
                               data: _deckA,
                               onLoad: () => _loadTrackOnDeck('a'),
                               onPlay: () => _playDeck('a'),
@@ -365,7 +373,7 @@ class _DJViewState extends State<DJView> {
                             )),
                             const SizedBox(width: 16),
                             Expanded(child: _DeckCard(
-                              label: 'Deck B',
+                              label: l.znDjDeck('B'),
                               data: _deckB,
                               onLoad: () => _loadTrackOnDeck('b'),
                               onPlay: () => _playDeck('b'),
@@ -377,7 +385,7 @@ class _DJViewState extends State<DJView> {
                         )
                       else ...[
                         _DeckCard(
-                          label: 'Deck A',
+                          label: l.znDjDeck('A'),
                           data: _deckA,
                           onLoad: () => _loadTrackOnDeck('a'),
                           onPlay: () => _playDeck('a'),
@@ -387,7 +395,7 @@ class _DJViewState extends State<DJView> {
                         ),
                         const SizedBox(height: 16),
                         _DeckCard(
-                          label: 'Deck B',
+                          label: l.znDjDeck('B'),
                           data: _deckB,
                           onLoad: () => _loadTrackOnDeck('b'),
                           onPlay: () => _playDeck('b'),
@@ -407,11 +415,11 @@ class _DJViewState extends State<DJView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Crossfade', style: TuneFonts.title3),
+                              Text(l.znDjCrossfade, style: TuneFonts.title3),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
-                                  Text('Duration: ${_crossfadeDuration.toStringAsFixed(1)}s',
+                                  Text(l.znDjDuration(_crossfadeDuration.toStringAsFixed(1)),
                                       style: TuneFonts.body),
                                   Expanded(
                                     child: Slider(
@@ -429,7 +437,7 @@ class _DJViewState extends State<DJView> {
                                 width: double.infinity,
                                 child: FilledButton.icon(
                                   icon: const Icon(Icons.swap_horiz_rounded),
-                                  label: const Text('Start Crossfade'),
+                                  label: Text(l.znDjStartCrossfade),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: TuneColors.accent,
                                   ),
@@ -440,7 +448,7 @@ class _DJViewState extends State<DJView> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Auto-crossfade', style: TuneFonts.body),
+                                  Text(l.znDjAutoCrossfade, style: TuneFonts.body),
                                   Switch(
                                     value: _autoCrossfade,
                                     activeThumbColor: TuneColors.accent,
@@ -460,19 +468,19 @@ class _DJViewState extends State<DJView> {
                                         await context.read<AppState>().apiClient?.syncTempo(zoneId);
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Sync ${_bpmA!.round()} \u2192 ${_bpmB!.round()} BPM')),
+                                            SnackBar(content: Text(l.znDjSyncBpm(_bpmA!.round(), _bpmB!.round()))),
                                           );
                                         }
                                       } catch (e) {
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Sync failed')),
+                                            SnackBar(content: Text(l.znDjSyncFailed)),
                                           );
                                         }
                                       }
                                     },
                                     icon: const Icon(Icons.sync, size: 16),
-                                    label: Text('Sync ${_bpmA!.round()} \u2192 ${_bpmB!.round()} BPM',
+                                    label: Text(l.znDjSyncBpm(_bpmA!.round(), _bpmB!.round()),
                                         style: const TextStyle(fontSize: 12)),
                                   ),
                                 ),
@@ -513,7 +521,8 @@ class _DeckCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data?['title'] as String? ?? 'No track loaded';
+    final l = AppLocalizations.of(context);
+    final title = data?['title'] as String? ?? l.znDjNoTrackLoaded;
     final artist = data?['artist'] as String?;
     final cover = data?['cover_path'] as String?;
     final isPlaying = data?['state'] == 'playing';
@@ -540,7 +549,7 @@ class _DeckCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.add_rounded),
                   color: TuneColors.textSecondary,
-                  tooltip: 'Load track',
+                  tooltip: l.znDjLoadTrack,
                   onPressed: onLoad,
                 ),
               ],
@@ -588,7 +597,7 @@ class _DeckCard extends StatelessWidget {
             // Gain bar
             Row(
               children: [
-                Text('Gain', style: TuneFonts.caption),
+                Text(l.znDjGain, style: TuneFonts.caption),
                 const SizedBox(width: 8),
                 Expanded(
                   child: LinearProgressIndicator(

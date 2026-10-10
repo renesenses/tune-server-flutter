@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -36,6 +37,7 @@ class _YouTubeBrowseViewState extends State<YouTubeBrowseView>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -46,10 +48,10 @@ class _YouTubeBrowseViewState extends State<YouTubeBrowseView>
           indicatorColor: TuneColors.accent,
           labelColor: TuneColors.accent,
           unselectedLabelColor: TuneColors.textSecondary,
-          tabs: const [
-            Tab(text: 'Accueil'),
-            Tab(text: 'Charts'),
-            Tab(text: 'Ambiances'),
+          tabs: [
+            Tab(text: l.miscYtHome),
+            Tab(text: l.miscYtCharts),
+            Tab(text: l.miscYtMoods),
           ],
         ),
       ),
@@ -100,11 +102,11 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
-    if (_data == null) return const Center(child: Text('Aucune donnee', style: TextStyle(color: TuneColors.textSecondary)));
+    if (_data == null) return Center(child: Text(AppLocalizations.of(context).miscNoData, style: const TextStyle(color: TuneColors.textSecondary)));
 
     final sections = _data!['sections'] as List<dynamic>? ?? [];
     if (sections.isEmpty) {
-      return const Center(child: Text('Aucun contenu disponible', style: TextStyle(color: TuneColors.textSecondary)));
+      return Center(child: Text(AppLocalizations.of(context).miscNoContentAvailable, style: const TextStyle(color: TuneColors.textSecondary)));
     }
 
     return ListView.builder(
@@ -153,11 +155,11 @@ class _ChartsTabState extends State<_ChartsTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
-    if (_data == null) return const Center(child: Text('Aucune donnee', style: TextStyle(color: TuneColors.textSecondary)));
+    if (_data == null) return Center(child: Text(AppLocalizations.of(context).miscNoData, style: const TextStyle(color: TuneColors.textSecondary)));
 
     final tracks = _data!['tracks'] as List<dynamic>? ?? [];
     if (tracks.isEmpty) {
-      return const Center(child: Text('Aucun chart disponible', style: TextStyle(color: TuneColors.textSecondary)));
+      return Center(child: Text(AppLocalizations.of(context).miscNoChartsAvailable, style: const TextStyle(color: TuneColors.textSecondary)));
     }
 
     return ListView.builder(
@@ -207,7 +209,7 @@ class _MoodsTabState extends State<_MoodsTab> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     if (_moods.isEmpty) {
-      return const Center(child: Text('Aucune ambiance disponible', style: TextStyle(color: TuneColors.textSecondary)));
+      return Center(child: Text(AppLocalizations.of(context).miscNoMoodsAvailable, style: const TextStyle(color: TuneColors.textSecondary)));
     }
 
     return GridView.builder(

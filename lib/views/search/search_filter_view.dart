@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/domain_models.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
@@ -74,8 +75,8 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     '32': '32-bit',
   };
 
+  // 'local' is localized in _labelFor().
   static const Map<String, String> _sourceLabels = {
-    'local': 'Local',
     'tidal': 'Tidal',
     'qobuz': 'Qobuz',
     'deezer': 'Deezer',
@@ -89,15 +90,18 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     '>10': '> 10min',
   };
 
-  static const Map<String, String> _fieldLabels = {
-    'format': 'Format',
-    'sample_rate': 'Sample Rate',
-    'bit_depth': 'Bit Depth',
-    'genre': 'Genre',
-    'year': 'Year',
-    'source': 'Source',
-    'duration': 'Duration',
-  };
+  static String _fieldLabel(AppLocalizations l, String field) {
+    switch (field) {
+      case 'format': return l.libFieldFormat;
+      case 'sample_rate': return l.libFieldSampleRate;
+      case 'bit_depth': return l.libFieldBitDepth;
+      case 'genre': return l.metadataGenreField;
+      case 'year': return l.metadataYearField;
+      case 'source': return l.libFieldSource;
+      case 'duration': return l.libFieldDuration;
+      default: return field;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Build chip lists dynamically (static + dynamic from library)
@@ -126,13 +130,14 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     return _staticChips[field] ?? [];
   }
 
-  String _labelFor(String field, String value) {
+  String _labelFor(AppLocalizations l, String field, String value) {
     switch (field) {
       case 'sample_rate':
         return _sampleRateLabels[value] ?? value;
       case 'bit_depth':
         return _bitDepthLabels[value] ?? value;
       case 'source':
+        if (value == 'local') return l.libSourceLocal;
         return _sourceLabels[value] ?? value;
       case 'duration':
         return _durationLabels[value] ?? value;
@@ -237,6 +242,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     final enabledFields =
         context.watch<SettingsState>().metadataDisplayFields;
     final lib = context.watch<LibraryState>();
+    final l = AppLocalizations.of(context);
 
     // Only show fields that have at least one chip available.
     final activeFields = enabledFields
@@ -255,7 +261,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: Text(
-            'Filter',
+            l.libFilter,
             style: TuneFonts.subheadline
                 .copyWith(color: TuneColors.textPrimary),
           ),
@@ -263,11 +269,11 @@ class _SearchFilterViewState extends State<SearchFilterView> {
         for (final field in activeFields)
           _FilterRow(
             field: field,
-            label: _fieldLabels[field] ?? field,
+            label: _fieldLabel(l, field),
             chips: _chipsFor(field, lib),
             selectedValue: _activeFilters[field],
             onChipSelected: (value) => _toggleFilter(field, value),
-            labelFor: (v) => _labelFor(field, v),
+            labelFor: (v) => _labelFor(l, field, v),
           ),
 
         // --- Results section ---
@@ -286,7 +292,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
                   )
                 else
                   Text(
-                    '$_totalCount track${_totalCount != 1 ? "s" : ""}',
+                    l.libTrackCount(_totalCount),
                     style: TuneFonts.footnote
                         .copyWith(color: TuneColors.textSecondary),
                   ),
@@ -302,8 +308,8 @@ class _SearchFilterViewState extends State<SearchFilterView> {
                     },
                     style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 4)),
-                    child: const Text('Clear',
-                        style: TextStyle(
+                    child: Text(l.btnClear,
+                        style: const TextStyle(
                             color: TuneColors.accent, fontSize: 13)),
                   ),
               ],

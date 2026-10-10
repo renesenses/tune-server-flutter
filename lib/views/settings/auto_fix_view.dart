@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../server/event_bus.dart';
 import '../../server/metadata/auto_fix.dart';
 import '../../state/app_state.dart';
@@ -87,6 +88,7 @@ class _AutoFixViewState extends State<AutoFixView> {
 
   Future<void> _applySingle(int index) async {
     final fix = _fixes![index];
+    final l = AppLocalizations.of(context);
     setState(() => _applying = true);
 
     try {
@@ -95,7 +97,7 @@ class _AutoFixViewState extends State<AutoFixView> {
       setState(() {
         _applying = false;
         _rejected.add(index); // remove from actionable list
-        _applyResult = 'Applied $count fix${count != 1 ? 'es' : ''}';
+        _applyResult = l.srvAutoFixApplied(count);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_applyResult!)),
@@ -113,6 +115,7 @@ class _AutoFixViewState extends State<AutoFixView> {
   Future<void> _applyAllHighConfidence() async {
     final fixes = _fixes;
     if (fixes == null) return;
+    final l = AppLocalizations.of(context);
 
     final highConfidence = <MetadataFix>[];
     for (int i = 0; i < fixes.length; i++) {
@@ -123,7 +126,7 @@ class _AutoFixViewState extends State<AutoFixView> {
 
     if (highConfidence.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No high-confidence fixes remaining')),
+        SnackBar(content: Text(l.srvAutoFixNoHighConfidence)),
       );
       return;
     }
@@ -143,7 +146,7 @@ class _AutoFixViewState extends State<AutoFixView> {
 
       setState(() {
         _applying = false;
-        _applyResult = 'Applied $count fix${count != 1 ? 'es' : ''}';
+        _applyResult = l.srvAutoFixApplied(count);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_applyResult!)),
@@ -161,26 +164,27 @@ class _AutoFixViewState extends State<AutoFixView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Auto Fix Metadata', style: TuneFonts.title3),
+        title: Text(l.srvAutoFixTitle, style: TuneFonts.title3),
         actions: [
           if (_scanning)
             IconButton(
               icon: const Icon(Icons.cancel_rounded,
                   size: 22, color: TuneColors.error),
-              tooltip: 'Cancel',
+              tooltip: l.btnCancel,
               onPressed: _cancelScan,
             ),
         ],
       ),
-      body: _buildBody(),
+      body: _buildBody(l),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l) {
     // Initial state
     if (_fixes == null && !_scanning && _error == null) {
       return _InitialState(onScan: _startScan);
@@ -220,15 +224,15 @@ class _AutoFixViewState extends State<AutoFixView> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$_remainingCount suggestion${_remainingCount != 1 ? 's' : ''} remaining',
+                  l.srvAutoFixRemaining(_remainingCount),
                   style: TuneFonts.footnote,
                 ),
               ),
               if (_remainingCount > 0 && !_applying)
                 TextButton(
                   onPressed: _applyAllHighConfidence,
-                  child: const Text('Apply High Conf.',
-                      style: TextStyle(color: TuneColors.accent, fontSize: 13)),
+                  child: Text(l.srvAutoFixApplyHighConf,
+                      style: const TextStyle(color: TuneColors.accent, fontSize: 13)),
                 ),
             ],
           ),
@@ -284,10 +288,10 @@ class _FixTile extends StatelessWidget {
     this.onReject,
   });
 
-  String _fieldLabel(String field) {
+  String _fieldLabel(AppLocalizations l, String field) {
     return switch (field) {
-      'genre' => 'Genre',
-      'year' => 'Year',
+      'genre' => l.metadataGenreField,
+      'year' => l.metadataYearField,
       'isrc' => 'ISRC',
       'musicbrainz_recording_id' => 'MBID',
       _ => field,
@@ -302,6 +306,7 @@ class _FixTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final confPct = (fix.confidence * 100).round();
 
     return Container(
@@ -324,7 +329,7 @@ class _FixTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  _fieldLabel(fix.field),
+                  _fieldLabel(l, fix.field),
                   style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -332,7 +337,7 @@ class _FixTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('Track #${fix.trackId}',
+              Text(l.srvAutoFixTrackNumber(fix.trackId),
                   style: TuneFonts.caption),
               const Spacer(),
               Container(
@@ -360,12 +365,12 @@ class _FixTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Current',
+                    Text(l.srvAutoFixCurrent,
                         style: TuneFonts.caption
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
                     Text(
-                      fix.oldValue ?? '(empty)',
+                      fix.oldValue ?? l.srvAutoFixEmpty,
                       style: TuneFonts.footnote.copyWith(
                         fontStyle: fix.oldValue == null
                             ? FontStyle.italic
@@ -386,7 +391,7 @@ class _FixTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Suggested',
+                    Text(l.srvAutoFixSuggested,
                         style: TuneFonts.caption
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
@@ -413,7 +418,7 @@ class _FixTile extends StatelessWidget {
                   foregroundColor: TuneColors.textTertiary,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
-                child: const Text('Skip'),
+                child: Text(l.srvAutoFixSkip),
               ),
               const SizedBox(width: 8),
               FilledButton(
@@ -423,7 +428,7 @@ class _FixTile extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   minimumSize: const Size(0, 32),
                 ),
-                child: const Text('Apply'),
+                child: Text(l.srvAutoFixApply),
               ),
             ],
           ),
@@ -443,6 +448,7 @@ class _InitialState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -450,13 +456,12 @@ class _InitialState extends StatelessWidget {
           const Icon(Icons.auto_fix_high_rounded,
               size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 16),
-          Text('Fix missing metadata', style: TuneFonts.subheadline),
+          Text(l.srvAutoFixIntroTitle, style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Scans tracks with missing genre, year, or MusicBrainz IDs '
-              'and suggests fixes from MusicBrainz.',
+              l.srvAutoFixIntroBody,
               style: TuneFonts.caption,
               textAlign: TextAlign.center,
             ),
@@ -465,7 +470,7 @@ class _InitialState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onScan,
             icon: const Icon(Icons.search_rounded),
-            label: const Text('Start Scan'),
+            label: Text(l.srvAutoFixStartScan),
             style: FilledButton.styleFrom(
               backgroundColor: TuneColors.accent,
               minimumSize: const Size(180, 48),
@@ -496,6 +501,7 @@ class _ScanningState extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = total > 0 ? processed / total : 0.0;
     final pct = (progress * 100).round();
+    final l = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -511,22 +517,22 @@ class _ScanningState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Scanning MusicBrainz...', style: TuneFonts.title3),
+          Text(l.srvAutoFixScanning, style: TuneFonts.title3),
           const SizedBox(height: 8),
           Text(
             total > 0
-                ? '$processed / $total tracks ($pct%)'
-                : 'Loading tracks...',
+                ? l.srvAutoFixProgress(processed, total, pct)
+                : l.srvAutoFixLoadingTracks,
             style: TuneFonts.footnote,
           ),
           const SizedBox(height: 4),
           Text(
-            '$fixesFound fix${fixesFound != 1 ? 'es' : ''} found so far',
+            l.srvAutoFixFoundSoFar(fixesFound),
             style: TuneFonts.caption.copyWith(color: TuneColors.accent),
           ),
           const SizedBox(height: 8),
           Text(
-            'Rate limited to 1 req/s (MusicBrainz policy)',
+            l.srvAutoFixRateLimit,
             style: TuneFonts.caption,
           ),
         ],
@@ -545,6 +551,7 @@ class _NoFixesFound extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -552,15 +559,15 @@ class _NoFixesFound extends StatelessWidget {
           const Icon(Icons.check_circle_outline_rounded,
               size: 56, color: TuneColors.success),
           const SizedBox(height: 12),
-          Text('No fixes needed', style: TuneFonts.subheadline),
+          Text(l.srvAutoFixNoneNeeded, style: TuneFonts.subheadline),
           const SizedBox(height: 4),
-          Text('All tracks have complete metadata.',
+          Text(l.srvAutoFixAllComplete,
               style: TuneFonts.caption),
           const SizedBox(height: 20),
           TextButton(
             onPressed: onRescan,
-            child: const Text('Scan Again',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(l.srvAutoFixScanAgain,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),
@@ -580,6 +587,7 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -587,7 +595,7 @@ class _ErrorState extends StatelessWidget {
           const Icon(Icons.error_outline,
               size: 48, color: TuneColors.error),
           const SizedBox(height: 12),
-          Text('Scan failed', style: TuneFonts.subheadline),
+          Text(l.srvAutoFixScanFailed, style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -599,7 +607,7 @@ class _ErrorState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l.btnRetry),
             style: FilledButton.styleFrom(
               backgroundColor: TuneColors.accent,
             ),

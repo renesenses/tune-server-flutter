@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -53,8 +54,8 @@ class _GenreTreeViewState extends State<GenreTreeView> {
       if (mounted) {
         setState(() => _tree = tree);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Genre tree saved'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).libGenreTreeSaved),
             backgroundColor: TuneColors.accent,
           ),
         );
@@ -63,7 +64,8 @@ class _GenreTreeViewState extends State<GenreTreeView> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving: $e'),
+            content: Text(
+                AppLocalizations.of(context).libSaveError(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );
@@ -74,22 +76,23 @@ class _GenreTreeViewState extends State<GenreTreeView> {
   @override
   Widget build(BuildContext context) {
     final api = _api;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Genre Tree', style: TuneFonts.title3),
+        title: Text(l.libGenreTree, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Refresh',
+            tooltip: l.btnRefresh,
             onPressed: _loadTree,
           ),
           IconButton(
             icon: const Icon(Icons.add_rounded, color: TuneColors.accent),
-            tooltip: 'Add root genre',
+            tooltip: l.libAddRootGenre,
             onPressed: _tree != null
                 ? () => _showAddGenreDialog(null)
                 : null,
@@ -107,7 +110,7 @@ class _GenreTreeViewState extends State<GenreTreeView> {
                         size: 48, color: TuneColors.textTertiary),
                     const SizedBox(height: 16),
                     Text(
-                      'Genre Tree requires a remote server connection.',
+                      l.libGenreTreeRequiresRemote,
                       textAlign: TextAlign.center,
                       style: TuneFonts.body
                           .copyWith(color: TuneColors.textSecondary),
@@ -140,7 +143,7 @@ class _GenreTreeViewState extends State<GenreTreeView> {
                             onPressed: _loadTree,
                             style: FilledButton.styleFrom(
                                 backgroundColor: TuneColors.accent),
-                            child: const Text('Retry'),
+                            child: Text(l.btnRetry),
                           ),
                         ],
                       ),
@@ -150,6 +153,7 @@ class _GenreTreeViewState extends State<GenreTreeView> {
   }
 
   Widget _buildTree() {
+    final l = AppLocalizations.of(context);
     final tree = _tree;
     if (tree == null || tree.isEmpty) {
       return Center(
@@ -159,12 +163,12 @@ class _GenreTreeViewState extends State<GenreTreeView> {
             const Icon(Icons.account_tree_rounded,
                 size: 56, color: TuneColors.textTertiary),
             const SizedBox(height: 12),
-            Text('No genre hierarchy defined',
+            Text(l.libNoGenreHierarchy,
                 style: TuneFonts.subheadline),
             const SizedBox(height: 16),
             FilledButton.icon(
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add root genre'),
+              label: Text(l.libAddRootGenre),
               style: FilledButton.styleFrom(
                   backgroundColor: TuneColors.accent),
               onPressed: () => _showAddGenreDialog(null),
@@ -196,6 +200,7 @@ class _GenreTreeViewState extends State<GenreTreeView> {
   }
 
   void _showAddGenreDialog(String? parentGenre) {
+    final l = AppLocalizations.of(context);
     final ctrl = TextEditingController();
     showDialog(
       context: context,
@@ -203,23 +208,23 @@ class _GenreTreeViewState extends State<GenreTreeView> {
         backgroundColor: TuneColors.surface,
         title: Text(
           parentGenre != null
-              ? 'Add sub-genre to "$parentGenre"'
-              : 'Add root genre',
+              ? l.libAddSubGenreTo(parentGenre)
+              : l.libAddRootGenre,
           style: TuneFonts.title3,
         ),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           style: const TextStyle(color: TuneColors.textPrimary),
-          decoration: const InputDecoration(
-            hintText: 'Genre name',
-            hintStyle: TextStyle(color: TuneColors.textTertiary),
+          decoration: InputDecoration(
+            hintText: l.libGenreName,
+            hintStyle: const TextStyle(color: TuneColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
@@ -230,7 +235,7 @@ class _GenreTreeViewState extends State<GenreTreeView> {
                 _addGenre(name, parentGenre);
               }
             },
-            child: const Text('Add'),
+            child: Text(l.btnAdd),
           ),
         ],
       ),
@@ -323,6 +328,7 @@ class _GenreNodeState extends State<_GenreNode> {
   @override
   Widget build(BuildContext context) {
     final indent = 16.0 + widget.depth * 24.0;
+    final l = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -365,7 +371,7 @@ class _GenreNodeState extends State<_GenreNode> {
             ),
             subtitle: _hasChildren
                 ? Text(
-                    '${_children.length} sub-genre${_children.length > 1 ? "s" : ""}',
+                    l.libSubGenreCount(_children.length),
                     style: TuneFonts.caption,
                   )
                 : null,
@@ -375,13 +381,13 @@ class _GenreNodeState extends State<_GenreNode> {
                 IconButton(
                   icon: const Icon(Icons.add_rounded,
                       size: 20, color: TuneColors.accent),
-                  tooltip: 'Add sub-genre',
+                  tooltip: l.libAddSubGenre,
                   onPressed: widget.onAddChild,
                 ),
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline_rounded,
                       size: 20, color: TuneColors.error),
-                  tooltip: 'Remove',
+                  tooltip: l.libRemove,
                   onPressed: () => _confirmDelete(context),
                 ),
               ],
@@ -409,29 +415,30 @@ class _GenreNodeState extends State<_GenreNode> {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text('Remove "${widget.name}"?', style: TuneFonts.title3),
+        title: Text(l.libRemoveNamedConfirm(widget.name), style: TuneFonts.title3),
         content: Text(
           _hasChildren
-              ? 'This will also remove all ${_children.length} sub-genres.'
-              : 'This genre will be removed from the tree.',
+              ? l.libRemoveGenreWithChildren(_children.length)
+              : l.libRemoveGenreBody,
           style: TuneFonts.body,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.btnCancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               widget.onDelete();
             },
-            child: const Text('Remove',
-                style: TextStyle(color: TuneColors.error)),
+            child: Text(l.libRemove,
+                style: const TextStyle(color: TuneColors.error)),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/enums.dart';
 import '../../server/database/database.dart';
 import '../../state/app_state.dart';
@@ -100,7 +101,7 @@ class _TrackRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    track?.title ?? 'Aucune piste',
+                    track?.title ?? AppLocalizations.of(context).nowPlayingNoTrack,
                     style: TuneFonts.miniTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

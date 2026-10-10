@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/library_state.dart';
 import '../ai/ai_chat_screen.dart';
@@ -87,17 +88,18 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   Future<void> _restoreSnapshot(Map<String, dynamic> snap) async {
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
+    final l = AppLocalizations.of(context);
     final nameController = TextEditingController(text: snap['playlist_name'] as String? ?? '');
     final result = await showDialog<String?>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Restaurer le snapshot', style: TuneFonts.title3),
+        title: Text(l.plRestoreSnapshotTitle, style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Nom de la playlist locale :', style: TuneFonts.footnote),
+            Text(l.plLocalPlaylistNameLabel, style: TuneFonts.footnote),
             const SizedBox(height: 8),
             TextField(
               controller: nameController,
@@ -111,11 +113,11 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-            child: const Text('Restaurer'),
+            child: Text(l.plRestore),
           ),
         ],
       ),
@@ -138,7 +140,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     try {
       final r = await doRestore(false);
       setState(() {
-        _restoreMessage = '"${r['name']}" restaurée : ${r['tracks_matched']} trouvées, ${r['tracks_not_found']} introuvables.';
+        _restoreMessage = l.plRestoreDone('${r['name']}', '${r['tracks_matched']}', '${r['tracks_not_found']}');
       });
     } catch (e) {
       final msg = e.toString();
@@ -148,14 +150,14 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: TuneColors.surface,
-            title: const Text('Playlist existante', style: TuneFonts.title3),
-            content: Text('Une playlist "${result.isEmpty ? snap['playlist_name'] : result}" existe déjà. La remplacer ?', style: TuneFonts.body),
+            title: Text(l.plExistingTitle, style: TuneFonts.title3),
+            content: Text(l.plExistingBody('${result.isEmpty ? snap['playlist_name'] : result}'), style: TuneFonts.body),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-                child: const Text('Remplacer'),
+                child: Text(l.plReplace),
               ),
             ],
           ),
@@ -164,14 +166,14 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           try {
             final r = await doRestore(true);
             setState(() {
-              _restoreMessage = '"${r['name']}" remplacée : ${r['tracks_matched']} trouvées, ${r['tracks_not_found']} introuvables.';
+              _restoreMessage = l.plRestoreReplaced('${r['name']}', '${r['tracks_matched']}', '${r['tracks_not_found']}');
             });
           } catch (e2) {
-            setState(() => _restoreMessage = 'Erreur : $e2');
+            setState(() => _restoreMessage = l.errorWith(e2.toString()));
           }
         }
       } else {
-        setState(() => _restoreMessage = 'Erreur : $e');
+        setState(() => _restoreMessage = l.errorWith(e.toString()));
       }
     }
 
@@ -179,18 +181,19 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   }
 
   Future<void> _deleteSnapshot(Map<String, dynamic> snap) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Supprimer', style: TuneFonts.title3),
-        content: Text('Supprimer le snapshot de "${snap['playlist_name']}" ?', style: TuneFonts.body),
+        title: Text(l.btnDelete, style: TuneFonts.title3),
+        content: Text(l.plDeleteSnapshotBody('${snap['playlist_name']}'), style: TuneFonts.body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-            child: const Text('Supprimer'),
+            child: Text(l.btnDelete),
           ),
         ],
       ),
@@ -207,16 +210,17 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   Future<void> _editSyncInterval(Map<String, dynamic> link) async {
     final current = link['sync_interval_minutes'] as int? ?? 0;
     final controller = TextEditingController(text: current.toString());
+    final l = AppLocalizations.of(context);
     final result = await showDialog<int?>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Intervalle auto-sync', style: TuneFonts.title3),
+        title: Text(l.plSyncIntervalTitle, style: TuneFonts.title3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Minutes (0 = manuel seulement) :', style: TuneFonts.footnote),
+            Text(l.plSyncIntervalLabel, style: TuneFonts.footnote),
             const SizedBox(height: 8),
             TextField(
               controller: controller,
@@ -226,20 +230,20 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
                 filled: true,
                 fillColor: TuneColors.surfaceVariant,
-                hintText: 'ex : 60',
+                hintText: l.plSyncIntervalHint,
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () {
               final v = int.tryParse(controller.text) ?? 0;
               Navigator.pop(ctx, v < 0 ? 0 : v);
             },
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-            child: const Text('Enregistrer'),
+            child: Text(l.btnSave),
           ),
         ],
       ),
@@ -254,11 +258,12 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Playlists Hub', style: TuneFonts.title3),
+        title: Text(l.plHubTitle, style: TuneFonts.title3),
         bottom: TabBar(
           controller: _tabCtrl,
           isScrollable: true,
@@ -266,13 +271,13 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           indicatorColor: TuneColors.accent,
           labelColor: TuneColors.accent,
           unselectedLabelColor: TuneColors.textSecondary,
-          tabs: const [
-            Tab(text: 'Playlists'),
-            Tab(text: 'Smart AI'),
-            Tab(text: 'Transferts'),
-            Tab(text: 'Sync'),
-            Tab(text: 'Backup'),
-            Tab(text: 'Compare'),
+          tabs: [
+            Tab(text: l.tabPlaylists),
+            Tab(text: l.plTabSmartAi),
+            Tab(text: l.plTabTransfers),
+            Tab(text: l.plSync),
+            Tab(text: l.plTabBackup),
+            Tab(text: l.plCompare),
           ],
         ),
       ),
@@ -357,7 +362,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       if (mounted) {
         setState(() => _comparing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Compare error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).plCompareError(e.toString()))),
         );
       }
     }
@@ -376,17 +381,18 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   }
 
   Widget _buildCompareTab() {
+    final l = AppLocalizations.of(context);
     if (_loadingPlaylists && _allPlaylists.isEmpty) {
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
     if (_allPlaylists.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.compare_arrows_rounded, size: 48, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
-            Text('No playlists available', style: TuneFonts.body),
+            const Icon(Icons.compare_arrows_rounded, size: 48, color: TuneColors.textTertiary),
+            const SizedBox(height: 12),
+            Text(l.plNoPlaylistsAvailable, style: TuneFonts.body),
           ],
         ),
       );
@@ -399,7 +405,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('SOURCE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionSource, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -407,12 +413,12 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _compareSourceService.isEmpty ? null : _compareSourceService,
                   decoration: InputDecoration(
-                    labelText: 'Service',
+                    labelText: l.plServiceLabel,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true, fillColor: TuneColors.surface,
                   ),
                   dropdownColor: TuneColors.surfaceVariant,
-                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? 'Local' : s.toUpperCase()))).toList(),
+                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? l.plLocal : s.toUpperCase()))).toList(),
                   onChanged: (v) => setState(() {
                     _compareSourceService = v ?? '';
                     _compareSourceId = '';
@@ -425,7 +431,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _compareSourceId.isEmpty ? null : _compareSourceId,
                   decoration: InputDecoration(
-                    labelText: 'Playlist',
+                    labelText: l.plPlaylistLabel,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true, fillColor: TuneColors.surface,
                   ),
@@ -439,7 +445,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             ],
           ),
           const SizedBox(height: 16),
-          const Text('TARGET', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionTarget, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -447,12 +453,12 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _compareTargetService.isEmpty ? null : _compareTargetService,
                   decoration: InputDecoration(
-                    labelText: 'Service',
+                    labelText: l.plServiceLabel,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true, fillColor: TuneColors.surface,
                   ),
                   dropdownColor: TuneColors.surfaceVariant,
-                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? 'Local' : s.toUpperCase()))).toList(),
+                  items: services.map((s) => DropdownMenuItem(value: s, child: Text(s == 'local' ? l.plLocal : s.toUpperCase()))).toList(),
                   onChanged: (v) => setState(() {
                     _compareTargetService = v ?? '';
                     _compareTargetId = '';
@@ -465,7 +471,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _compareTargetId.isEmpty ? null : _compareTargetId,
                   decoration: InputDecoration(
-                    labelText: 'Playlist',
+                    labelText: l.plPlaylistLabel,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true, fillColor: TuneColors.surface,
                   ),
@@ -488,7 +494,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               icon: _comparing
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.compare_arrows_rounded),
-              label: Text(_comparing ? 'Comparing...' : 'Compare'),
+              label: Text(_comparing ? l.plComparing : l.plCompare),
               style: FilledButton.styleFrom(
                 backgroundColor: TuneColors.accent,
                 minimumSize: const Size.fromHeight(48),
@@ -513,13 +519,13 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
     if (_history.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.swap_horiz_rounded, size: 48, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
-            Text('Aucun transfert', style: TuneFonts.body),
+            const Icon(Icons.swap_horiz_rounded, size: 48, color: TuneColors.textTertiary),
+            const SizedBox(height: 12),
+            Text(AppLocalizations.of(context).plNoTransfers, style: TuneFonts.body),
           ],
         ),
       );
@@ -562,19 +568,20 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   // ---------------------------------------------------------------------------
 
   Widget _buildSyncTab() {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
     if (_links.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sync_rounded, size: 48, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
-            Text('Aucun lien de sync', style: TuneFonts.body),
-            SizedBox(height: 4),
-            Text('Créez des liens depuis le transfert', style: TuneFonts.footnote),
+            const Icon(Icons.sync_rounded, size: 48, color: TuneColors.textTertiary),
+            const SizedBox(height: 12),
+            Text(l.plNoSyncLinks, style: TuneFonts.body),
+            const SizedBox(height: 4),
+            Text(l.plNoSyncLinksHint, style: TuneFonts.footnote),
           ],
         ),
       );
@@ -599,12 +606,12 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             title: Text(
               (link['service_playlist_name'] as String?)?.isNotEmpty == true
                   ? link['service_playlist_name'] as String
-                  : 'Playlist #${link['local_playlist_id']}',
+                  : l.plPlaylistNumber('${link['local_playlist_id']}'),
               style: TuneFonts.body,
             ),
             subtitle: Text(
               '${link['service']} · ${link['sync_direction']}'
-              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · auto ${link['sync_interval_minutes']}min' : ''}'
+              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · ${l.plAutoEveryMinutes('${link['sync_interval_minutes']}')}' : ''}'
               '${link['last_synced_at'] != null ? ' · ${(link['last_synced_at'] as String).split('T').first}' : ''}',
               style: TuneFonts.footnote,
             ),
@@ -613,7 +620,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               children: [
                 IconButton(
                   icon: const Icon(Icons.schedule, size: 18, color: TuneColors.textSecondary),
-                  tooltip: 'Intervalle auto-sync',
+                  tooltip: l.plSyncIntervalTitle,
                   onPressed: () => _editSyncInterval(link),
                 ),
                 FilledButton(
@@ -629,21 +636,20 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                       final conflicts = (result['conflicts'] as List?)?.length ?? 0;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(
-                          'Sync OK : +$addedLocal/-$removedLocal local, '
-                          '+$addedRemote/-$removedRemote remote'
-                          '${conflicts > 0 ? ', $conflicts conflits' : ''}',
+                          l.plSyncDone('$addedLocal', '$removedLocal', '$addedRemote', '$removedRemote') +
+                              (conflicts > 0 ? l.plSyncConflicts(conflicts) : ''),
                         )),
                       );
                     } catch (e) {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Sync error: $e')),
+                        SnackBar(content: Text(l.plSyncError(e.toString()))),
                       );
                     }
                     _loadTab();
                   },
                   style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size(60, 32)),
-                  child: const Text('Sync', style: TextStyle(fontSize: 12)),
+                  child: Text(l.plSync, style: const TextStyle(fontSize: 12)),
                 ),
               ],
             ),
@@ -660,6 +666,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   Widget _buildBackupTab() {
     final services = context.watch<LibraryState>().streamingServices;
     final authServices = services.where((s) => s.authenticated).map((s) => s.serviceId).toList();
+    final l = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -667,7 +674,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Backup
-          const Text('BACKUP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionBackup, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -687,7 +694,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 setState(() => _backingUp = false);
               },
               icon: const Icon(Icons.backup_rounded),
-              label: Text(_backingUp ? 'Backup en cours...' : 'Backup toutes les playlists'),
+              label: Text(_backingUp ? l.plBackingUp : l.plBackupAll),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size.fromHeight(48)),
             ),
           ),
@@ -700,7 +707,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green, size: 18),
                   const SizedBox(width: 8),
-                  Text('${_backupResult!['playlists_backed_up']} playlists · ${_backupResult!['total_tracks_snapshot']} tracks',
+                  Text(l.plBackupResult('${_backupResult!['playlists_backed_up']}', '${_backupResult!['total_tracks_snapshot']}'),
                       style: TuneFonts.footnote),
                 ],
               ),
@@ -708,7 +715,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           ],
 
           const SizedBox(height: 20),
-          const Text('SNAPSHOTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionSnapshots, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 8),
           if (_restoreMessage.isNotEmpty) ...[
             Container(
@@ -719,9 +726,9 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             ),
           ],
           if (_snapshots.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('Aucun snapshot. Lance un backup pour en créer.', style: TuneFonts.footnote),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(l.plNoSnapshots, style: TuneFonts.footnote),
             )
           else
             ..._snapshots.map((snap) => Container(
@@ -737,7 +744,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                         Text(snap['playlist_name'] as String? ?? '—',
                             style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text(
-                          '${snap['source_service']} · ${snap['track_count']} pistes'
+                          '${snap['source_service']} · ${l.plTracksCount(int.tryParse('${snap['track_count'] ?? 0}') ?? 0)}'
                           '${snap['created_at'] != null ? ' · ${(snap['created_at'] as String).split('T').first}' : ''}',
                           style: TuneFonts.footnote,
                         ),
@@ -748,12 +755,12 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                     icon: _restoringSnapshotId == snap['id']
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
                         : const Icon(Icons.restore, color: TuneColors.accent, size: 20),
-                    tooltip: 'Restaurer',
+                    tooltip: l.plRestore,
                     onPressed: _restoringSnapshotId == snap['id'] ? null : () => _restoreSnapshot(snap),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: TuneColors.textSecondary, size: 20),
-                    tooltip: 'Supprimer',
+                    tooltip: l.btnDelete,
                     onPressed: () => _deleteSnapshot(snap),
                   ),
                 ],
@@ -765,9 +772,9 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
           const SizedBox(height: 16),
 
           // Batch Transfer
-          const Text('BATCH TRANSFER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionBatchTransfer, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 8),
-          const Text('Transférer toutes les playlists d\'un service', style: TuneFonts.footnote),
+          Text(l.plBatchTransferHint, style: TuneFonts.footnote),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -775,7 +782,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _batchSource.isEmpty ? null : _batchSource,
                   decoration: InputDecoration(
-                    labelText: 'Source',
+                    labelText: l.plSourceLabel,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true, fillColor: TuneColors.surface,
                   ),
@@ -785,7 +792,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 ),
               ),
               const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Icon(Icons.arrow_forward, color: TuneColors.textTertiary)),
-              const Text('Local', style: TuneFonts.body),
+              Text(l.plLocal, style: TuneFonts.body),
             ],
           ),
           const SizedBox(height: 12),
@@ -802,7 +809,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                 setState(() => _batching = false);
               },
               icon: const Icon(Icons.download_rounded),
-              label: Text(_batching ? 'Transfert...' : 'Transférer tout'),
+              label: Text(_batching ? l.plTransferring : l.plTransferAll),
               style: FilledButton.styleFrom(
                 backgroundColor: _batchSource.isEmpty ? Colors.grey : TuneColors.accent,
                 minimumSize: const Size.fromHeight(48),
@@ -814,7 +821,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(8)),
-              child: Text('${_batchResult!['total_playlists']} playlists — ${_batchResult!['status']}', style: TuneFonts.footnote),
+              child: Text(l.plBatchResult('${_batchResult!['total_playlists']}', '${_batchResult!['status']}'), style: TuneFonts.footnote),
             ),
           ],
         ],
@@ -1004,6 +1011,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
     final app = context.read<AppState>();
     final selected = _all.where((p) => _mergeSelected.contains(p.key)).toList();
     final payload = selected.map((p) => {'service': p.service, 'playlist_id': p.id}).toList();
+    final l = AppLocalizations.of(context);
     setState(() => _merging = true);
     try {
       await app.apiClient?.mergePlaylists(
@@ -1018,13 +1026,13 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
         _mergeNameCtrl.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Playlists fusionnées.')),
+        SnackBar(content: Text(l.plMergeDone)),
       );
       await _load();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur merge : $e')),
+        SnackBar(content: Text(l.plMergeError(e.toString()))),
       );
     }
     if (mounted) setState(() => _merging = false);
@@ -1032,25 +1040,26 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
 
   Future<void> _createPlaylist() async {
     final nameCtrl = TextEditingController();
+    final l = AppLocalizations.of(context);
     final result = await showDialog<String?>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Nouvelle playlist', style: TuneFonts.title3),
+        title: Text(l.playlistNewPlaylist, style: TuneFonts.title3),
         content: TextField(
           controller: nameCtrl,
           decoration: InputDecoration(
-            labelText: 'Nom',
+            labelText: l.plNameLabel,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
             filled: true, fillColor: TuneColors.surfaceVariant,
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-            child: const Text('Créer'),
+            child: Text(l.btnCreate),
           ),
         ],
       ),
@@ -1063,24 +1072,25 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e')),
+        SnackBar(content: Text(l.errorWith(e.toString()))),
       );
     }
   }
 
   Future<void> _deletePlaylist(_PlaylistItem item) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Supprimer', style: TuneFonts.title3),
-        content: Text('Supprimer "${item.name}" ?', style: TuneFonts.body),
+        title: Text(l.btnDelete, style: TuneFonts.title3),
+        content: Text(l.plDeleteNamed(item.name), style: TuneFonts.body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-            child: const Text('Supprimer'),
+            child: Text(l.btnDelete),
           ),
         ],
       ),
@@ -1094,13 +1104,14 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e')),
+        SnackBar(content: Text(l.errorWith(e.toString()))),
       );
     }
   }
 
   Future<void> _importStreamingPlaylist(_PlaylistItem item) async {
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     try {
       await app.apiClient?.importStreamingPlaylist(
         service: item.service,
@@ -1109,13 +1120,13 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${item.name}" importée en local.')),
+        SnackBar(content: Text(l.plImportedLocal(item.name))),
       );
       await _load();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur import : $e')),
+        SnackBar(content: Text(l.plImportError(e.toString()))),
       );
     }
   }
@@ -1132,6 +1143,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
   @override
   Widget build(BuildContext context) {
     final services = _availableServices;
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       floatingActionButton: _mergeMode
@@ -1150,7 +1162,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
               controller: _searchCtrl,
               onChanged: (v) => setState(() => _search = v),
               decoration: InputDecoration(
-                hintText: 'Rechercher…',
+                hintText: l.searchHint,
                 prefixIcon: const Icon(Icons.search, color: TuneColors.textSecondary),
                 suffixIcon: _search.isNotEmpty
                     ? IconButton(
@@ -1181,7 +1193,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                 ...['all', ...services].map((f) => Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
-                        label: Text(f == 'all' ? 'Tous' : f.toUpperCase()),
+                        label: Text(f == 'all' ? l.plFilterAll : f.toUpperCase()),
                         selected: _filter == f,
                         onSelected: (_) => setState(() => _filter = f),
                         backgroundColor: TuneColors.surface,
@@ -1197,7 +1209,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                     )),
                 const SizedBox(width: 8),
                 FilterChip(
-                  label: Text(_mergeMode ? 'Annuler fusion' : 'Fusionner'),
+                  label: Text(_mergeMode ? l.plCancelMerge : l.plMerge),
                   selected: _mergeMode,
                   onSelected: (_) => setState(() {
                     _mergeMode = !_mergeMode;
@@ -1221,7 +1233,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
                 : _filtered.isEmpty
-                    ? const Center(child: Text('Aucune playlist', style: TuneFonts.body))
+                    ? Center(child: Text(l.libraryEmptyPlaylists, style: TuneFonts.body))
                     : ListView.separated(
                         padding: EdgeInsets.only(
                           top: 8,
@@ -1269,7 +1281,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '${p.service == 'local' ? 'Local' : p.service.toUpperCase()} · ${p.trackCount} pistes',
+                                    '${p.service == 'local' ? l.plLocal : p.service.toUpperCase()} · ${l.plTracksCount(p.trackCount)}',
                                     style: TuneFonts.footnote,
                                   ),
                                 ],
@@ -1282,13 +1294,13 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                                         if (!p.isLocal)
                                           IconButton(
                                             icon: const Icon(Icons.download, size: 20, color: TuneColors.accent),
-                                            tooltip: 'Importer en local',
+                                            tooltip: l.plImportToLocal,
                                             onPressed: () => _importStreamingPlaylist(p),
                                           ),
                                         if (p.isLocal)
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline, size: 20, color: TuneColors.textSecondary),
-                                            tooltip: 'Supprimer',
+                                            tooltip: l.btnDelete,
                                             onPressed: () => _deletePlaylist(p),
                                           ),
                                         const Icon(Icons.chevron_right_rounded, color: TuneColors.textTertiary),
@@ -1313,7 +1325,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                 children: [
                   Row(
                     children: [
-                      Text('${_mergeSelected.length} sélectionnées',
+                      Text(l.plSelectedCount(_mergeSelected.length),
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: TuneColors.textPrimary)),
                       const Spacer(),
                       Row(children: [
@@ -1322,7 +1334,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                           onChanged: (v) => setState(() => _mergeDedup = v),
                           activeThumbColor: TuneColors.accent,
                         ),
-                        const Text('Dédup.', style: TuneFonts.footnote),
+                        Text(l.plDedup, style: TuneFonts.footnote),
                       ]),
                     ],
                   ),
@@ -1330,7 +1342,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                     controller: _mergeNameCtrl,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Nom de la playlist fusionnée',
+                      hintText: l.plMergedNameHint,
                       filled: true,
                       fillColor: TuneColors.surfaceVariant,
                       border: OutlineInputBorder(
@@ -1350,7 +1362,7 @@ class _PlaylistsTabState extends State<_PlaylistsTab> {
                       icon: _merging
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.merge),
-                      label: Text(_merging ? 'Fusion…' : 'Fusionner'),
+                      label: Text(_merging ? l.plMerging : l.plMerge),
                       style: FilledButton.styleFrom(
                         backgroundColor: TuneColors.accent,
                         minimumSize: const Size.fromHeight(44),
@@ -1380,6 +1392,7 @@ class _CompareResultCard extends StatelessWidget {
     final onlyInSource = result['only_in_source'] as List? ?? [];
     final onlyInTarget = result['only_in_target'] as List? ?? [];
     final matchRate = result['match_rate'] as num? ?? 0;
+    final l = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1390,15 +1403,15 @@ class _CompareResultCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('RESULTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          Text(l.plSectionResults, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 12),
           Row(
             children: [
-              _StatBadge(label: 'Common', count: common.length, color: TuneColors.success),
+              _StatBadge(label: l.plCommon, count: common.length, color: TuneColors.success),
               const SizedBox(width: 8),
-              _StatBadge(label: 'Source only', count: onlyInSource.length, color: TuneColors.warning),
+              _StatBadge(label: l.plSourceOnly, count: onlyInSource.length, color: TuneColors.warning),
               const SizedBox(width: 8),
-              _StatBadge(label: 'Target only', count: onlyInTarget.length, color: TuneColors.error),
+              _StatBadge(label: l.plTargetOnly, count: onlyInTarget.length, color: TuneColors.error),
             ],
           ),
           const SizedBox(height: 12),
@@ -1410,10 +1423,10 @@ class _CompareResultCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
           const SizedBox(height: 4),
-          Text('${matchRate.toStringAsFixed(1)}% match rate', style: TuneFonts.caption),
+          Text(l.plMatchRate(matchRate.toStringAsFixed(1)), style: TuneFonts.caption),
           if (onlyInSource.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Only in source (${onlyInSource.length})', style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
+            Text(l.plOnlyInSource(onlyInSource.length), style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
             for (int i = 0; i < onlyInSource.length && i < 10; i++)
               Padding(
@@ -1426,11 +1439,11 @@ class _CompareResultCard extends StatelessWidget {
                 ),
               ),
             if (onlyInSource.length > 10)
-              Text('+ ${onlyInSource.length - 10} more', style: TuneFonts.caption),
+              Text(l.plMoreCount(onlyInSource.length - 10), style: TuneFonts.caption),
           ],
           if (onlyInTarget.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Only in target (${onlyInTarget.length})', style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
+            Text(l.plOnlyInTarget(onlyInTarget.length), style: TuneFonts.footnote.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
             for (int i = 0; i < onlyInTarget.length && i < 10; i++)
               Padding(
@@ -1443,7 +1456,7 @@ class _CompareResultCard extends StatelessWidget {
                 ),
               ),
             if (onlyInTarget.length > 10)
-              Text('+ ${onlyInTarget.length - 10} more', style: TuneFonts.caption),
+              Text(l.plMoreCount(onlyInTarget.length - 10), style: TuneFonts.caption),
           ],
         ],
       ),
@@ -1532,6 +1545,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
     final allTargets = ['local', ...authServices.where((s) => s != widget.item.service)];
 
     String target = 'local';
+    final l = AppLocalizations.of(context);
     String targetName = widget.item.name;
     bool createOnTarget = false;
 
@@ -1540,7 +1554,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
           backgroundColor: TuneColors.surface,
-          title: const Text('Transférer la playlist', style: TuneFonts.title3),
+          title: Text(l.plTransferPlaylistTitle, style: TuneFonts.title3),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1551,7 +1565,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
                 dropdownColor: TuneColors.surfaceVariant,
                 items: allTargets.map((s) => DropdownMenuItem(
                   value: s,
-                  child: Text(s == 'local' ? 'Local' : s.toUpperCase()),
+                  child: Text(s == 'local' ? l.plLocal : s.toUpperCase()),
                 )).toList(),
                 onChanged: (v) => setD(() {
                   target = v ?? 'local';
@@ -1561,14 +1575,14 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
               TextField(
                 controller: TextEditingController(text: targetName),
                 onChanged: (v) => targetName = v,
-                decoration: const InputDecoration(labelText: 'Nom'),
+                decoration: InputDecoration(labelText: l.plNameLabel),
               ),
               if (target != 'local') ...[
                 const SizedBox(height: 8),
                 CheckboxListTile(
                   value: createOnTarget,
                   onChanged: (v) => setD(() => createOnTarget = v ?? false),
-                  title: const Text('Créer sur le service distant', style: TuneFonts.footnote),
+                  title: Text(l.plCreateOnRemote, style: TuneFonts.footnote),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -1576,11 +1590,11 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-              child: const Text('Transférer'),
+              child: Text(l.plTransfer),
             ),
           ],
         ),
@@ -1601,18 +1615,19 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       final approx = result?['approximate'] ?? 0;
       final notFound = result?['not_found'] ?? 0;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transfert : $matched matchées, $approx approx, $notFound manquantes.')),
+        SnackBar(content: Text(l.plTransferDone('$matched', '$approx', '$notFound'))),
       );
       widget.onChanged();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.errorWith(e.toString()))));
     }
   }
 
   Future<void> _recover() async {
     if (!widget.item.isLocal) return;
     final app = context.read<AppState>();
+    final l = AppLocalizations.of(context);
     try {
       final result = await app.apiClient!.recoverPlaylist(int.parse(widget.item.id));
       if (!mounted) return;
@@ -1620,16 +1635,17 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       final available = (result['available'] as int?) ?? 0;
       final recovered = alternatives.length;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Recover : $available disponibles, $recovered alternatives trouvées.')),
+        SnackBar(content: Text(l.plRecoverDone(available, recovered))),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.errorWith(e.toString()))));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
@@ -1638,13 +1654,13 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz),
-            tooltip: 'Transférer',
+            tooltip: l.plTransfer,
             onPressed: _transfer,
           ),
           if (widget.item.isLocal)
             IconButton(
               icon: const Icon(Icons.healing),
-              tooltip: 'Recover',
+              tooltip: l.plRecover,
               onPressed: _recover,
             ),
         ],
@@ -1652,7 +1668,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
           : _tracks.isEmpty
-              ? const Center(child: Text('Aucune piste', style: TuneFonts.body))
+              ? Center(child: Text(l.playlistEmpty, style: TuneFonts.body))
               : ListView.separated(
                   itemCount: _tracks.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, color: TuneColors.divider),

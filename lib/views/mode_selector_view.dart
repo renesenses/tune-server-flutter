@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_localizations.dart';
 import '../server/embedded_server_service.dart';
 import '../server/tune_native_server.dart';
 import '../state/app_state.dart';
@@ -51,6 +52,7 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
   }
 
   Future<void> _startEmbedded() async {
+    final l = AppLocalizations.of(context);
     setState(() {
       _starting = true;
       _error = null;
@@ -77,19 +79,20 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
       } else {
         setState(() {
           _starting = false;
-          _error = 'Failed to start server';
+          _error = l.stgStartServerFailed;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _starting = false;
-        _error = 'Failed to start server: $e';
+        _error = l.stgStartServerFailedWith(e.toString());
       });
     }
   }
 
   void _connectRemote() {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => _RemoteConnectDialog(
@@ -106,13 +109,13 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
               _navigateToApp();
             } else {
               setState(() {
-                _error = appState.errorMessage ?? 'Connection failed';
+                _error = appState.errorMessage ?? l.stgConnectionFailed;
               });
             }
           } catch (e) {
             if (!mounted) return;
             setState(() {
-              _error = 'Connection failed: $e';
+              _error = l.stgConnectionFailedWith(e.toString());
             });
           }
         },
@@ -129,6 +132,7 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final nativeAvailable = TuneNativeServer.isAvailable ||
         // On Android the lib loads lazily, so show the option anyway
         (Theme.of(context).platform == TargetPlatform.android);
@@ -143,7 +147,7 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
               const CircularProgressIndicator(color: Color(0xFF6366F1)),
               const SizedBox(height: 24),
               Text(
-                'Starting Tune Server...',
+                l.stgStartingServer,
                 style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70),
               ),
             ],
@@ -181,7 +185,7 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Multi-room music server',
+                  l.stgTagline,
                   style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white54),
                 ),
                 const SizedBox(height: 48),
@@ -190,8 +194,8 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
                 if (nativeAvailable) ...[
                   _ModeCard(
                     icon: Icons.dns_rounded,
-                    title: 'Serveur local',
-                    subtitle: 'Lancez Tune sur cet appareil.\nVotre musique, vos regles.',
+                    title: l.stgLocalServer,
+                    subtitle: l.stgLocalServerDesc,
                     accentColor: const Color(0xFF6366F1),
                     onTap: _startEmbedded,
                   ),
@@ -201,8 +205,8 @@ class _ModeSelectorViewState extends State<ModeSelectorView> {
                 // Remote mode
                 _ModeCard(
                   icon: Icons.wifi_rounded,
-                  title: 'Telecommande',
-                  subtitle: 'Connectez-vous a un serveur\nTune sur votre reseau.',
+                  title: l.stgRemoteControl,
+                  subtitle: l.stgRemoteControlDesc,
                   accentColor: const Color(0xFF10B981),
                   onTap: _connectRemote,
                 ),
@@ -305,20 +309,21 @@ class _RemoteConnectDialogState extends State<_RemoteConnectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('Connexion distante'),
+      title: Text(l.stgRemoteConnection),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _hostController,
-            decoration: const InputDecoration(labelText: 'Adresse IP'),
+            decoration: InputDecoration(labelText: l.sourcesIpLabel),
             keyboardType: TextInputType.url,
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _portController,
-            decoration: const InputDecoration(labelText: 'Port'),
+            decoration: InputDecoration(labelText: l.port),
             keyboardType: TextInputType.number,
           ),
         ],
@@ -326,7 +331,7 @@ class _RemoteConnectDialogState extends State<_RemoteConnectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(l.btnCancel),
         ),
         FilledButton(
           onPressed: () {
@@ -335,7 +340,7 @@ class _RemoteConnectDialogState extends State<_RemoteConnectDialog> {
             Navigator.pop(context);
             widget.onConnect(host, port);
           },
-          child: const Text('Connecter'),
+          child: Text(l.btnConnect),
         ),
       ],
     );

@@ -52,25 +52,25 @@ class _iPadContentViewState extends State<iPadContentView> {
     // Party/DJ keeps nav and pages aligned without manual index math.
     final entries = <_NavEntry>[
       _NavEntry(Icons.library_music_outlined, Icons.library_music_rounded, l.navLibrary, const LibraryView()),
-      if (isRemote) _NavEntry(Icons.folder_outlined, Icons.folder_rounded, 'Repertoires', const BrowseLibraryView()),
+      if (isRemote) _NavEntry(Icons.folder_outlined, Icons.folder_rounded, l.miscNavFolders, const BrowseLibraryView()),
       _NavEntry(Icons.cloud_outlined, Icons.cloud_rounded, l.navStreaming, const StreamingView()),
       _NavEntry(Icons.speaker_group_outlined, Icons.speaker_group_rounded, l.navZones, const ZonesView()),
       _NavEntry(Icons.radio_outlined, Icons.radio_rounded, l.navRadios, const RadiosView()),
-      _NavEntry(Icons.collections_bookmark_outlined, Icons.collections_bookmark_rounded, 'Collections', const CollectionsView()),
-      _NavEntry(Icons.auto_awesome_motion_outlined, Icons.auto_awesome_motion_rounded, 'Smart Collections', const SmartCollectionsView()),
-      _NavEntry(Icons.favorite_outline_rounded, Icons.favorite_rounded, 'Favoris Radio', const RadioFavoritesView()),
+      _NavEntry(Icons.collections_bookmark_outlined, Icons.collections_bookmark_rounded, l.miscNavCollections, const CollectionsView()),
+      _NavEntry(Icons.auto_awesome_motion_outlined, Icons.auto_awesome_motion_rounded, l.miscNavSmartCollections, const SmartCollectionsView()),
+      _NavEntry(Icons.favorite_outline_rounded, Icons.favorite_rounded, l.radioFavTitle, const RadioFavoritesView()),
       // Party + DJ require server-side routes only the Python (remote)
       // server provides — hidden when running standalone.
-      if (isRemote) _NavEntry(Icons.album_outlined, Icons.album_rounded, 'DJ', const DJView()),
-      if (isRemote) _NavEntry(Icons.celebration_outlined, Icons.celebration_rounded, 'Party', const PartyView()),
-      _NavEntry(Icons.auto_awesome_outlined, Icons.auto_awesome_rounded, 'Smart Playlists', const SmartPlaylistsView()),
+      if (isRemote) _NavEntry(Icons.album_outlined, Icons.album_rounded, l.miscNavDj, const DJView()),
+      if (isRemote) _NavEntry(Icons.celebration_outlined, Icons.celebration_rounded, l.miscNavParty, const PartyView()),
+      _NavEntry(Icons.auto_awesome_outlined, Icons.auto_awesome_rounded, l.miscNavSmartPlaylists, const SmartPlaylistsView()),
       _NavEntry(Icons.podcasts_outlined, Icons.podcasts_rounded, l.navPodcasts, const PodcastsView()),
-      if (isRemote) _NavEntry(Icons.alarm_outlined, Icons.alarm_rounded, 'Alarmes', const AlarmsView()),
-      if (isRemote) _NavEntry(Icons.account_tree_outlined, Icons.account_tree_rounded, 'Genre Tree', const GenreTreeView()),
-      _NavEntry(Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Dashboard', const DashboardView()),
-      _NavEntry(Icons.find_replace_outlined, Icons.find_replace_rounded, 'Duplicates', const DuplicatesView()),
-      if (isRemote) _NavEntry(Icons.monitor_heart_outlined, Icons.monitor_heart_rounded, 'Diagnostics', const DiagnosticsView()),
-      if (isRemote) _NavEntry(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Admin', const AdminDashboardView()),
+      if (isRemote) _NavEntry(Icons.alarm_outlined, Icons.alarm_rounded, l.miscNavAlarms, const AlarmsView()),
+      if (isRemote) _NavEntry(Icons.account_tree_outlined, Icons.account_tree_rounded, l.miscNavGenreTree, const GenreTreeView()),
+      _NavEntry(Icons.bar_chart_outlined, Icons.bar_chart_rounded, l.miscNavDashboard, const DashboardView()),
+      _NavEntry(Icons.find_replace_outlined, Icons.find_replace_rounded, l.metadataSectionDuplicates, const DuplicatesView()),
+      if (isRemote) _NavEntry(Icons.monitor_heart_outlined, Icons.monitor_heart_rounded, l.miscNavDiagnostics, const DiagnosticsView()),
+      if (isRemote) _NavEntry(Icons.dashboard_outlined, Icons.dashboard_rounded, l.miscNavAdmin, const AdminDashboardView()),
       _NavEntry(Icons.settings_outlined, Icons.settings_rounded, l.navSettings, const SettingsView()),
     ];
 
@@ -168,7 +168,7 @@ class _Sidebar extends StatelessWidget {
                     builder: (ctx) => IconButton(
                       icon: const Icon(Icons.search_rounded,
                           color: TuneColors.textSecondary, size: 20),
-                      tooltip: 'Search',
+                      tooltip: AppLocalizations.of(ctx).navSearch,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 32,

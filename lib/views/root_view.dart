@@ -324,13 +324,14 @@ class _StartupStatusBannerState extends State<_StartupStatusBanner> {
       _streamingDismissed = true;
     }
 
+    final l10n = AppLocalizations.of(context);
     String? label;
     String? sub;
     if (showScan) {
-      label = 'Synchronisation de la bibliothèque…';
-      if (scanTotal > 0) sub = '$scanProgress / $scanTotal pistes';
+      label = l10n.stgSyncingLibrary;
+      if (scanTotal > 0) sub = l10n.stgScanProgressTracks(scanProgress, scanTotal);
     } else if (showStreaming) {
-      label = 'Connexion aux services streaming…';
+      label = l10n.stgConnectingStreaming;
     }
 
     // Offset by the real status-bar height. Relying on SafeArea inside the
@@ -458,6 +459,7 @@ class _WhatsNewDialogListenerState extends State<_WhatsNewDialogListener> {
   void _showDialog(AppState app) {
     if (!mounted) return;
     final version = app.whatsNewVersion ?? '';
+    final l = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -470,7 +472,7 @@ class _WhatsNewDialogListenerState extends State<_WhatsNewDialogListener> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Nouveau dans v$version',
+                l.stgWhatsNewTitle(version),
                 style: TuneFonts.title3,
               ),
             ),
@@ -480,18 +482,18 @@ class _WhatsNewDialogListenerState extends State<_WhatsNewDialogListener> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               _WhatsNewItem(
                 icon: Icons.library_music_rounded,
-                text: 'Synchronisation de bibliothèque améliorée',
+                text: l.stgWhatsNewLibrarySync,
               ),
               _WhatsNewItem(
                 icon: Icons.speaker_group_rounded,
-                text: 'Multi-room et gestion des zones optimisés',
+                text: l.stgWhatsNewMultiRoom,
               ),
               _WhatsNewItem(
                 icon: Icons.bug_report_rounded,
-                text: 'Corrections de bugs et améliorations de stabilité',
+                text: l.stgWhatsNewBugFixes,
               ),
             ],
           ),
@@ -502,7 +504,7 @@ class _WhatsNewDialogListenerState extends State<_WhatsNewDialogListener> {
               Navigator.of(ctx).pop();
               app.dismissWhatsNew();
             },
-            child: const Text('OK'),
+            child: Text(l.btnOk),
           ),
         ],
       ),
@@ -654,7 +656,7 @@ class _ErrorViewState extends State<_ErrorView> {
                     decoration: InputDecoration(
                       hintText: '192.168.1.100',
                       hintStyle: TuneFonts.footnote,
-                      labelText: 'Adresse du serveur',
+                      labelText: l.stgServerAddress,
                       labelStyle: TuneFonts.footnote,
                       prefixIcon: const Icon(Icons.dns_outlined, size: 20),
                       filled: true,
@@ -679,7 +681,7 @@ class _ErrorViewState extends State<_ErrorView> {
                     decoration: InputDecoration(
                       hintText: '8888',
                       hintStyle: TuneFonts.footnote,
-                      labelText: 'Port',
+                      labelText: l.port,
                       labelStyle: TuneFonts.footnote,
                       prefixIcon: const Icon(Icons.numbers_outlined, size: 20),
                       filled: true,
@@ -705,7 +707,7 @@ class _ErrorViewState extends State<_ErrorView> {
                           strokeWidth: 2, color: TuneColors.accent))
                   : FilledButton(
                       onPressed: isRemote ? _saveAndRetry : widget.onRetry,
-                      child: Text(isRemote ? 'Connexion' : l.btnRetry),
+                      child: Text(isRemote ? l.btnConnect : l.btnRetry),
                     ),
             ],
           ),
