@@ -153,17 +153,17 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
                         child: TagChipsWidget(itemType: 'track', itemId: widget.track.id),
                       ),
                     const SizedBox(height: 8),
-                    _Field(label: 'Titre', controller: _titleCtrl),
+                    _Field(label: l.librarySortTitle, controller: _titleCtrl),
                     const SizedBox(height: 12),
-                    _Field(label: 'Artiste', controller: _artistCtrl),
+                    _Field(label: l.metadataArtistField, controller: _artistCtrl),
                     const SizedBox(height: 12),
-                    _Field(label: 'Album', controller: _albumCtrl),
+                    _Field(label: l.metadataAlbumField, controller: _albumCtrl),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: _Field(
-                            label: 'Piste n°',
+                            label: l.libTrackNumberField,
                             controller: _trackNumCtrl,
                             keyboardType: TextInputType.number,
                           ),
@@ -171,7 +171,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _Field(
-                            label: 'Disque n°',
+                            label: l.libDiscNumberField,
                             controller: _discNumCtrl,
                             keyboardType: TextInputType.number,
                           ),
@@ -184,7 +184,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
                       Divider(color: TuneColors.divider.withValues(alpha: 0.5)),
                       const SizedBox(height: 8),
                       Text(
-                        'Metadonnees etendues',
+                        l.libExtendedMetadata,
                         style: TuneFonts.footnote.copyWith(
                           color: TuneColors.textSecondary,
                           letterSpacing: 0.5,
@@ -293,7 +293,7 @@ class _EditTrackSheetState extends State<EditTrackSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text(AppLocalizations.of(context).errorWith(e.toString())),
             backgroundColor: TuneColors.error,
           ),
         );

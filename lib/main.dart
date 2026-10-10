@@ -9,6 +9,7 @@ import 'state/library_state.dart';
 import 'state/settings_state.dart';
 import 'state/zone_state.dart';
 import 'app_navigator.dart';
+import 'views/components/barre_onglets.dart';
 import 'views/components/player_sheet.dart';
 import 'views/helpers/app_theme.dart';
 import 'views/mode_selector_view.dart';
@@ -164,6 +165,9 @@ class TuneServerApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      // Langue du téléphone si elle est prise en charge, l'anglais sinon —
+      // pas la première de la liste (voir `resoudreLocale`).
+      localeListResolutionCallback: resoudreLocale,
       // Mount the player sheet ABOVE the Navigator so the mini-player stays
       // visible while browsing into sub-pages / folders — pushing a full-screen
       // route no longer hides it (Rhorn, #1088). Phone only: the iPad layout has
@@ -180,9 +184,14 @@ class TuneServerApp extends StatelessWidget {
         // tab-bar labels on devices with a bottom inset, so the menu bar looked
         // gone in portrait (Fabien, Android v0.8.336). Include the safe area.
         final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
+        // Ordre : Navigator, puis la barre d'onglets, puis le tiroir de
+        // lecture. La barre est hissée hors du Navigator pour la même raison
+        // que le tiroir (#1088) — une sous-page plein écran la recouvrait
+        // (#1950) — mais elle reste SOUS le tiroir, faute de quoi celui-ci
+        // serait tronqué une fois déplié.
         return PlayerSheetScaffold(
           sheetBottomInset: kBottomNavigationBarHeight + safeBottom,
-          child: child,
+          child: BarreOnglets(child: child),
         );
       },
       home: const ModeSelectorView(),

@@ -107,24 +107,25 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
   }
 
   Future<void> _reportImage(BuildContext context, int artistId) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: const Text('Signaler l\'image', style: TuneFonts.title3),
-        content: const Text(
-          'Signaler cette image artiste comme incorrecte ? Le serveur la remplacera lors du prochain enrichissement.',
+        title: Text(l.libReportImageTitle, style: TuneFonts.title3),
+        content: Text(
+          l.libReportImageBody,
           style: TuneFonts.body,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l.btnCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: TuneColors.warning),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Signaler'),
+            child: Text(l.libReportAction),
           ),
         ],
       ),
@@ -136,13 +137,13 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
       await api.reportArtistImage(artistId, reason: 'incorrect');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image signalee'), backgroundColor: TuneColors.success),
+          SnackBar(content: Text(l.libImageReported), backgroundColor: TuneColors.success),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.errorWith(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -255,7 +256,7 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
           if (context.read<AppState>().apiClient != null && artist.imagePath != null)
             IconButton(
               icon: const Icon(Icons.flag_outlined, color: TuneColors.textSecondary, size: 20),
-              tooltip: 'Signaler l\'image',
+              tooltip: l.libReportImageTitle,
               onPressed: () => _reportImage(context, artist.id),
             ),
         ],
@@ -425,7 +426,7 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
 
                 // --- Albums from library ---
                 if (_albums!.isNotEmpty) ...[
-                  _sectionHeader('Albums'),
+                  _sectionHeader(l.sectionAlbums),
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 190,
@@ -457,7 +458,8 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
                     ),
                   ),
                 for (final entry in _streamingAlbums.entries) ...[
-                  _sectionHeader('Albums ${serviceInfo(entry.key).name}'),
+                  _sectionHeader(
+                      l.libServiceAlbums(serviceInfo(entry.key).name)),
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 190,
@@ -475,8 +477,7 @@ class _ArtistDetailViewState extends State<ArtistDetailView> {
 
                 // --- Pistes ---
                 if (_tracks != null && _tracks!.isNotEmpty) ...[
-                  _sectionHeader(
-                      '${_tracks!.length} piste${_tracks!.length > 1 ? "s" : ""}'),
+                  _sectionHeader(l.libTrackCount(_tracks!.length)),
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (_, i) => _ArtistTrackTile(

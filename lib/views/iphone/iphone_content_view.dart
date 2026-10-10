@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app_navigator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/settings_state.dart';
 import '../dj/dj_view.dart';
@@ -40,7 +41,21 @@ class iPhoneContentView extends StatefulWidget {
 }
 
 class _iPhoneContentViewState extends State<iPhoneContentView> {
-  int _selectedIndex = 0;
+  // La barre d'onglets est dessinée par `BarreOnglets`, au-dessus du Navigator
+  // (#1950). Elle ne peut pas deviner seule si des onglets ont un sens à
+  // l'écran : c'est cette vue, et elle seule, qui le sait. Sans ce drapeau la
+  // barre s'afficherait aussi sur le sélecteur de mode du lancement.
+  @override
+  void initState() {
+    super.initState();
+    ongletsMontes.value = true;
+  }
+
+  @override
+  void dispose() {
+    ongletsMontes.value = false;
+    super.dispose();
+  }
 
   static const _rootPages = [
     LibraryView(),
@@ -52,15 +67,6 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final tabs = [
-      (icon: Icons.library_music_outlined,   activeIcon: Icons.library_music_rounded,   label: l.navLibrary),
-      (icon: Icons.cloud_outlined,           activeIcon: Icons.cloud_rounded,           label: l.navStreaming),
-      (icon: Icons.speaker_group_outlined,   activeIcon: Icons.speaker_group_rounded,   label: l.navZones),
-      (icon: Icons.radio_outlined,           activeIcon: Icons.radio_rounded,           label: l.navRadios),
-      (icon: Icons.more_horiz_rounded,       activeIcon: Icons.more_horiz_rounded,      label: 'More'),
-    ];
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -90,10 +96,16 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
                 // Expanded and never shows the black; this mirrors it. Sub-page
                 // pushes now go to the root Navigator (full-screen), which is
                 // fine and matches the iPad behaviour.
-                child: IndexedStack(
-                  index: _selectedIndex,
-                  sizing: StackFit.expand,
-                  children: _rootPages,
+                // L'index vient de `ongletActif` et non d'un état local : la
+                // barre d'onglets est désormais montée AU-DESSUS du Navigator
+                // (main.dart), donc hors de cet arbre de widgets (#1950).
+                child: ValueListenableBuilder<int>(
+                  valueListenable: ongletActif,
+                  builder: (context, index, _) => IndexedStack(
+                    index: index,
+                    sizing: StackFit.expand,
+                    children: _rootPages,
+                  ),
                 ),
               ),
               // Reserve space for the mini player at the bottom so content
@@ -101,17 +113,9 @@ class _iPhoneContentViewState extends State<iPhoneContentView> {
               const SizedBox(height: 72),
             ],
           ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
-          items: tabs
-              .map((t) => BottomNavigationBarItem(
-                    icon: Icon(t.icon),
-                    activeIcon: Icon(t.activeIcon),
-                    label: t.label,
-                  ))
-              .toList(),
-        ),
+        // Plus de `bottomNavigationBar` ici : la barre est montée au-dessus du
+        // Navigator dans main.dart, sinon toute sous-page plein écran la
+        // recouvrait (#1950). Même remède que pour le tiroir de lecture (#1088).
       ),
     );
   }
@@ -130,26 +134,26 @@ class _MoreView extends StatelessWidget {
     final isRemote = context.watch<SettingsState>().isRemoteMode;
     final items = [
       if (isRemote)
-        (icon: Icons.folder_rounded,           label: 'Repertoires',       page: const BrowseLibraryView()),
-      (icon: Icons.collections_bookmark_rounded, label: 'Collections',  page: const CollectionsView()),
-      (icon: Icons.auto_awesome_motion_rounded, label: 'Smart Collections', page: const SmartCollectionsView()),
+        (icon: Icons.folder_rounded,           label: l.miscNavFolders,       page: const BrowseLibraryView()),
+      (icon: Icons.collections_bookmark_rounded, label: l.miscNavCollections,  page: const CollectionsView()),
+      (icon: Icons.auto_awesome_motion_rounded, label: l.miscNavSmartCollections, page: const SmartCollectionsView()),
       // Party + DJ require routes only the remote Python server provides.
       if (isRemote)
-        (icon: Icons.album_rounded,          label: 'DJ Mode',           page: const DJView()),
+        (icon: Icons.album_rounded,          label: l.miscNavDjMode,           page: const DJView()),
       if (isRemote)
-        (icon: Icons.celebration_rounded,    label: 'Party Mode',        page: const PartyView()),
-      (icon: Icons.auto_awesome_rounded,   label: 'Smart Playlists',   page: const SmartPlaylistsView()),
+        (icon: Icons.celebration_rounded,    label: l.miscNavPartyMode,        page: const PartyView()),
+      (icon: Icons.auto_awesome_rounded,   label: l.miscNavSmartPlaylists,   page: const SmartPlaylistsView()),
       (icon: Icons.podcasts_rounded,       label: l.navPodcasts,       page: const PodcastsView()),
       if (isRemote)
-        (icon: Icons.alarm_rounded,        label: 'Alarmes',           page: const AlarmsView()),
+        (icon: Icons.alarm_rounded,        label: l.miscNavAlarms,           page: const AlarmsView()),
       if (isRemote)
-        (icon: Icons.account_tree_rounded, label: 'Genre Tree',        page: const GenreTreeView()),
-      (icon: Icons.bar_chart_rounded,       label: 'Dashboard',         page: const DashboardView()),
-      (icon: Icons.find_replace_rounded,   label: 'Duplicates',        page: const DuplicatesView()),
+        (icon: Icons.account_tree_rounded, label: l.miscNavGenreTree,        page: const GenreTreeView()),
+      (icon: Icons.bar_chart_rounded,       label: l.miscNavDashboard,         page: const DashboardView()),
+      (icon: Icons.find_replace_rounded,   label: l.metadataSectionDuplicates,        page: const DuplicatesView()),
       if (isRemote)
-        (icon: Icons.monitor_heart_rounded, label: 'Diagnostics',      page: const DiagnosticsView()),
+        (icon: Icons.monitor_heart_rounded, label: l.miscNavDiagnostics,      page: const DiagnosticsView()),
       if (isRemote)
-        (icon: Icons.dashboard_rounded,     label: 'Admin',            page: const AdminDashboardView()),
+        (icon: Icons.dashboard_rounded,     label: l.miscNavAdmin,            page: const AdminDashboardView()),
       (icon: Icons.settings_rounded,       label: l.navSettings,       page: const SettingsView()),
     ];
 
@@ -157,7 +161,7 @@ class _MoreView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('More', style: TuneFonts.title2),
+        title: Text(l.miscNavMore, style: TuneFonts.title2),
         actions: [
           Builder(
             builder: (ctx) => IconButton(

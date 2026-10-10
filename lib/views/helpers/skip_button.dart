@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Skip backward/forward button matching the web client transport bar style:
 /// Previous = bar + triangle (|◀), Next = triangle + bar (▶|)
 class SkipButton extends StatelessWidget {
@@ -20,7 +22,9 @@ class SkipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: isForward ? 'Next track' : 'Previous track',
+      label: isForward
+          ? AppLocalizations.of(context).miscNextTrack
+          : AppLocalizations.of(context).miscPreviousTrack,
       child: GestureDetector(
         onTap: onPressed,
         behavior: HitTestBehavior.opaque,

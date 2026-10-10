@@ -67,7 +67,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
     // Build source list
     final sources = <_SourceInfo>[
-      _SourceInfo('local', 'Local', Icons.music_note_rounded, localPlaylists.length),
+      _SourceInfo('local', l.plLocal, Icons.music_note_rounded, localPlaylists.length),
     ];
     for (final entry in _streamingPlaylists.entries) {
       sources.add(_SourceInfo(
@@ -167,6 +167,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
   }
 
   Future<void> _handleLocalPlaylistAction(String action, Playlist playlist, AppState app) async {
+    final l = AppLocalizations.of(context);
     try {
       switch (action) {
         case 'duplicate':
@@ -175,11 +176,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
               sourceService: 'local',
               sourcePlaylistId: playlist.id.toString(),
               targetService: 'local',
-              targetName: '${playlist.name} (copie)',
+              targetName: l.plCopyName(playlist.name),
             );
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Dupliqué: ${playlist.name}'), duration: const Duration(seconds: 2)),
+                SnackBar(content: Text(l.plDuplicated(playlist.name)), duration: const Duration(seconds: 2)),
               );
             }
           }
@@ -188,7 +189,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             await app.apiClient!.exportPlaylist('local', playlist.id.toString(), 'json');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Export JSON réussi'), duration: Duration(seconds: 2)),
+                SnackBar(content: Text(l.plExportJsonDone), duration: const Duration(seconds: 2)),
               );
             }
           }
@@ -197,7 +198,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             await app.apiClient!.exportPlaylist('local', playlist.id.toString(), 'csv');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Export CSV réussi'), duration: Duration(seconds: 2)),
+                SnackBar(content: Text(l.plExportCsvDone), duration: const Duration(seconds: 2)),
               );
             }
           }
@@ -212,7 +213,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('M3U exporte: ${file.path}'),
+                    content: Text(l.plExportM3uDone(file.path)),
                     duration: const Duration(seconds: 3),
                   ),
                 );
@@ -220,7 +221,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             } catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Erreur export M3U: $e'), duration: const Duration(seconds: 3)),
+                  SnackBar(content: Text(l.plExportM3uError(e.toString())), duration: const Duration(seconds: 3)),
                 );
               }
             }
@@ -229,22 +230,23 @@ class _PlaylistsViewState extends State<PlaylistsView> {
           await app.deletePlaylist(playlist.id);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Supprimé: ${playlist.name}'), duration: const Duration(seconds: 2)),
+              SnackBar(content: Text(l.plDeleted(playlist.name)), duration: const Duration(seconds: 2)),
             );
           }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), duration: const Duration(seconds: 3)),
+          SnackBar(content: Text(l.errorWith(e.toString())), duration: const Duration(seconds: 3)),
         );
       }
     }
   }
 
   Widget _buildStreamingList(List<Map<String, dynamic>> playlists) {
+    final l = AppLocalizations.of(context);
     if (playlists.isEmpty) {
-      return const Center(child: Text('Aucune playlist', style: TuneFonts.body));
+      return Center(child: Text(l.libraryEmptyPlaylists, style: TuneFonts.body));
     }
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 80),
@@ -265,7 +267,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                   child: const Icon(Icons.queue_music_rounded, color: TuneColors.accent, size: 22),
                 ),
           title: Text(pl['name'] as String? ?? '', style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text('${pl['track_count'] ?? 0} pistes', style: TuneFonts.footnote),
+          subtitle: Text(l.plTracksCount(int.tryParse('${pl['track_count'] ?? 0}') ?? 0), style: TuneFonts.footnote),
           trailing: PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: TuneColors.textTertiary, size: 20),
             color: TuneColors.surfaceVariant,
@@ -283,46 +285,46 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                     );
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Transféré: $name'), duration: const Duration(seconds: 2)),
+                        SnackBar(content: Text(l.plTransferred(name)), duration: const Duration(seconds: 2)),
                       );
                     }
                   case 'export_json':
                     await app.apiClient!.exportPlaylist(_selectedSource, sourceId, 'json');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Export JSON réussi'), duration: Duration(seconds: 2)),
+                        SnackBar(content: Text(l.plExportJsonDone), duration: const Duration(seconds: 2)),
                       );
                     }
                   case 'export_csv':
                     await app.apiClient!.exportPlaylist(_selectedSource, sourceId, 'csv');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Export CSV réussi'), duration: Duration(seconds: 2)),
+                        SnackBar(content: Text(l.plExportCsvDone), duration: const Duration(seconds: 2)),
                       );
                     }
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erreur: $e'), duration: const Duration(seconds: 3)),
+                    SnackBar(content: Text(l.errorWith(e.toString())), duration: const Duration(seconds: 3)),
                   );
                 }
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(value: 'transfer', child: ListTile(
-                leading: Icon(Icons.download_rounded, size: 20),
-                title: Text('Transférer en local', style: TextStyle(fontSize: 14)),
+                leading: const Icon(Icons.download_rounded, size: 20),
+                title: Text(l.plTransferToLocal, style: const TextStyle(fontSize: 14)),
                 dense: true, contentPadding: EdgeInsets.zero,
               )),
               PopupMenuItem(value: 'export_json', child: ListTile(
-                leading: Icon(Icons.data_object_rounded, size: 20),
-                title: Text('Exporter JSON', style: TextStyle(fontSize: 14)),
+                leading: const Icon(Icons.data_object_rounded, size: 20),
+                title: Text(l.plExportJson, style: const TextStyle(fontSize: 14)),
                 dense: true, contentPadding: EdgeInsets.zero,
               )),
               PopupMenuItem(value: 'export_csv', child: ListTile(
-                leading: Icon(Icons.table_chart_rounded, size: 20),
-                title: Text('Exporter CSV', style: TextStyle(fontSize: 14)),
+                leading: const Icon(Icons.table_chart_rounded, size: 20),
+                title: Text(l.plExportCsv, style: const TextStyle(fontSize: 14)),
                 dense: true, contentPadding: EdgeInsets.zero,
               )),
             ],
@@ -352,6 +354,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
   Future<void> _importM3U(BuildContext context, AppState app) async {
     final api = app.apiClient;
     if (api == null) return;
+    final l = AppLocalizations.of(context);
 
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -364,11 +367,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
       final data = await api.importM3U(filePath);
       if (mounted) {
-        final name = data['name'] ?? 'Playlist';
-        final count = data['track_count'] ?? data['tracks_added'] ?? 0;
+        final name = '${data['name'] ?? l.plPlaylistLabel}';
+        final count = int.tryParse('${data['track_count'] ?? data['tracks_added'] ?? 0}') ?? 0;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Importe: $name ($count pistes)'),
+            content: Text(l.plImportedM3u(name, count)),
             backgroundColor: TuneColors.success,
           ),
         );
@@ -378,7 +381,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur import M3U: $e'), backgroundColor: TuneColors.error),
+          SnackBar(content: Text(l.plImportM3uError(e.toString())), backgroundColor: TuneColors.error),
         );
       }
     }
@@ -482,6 +485,7 @@ class _PlaylistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
@@ -493,35 +497,35 @@ class _PlaylistTile extends StatelessWidget {
         child: const Icon(Icons.queue_music_rounded, color: TuneColors.accent, size: 22),
       ),
       title: Text(playlist.name, style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('${playlist.trackCount} piste${playlist.trackCount != 1 ? "s" : ""}', style: TuneFonts.footnote),
+      subtitle: Text(l.plTracksCount(playlist.trackCount), style: TuneFonts.footnote),
       trailing: PopupMenuButton<String>(
         icon: const Icon(Icons.more_vert_rounded, color: TuneColors.textTertiary, size: 20),
         color: TuneColors.surfaceVariant,
         onSelected: (action) => onAction?.call(action),
-        itemBuilder: (_) => const [
+        itemBuilder: (_) => [
           PopupMenuItem(value: 'duplicate', child: ListTile(
-            leading: Icon(Icons.copy_rounded, size: 20),
-            title: Text('Dupliquer', style: TextStyle(fontSize: 14)),
+            leading: const Icon(Icons.copy_rounded, size: 20),
+            title: Text(l.plDuplicate, style: const TextStyle(fontSize: 14)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
           PopupMenuItem(value: 'export_json', child: ListTile(
-            leading: Icon(Icons.data_object_rounded, size: 20),
-            title: Text('Exporter JSON', style: TextStyle(fontSize: 14)),
+            leading: const Icon(Icons.data_object_rounded, size: 20),
+            title: Text(l.plExportJson, style: const TextStyle(fontSize: 14)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
           PopupMenuItem(value: 'export_csv', child: ListTile(
-            leading: Icon(Icons.table_chart_rounded, size: 20),
-            title: Text('Exporter CSV', style: TextStyle(fontSize: 14)),
+            leading: const Icon(Icons.table_chart_rounded, size: 20),
+            title: Text(l.plExportCsv, style: const TextStyle(fontSize: 14)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
           PopupMenuItem(value: 'export_m3u', child: ListTile(
-            leading: Icon(Icons.playlist_play_rounded, size: 20),
-            title: Text('Exporter M3U', style: TextStyle(fontSize: 14)),
+            leading: const Icon(Icons.playlist_play_rounded, size: 20),
+            title: Text(l.plExportM3u, style: const TextStyle(fontSize: 14)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
           PopupMenuItem(value: 'delete', child: ListTile(
-            leading: Icon(Icons.delete_rounded, size: 20, color: TuneColors.error),
-            title: Text('Supprimer', style: TextStyle(fontSize: 14, color: TuneColors.error)),
+            leading: const Icon(Icons.delete_rounded, size: 20, color: TuneColors.error),
+            title: Text(l.btnDelete, style: const TextStyle(fontSize: 14, color: TuneColors.error)),
             dense: true, contentPadding: EdgeInsets.zero,
           )),
         ],
@@ -694,7 +698,7 @@ class _StreamingPlaylistDetailViewState extends State<_StreamingPlaylistDetailVi
       body: _tracks == null
           ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
           : _tracks!.isEmpty
-              ? Center(child: Text('$count pistes', style: TuneFonts.body))
+              ? Center(child: Text(AppLocalizations.of(context).plTracksCount(count), style: TuneFonts.body))
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 80),
                   itemCount: _tracks!.length,

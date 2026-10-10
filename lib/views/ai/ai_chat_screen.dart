@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
@@ -43,6 +44,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
+    final l = AppLocalizations.of(context);
 
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
@@ -57,8 +59,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     if (api == null) {
       setState(() {
-        _messages.add(const _ChatMessage(
-          text: 'Serveur non connecte. Verifiez la connexion.',
+        _messages.add(_ChatMessage(
+          text: l.miscAiServerNotConnected,
           isUser: false,
         ));
         _sending = false;
@@ -68,7 +70,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     }
 
     try {
-      final response = await _postAIQuery(api, auth, text, zoneId);
+      final response = await _postAIQuery(api, auth, text, zoneId, l);
       if (mounted) {
         setState(() {
           _messages.add(_ChatMessage(
@@ -84,7 +86,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       if (mounted) {
         setState(() {
           _messages.add(_ChatMessage(
-            text: 'Erreur: ${e.toString().replaceFirst("Exception: ", "")}',
+            text: l.errorWith(e.toString().replaceFirst('Exception: ', '')),
             isUser: false,
           ));
           _sending = false;
@@ -99,6 +101,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     AuthService auth,
     String message,
     int? zoneId,
+    AppLocalizations l,
   ) async {
     final baseUrl = api.baseUrl;
     final uri = Uri.parse('$baseUrl/ai/query');
@@ -117,7 +120,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
         .timeout(const Duration(seconds: 60));
 
     if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception('AI query failed (${resp.statusCode})');
+      throw Exception(l.miscAiQueryFailed(resp.statusCode));
     }
 
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -125,7 +128,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final reply = data['reply'] as String? ??
         data['response'] as String? ??
         data['message'] as String? ??
-        'Pas de reponse';
+        l.miscAiNoReply;
 
     final actionsRaw = data['actions'] as List<dynamic>? ?? [];
     final actions = actionsRaw
@@ -158,6 +161,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
         // Messages list
@@ -198,7 +202,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _send(),
                   decoration: InputDecoration(
-                    hintText: 'Posez une question...',
+                    hintText: l.miscAiAskHint,
                     hintStyle: TuneFonts.footnote,
                     filled: true,
                     fillColor: TuneColors.surfaceVariant,
@@ -220,7 +224,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                   Icons.send_rounded,
                   color: _sending ? TuneColors.textTertiary : TuneColors.accent,
                 ),
-                tooltip: 'Envoyer',
+                tooltip: l.miscAiSend,
               ),
             ],
           ),
@@ -247,7 +251,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           children: [
             const Icon(Icons.auto_awesome_rounded, color: TuneColors.accent, size: 22),
             const SizedBox(width: 8),
-            Text('Assistant IA', style: TuneFonts.title3),
+            Text(AppLocalizations.of(context).miscAiTitle, style: TuneFonts.title3),
           ],
         ),
       ),
@@ -304,12 +308,12 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Assistant IA Tune',
+            AppLocalizations.of(context).miscAiEmptyTitle,
             style: TuneFonts.title3.copyWith(color: TuneColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
-            'Posez une question sur votre musique,\ndemandez des recommandations...',
+            AppLocalizations.of(context).miscAiEmptyBody,
             style: TuneFonts.footnote,
             textAlign: TextAlign.center,
           ),
@@ -400,7 +404,7 @@ class _MessageBubble extends StatelessWidget {
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Action: ${a.action}'),
+                              content: Text(AppLocalizations.of(context).miscAiAction(a.action)),
                               backgroundColor: TuneColors.accent,
                               duration: const Duration(seconds: 2),
                             ),

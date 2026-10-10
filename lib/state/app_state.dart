@@ -167,6 +167,16 @@ class AppState extends ChangeNotifier {
 
     final settingsState = SettingsState(engine.config);
     final zoneState = ZoneState();
+    // Mémorisation de la dernière zone utilisée (#1952). Le stockage existait
+    // déjà de bout en bout — `configuration.dart`, `settings_state.dart` — sans
+    // le moindre appelant : rien n'écrivait le choix, rien ne le relisait, et
+    // le démarrage prenait la première zone renvoyée par le serveur.
+    zoneState.zonePreferee = settingsState.defaultZoneId;
+    zoneState.onZoneChanged = (id) {
+      // Volontairement sans `await` : persister est un effet de bord, il ne
+      // doit ni retarder le changement de zone ni le faire échouer.
+      settingsState.setDefaultZoneId(id);
+    };
     final libraryState = LibraryState();
 
     final app = AppState(

@@ -49,6 +49,70 @@ void main() {
     });
   });
 
+  group('ZoneState — dernière zone mémorisée (#1952)', () {
+    test('préfère la zone mémorisée à la première de la liste', () {
+      final state = ZoneState()..zonePreferee = 2;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 2);
+    });
+
+    // L'identifiant de zone n'est PAS stable entre le mode local et le mode
+    // distant. Restaurer un id fantôme laisserait l'application sur une zone
+    // qui n'existe pas — pire que l'état actuel, où elle prend la première.
+    test('ignore une zone mémorisée absente et retombe sur la première', () {
+      final state = ZoneState()..zonePreferee = 99;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 1);
+    });
+
+    test('sans zone mémorisée, le comportement d\'avant est conservé', () {
+      final state = ZoneState();
+      state.setZones(const [
+        ZoneWithState(id: 7, name: 'Salon'),
+        ZoneWithState(id: 8, name: 'Cuisine'),
+      ]);
+      expect(state.currentZoneId, 7);
+    });
+
+    test('un changement de zone est notifié pour persistance', () {
+      final vus = <int>[];
+      final state = ZoneState()..onZoneChanged = vus.add;
+      state.setZones(const [
+        ZoneWithState(id: 1, name: 'Salon'),
+        ZoneWithState(id: 2, name: 'Cuisine'),
+      ]);
+      state.setCurrentZoneId(2);
+      expect(vus, [2]);
+    });
+
+    // `setCurrentZoneId` sort tôt quand l'id ne change pas : le rappel ne doit
+    // pas se déclencher, sinon chaque rafraîchissement de zone écrirait dans
+    // SharedPreferences pour rien.
+    test('ré-affecter la même zone ne notifie pas', () {
+      final vus = <int>[];
+      final state = ZoneState()..onZoneChanged = vus.add;
+      state.setZones(const [ZoneWithState(id: 1, name: 'Salon')]);
+      state.setCurrentZoneId(1);
+      state.setCurrentZoneId(1);
+      expect(vus, isEmpty, reason: 'zone 1 était déjà active');
+    });
+
+    // La sélection automatique du premier `setZones` n'est PAS un choix de
+    // l'utilisateur : la persister écraserait sa vraie préférence.
+    test('la sélection automatique au démarrage ne persiste rien', () {
+      final vus = <int>[];
+      final state = ZoneState()..onZoneChanged = vus.add;
+      state.setZones(const [ZoneWithState(id: 1, name: 'Salon')]);
+      expect(vus, isEmpty);
+    });
+  });
+
   group('ZoneState — playback derived', () {
     test('isPlaying mirrors currentZone state', () {
       final state = ZoneState();

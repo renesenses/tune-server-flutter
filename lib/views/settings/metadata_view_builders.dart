@@ -20,6 +20,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildCompletenessCards() {
+    final l = AppLocalizations.of(context);
     if (_loadingCompleteness && _completeness == null) {
       return Container(
         color: TuneColors.surface,
@@ -34,7 +35,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
         color: TuneColors.surface,
         padding: const EdgeInsets.all(16),
         child: Text(
-          'Statistiques indisponibles',
+          l.cfgMetaStatsUnavailable,
           style: TuneFonts.footnote.copyWith(color: TuneColors.textTertiary),
         ),
       );
@@ -56,7 +57,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
         children: [
           _CompletenessCard(
             icon: Icons.image_rounded,
-            label: 'Cover',
+            label: l.cover,
             missing: noCover,
             total: totalAlbums,
             color: TuneColors.accent,
@@ -65,7 +66,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
           ),
           _CompletenessCard(
             icon: Icons.category_rounded,
-            label: 'Genre',
+            label: l.metadataGenreField,
             missing: noGenre,
             total: totalAlbums,
             color: TuneColors.warning,
@@ -74,7 +75,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
           ),
           _CompletenessCard(
             icon: Icons.calendar_today_rounded,
-            label: 'Année',
+            label: l.metadataYearField,
             missing: noYear,
             total: totalAlbums,
             color: TuneColors.accentLight,
@@ -83,7 +84,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
           ),
           _CompletenessCard(
             icon: Icons.person_rounded,
-            label: 'Artiste',
+            label: l.metadataArtistField,
             missing: noArtist,
             total: totalTracks,
             color: TuneColors.success,
@@ -100,6 +101,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildFilterChips() {
+    final l = AppLocalizations.of(context);
     return Container(
       color: TuneColors.surface,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -107,12 +109,12 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _filterChip('Tous', _MetaFilter.all),
-            _filterChip('Covers manquantes', _MetaFilter.noCover),
-            _filterChip('Genre manquant', _MetaFilter.noGenre),
-            _filterChip('Année manquante', _MetaFilter.noYear),
-            _filterChip('Artiste manquant', _MetaFilter.noArtist),
-            _filterChip('Douteux', _MetaFilter.doubtful),
+            _filterChip(l.metadataFilterAll, _MetaFilter.all),
+            _filterChip(l.metadataFilterMissingCover, _MetaFilter.noCover),
+            _filterChip(l.metadataFilterMissingGenre, _MetaFilter.noGenre),
+            _filterChip(l.metadataFilterMissingYear, _MetaFilter.noYear),
+            _filterChip(l.metadataFilterMissingArtist, _MetaFilter.noArtist),
+            _filterChip(l.metadataFilterDoubtful, _MetaFilter.doubtful),
           ],
         ),
       ),
@@ -148,6 +150,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildSearchAndDropdowns() {
+    final l = AppLocalizations.of(context);
     return Container(
       color: TuneColors.surface,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -158,7 +161,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
             controller: _searchCtrl,
             style: TuneFonts.body,
             decoration: InputDecoration(
-              hintText: 'Rechercher des albums…',
+              hintText: l.metadataSearchHint,
               hintStyle: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
               prefixIcon: const Icon(Icons.search_rounded,
                   color: TuneColors.textTertiary, size: 20),
@@ -191,7 +194,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
               Expanded(
                 child: _buildDropdown(
                   value: _filterArtist.isEmpty ? null : _filterArtist,
-                  hint: 'Tous les artistes',
+                  hint: l.metadataAllArtists,
                   items: _distinctArtists,
                   onChanged: (v) => setState(() => _filterArtist = v ?? ''),
                 ),
@@ -200,7 +203,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
               Expanded(
                 child: _buildDropdown(
                   value: _filterGenre.isEmpty ? null : _filterGenre,
-                  hint: 'Tous les genres',
+                  hint: l.metadataAllGenres,
                   items: _distinctGenres,
                   onChanged: (v) => setState(() => _filterGenre = v ?? ''),
                 ),
@@ -253,6 +256,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildAlbumList() {
+    final l = AppLocalizations.of(context);
     if (_loadingAlbums && _allAlbums.isEmpty) {
       return Container(
         color: TuneColors.surface,
@@ -279,7 +283,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text(
-            'Aucun album correspondant',
+            l.metadataNoAlbums,
             style: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
           ),
         ),
@@ -294,7 +298,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Text(
-              '${albums.length} albums',
+              l.cfgMetaAlbumCount(albums.length),
               style: TuneFonts.caption,
             ),
           ),
@@ -304,7 +308,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '... et ${albums.length - 50} autres albums (filtrez pour affiner)',
+                l.cfgMetaMoreAlbums(albums.length - 50),
                 style: TuneFonts.caption,
               ),
             ),
@@ -318,6 +322,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildAlbumCard(Map<String, dynamic> album) {
+    final l = AppLocalizations.of(context);
     final albumId = album['id'] as int;
     final isEditing = _editingAlbumId == albumId;
     final coverUrl = _coverUrl(album);
@@ -332,12 +337,12 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
     final missingTags = <String>[];
     final coverPath = album['cover_path']?.toString() ?? '';
     if (coverPath.isEmpty) {
-      missingTags.add('Cover');
+      missingTags.add(l.cover);
     }
-    if (genre.isEmpty) missingTags.add('Genre');
-    if (year == null || year == 0) missingTags.add('Année');
+    if (genre.isEmpty) missingTags.add(l.metadataGenreField);
+    if (year == null || year == 0) missingTags.add(l.metadataYearField);
     if (artist.isEmpty || artist == 'Unknown Artist') {
-      missingTags.add('Artiste');
+      missingTags.add(l.metadataArtistField);
     }
 
     // Doubtful reasons
@@ -418,7 +423,9 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                           Text('$year', style: TuneFonts.caption),
                         if (trackCount != null) ...[
                           Text(' · ', style: TuneFonts.caption),
-                          Text('$trackCount pistes',
+                          Text(
+                              l.metadataTracksCount(
+                                  int.tryParse('$trackCount') ?? 0),
                               style: TuneFonts.caption),
                         ],
                       ],
@@ -461,14 +468,14 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                   IconButton(
                     icon: const Icon(Icons.edit_rounded,
                         size: 18, color: TuneColors.accent),
-                    tooltip: 'Modifier',
+                    tooltip: l.btnEdit,
                     onPressed: () => _startEdit(album),
                     visualDensity: VisualDensity.compact,
                   ),
                   IconButton(
                     icon: const Icon(Icons.add_photo_alternate_outlined,
                         size: 18, color: TuneColors.textSecondary),
-                    tooltip: 'Upload cover',
+                    tooltip: l.metadataUploadCover,
                     onPressed: () => _uploadCover(albumId),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -486,6 +493,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildEditMode(Map<String, dynamic> album) {
+    final l = AppLocalizations.of(context);
     final albumId = album['id'] as int;
     final coverUrl = _coverUrl(album);
 
@@ -524,17 +532,17 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
               Expanded(
                 child: Column(
                   children: [
-                    _editField('Artiste', _editArtist),
+                    _editField(l.metadataArtistField, _editArtist),
                     const SizedBox(height: 6),
-                    _editField('Album', _editTitle),
+                    _editField(l.metadataAlbumField, _editTitle),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Expanded(child: _editField('Genre', _editGenre)),
+                        Expanded(child: _editField(l.metadataGenreField, _editGenre)),
                         const SizedBox(width: 8),
                         SizedBox(
                           width: 80,
-                          child: _editField('Année', _editYear,
+                          child: _editField(l.metadataYearField, _editYear,
                               keyboardType: TextInputType.number),
                         ),
                       ],
@@ -558,7 +566,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                       borderRadius: BorderRadius.circular(8)),
                 ),
                 icon: const Icon(Icons.check_rounded, size: 16),
-                label: Text('Enregistrer', style: TuneFonts.footnote
+                label: Text(l.btnSave, style: TuneFonts.footnote
                     .copyWith(color: Colors.white)),
                 onPressed: _saveEdit,
               ),
@@ -575,13 +583,13 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                   ),
                   icon: const Icon(Icons.save_alt_rounded, size: 16),
                   label:
-                      Text('Graver tags', style: TuneFonts.footnote),
+                      Text(l.metadataWriteTags, style: TuneFonts.footnote),
                   onPressed: () => _writeAlbumTags(albumId),
                 ),
               const Spacer(),
               TextButton(
                 onPressed: _cancelEdit,
-                child: Text('Annuler',
+                child: Text(l.btnCancel,
                     style: TuneFonts.footnote
                         .copyWith(color: TuneColors.textSecondary)),
               ),
@@ -619,6 +627,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   Widget _buildDuplicateGroup(List<Map<String, dynamic>> group) {
+    final l = AppLocalizations.of(context);
     final first = group.first;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -644,7 +653,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                 ),
                 _ActionButton(
                   icon: Icons.merge_rounded,
-                  label: 'Fusionner',
+                  label: l.metadataMergeGroup,
                   loading: false,
                   onPressed: () => _mergeGroup(group),
                 ),
@@ -663,7 +672,7 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '$tc pistes${fp.isNotEmpty ? ' — $fp' : ''}',
+                      '${l.cfgMetaTrackCountText('$tc')}${fp.isNotEmpty ? ' — $fp' : ''}',
                       style: TuneFonts.caption,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -684,14 +693,15 @@ extension _MetadataViewStateBuilders on _MetadataViewState {
   // ---------------------------------------------------------------------------
 
   String _reasonLabel(String reason) {
-    const labels = {
-      'artist_uppercase': 'Artiste MAJ',
-      'artist_placeholder': 'Artiste provisoire',
-      'artist_has_year': 'Artiste = dossier',
-      'genre_placeholder': 'Genre provisoire',
-      'year_suspicious': 'Année suspecte',
-      'title_uppercase': 'Titre MAJ',
-      'artist_mismatch': 'Artiste différent',
+    final l = AppLocalizations.of(context);
+    final labels = {
+      'artist_uppercase': l.cfgMetaReasonArtistUppercase,
+      'artist_placeholder': l.cfgMetaReasonArtistPlaceholder,
+      'artist_has_year': l.cfgMetaReasonArtistHasYear,
+      'genre_placeholder': l.cfgMetaReasonGenrePlaceholder,
+      'year_suspicious': l.cfgMetaReasonYearSuspicious,
+      'title_uppercase': l.cfgMetaReasonTitleUppercase,
+      'artist_mismatch': l.cfgMetaReasonArtistMismatch,
     };
     return labels[reason] ?? reason;
   }

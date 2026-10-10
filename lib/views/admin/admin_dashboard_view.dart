@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -29,6 +30,10 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
   String? _error;
   Timer? _refreshTimer;
 
+  // Sentinelle : _loadAll() part d'initState(), où AppLocalizations n'est pas
+  // encore lisible — le texte traduit est résolu au moment de l'affichage.
+  static const _kNotConnected = '\u0000not-connected';
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +57,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     if (api == null) {
       if (!silent) {
         setState(() {
-          _error = 'Non connecte a un serveur distant';
+          _error = _kNotConnected;
           _loading = false;
         });
       }
@@ -93,10 +98,12 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Admin Dashboard', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).miscAdminTitle,
+            style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.textSecondary),
+            tooltip: AppLocalizations.of(context).btnRefresh,
             onPressed: () => _loadAll(),
           ),
         ],
@@ -106,6 +113,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
   }
 
   Widget _buildBody() {
+    final l = AppLocalizations.of(context);
     if (_loading && _health == null) {
       return const Center(
         child: CircularProgressIndicator(color: TuneColors.accent),
@@ -118,12 +126,13 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           children: [
             const Icon(Icons.error_outline_rounded, size: 48, color: TuneColors.error),
             const SizedBox(height: 12),
-            Text(_error!, style: TuneFonts.footnote, textAlign: TextAlign.center),
+            Text(_error == _kNotConnected ? l.miscAdminNotConnected : _error!,
+                style: TuneFonts.footnote, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => _loadAll(),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-              child: const Text('Reessayer'),
+              child: Text(l.btnRetry),
             ),
           ],
         ),
@@ -151,24 +160,25 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
   // ---- Health ----
 
   Widget _buildHealthSection() {
+    final l = AppLocalizations.of(context);
     final h = _health ?? {};
     final cpu = h['cpu_percent'] ?? h['cpu'] ?? h['cpu_usage'];
     final ram = h['memory_percent'] ?? h['memory'] ?? h['ram'];
     final disk = h['disk_percent'] ?? h['disk'] ?? h['disk_usage'];
     final uptime = h['uptime'] ?? h['uptime_seconds'];
-    final status = h['status'] ?? h['health'] ?? 'unknown';
+    final status = h['status'] ?? h['health'] ?? l.miscUnknown;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeader('SANTE SYSTEME'),
+        _SectionHeader(l.miscAdminSystemHealth),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: [
               _InfoTile(
                 icon: Icons.verified_rounded,
-                label: 'Status',
+                label: l.miscAdminStatus,
                 value: status.toString(),
                 valueColor: status.toString().toLowerCase() == 'ok' ||
                         status.toString().toLowerCase() == 'healthy'
@@ -195,7 +205,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 const Divider(height: 1, indent: 56, color: TuneColors.divider),
                 _GaugeTile(
                   icon: Icons.storage_rounded,
-                  label: 'Disque',
+                  label: l.miscAdminDisk,
                   value: _toPercent(disk),
                 ),
               ],
@@ -203,7 +213,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 const Divider(height: 1, indent: 56, color: TuneColors.divider),
                 _InfoTile(
                   icon: Icons.timer_rounded,
-                  label: 'Uptime',
+                  label: l.miscDiagUptime,
                   value: _formatUptime(uptime),
                 ),
               ],
@@ -218,18 +228,19 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
 
   Widget _buildZonesSection() {
     if (_zones.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader('ZONES (${_zones.length})'),
+        _SectionHeader('${l.navZones} (${_zones.length})'),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: _zones.asMap().entries.map((entry) {
               final idx = entry.key;
               final z = entry.value as Map<String, dynamic>;
-              final name = z['name'] ?? 'Zone ${z['id']}';
+              final name = z['name'] ?? l.miscZoneNumbered('${z['id']}');
               final state = z['state'] ?? z['playback_state'] ?? z['status'] ?? 'idle';
               final output = z['output_type'] ?? z['output'] ?? 'local';
               final track = z['current_track'] ?? z['track'];
@@ -281,18 +292,19 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
 
   Widget _buildDiscoverySection() {
     if (_discovery.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader('APPAREILS DECOUVERTS (${_discovery.length})'),
+        _SectionHeader(l.miscAdminDiscoveredDevices(_discovery.length)),
         Container(
           color: TuneColors.surface,
           child: Column(
             children: _discovery.asMap().entries.map((entry) {
               final idx = entry.key;
               final d = entry.value as Map<String, dynamic>;
-              final name = d['name'] ?? d['friendly_name'] ?? 'Unknown';
+              final name = d['name'] ?? d['friendly_name'] ?? l.miscUnknown;
               final type = d['type'] ?? d['protocol'] ?? '';
               final ip = d['ip'] ?? d['host'] ?? d['address'] ?? '';
 
@@ -324,10 +336,11 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
   // ---- Errors ----
 
   Widget _buildErrorsSection() {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader('ERREURS RECENTES (${_errors.length})'),
+        _SectionHeader(l.miscAdminRecentErrors(_errors.length)),
         Container(
           color: TuneColors.surface,
           child: _errors.isEmpty
@@ -338,7 +351,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                       const Icon(Icons.check_circle_rounded,
                           size: 18, color: TuneColors.success),
                       const SizedBox(width: 10),
-                      Text('Aucune erreur recente',
+                      Text(l.miscAdminNoRecentErrors,
                           style: TuneFonts.footnote.copyWith(color: TuneColors.success)),
                     ],
                   ),

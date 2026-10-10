@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/tune_api_client.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
@@ -66,7 +67,9 @@ class _TagChipsWidgetState extends State<TagChipsWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+          SnackBar(
+                content: Text(AppLocalizations.of(context).errorWith(e.toString())),
+                backgroundColor: TuneColors.error),
         );
       }
     }
@@ -102,7 +105,9 @@ class _TagChipsWidgetState extends State<TagChipsWidget> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+                SnackBar(
+                content: Text(AppLocalizations.of(context).errorWith(e.toString())),
+                backgroundColor: TuneColors.error),
               );
             }
           }
@@ -116,7 +121,9 @@ class _TagChipsWidgetState extends State<TagChipsWidget> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur: $e'), backgroundColor: TuneColors.error),
+                SnackBar(
+                content: Text(AppLocalizations.of(context).errorWith(e.toString())),
+                backgroundColor: TuneColors.error),
               );
             }
           }
@@ -249,7 +256,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
             children: [
               const Icon(Icons.label_rounded, color: TuneColors.accent),
               const SizedBox(width: 10),
-              Text('Tags', style: TuneFonts.title3),
+              Text(AppLocalizations.of(context).libTags, style: TuneFonts.title3),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close_rounded, color: TuneColors.textSecondary),
@@ -299,7 +306,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                   controller: _newTagCtrl,
                   style: TuneFonts.body,
                   decoration: InputDecoration(
-                    hintText: 'Nouveau tag...',
+                    hintText: AppLocalizations.of(context).libNewTagHint,
                     hintStyle: TuneFonts.body.copyWith(color: TuneColors.textTertiary),
                     filled: true,
                     fillColor: TuneColors.background,
@@ -321,7 +328,7 @@ class _TagPickerSheetState extends State<_TagPickerSheet> {
                   if (mounted) Navigator.pop(context);
                 },
                 style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
-                child: const Text('Creer'),
+                child: Text(AppLocalizations.of(context).btnCreate),
               ),
             ],
           ),

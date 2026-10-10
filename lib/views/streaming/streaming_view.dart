@@ -35,7 +35,8 @@ class StreamingView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Streaming', style: TuneFonts.title2),
+        title: Text(AppLocalizations.of(context).streamingTitle,
+            style: TuneFonts.title2),
         actions: [
           Builder(
             builder: (ctx) => IconButton(
@@ -140,8 +141,11 @@ class _ServiceCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               status.authenticated
-                                  ? (status.accountName ?? 'Connecté')
-                                  : 'Non connecté',
+                                  ? (status.accountName ??
+                                      AppLocalizations.of(context)
+                                          .streamingConnected)
+                                  : AppLocalizations.of(context)
+                                      .streamingNotConnected,
                               style: TuneFonts.footnote,
                             ),
                           ],
@@ -174,7 +178,7 @@ class _ServiceCard extends StatelessWidget {
                     Expanded(
                       child: FilledButton.icon(
                         icon: const Icon(Icons.login_rounded, size: 18),
-                        label: const Text('Se connecter'),
+                        label: Text(AppLocalizations.of(context).streamingSignIn),
                         style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent),
                         onPressed: () =>
@@ -185,7 +189,7 @@ class _ServiceCard extends StatelessWidget {
                     Expanded(
                       child: FilledButton.icon(
                         icon: const Icon(Icons.explore_rounded, size: 18),
-                        label: const Text('Parcourir'),
+                        label: Text(AppLocalizations.of(context).browseTitle),
                         style: FilledButton.styleFrom(
                             backgroundColor: TuneColors.accent),
                         onPressed: () => Navigator.of(context).push(
@@ -299,6 +303,7 @@ class _QobuzAuthSheetState extends State<QobuzAuthSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20, 20, 20,
@@ -331,18 +336,18 @@ class _QobuzAuthSheetState extends State<QobuzAuthSheet> {
                     color: Color(0xFF2563EB)),
               ),
               const SizedBox(width: 12),
-              const Text('Connexion Qobuz', style: TuneFonts.title3),
+              Text(l.loginTo('Qobuz'), style: TuneFonts.title3),
             ],
           ),
           const SizedBox(height: 20),
           _AuthField(
-            label: 'Email',
+            label: l.streamingEmail,
             controller: _emailCtrl,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
           _AuthField(
-            label: 'Mot de passe',
+            label: l.streamingPassword,
             controller: _pwCtrl,
             obscureText: true,
           ),
@@ -365,7 +370,7 @@ class _QobuzAuthSheetState extends State<QobuzAuthSheet> {
                       height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
-                  : const Text('Se connecter'),
+                  : Text(l.streamingSignIn),
             ),
           ),
         ],
@@ -517,7 +522,8 @@ class _DeviceCodeAuthSheetState extends State<DeviceCodeAuthSheet> {
                 child: Icon(info.icon, color: info.color),
               ),
               const SizedBox(width: 12),
-              Text('Connexion ${info.name}', style: TuneFonts.title3),
+              Text(AppLocalizations.of(context).loginTo(info.name),
+                  style: TuneFonts.title3),
             ],
           ),
           const SizedBox(height: 24),
@@ -543,7 +549,7 @@ class _DeviceCodeAuthSheetState extends State<DeviceCodeAuthSheet> {
         ),
       _DeviceCodeStep.success => const _SuccessBody(),
       _DeviceCodeStep.error => _ErrorBody(
-          message: _errorMsg ?? 'Erreur inconnue',
+          message: _errorMsg ?? AppLocalizations.of(context).miscUnknownError,
           onRetry: () {
             setState(() => _step = _DeviceCodeStep.starting);
             _startFlow();
@@ -571,7 +577,7 @@ class _WaitingCodeBody extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const Text('Code d\'autorisation',
+              Text(AppLocalizations.of(context).miscAuthorizationCode,
                   style: TuneFonts.subheadline),
               const SizedBox(height: 8),
               Text(
@@ -637,11 +643,11 @@ class _PollingBody extends StatelessWidget {
       children: [
         const CircularProgressIndicator(color: TuneColors.accent),
         const SizedBox(height: 16),
-        const Text('En attente de la validation…',
+        Text(AppLocalizations.of(context).miscWaitingForValidation,
             style: TuneFonts.subheadline),
         const SizedBox(height: 8),
         Text(
-          'Code : ${codeResult.userCode}',
+          AppLocalizations.of(context).miscCodeValue(codeResult.userCode),
           style: TuneFonts.footnote,
         ),
       ],
@@ -710,7 +716,7 @@ class _QualityBadge extends StatelessWidget {
             : quality == 'lossless'
                 ? 'Lossless'
                 : quality == 'high'
-                    ? 'High'
+                    ? AppLocalizations.of(context).miscQualityHigh
                     : quality,
         style: TextStyle(
           fontSize: 11,

@@ -1,6 +1,6 @@
 name: tune_server
 description: "Tune Server — serveur musical multi-room embarqué pour iOS et Android."
-version: 0.9.91+502
+version: 0.9.147+512
 publish_to: 'none'
 
 environment:
@@ -61,6 +61,9 @@ dependencies:
   # --- Update check (UpdateChecker, SettingsView banner) ---
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0
+  # Comparaison semver, pré-versions comprises (1.0.0-rc1). Déjà présente en
+  # dépendance transitive (2.2.0) : on la nomme, on n'en ajoute pas.
+  pub_semver: ^2.1.4
 
   # --- Home screen widget (Now Playing) ---
   home_widget: ^0.7.0

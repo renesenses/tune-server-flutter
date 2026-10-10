@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/artwork_view.dart';
@@ -86,6 +87,7 @@ class _PartyViewState extends State<PartyView> {
   Future<void> _addTrack() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     if (api == null) return;
     try {
@@ -95,13 +97,14 @@ class _PartyViewState extends State<PartyView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding track: $e')),
+          SnackBar(content: Text(l.znPartyAddError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _vote(int position) async {
+    final l = AppLocalizations.of(context);
     final api = context.read<AppState>().apiClient;
     if (api == null) return;
     try {
@@ -110,7 +113,7 @@ class _PartyViewState extends State<PartyView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Vote error: $e')),
+          SnackBar(content: Text(l.znPartyVoteError(e.toString()))),
         );
       }
     }
@@ -122,22 +125,23 @@ class _PartyViewState extends State<PartyView> {
     final link = 'http://$host:$port/party';
     Clipboard.setData(ClipboardData(text: link));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Party link copied to clipboard')),
+      SnackBar(content: Text(AppLocalizations.of(context).znPartyLinkCopied)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: Text('Party Mode', style: TuneFonts.title2),
+        title: Text(l.znPartyTitle, style: TuneFonts.title2),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded),
             color: TuneColors.textSecondary,
-            tooltip: 'Share party link',
+            tooltip: l.znPartyShareLink,
             onPressed: _sharePartyLink,
           ),
         ],
@@ -159,7 +163,7 @@ class _PartyViewState extends State<PartyView> {
                           controller: _searchController,
                           style: TuneFonts.body,
                           decoration: InputDecoration(
-                            hintText: 'Add a track...',
+                            hintText: l.znPartyAddHint,
                             hintStyle: TuneFonts.subheadline,
                             filled: true,
                             fillColor: TuneColors.surface,
@@ -181,7 +185,7 @@ class _PartyViewState extends State<PartyView> {
                               horizontal: 16, vertical: 14),
                         ),
                         onPressed: _addTrack,
-                        child: const Text('Add'),
+                        child: Text(l.btnAdd),
                       ),
                     ],
                   ),
@@ -192,10 +196,10 @@ class _PartyViewState extends State<PartyView> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      Text('Queue',
+                      Text(l.znPartyQueue,
                           style: TuneFonts.title3),
                       const Spacer(),
-                      Text('${_queue.length} tracks',
+                      Text(l.znTrackCount(_queue.length),
                           style: TuneFonts.caption),
                     ],
                   ),
@@ -212,7 +216,7 @@ class _PartyViewState extends State<PartyView> {
                               const Icon(Icons.queue_music_rounded,
                                   size: 48, color: TuneColors.textTertiary),
                               const SizedBox(height: 8),
-                              Text('Queue is empty',
+                              Text(l.queueEmpty,
                                   style: TuneFonts.subheadline),
                             ],
                           ),
@@ -245,12 +249,13 @@ class _CurrentTrackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final current = status['current_track'] as Map<String, dynamic>?;
-    final zoneName = status['zone_name'] as String? ?? 'Unknown zone';
+    final zoneName = status['zone_name'] as String? ?? l.znUnknownZone;
 
     if (current == null) return const SizedBox.shrink();
 
-    final title = current['title'] as String? ?? 'Unknown';
+    final title = current['title'] as String? ?? l.znUnknownTitle;
     final artist = current['artist'] as String?;
     final cover = current['cover_path'] as String?;
 
@@ -267,7 +272,7 @@ class _CurrentTrackCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Now playing', style: TuneFonts.caption),
+                  Text(l.znNowPlaying, style: TuneFonts.caption),
                   Text(title,
                       style: TuneFonts.body,
                       maxLines: 1,
@@ -305,7 +310,8 @@ class _QueueItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = item['title'] as String? ?? 'Unknown';
+    final l = AppLocalizations.of(context);
+    final title = item['title'] as String? ?? l.znUnknownTitle;
     final artist = item['artist'] as String?;
     final votes = item['votes'] as int? ?? 0;
     final cover = item['cover_path'] as String?;
@@ -340,7 +346,7 @@ class _QueueItemTile extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_upward_rounded),
             color: TuneColors.accent,
-            tooltip: 'Upvote',
+            tooltip: l.znUpvote,
             onPressed: onVote,
           ),
         ],

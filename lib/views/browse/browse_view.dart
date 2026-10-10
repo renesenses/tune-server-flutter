@@ -26,12 +26,13 @@ class BrowseView extends StatelessWidget {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Parcourir', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).browseTitle,
+            style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 color: TuneColors.textSecondary),
-            tooltip: 'Actualiser',
+            tooltip: AppLocalizations.of(context).browseRefreshTooltip,
             onPressed: () =>
                 context.read<AppState>().engine.discoveryManager.refresh(),
           ),
@@ -204,14 +205,15 @@ class _BrowseContainerViewState extends State<BrowseContainerView> {
     final total = containers.length + items.length;
 
     if (total == 0) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.folder_open_rounded,
+            const Icon(Icons.folder_open_rounded,
                 size: 48, color: TuneColors.textTertiary),
-            SizedBox(height: 12),
-            Text('Dossier vide', style: TuneFonts.subheadline),
+            const SizedBox(height: 12),
+            Text(AppLocalizations.of(context).browseNoContent,
+                style: TuneFonts.subheadline),
           ],
         ),
       );
@@ -349,8 +351,8 @@ class _NoServers extends StatelessWidget {
                 .engine
                 .discoveryManager
                 .refresh(),
-            child: const Text('Actualiser',
-                style: TextStyle(color: TuneColors.accent)),
+            child: Text(AppLocalizations.of(context).btnRefresh,
+                style: const TextStyle(color: TuneColors.accent)),
           ),
         ],
       ),

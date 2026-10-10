@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -31,8 +32,8 @@ import '../streaming/streaming_helpers.dart';
 // ---------------------------------------------------------------------------
 // PlayerSheet — unified mini / now-playing / queue bottom sheet
 //
-// 3 snap stops (as fractions of screen height):
-//   _kMini     (~8%)   — collapsed mini player
+// 3 snap stops (as fractions of screen height), plus a transient volume stop:
+//   _kMini     (~9%)   — collapsed mini player
 //   _kNowPlaying(~52%) — Now Playing with artwork + transport
 //   _kQueue    (~95%)  — full queue list
 //
@@ -43,6 +44,24 @@ import '../streaming/streaming_helpers.dart';
 const double _kMini = 0.09;
 const double _kNowPlaying = 0.52;
 const double _kQueue = 0.95;
+const double _kVolumeRowHeight = 56;
+
+/// Fraction de feuille nécessaire pour révéler la ligne de volume compacte.
+///
+/// `_kMini` ne réserve que la barre repliée. Ajouter `VolumeControlView` à sa
+/// `Column` sans agrandir le `DraggableScrollableSheet` la rend hors champ :
+/// l'icône change bien d'état, mais l'utilisateur ne voit rien (#2309).
+///
+/// Le calcul part de la hauteur réellement disponible au sheet, pas d'une
+/// fraction fixe : la ligne gagne ainsi 56 px sur téléphone court comme long.
+/// La borne haute laisse toujours le cran Lecture en cours distinct.
+@visibleForTesting
+double tailleMiniAvecVolume(double hauteurDisponible) {
+  if (!hauteurDisponible.isFinite || hauteurDisponible <= 0) return _kMini;
+  return (_kMini + _kVolumeRowHeight / hauteurDisponible)
+      .clamp(_kMini, _kNowPlaying - 0.01)
+      .toDouble();
+}
 
 // ---------------------------------------------------------------------------
 // Shared now-playing navigation — resolve the album/artist for a track and
@@ -170,9 +189,44 @@ class PlayerSheet extends StatefulWidget {
 class _PlayerSheetState extends State<PlayerSheet> {
   final DraggableScrollableController _controller =
       DraggableScrollableController();
+  bool _volumeOuvert = false;
+  bool _animationVolume = false;
+  double _cranVolume = _kMini;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_fermerVolumeSiLeCranChange);
+  }
+
+  void _fermerVolumeSiLeCranChange() {
+    if (!_volumeOuvert || _animationVolume || !_controller.isAttached) return;
+    // Un glissement volontaire vers le mini-player ou Lecture en cours quitte
+    // le cran volume. Sans cela, revenir ensuite au mini-player rouvrirait une
+    // ligne que l'utilisateur avait déjà quittée.
+    if ((_controller.size - _cranVolume).abs() > 0.015 && mounted) {
+      setState(() => _volumeOuvert = false);
+    }
+  }
+
+  Future<void> _afficherVolume(bool ouvert) async {
+    setState(() => _volumeOuvert = ouvert);
+    if (!_controller.isAttached) return;
+    _animationVolume = true;
+    try {
+      await _controller.animateTo(
+        ouvert ? _cranVolume : _kMini,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    } finally {
+      _animationVolume = false;
+    }
+  }
 
   @override
   void dispose() {
+    _controller.removeListener(_fermerVolumeSiLeCranChange);
     _controller.dispose();
     super.dispose();
   }
@@ -188,17 +242,30 @@ class _PlayerSheetState extends State<PlayerSheet> {
       return const SizedBox.shrink();
     }
 
-    return DraggableScrollableSheet(
-      controller: _controller,
-      initialChildSize: _kMini,
-      minChildSize: _kMini,
-      maxChildSize: _kQueue,
-      snap: true,
-      snapSizes: const [_kMini, _kNowPlaying, _kQueue],
-      builder: (context, scrollController) {
-        return _PlayerSheetContent(
-          scrollController: scrollController,
-          sheetController: _controller,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _cranVolume = tailleMiniAvecVolume(constraints.maxHeight);
+        return DraggableScrollableSheet(
+          controller: _controller,
+          initialChildSize: _kMini,
+          minChildSize: _kMini,
+          maxChildSize: _kQueue,
+          snap: true,
+          snapSizes: [
+            _kMini,
+            if (_cranVolume > _kMini) _cranVolume,
+            _kNowPlaying,
+            _kQueue,
+          ],
+          builder: (context, scrollController) {
+            return _PlayerSheetContent(
+              scrollController: scrollController,
+              sheetController: _controller,
+              volumeOuvert: _volumeOuvert,
+              cranVolume: _cranVolume,
+              onVolumeChanged: _afficherVolume,
+            );
+          },
         );
       },
     );
@@ -212,10 +279,16 @@ class _PlayerSheetState extends State<PlayerSheet> {
 class _PlayerSheetContent extends StatelessWidget {
   final ScrollController scrollController;
   final DraggableScrollableController sheetController;
+  final bool volumeOuvert;
+  final double cranVolume;
+  final ValueChanged<bool> onVolumeChanged;
 
   const _PlayerSheetContent({
     required this.scrollController,
     required this.sheetController,
+    required this.volumeOuvert,
+    required this.cranVolume,
+    required this.onVolumeChanged,
   });
 
   /// Fraction of the screen height currently occupied by the sheet.
@@ -233,10 +306,22 @@ class _PlayerSheetContent extends StatelessWidget {
       animation: sheetController,
       builder: (context, _) {
         final currentSize = _size(context);
-        final currentNpProgress = ((currentSize - _kMini) / (_kNowPlaying - _kMini)).clamp(0.0, 1.0);
-        final currentQueueProgress = ((currentSize - _kNowPlaying) / (_kQueue - _kNowPlaying)).clamp(0.0, 1.0);
-        final currentIsMini = currentSize < (_kMini + (_kNowPlaying - _kMini) * 0.3);
-        final currentIsQueue = currentSize > (_kNowPlaying + (_kQueue - _kNowPlaying) * 0.5);
+        // Le cran volume agrandit la feuille sans commencer à fondre le
+        // mini-player vers la vue Lecture en cours. Dès que l'utilisateur le
+        // dépasse, la progression normale reprend.
+        final visualSize = volumeOuvert && currentSize <= cranVolume + 0.015
+            ? _kMini
+            : currentSize;
+        final currentNpProgress =
+            ((visualSize - _kMini) / (_kNowPlaying - _kMini))
+                .clamp(0.0, 1.0);
+        final currentQueueProgress =
+            ((currentSize - _kNowPlaying) / (_kQueue - _kNowPlaying))
+                .clamp(0.0, 1.0);
+        final currentIsMini =
+            visualSize < (_kMini + (_kNowPlaying - _kMini) * 0.3);
+        final currentIsQueue =
+            currentSize > (_kNowPlaying + (_kQueue - _kNowPlaying) * 0.5);
 
         return _SheetBody(
           track: track,
@@ -246,6 +331,8 @@ class _PlayerSheetContent extends StatelessWidget {
           queueProgress: currentQueueProgress,
           isMini: currentIsMini,
           isQueue: currentIsQueue,
+          volumeOuvert: volumeOuvert,
+          onVolumeChanged: onVolumeChanged,
         );
       },
     );
@@ -260,6 +347,8 @@ class _SheetBody extends StatelessWidget {
   final double queueProgress;
   final bool isMini;
   final bool isQueue;
+  final bool volumeOuvert;
+  final ValueChanged<bool> onVolumeChanged;
 
   const _SheetBody({
     required this.track,
@@ -269,6 +358,8 @@ class _SheetBody extends StatelessWidget {
     required this.queueProgress,
     required this.isMini,
     required this.isQueue,
+    required this.volumeOuvert,
+    required this.onVolumeChanged,
   });
 
   @override
@@ -345,6 +436,8 @@ class _SheetBody extends StatelessWidget {
                         child: _MiniRow(
                           track: track,
                           sheetController: sheetController,
+                          volumeOuvert: volumeOuvert,
+                          onVolumeChanged: onVolumeChanged,
                         ),
                       ),
 
@@ -387,7 +480,14 @@ class _SheetBody extends StatelessWidget {
 class _MiniRow extends StatelessWidget {
   final Track? track;
   final DraggableScrollableController sheetController;
-  const _MiniRow({required this.track, required this.sheetController});
+  final bool volumeOuvert;
+  final ValueChanged<bool> onVolumeChanged;
+  const _MiniRow({
+    required this.track,
+    required this.sheetController,
+    required this.volumeOuvert,
+    required this.onVolumeChanged,
+  });
 
   /// Expand the sheet to the now-playing snap, which exposes the full
   /// interactive seek bar and the volume control. Tapping the track (or the
@@ -408,38 +508,34 @@ class _MiniRow extends StatelessWidget {
   /// sends every change to the server via AppState.setVolume and updates the
   /// zone optimistically, so the mini-player volume icon is genuinely
   /// functional instead of merely expanding the sheet.
-  void _showVolumePopup(BuildContext context) {
-    showModalBottomSheet(
-      // The player sheet has no Navigator ancestor (mounted via
-      // MaterialApp.builder), so opening the modal from its own context did
-      // nothing (Fabien: volume icon "inactive"). Anchor it on the app
-      // navigator's context, which is inside the Navigator subtree.
-      context: appNavigatorKey.currentContext ?? context,
-      backgroundColor: TuneColors.surface,
-      useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: TuneColors.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const VolumeControlView(),
-            ],
-          ),
-        ),
-      ),
+  /// Ligne de volume repliable, DANS la barre.
+  ///
+  /// Remplace un `showModalBottomSheet` qui cumulait deux défauts (#1949) :
+  ///
+  /// 1. Aucun état d'ouverture n'était retenu, donc recliquer sur l'icône
+  ///    empilait un SECOND tiroir au lieu de fermer le premier.
+  /// 2. Le voile du modal était peint SOUS la barre de lecture — celle-ci est
+  ///    montée au-dessus du `Navigator` (#1088) — donc l'icône restait
+  ///    cliquable pendant l'ouverture, et le glissement vers le bas qui aurait
+  ///    dû refermer le tiroir était mangé par le `DraggableScrollableSheet`.
+  ///    Depuis #1950, la barre d'onglets s'ajoute à cette pile : une couche de
+  ///    plus entre le doigt et le voile.
+  ///
+  /// Un correctif antérieur avait déjà déplacé ce modal vers le `Navigator`
+  /// pour qu'il s'ouvre (« icône volume inactive », déjà signalé par Fabien) —
+  /// c'est précisément ce qui l'a placé sous la barre. Le sortir de la pile
+  /// supprime la classe entière de problèmes au lieu de la déplacer.
+  Widget _ligneVolume() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      alignment: Alignment.bottomCenter,
+      child: volumeOuvert
+          ? const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: VolumeControlView(),
+            )
+          : const SizedBox(width: double.infinity, height: 0),
     );
   }
 
@@ -490,7 +586,7 @@ class _MiniRow extends StatelessWidget {
                         _expand();
                       },
                       child: Text(
-                        track?.title ?? 'No track',
+                        track?.title ?? AppLocalizations.of(context).nowPlayingNoTrack,
                         style: TuneFonts.miniTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -517,16 +613,18 @@ class _MiniRow extends StatelessWidget {
                   ],
                 ),
               ),
-              // Volume: tapping the icon opens an in-place slider popup so the
-              // volume is genuinely adjustable from the mini-player without
-              // expanding the whole sheet (Fabien: "l'icône volume toujours
-              // inactive, si je clique dessus ça ouvre le volet").
+              // Volume : l'icône BASCULE une ligne repliable dans la barre.
+              // Plus de modal — voir `_ligneVolume` pour ce que ça corrige.
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded),
+                icon: Icon(volumeOuvert
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_up_outlined),
                 iconSize: 22,
-                color: TuneColors.textPrimary,
-                tooltip: 'Volume',
-                onPressed: () => _showVolumePopup(context),
+                color: volumeOuvert
+                    ? TuneColors.accent
+                    : TuneColors.textPrimary,
+                tooltip: AppLocalizations.of(context).npVolume,
+                onPressed: () => onVolumeChanged(!volumeOuvert),
               ),
               SkipButton(
                 isForward: false,
@@ -554,7 +652,9 @@ class _MiniRow extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 32,
                   color: TuneColors.textPrimary,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
+                  tooltip: isPlaying
+                      ? AppLocalizations.of(context).npPause
+                      : AppLocalizations.of(context).libraryPlay,
                   onPressed:
                       isPlaying ? () => app.pause() : () => app.resume(),
                 ),
@@ -567,6 +667,7 @@ class _MiniRow extends StatelessWidget {
             ],
           ),
         ),
+        _ligneVolume(),
         // Progress bar at bottom of mini player
         _MiniProgressBar(),
       ],
@@ -574,22 +675,105 @@ class _MiniRow extends StatelessWidget {
   }
 }
 
-class _MiniProgressBar extends StatelessWidget {
+/// Fraction de morceau visée par un toucher à l'abscisse `dx`, sur une barre
+/// de largeur `largeur`.
+///
+/// Extraite et publique pour être testable : c'est ici que vivent les erreurs
+/// de bornes, et un widget privé dépendant de deux `Provider` ne se teste pas
+/// à ce grain.
+///
+/// ⚠️ La largeur nulle n'est PAS théorique. `LayoutBuilder` peut la produire
+/// pendant une passe de mise en page, et `dx / 0` donne `NaN` — que `.clamp()`
+/// propage, et dont `.round()` LÈVE UNE EXCEPTION en Dart. Sans ce garde, un
+/// toucher au mauvais moment ferait planter la barre de lecture.
+@visibleForTesting
+double fractionVisee(double dx, double largeur) {
+  if (!(largeur > 0)) return 0.0;
+  final v = dx / largeur;
+  if (v.isNaN) return 0.0;
+  return v.clamp(0.0, 1.0);
+}
+
+/// Barre de progression de la barre de lecture compacte — désormais UTILISABLE
+/// pour se positionner dans le morceau (#1951).
+///
+/// Elle n'était qu'un `LinearProgressIndicator` de 2 px, et le commentaire
+/// d'alors l'assumait : « the 2px mini progress bar itself is not seekable ».
+/// Le slider existait bien, mais seulement après avoir tiré le tiroir vers le
+/// haut — un geste que Fabien, qui utilise l'application tous les jours, n'a
+/// jamais trouvé. La poignée fait 36 × 4 px et rien ne dit qu'on peut la tirer.
+///
+/// L'APPARENCE ne change pas : toujours 2 px. Seule la zone TACTILE est
+/// élargie, de façon invisible, parce qu'on ne vise pas 2 pixels au doigt.
+class _MiniProgressBar extends StatefulWidget {
+  @override
+  State<_MiniProgressBar> createState() => _MiniProgressBarState();
+}
+
+class _MiniProgressBarState extends State<_MiniProgressBar> {
+  /// Position visée pendant le geste. Sans elle, la barre reviendrait à la
+  /// position réelle à chaque rafraîchissement, et sauterait sous le doigt.
+  double? _enCours;
+
+  void _viser(double dx, double largeur, int durationMs, {required bool relacher}) {
+    if (durationMs <= 0) return;
+    final v = fractionVisee(dx, largeur);
+    if (relacher) {
+      setState(() => _enCours = null);
+      context.read<AppState>().seek(Duration(milliseconds: (v * durationMs).round()));
+    } else {
+      setState(() => _enCours = v);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final positionMs =
-        context.select<ZoneState, int>((z) => z.positionMs);
+    final positionMs = context.select<ZoneState, int>((z) => z.positionMs);
     final track =
         context.select<ZoneState, dynamic>((z) => z.currentTrack) as Track?;
     final durationMs = track?.durationMs ?? 0;
-    final progress =
+    final reelle =
         durationMs > 0 ? (positionMs / durationMs).clamp(0.0, 1.0) : 0.0;
+    final progress = _enCours ?? reelle;
 
-    return LinearProgressIndicator(
-      value: progress,
-      minHeight: 2,
-      backgroundColor: TuneColors.divider,
-      valueColor: const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+    return LayoutBuilder(
+      builder: (context, contraintes) {
+        final largeur = contraintes.maxWidth;
+        return GestureDetector(
+          // Gestes HORIZONTAUX seulement : le tiroir de lecture est un
+          // `DraggableScrollableSheet` qui écoute la verticale. Capter les deux
+          // volerait le glissement vers le haut, c'est-à-dire l'accès à la vue
+          // complète — on corrigerait un défaut en en créant un pire.
+          onTapDown: (d) => _viser(d.localPosition.dx, largeur, durationMs, relacher: true),
+          onHorizontalDragUpdate: (d) =>
+              _viser(d.localPosition.dx, largeur, durationMs, relacher: false),
+          onHorizontalDragEnd: (_) {
+            final v = _enCours;
+            if (v != null && durationMs > 0) {
+              setState(() => _enCours = null);
+              context.read<AppState>().seek(Duration(milliseconds: (v * durationMs).round()));
+            }
+          },
+          // Opaque : la zone élargie doit recevoir les touchers même là où elle
+          // est transparente, sinon seuls les 2 px visibles répondraient.
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            // 20 px de haut pour le doigt, 2 px visibles pour l'oeil. La barre
+            // reste alignée en bas, exactement où elle était.
+            height: 20,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 2,
+                backgroundColor: TuneColors.divider,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(TuneColors.accent),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -768,7 +952,7 @@ class _TrackInfo extends StatelessWidget {
             icon: const Icon(Icons.favorite_border_rounded),
             color: TuneColors.textSecondary,
             iconSize: 28,
-            tooltip: 'Favorite',
+            tooltip: AppLocalizations.of(context).npFavorite,
             onPressed: () {
               if (track != null) {
                 final radios = app.libraryState.radios;
@@ -782,9 +966,9 @@ class _TrackInfo extends StatelessWidget {
                     radio: radio,
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ajouté aux favoris radio'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).npRadioFavAdded),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
@@ -803,7 +987,7 @@ class _TrackInfo extends StatelessWidget {
                 color:
                     isFav ? TuneColors.accent : TuneColors.textSecondary,
                 iconSize: 28,
-                tooltip: 'Favorite',
+                tooltip: AppLocalizations.of(context).npFavorite,
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   final l = AppLocalizations.of(context);
@@ -939,7 +1123,9 @@ class _TransportControls extends StatelessWidget {
                       : Icons.play_arrow_rounded),
                   iconSize: 38,
                   color: TuneColors.background,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
+                  tooltip: isPlaying
+                      ? AppLocalizations.of(context).npPause
+                      : AppLocalizations.of(context).libraryPlay,
                   onPressed:
                       isPlaying ? () => app.pause() : () => app.resume(),
                 ),
@@ -979,7 +1165,7 @@ class _SecondaryControls extends StatelessWidget {
                   color: shuffle
                       ? TuneColors.accent
                       : TuneColors.textTertiary),
-              tooltip: 'Shuffle',
+              tooltip: AppLocalizations.of(context).btnShuffle,
               onPressed: () => app.setShuffle(enabled: !shuffle),
             ),
             // Repeat
@@ -992,14 +1178,14 @@ class _SecondaryControls extends StatelessWidget {
                     ? TuneColors.accent
                     : TuneColors.textTertiary,
               ),
-              tooltip: 'Repeat',
+              tooltip: AppLocalizations.of(context).npRepeat,
               onPressed: () => app.cycleRepeat(),
             ),
             // Queue — drag sheet up to queue view
             IconButton(
               icon: const Icon(Icons.queue_music_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Queue',
+              tooltip: AppLocalizations.of(context).npQueue,
               onPressed: () {
                 sheetController.animateTo(
                   _kQueue,
@@ -1012,7 +1198,7 @@ class _SecondaryControls extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.speaker_group_rounded,
                   color: TuneColors.textSecondary),
-              tooltip: 'Zones',
+              tooltip: AppLocalizations.of(context).navZones,
               onPressed: () => showModalBottomSheet(
                 context: context,
                 backgroundColor: TuneColors.surface,
@@ -1060,7 +1246,7 @@ class _ExtraActions extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.lyrics_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Lyrics',
+          tooltip: AppLocalizations.of(context).npLyrics,
           onPressed: track?.id != null && track!.id != 0
               ? () => _showLyrics(context, track!.id)
               : null,
@@ -1068,31 +1254,31 @@ class _ExtraActions extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.alarm_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Alarm',
+          tooltip: AppLocalizations.of(context).npAlarm,
           onPressed: () => _showAlarmSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.bedtime_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Sleep Timer',
+          tooltip: AppLocalizations.of(context).npSleepTimer,
           onPressed: () => showSleepTimerSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.equalizer_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Equalizer',
+          tooltip: AppLocalizations.of(context).npEqualizer,
           onPressed: () => _showEQSheet(context),
         ),
         IconButton(
           icon: const Icon(Icons.share_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Share',
+          tooltip: AppLocalizations.of(context).npShare,
           onPressed: () => _shareNowPlaying(context),
         ),
         IconButton(
           icon: const Icon(Icons.cast_rounded,
               color: TuneColors.textSecondary),
-          tooltip: 'Transfer',
+          tooltip: AppLocalizations.of(context).npTransfer,
           onPressed: () => _showTransferDialog(context),
         ),
       ],
@@ -1151,7 +1337,7 @@ class _ExtraActions extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: text));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Copied to clipboard')),
+            SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
           );
         }
       }
@@ -1164,7 +1350,7 @@ class _ExtraActions extends StatelessWidget {
       Clipboard.setData(ClipboardData(text: shareText));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
     } catch (e) {
@@ -1172,7 +1358,7 @@ class _ExtraActions extends StatelessWidget {
         final text = '${track!.title} - ${track!.artistName ?? ""}';
         Clipboard.setData(ClipboardData(text: text));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
+          SnackBar(content: Text(AppLocalizations.of(context).npCopiedToClipboard)),
         );
       }
     }
@@ -1530,12 +1716,12 @@ class _LyricsPlaceholderSheet extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Lyrics', style: TuneFonts.title3),
+            child: Text(AppLocalizations.of(context).npLyrics, style: TuneFonts.title3),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: Center(
-              child: Text('Open from Now Playing for full lyrics',
+              child: Text(AppLocalizations.of(context).npLyricsOpenFromNowPlaying,
                   style: TuneFonts.subheadline
                       .copyWith(color: TuneColors.textTertiary)),
             ),
@@ -1565,13 +1751,23 @@ class _EQSheetState extends State<_EQSheet> {
     'jazz', 'classical', 'electronic', 'hip_hop', 'acoustic',
   ];
 
-  static const _presetLabels = {
-    'flat': 'Flat', 'bass_boost': 'Bass Boost', 'treble_boost': 'Treble Boost',
-    'vocal': 'Vocal', 'rock': 'Rock', 'jazz': 'Jazz', 'classical': 'Classical',
-    'electronic': 'Electronic', 'hip_hop': 'Hip Hop', 'acoustic': 'Acoustic',
-  };
+  static String _presetLabel(AppLocalizations l, String preset) =>
+      switch (preset) {
+        'flat' => l.npEqFlat,
+        'bass_boost' => l.npEqBassBoost,
+        'treble_boost' => l.npEqTrebleBoost,
+        'vocal' => l.npEqVocal,
+        'rock' => l.npEqRock,
+        'jazz' => l.npEqJazz,
+        'classical' => l.npEqClassical,
+        'electronic' => l.npEqElectronic,
+        'hip_hop' => l.npEqHipHop,
+        'acoustic' => l.npEqAcoustic,
+        _ => preset,
+      };
 
   Future<void> _applyPreset(String preset) async {
+    final l = AppLocalizations.of(context);
     final app = context.read<AppState>();
     final zoneId = context.read<ZoneState>().currentZoneId;
     if (app.apiClient == null || zoneId == null) return;
@@ -1580,13 +1776,13 @@ class _EQSheetState extends State<_EQSheet> {
       if (mounted) {
         setState(() => _selectedPreset = preset);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ: ${_presetLabels[preset] ?? preset}')),
+          SnackBar(content: Text(l.npEqApplied(_presetLabel(l, preset)))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('EQ error: $e')),
+          SnackBar(content: Text(l.npEqError(e.toString()))),
         );
       }
     }
@@ -1611,7 +1807,7 @@ class _EQSheetState extends State<_EQSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Equalizer', style: TuneFonts.title3),
+          Text(AppLocalizations.of(context).npEqualizer, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -1619,7 +1815,7 @@ class _EQSheetState extends State<_EQSheet> {
             children: _presets.map((preset) {
               final selected = _selectedPreset == preset;
               return ChoiceChip(
-                label: Text(_presetLabels[preset] ?? preset),
+                label: Text(_presetLabel(AppLocalizations.of(context), preset)),
                 selected: selected,
                 selectedColor: TuneColors.accent.withValues(alpha: 0.25),
                 backgroundColor: TuneColors.surfaceVariant,
@@ -1658,6 +1854,7 @@ class _AlarmSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1675,7 +1872,7 @@ class _AlarmSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Alarm Clock', style: TuneFonts.title3),
+          Text(l.npAlarmClock, style: TuneFonts.title3),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -1700,14 +1897,14 @@ class _AlarmSheet extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(
-                                      'Alarm set for ${opt.label}')),
+                                      l.npAlarmSetFor(opt.label))),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Alarm error: $e')),
+                                  content: Text(l.npAlarmError(e.toString()))),
                             );
                           }
                         }
@@ -1717,7 +1914,7 @@ class _AlarmSheet extends StatelessWidget {
               ActionChip(
                 avatar: const Icon(Icons.alarm_off_rounded,
                     size: 16, color: TuneColors.error),
-                label: const Text('Cancel'),
+                label: Text(l.btnCancel),
                 backgroundColor: TuneColors.surfaceVariant,
                 labelStyle:
                     const TextStyle(color: TuneColors.textSecondary),
@@ -1732,8 +1929,8 @@ class _AlarmSheet extends StatelessWidget {
                       await app.apiClient!.cancelAlarm(zoneId);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Alarm cancelled')),
+                          SnackBar(
+                              content: Text(l.npAlarmCancelled)),
                         );
                       }
                     } catch (_) {}
@@ -1762,12 +1959,13 @@ class _TransferDialog extends StatelessWidget {
     final currentZoneId = zoneState.currentZoneId;
     final zones =
         zoneState.zones.where((z) => z.id != currentZoneId).toList();
+    final l = AppLocalizations.of(context);
 
     return AlertDialog(
       backgroundColor: TuneColors.surface,
-      title: Text('Transfer playback', style: TuneFonts.title3),
+      title: Text(l.npTransferTitle, style: TuneFonts.title3),
       content: zones.isEmpty
-          ? Text('No other zones available', style: TuneFonts.subheadline)
+          ? Text(l.npNoOtherZones, style: TuneFonts.subheadline)
           : SizedBox(
               width: double.maxFinite,
               child: ListView.builder(
@@ -1790,14 +1988,14 @@ class _TransferDialog extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(
-                                      'Transferred to ${zone.name}')),
+                                      l.npTransferredTo(zone.name))),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Transfer error: $e')),
+                                  content: Text(l.npTransferError(e.toString()))),
                             );
                           }
                         }
@@ -1810,7 +2008,7 @@ class _TransferDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.btnCancel),
         ),
       ],
     );

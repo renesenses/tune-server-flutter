@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -106,12 +107,13 @@ class _DashboardViewState extends State<DashboardView> {
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Dashboard', style: TuneFonts.title3),
+        title: Text(AppLocalizations.of(context).miscNavDashboard,
+            style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
                 size: 22, color: TuneColors.textSecondary),
-            tooltip: 'Refresh',
+            tooltip: AppLocalizations.of(context).btnRefresh,
             onPressed: _load,
           ),
         ],
@@ -128,6 +130,7 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildContent() {
+    final l = AppLocalizations.of(context);
     final data = _data!;
     final totalListens = data['total_listens'] as int? ?? 0;
     final totalDurationMs = data['total_duration_ms'] as int? ?? 0;
@@ -162,13 +165,13 @@ class _DashboardViewState extends State<DashboardView> {
           children: [
             Expanded(child: _StatCard(
               icon: Icons.play_circle_rounded,
-              label: 'Total Plays',
+              label: l.miscDashTotalPlays,
               value: '$totalListens',
             )),
             const SizedBox(width: 12),
             Expanded(child: _StatCard(
               icon: Icons.timer_outlined,
-              label: 'Listening Time',
+              label: l.miscDashListeningTime,
               value: _formatDuration(totalDurationMs),
             )),
           ],
@@ -178,13 +181,13 @@ class _DashboardViewState extends State<DashboardView> {
           children: [
             Expanded(child: _StatCard(
               icon: Icons.music_note_rounded,
-              label: 'Unique Tracks',
+              label: l.miscDashUniqueTracks,
               value: '$uniqueTracks',
             )),
             const SizedBox(width: 12),
             Expanded(child: _StatCard(
               icon: Icons.person_rounded,
-              label: 'Unique Artists',
+              label: l.miscDashUniqueArtists,
               value: '$uniqueArtists',
             )),
           ],
@@ -193,8 +196,8 @@ class _DashboardViewState extends State<DashboardView> {
         // Top Artists
         if (topArtists.isNotEmpty) ...[
           const SizedBox(height: 24),
-          const Text('TOP ARTISTS',
-              style: TextStyle(
+          Text(l.miscDashTopArtists,
+              style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: TuneColors.textTertiary,
@@ -212,8 +215,8 @@ class _DashboardViewState extends State<DashboardView> {
         // Top Albums
         if (topAlbums.isNotEmpty) ...[
           const SizedBox(height: 24),
-          const Text('TOP ALBUMS',
-              style: TextStyle(
+          Text(l.miscDashTopAlbums,
+              style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: TuneColors.textTertiary,
@@ -231,8 +234,8 @@ class _DashboardViewState extends State<DashboardView> {
         // Top Tracks
         if (topTracks.isNotEmpty) ...[
           const SizedBox(height: 24),
-          const Text('TOP TRACKS',
-              style: TextStyle(
+          Text(l.miscDashTopTracks,
+              style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: TuneColors.textTertiary,
@@ -250,8 +253,8 @@ class _DashboardViewState extends State<DashboardView> {
         // Hourly Distribution
         if (hourly.isNotEmpty) ...[
           const SizedBox(height: 24),
-          const Text('LISTENING BY HOUR',
-              style: TextStyle(
+          Text(l.miscDashListeningByHour,
+              style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: TuneColors.textTertiary,
@@ -263,8 +266,8 @@ class _DashboardViewState extends State<DashboardView> {
         // Daily Distribution — one bar per day of the selected period.
         if (trend.isNotEmpty) ...[
           const SizedBox(height: 24),
-          const Text('LISTENING BY DAY',
-              style: TextStyle(
+          Text(l.miscDashListeningByDay,
+              style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: TuneColors.textTertiary,
@@ -291,15 +294,16 @@ class _PeriodFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
-        _chip('All Time', null),
+        _chip(l.miscDashAllTime, null),
         const SizedBox(width: 8),
-        _chip('7 Days', '7d'),
+        _chip(l.miscDashLastDays(7), '7d'),
         const SizedBox(width: 8),
-        _chip('30 Days', '30d'),
+        _chip(l.miscDashLastDays(30), '30d'),
         const SizedBox(width: 8),
-        _chip('90 Days', '90d'),
+        _chip(l.miscDashLastDays(90), '90d'),
       ],
     );
   }
@@ -391,6 +395,7 @@ class _TopList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unknown = AppLocalizations.of(context).miscUnknown;
     return Container(
       decoration: BoxDecoration(
         color: TuneColors.surface,
@@ -404,7 +409,7 @@ class _TopList extends StatelessWidget {
                   height: 1, indent: 52, color: TuneColors.divider),
             _TopListTile(
               rank: i + 1,
-              title: '${items[i][titleKey] ?? 'Unknown'}',
+              title: '${items[i][titleKey] ?? unknown}',
               subtitle: subtitleKey != null
                   ? items[i][subtitleKey] as String?
                   : null,
@@ -527,6 +532,7 @@ class _DailyChart extends StatelessWidget {
       dates.add(d);
     }
     final maxCount = counts.fold<int>(1, (m, c) => math.max(m, c));
+    final l = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -546,7 +552,7 @@ class _DailyChart extends StatelessWidget {
                   Expanded(
                     child: Tooltip(
                       message:
-                          '${dates[i].day}/${dates[i].month} — ${counts[i]} plays',
+                          '${dates[i].day}/${dates[i].month} — ${l.miscPlaysCount(counts[i])}',
                       child: Container(
                         height: (counts[i] / maxCount * 100).clamp(2.0, 100.0),
                         decoration: BoxDecoration(
@@ -595,6 +601,7 @@ class _HourlyChart extends StatelessWidget {
     }
 
     final maxCount = hourCounts.reduce(math.max).clamp(1, double.maxFinite.toInt());
+    final l = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -613,7 +620,7 @@ class _HourlyChart extends StatelessWidget {
                   if (h > 0) const SizedBox(width: 2),
                   Expanded(
                     child: Tooltip(
-                      message: '${h.toString().padLeft(2, '0')}:00 - ${hourCounts[h]} plays',
+                      message: '${h.toString().padLeft(2, '0')}:00 - ${l.miscPlaysCount(hourCounts[h])}',
                       child: Container(
                         height: (hourCounts[h] / maxCount * 100).clamp(2.0, 100.0),
                         decoration: BoxDecoration(
@@ -664,10 +671,10 @@ class _EmptyDashboard extends StatelessWidget {
           const Icon(Icons.bar_chart_rounded,
               size: 56, color: TuneColors.textTertiary),
           const SizedBox(height: 12),
-          Text('No listening data yet',
+          Text(AppLocalizations.of(context).miscDashNoData,
               style: TuneFonts.subheadline),
           const SizedBox(height: 4),
-          Text('Play some music to see your stats here.',
+          Text(AppLocalizations.of(context).miscDashNoDataHint,
               style: TuneFonts.caption),
         ],
       ),
@@ -694,7 +701,7 @@ class _ErrorState extends StatelessWidget {
           const Icon(Icons.error_outline,
               size: 48, color: TuneColors.error),
           const SizedBox(height: 12),
-          Text('Failed to load dashboard',
+          Text(AppLocalizations.of(context).miscDashLoadFailed,
               style: TuneFonts.subheadline),
           const SizedBox(height: 4),
           Padding(
@@ -707,7 +714,7 @@ class _ErrorState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(AppLocalizations.of(context).btnRetry),
             style: FilledButton.styleFrom(
               backgroundColor: TuneColors.accent,
             ),

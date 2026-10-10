@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../state/zone_state.dart';
 import '../helpers/tune_colors.dart';
@@ -23,13 +24,14 @@ class EqualizerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: TuneColors.background,
         appBar: AppBar(
           backgroundColor: TuneColors.surface,
-          title: const Text('Equalizer', style: TuneFonts.title3),
+          title: Text(l.cfgEqTitle, style: TuneFonts.title3),
           bottom: TabBar(
             indicatorColor: TuneColors.accent,
             indicatorWeight: 2.5,
@@ -37,14 +39,14 @@ class EqualizerView extends StatelessWidget {
             unselectedLabelColor: TuneColors.textSecondary,
             labelStyle:
                 const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            tabs: const [
+            tabs: [
               Tab(
-                icon: Icon(Icons.auto_fix_high_rounded, size: 18),
-                text: 'Assistant',
+                icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                text: l.cfgEqTabAssistant,
               ),
               Tab(
-                icon: Icon(Icons.tune_rounded, size: 18),
-                text: 'Expert',
+                icon: const Icon(Icons.tune_rounded, size: 18),
+                text: l.cfgEqTabExpert,
               ),
             ],
           ),
@@ -120,7 +122,10 @@ class _ParametricEqTabState extends State<_ParametricEqTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur EQ: $e'), backgroundColor: TuneColors.error),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context).cfgEqError(e.toString())),
+              backgroundColor: TuneColors.error),
         );
       }
     }
@@ -133,6 +138,7 @@ class _ParametricEqTabState extends State<_ParametricEqTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (_loading) {
       return const Center(
           child: CircularProgressIndicator(color: TuneColors.accent));
@@ -150,8 +156,8 @@ class _ParametricEqTabState extends State<_ParametricEqTab> {
             padding: const EdgeInsets.only(right: 12, top: 8),
             child: TextButton(
               onPressed: _resetFlat,
-              child: const Text('Flat',
-                  style: TextStyle(color: TuneColors.accent)),
+              child: Text(l.cfgEqPresetFlat,
+                  style: const TextStyle(color: TuneColors.accent)),
             ),
           ),
         ),
@@ -196,8 +202,8 @@ class _ParametricEqTabState extends State<_ParametricEqTab> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
-              _PresetChip(label: 'Flat', onTap: _resetFlat),
-              _PresetChip(label: 'Bass Boost', onTap: () {
+              _PresetChip(label: l.cfgEqPresetFlat, onTap: _resetFlat),
+              _PresetChip(label: l.cfgEqPresetBassBoost, onTap: () {
                 setState(() => _gains = [8, 6, 4, 2, 0, 0, 0, 0, 0, 0]);
                 _applyGains();
               }),
@@ -209,11 +215,11 @@ class _ParametricEqTabState extends State<_ParametricEqTab> {
                 setState(() => _gains = [2, 3, 1, 2, -1, -1, 0, 1, 2, 3]);
                 _applyGains();
               }),
-              _PresetChip(label: 'Classique', onTap: () {
+              _PresetChip(label: l.cfgEqPresetClassical, onTap: () {
                 setState(() => _gains = [0, 0, 0, 0, 0, 0, -2, -3, -2, 0]);
                 _applyGains();
               }),
-              _PresetChip(label: 'Vocal', onTap: () {
+              _PresetChip(label: l.cfgEqPresetVocal, onTap: () {
                 setState(() => _gains = [-2, -1, 0, 2, 4, 4, 2, 0, -1, -2]);
                 _applyGains();
               }),

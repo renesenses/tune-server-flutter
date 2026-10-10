@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
@@ -21,6 +22,7 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
   Map<String, dynamic>? _data;
   bool _loading = true;
   String? _error;
+  bool _notConnected = false;
 
   @override
   void initState() {
@@ -31,7 +33,7 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
   Future<void> _load() async {
     final api = context.read<AppState>().apiClient;
     if (api == null) {
-      setState(() { _loading = false; _error = 'Non connecte'; });
+      setState(() { _loading = false; _notConnected = true; });
       return;
     }
     setState(() => _loading = true);
@@ -45,11 +47,12 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: TuneColors.background,
       appBar: AppBar(
         backgroundColor: TuneColors.surface,
-        title: const Text('Diagnostics reseau', style: TuneFonts.title3),
+        title: Text(l.cfgNetDiagTitle, style: TuneFonts.title3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: TuneColors.accent),
@@ -59,14 +62,18 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: TuneColors.accent))
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: TuneColors.error)))
+          : (_error != null || _notConnected)
+              ? Center(
+                  child: Text(
+                      _notConnected ? l.streamingNotConnected : _error!,
+                      style: const TextStyle(color: TuneColors.error)))
               : _buildContent(),
     );
   }
 
   Widget _buildContent() {
     if (_data == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
 
     final multicast = _data!['multicast'] as Map<String, dynamic>? ?? {};
     final dns = _data!['dns'] as Map<String, dynamic>? ?? {};
@@ -81,9 +88,9 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
           icon: Icons.cast_connected_rounded,
           status: multicast['status'] as String? ?? 'unknown',
           details: {
-            'SSDP actif': '${multicast['ssdp_active'] ?? '-'}',
-            'Multicast joignable': '${multicast['reachable'] ?? '-'}',
-            if (multicast['error'] != null) 'Erreur': multicast['error'] as String,
+            l.cfgNetSsdpActive: '${multicast['ssdp_active'] ?? '-'}',
+            l.cfgNetMulticastReachable: '${multicast['reachable'] ?? '-'}',
+            if (multicast['error'] != null) l.cfgError: multicast['error'] as String,
           },
         ),
         const SizedBox(height: 12),
@@ -92,9 +99,9 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
           icon: Icons.dns_rounded,
           status: dns['status'] as String? ?? 'unknown',
           details: {
-            'Resolution': '${dns['resolution_ms'] ?? '-'} ms',
-            'Serveur': dns['server'] as String? ?? '-',
-            if (dns['error'] != null) 'Erreur': dns['error'] as String,
+            l.cfgNetResolution: '${dns['resolution_ms'] ?? '-'} ms',
+            l.server: dns['server'] as String? ?? '-',
+            if (dns['error'] != null) l.cfgError: dns['error'] as String,
           },
         ),
         const SizedBox(height: 12),
@@ -103,14 +110,14 @@ class _NetworkDiagnosticsViewState extends State<NetworkDiagnosticsView> {
           icon: Icons.language_rounded,
           status: internet['status'] as String? ?? 'unknown',
           details: {
-            'Latence': '${internet['latency_ms'] ?? '-'} ms',
-            'IP publique': internet['public_ip'] as String? ?? '-',
-            if (internet['error'] != null) 'Erreur': internet['error'] as String,
+            l.cfgNetLatency: '${internet['latency_ms'] ?? '-'} ms',
+            l.cfgNetPublicIp: internet['public_ip'] as String? ?? '-',
+            if (internet['error'] != null) l.cfgError: internet['error'] as String,
           },
         ),
         if (interfaces.isNotEmpty) ...[
           const SizedBox(height: 20),
-          Text('INTERFACES RESEAU',
+          Text(l.cfgNetInterfaces,
               style: TuneFonts.footnote.copyWith(
                 color: TuneColors.textTertiary,
                 letterSpacing: 0.8,
@@ -181,12 +188,12 @@ class _StatusCard extends StatelessWidget {
     }
   }
 
-  String get _statusLabel {
+  String _statusLabel(AppLocalizations l) {
     switch (status) {
       case 'ok': return 'OK';
-      case 'warning': return 'Attention';
-      case 'error': return 'Erreur';
-      default: return 'Inconnu';
+      case 'warning': return l.cfgStatusWarning;
+      case 'error': return l.cfgError;
+      default: return l.cfgUnknown;
     }
   }
 
@@ -215,7 +222,7 @@ class _StatusCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  _statusLabel,
+                  _statusLabel(AppLocalizations.of(context)),
                   style: TextStyle(color: _statusColor, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
