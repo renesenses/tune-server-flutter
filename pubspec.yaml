@@ -30,6 +30,9 @@ dependencies:
   verrou_multicast:
     path: packages/verrou_multicast
 
+  # --- Permissions médias (READ_MEDIA_AUDIO / READ_MEDIA_IMAGES) ---
+  permission_handler: ^11.3.1
+
   # --- Dossier privé de la base, préférences partagées avec l'interface ---
   path_provider: ^2.1.4
   shared_preferences: ^2.3.2

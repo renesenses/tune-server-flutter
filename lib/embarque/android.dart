@@ -9,19 +9,30 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:verrou_multicast/verrou_multicast.dart';
 
+import 'acces_medias.dart';
 import 'moteur_natif.dart';
 import 'tache_serveur.dart';
 import 'serveur_embarque.dart';
+
+/// Ce que le dernier démarrage a obtenu comme accès aux médias.
+EtatMedias? dernierAccesMedias;
 
 /// Le serveur tel que l'application le lance sur un téléphone.
 ServeurEmbarque serveurAndroid() => ServeurEmbarque(
   moteur: MoteurNatif.charger,
   service: ServiceAvantPlanAndroid(),
   dossierDonnees: () async => (await getApplicationSupportDirectory()).path,
-  repertoires: repertoiresParDefaut,
+  repertoires: () async {
+    // Les boîtes de dialogue médias passent AVANT le démarrage du moteur :
+    // son premier scan doit déjà pouvoir lire les dossiers.
+    dernierAccesMedias = await AccesMedias().obtenir();
+    return repertoiresParDefaut();
+  },
 );
 
-/// Les dossiers de musique habituels d'un téléphone, s'ils existent.
+/// Les dossiers de musique habituels d'un téléphone, s'ils existent. Ils
+/// sont passés même si l'accès aux médias a été refusé : le moteur les
+/// relira au prochain scan, une fois la permission donnée dans les réglages.
 Future<List<String>> repertoiresParDefaut() async {
   const candidats = [
     '/storage/emulated/0/Music',

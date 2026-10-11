@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:tune_remote/tune_remote.dart';
 
@@ -22,6 +24,11 @@ Future<void> main() async {
       demarrer: serveur.demarrer,
       quandPret: (_) async {
         await preparerTelecommande();
+        // Premier scan (et rescan incrémental à chaque ouverture) si la
+        // musique du téléphone est lisible.
+        if (dernierAccesMedias?.musique ?? false) {
+          unawaited(serveur.lancerScan());
+        }
         // Remplace l'écran de démarrage par l'interface de la télécommande.
         await lancerTune(paquet: 'tune_remote');
       },
