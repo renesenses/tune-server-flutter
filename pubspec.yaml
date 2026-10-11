@@ -26,6 +26,10 @@ dependencies:
   # --- Service au premier plan (mediaPlayback) qui garde le serveur vivant ---
   flutter_foreground_task: ^8.13.0
 
+  # --- Verrou multicast Wi-Fi, tenu par le service (greffon local) ---
+  verrou_multicast:
+    path: packages/verrou_multicast
+
   # --- Dossier privé de la base, préférences partagées avec l'interface ---
   path_provider: ^2.1.4
   shared_preferences: ^2.3.2
