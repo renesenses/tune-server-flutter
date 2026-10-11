@@ -112,6 +112,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String zoneLimitOverCap(int current, int limit) {
+    return 'Ihre $current Zonen funktionieren weiterhin, die kostenlose Version erlaubt aber $limit — entfernen Sie eine oder wechseln Sie zu Premium, um eine neue hinzuzufügen';
+  }
+
+  @override
   String get navLibrary => 'Bibliothek';
 
   @override

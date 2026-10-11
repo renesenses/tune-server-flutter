@@ -5,6 +5,16 @@ part of 'app_state.dart';
 // - Multi-room grouping (group/ungroup, syncDelay)
 // - selectZone avec migration de la lecture en cours
 
+/// Clé d'erreur présentée à l'utilisateur quand une création de zone est
+/// refusée par la licence.
+///
+/// #4077 : une installation qui porte déjà plus de zones que le plafond ne doit
+/// PAS lire « offre gratuite limitée à 3 zones » alors que sept tournent chez
+/// elle. Elle reçoit un message distinct, qui dit que ses zones restent en
+/// service et que seule la création suivante est refusée.
+String zoneErrorKeyFor(ZoneLimitException e) =>
+    e.isGrandfathered ? 'zone_limit_over_cap' : 'zone_limit_reached';
+
 extension AppStateZones on AppState {
 
   // ---------------------------------------------------------------------------
@@ -19,8 +29,9 @@ extension AppStateZones on AppState {
     }
     try {
       await engine.zoneManager.createZone(name);
-    } on ZoneLimitException {
-      _lastZoneError = 'zone_limit_reached';
+    } on ZoneLimitException catch (e) {
+      _lastZoneError = zoneErrorKeyFor(e);
+      _lastZoneCount = e.currentCount;
       notify();
       return;
     }
@@ -49,8 +60,9 @@ extension AppStateZones on AppState {
       await _refreshZones();
       zoneState.setCurrentZoneId(instance.zone.id);
       return instance.zone.id;
-    } on ZoneLimitException {
-      _lastZoneError = 'zone_limit_reached';
+    } on ZoneLimitException catch (e) {
+      _lastZoneError = zoneErrorKeyFor(e);
+      _lastZoneCount = e.currentCount;
       notify();
       return -1;
     }

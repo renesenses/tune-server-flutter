@@ -66,9 +66,17 @@ class AppState extends ChangeNotifier {
   /// Les vues l'observent pour proposer un passage Premium.
   String? _lastZoneError;
   String? get lastZoneError => _lastZoneError;
+
+  /// Nombre de zones que portait l'installation quand la dernière création a
+  /// été refusée. #4077 : au-delà du plafond, le message doit dire la vérité
+  /// (« vos 7 zones restent là ») plutôt que « limité à 3 zones ».
+  int _lastZoneCount = 0;
+  int get lastZoneCount => _lastZoneCount;
+
   void clearZoneError() {
     if (_lastZoneError == null) return;
     _lastZoneError = null;
+    _lastZoneCount = 0;
     notifyListeners();
   }
 

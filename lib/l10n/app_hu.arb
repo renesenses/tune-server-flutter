@@ -33,6 +33,7 @@
   "playbackErrorZoneNotFound": "A zóna nem található",
   "playbackErrorFailed": "A lejátszás nem sikerült",
   "zoneLimitReached": "Az ingyenes csomag {limit} zónára korlátozott — válts Premiumra a korlátlan használathoz",
+  "zoneLimitOverCap": "A meglévő {current} zónád továbbra is működik, az ingyenes csomag azonban {limit} zónát enged — törölj egyet, vagy válts Premiumra új hozzáadásához",
   "navLibrary": "Gyűjtemény",
   "navSearch": "Keresés",
   "navStreaming": "Streaming",
