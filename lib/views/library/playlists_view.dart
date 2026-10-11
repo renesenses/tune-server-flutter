@@ -15,6 +15,7 @@ import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'albums_grid_view.dart';
 import 'package:tune_server/services/tune_api_client.dart';
+import '../playlists/refus_playlists.dart';
 
 // ---------------------------------------------------------------------------
 // PlaylistsView — source icon bar + filtered list
@@ -235,11 +236,9 @@ class _PlaylistsViewState extends State<PlaylistsView> {
           }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.errorWith(e.toString())), duration: const Duration(seconds: 3)),
-        );
-      }
+      // Un refus Premium (Transférer) ou un greffon absent s'explique ;
+      // le reste garde le message d'erreur générique.
+      if (mounted) montrerRefus(context, e);
     }
   }
 
@@ -304,11 +303,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                     }
                 }
               } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.errorWith(e.toString())), duration: const Duration(seconds: 3)),
-                  );
-                }
+                if (context.mounted) montrerRefus(context, e);
               }
             },
             itemBuilder: (_) => [

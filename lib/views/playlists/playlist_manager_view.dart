@@ -9,6 +9,7 @@ import '../helpers/artwork_view.dart';
 import '../helpers/tune_colors.dart';
 import '../helpers/tune_fonts.dart';
 import 'package:tune_server/services/tune_api_client.dart';
+import 'refus_playlists.dart';
 
 /// Playlist Manager — Transfer, Sync, Backup tabs
 /// Mirrors PlaylistManagerView.swift (iOS) and web client
@@ -25,19 +26,20 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
 
   List<Map<String, dynamic>> _history = [];
   List<Map<String, dynamic>> _links = [];
+  /// Une ligne par playlist gardée par le greffon « Playlists converter » :
+  /// `{service, playlist_id, nom, snapshots, dernier_le_ms}`.
   List<Map<String, dynamic>> _snapshots = [];
   bool _loading = false;
 
+  /// L'échec du dernier chargement d'onglet (refus Premium, greffon absent…),
+  /// montré à la place d'une liste vide.
+  Object? _loadError;
+
   // Backup
   bool _backingUp = false;
-  Map<String, dynamic>? _backupResult;
-  int? _restoringSnapshotId;
+  String _backupMessage = '';
+  String? _restoringKey;
   String _restoreMessage = '';
-
-  // Batch
-  String _batchSource = '';
-  bool _batching = false;
-  Map<String, dynamic>? _batchResult;
 
   // Compare
   List<Map<String, dynamic>> _allPlaylists = [];
@@ -67,148 +69,117 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   Future<void> _loadTab() async {
     final app = context.read<AppState>();
     if (!app.isRemoteMode || app.apiClient == null) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
     try {
       if (_tabCtrl.index == 2) {
         final data = await app.apiClient!.getTransferHistory();
         _history = data.cast<Map<String, dynamic>>();
       } else if (_tabCtrl.index == 3) {
-        final data = await app.apiClient!.getPlaylistLinks();
-        _links = data.cast<Map<String, dynamic>>();
+        _links = await app.apiClient!.getPlaylistLinks();
       } else if (_tabCtrl.index == 4) {
-        final data = await app.apiClient!.listPlaylistSnapshots();
-        _snapshots = data.cast<Map<String, dynamic>>();
+        _snapshots = await app.apiClient!.listPlaylistSnapshots();
       } else if (_tabCtrl.index == 5) {
         await _loadAllPlaylistsForCompare();
       }
-    } catch (_) {}
+    } catch (e) {
+      _loadError = e;
+    }
     if (mounted) setState(() => _loading = false);
   }
 
+  /// Recrée une playlist depuis sa copie datée la plus récente, chez son
+  /// service d'origine. L'actuelle n'est ni modifiée ni supprimée.
   Future<void> _restoreSnapshot(Map<String, dynamic> snap) async {
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
     final l = AppLocalizations.of(context);
-    final nameController = TextEditingController(text: snap['playlist_name'] as String? ?? '');
-    final result = await showDialog<String?>(
+    final nom = snap['nom'] as String? ?? '';
+    final go = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: TuneColors.surface,
-        title: Text(l.plRestoreSnapshotTitle, style: TuneFonts.title3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l.plLocalPlaylistNameLabel, style: TuneFonts.footnote),
-            const SizedBox(height: 8),
-            TextField(
-              controller: nameController,
-              style: TuneFonts.body,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                filled: true,
-                fillColor: TuneColors.surfaceVariant,
-              ),
-            ),
-          ],
-        ),
+        title: Text(l.plRestore, style: TuneFonts.title3),
+        content: Text(l.plRestoreRecreateAsk(nom), style: TuneFonts.body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l.btnCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
+            onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
             child: Text(l.plRestore),
           ),
         ],
       ),
     );
-    if (result == null) return;
-
+    if (go != true || !mounted) return;
+    final key = '${snap['service']}:${snap['playlist_id']}';
     setState(() {
-      _restoringSnapshotId = snap['id'] as int;
+      _restoringKey = key;
       _restoreMessage = '';
     });
-
-    Future<dynamic> doRestore(bool overwrite) {
-      return app.apiClient!.restorePlaylistSnapshot(
-        snap['id'] as int,
-        targetName: result.isEmpty ? null : result,
-        overwriteExisting: overwrite,
-      );
-    }
-
     try {
-      final r = await doRestore(false);
-      setState(() {
-        _restoreMessage = l.plRestoreDone('${r['name']}', '${r['tracks_matched']}', '${r['tracks_not_found']}');
-      });
+      await app.apiClient!.restoreLatestSnapshot(
+        service: '${snap['service']}',
+        playlistId: '${snap['playlist_id']}',
+      );
+      if (mounted) setState(() => _restoreMessage = l.plRestoreRecreated(nom));
     } catch (e) {
-      final msg = e.toString();
-      if (msg.contains('already exists') || msg.contains('409')) {
-        if (!mounted) return;
-        final overwrite = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: TuneColors.surface,
-            title: Text(l.plExistingTitle, style: TuneFonts.title3),
-            content: Text(l.plExistingBody('${result.isEmpty ? snap['playlist_name'] : result}'), style: TuneFonts.body),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-                child: Text(l.plReplace),
-              ),
-            ],
-          ),
-        );
-        if (overwrite == true) {
-          try {
-            final r = await doRestore(true);
-            setState(() {
-              _restoreMessage = l.plRestoreReplaced('${r['name']}', '${r['tracks_matched']}', '${r['tracks_not_found']}');
-            });
-          } catch (e2) {
-            setState(() => _restoreMessage = l.errorWith(e2.toString()));
-          }
-        }
-      } else {
-        setState(() => _restoreMessage = l.errorWith(e.toString()));
-      }
+      if (mounted) setState(() => _restoreMessage = expliquerRefus(e, l));
     }
-
-    setState(() => _restoringSnapshotId = null);
+    if (mounted) setState(() => _restoringKey = null);
   }
 
-  Future<void> _deleteSnapshot(Map<String, dynamic> snap) async {
-    final l = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: TuneColors.surface,
-        title: Text(l.btnDelete, style: TuneFonts.title3),
-        content: Text(l.plDeleteSnapshotBody('${snap['playlist_name']}'), style: TuneFonts.body),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.btnCancel)),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: TuneColors.error),
-            child: Text(l.btnDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+  /// « Tout sauvegarder » : une copie datée de chaque playlist locale et de
+  /// chaque playlist des services connectés, l'une après l'autre. Un refus
+  /// Premium ou un greffon absent arrête tout de suite : les suivantes
+  /// échoueraient de la même façon.
+  Future<void> _backupAll() async {
     final app = context.read<AppState>();
-    await app.apiClient?.deletePlaylistSnapshot(snap['id'] as int);
-    if (!mounted) return;
+    if (app.apiClient == null) return;
+    final l = AppLocalizations.of(context);
     setState(() {
-      _snapshots.removeWhere((s) => s['id'] == snap['id']);
+      _backingUp = true;
+      _backupMessage = '';
     });
+    final playlists = await _collectPlaylists();
+    var ok = 0;
+    var echecs = 0;
+    for (final pl in playlists) {
+      try {
+        await app.apiClient!.snapshotPlaylist(
+          service: pl['service'] as String,
+          playlistId: pl['id'] as String,
+          name: pl['name'] as String?,
+        );
+        ok++;
+      } catch (e) {
+        if (classerRefus(e) != RefusPlaylist.autre) {
+          if (mounted) {
+            setState(() {
+              _backingUp = false;
+              _backupMessage = expliquerRefus(e, l);
+            });
+          }
+          return;
+        }
+        echecs++;
+      }
+    }
+    try {
+      _snapshots = await app.apiClient!.listPlaylistSnapshots();
+    } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _backingUp = false;
+        _backupMessage = l.plBackupAllDone(ok, echecs);
+      });
+    }
   }
 
   Future<void> _editSyncInterval(Map<String, dynamic> link) async {
-    final current = link['sync_interval_minutes'] as int? ?? 0;
+    final current = link['cadence_minutes'] as int? ?? 0;
     final controller = TextEditingController(text: current.toString());
     final l = AppLocalizations.of(context);
     final result = await showDialog<int?>(
@@ -250,10 +221,18 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     );
     if (result == null || !mounted) return;
     final app = context.read<AppState>();
+    final retenue = TuneApiClient.cadenceDuLien(result);
     try {
-      await app.apiClient?.updatePlaylistLink(link['id'] as int, syncIntervalMinutes: result);
+      await app.apiClient?.setPlaylistLinkInterval('${link['lien_id']}', result);
+      if (mounted && retenue != result) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.plIntervalAdjusted(retenue))),
+        );
+      }
       await _loadTab();
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) montrerRefus(context, e);
+    }
   }
 
   @override
@@ -304,7 +283,22 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     final app = context.read<AppState>();
     if (app.apiClient == null) return;
     _loadingPlaylists = true;
+    final items = await _collectPlaylists();
+
+    if (mounted) {
+      setState(() {
+        _allPlaylists = items;
+        _loadingPlaylists = false;
+      });
+    }
+  }
+
+  /// Les playlists locales et celles des services connectés :
+  /// `{service, id, name}`.
+  Future<List<Map<String, dynamic>>> _collectPlaylists() async {
+    final app = context.read<AppState>();
     final items = <Map<String, dynamic>>[];
+    if (app.apiClient == null) return items;
 
     try {
       final local = await app.apiClient!.getPlaylists();
@@ -335,13 +329,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
         }
       } catch (_) {}
     }));
-
-    if (mounted) {
-      setState(() {
-        _allPlaylists = items;
-        _loadingPlaylists = false;
-      });
-    }
+    return items;
   }
 
   Future<void> _doCompare() async {
@@ -563,8 +551,42 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     );
   }
 
+  /// L'échec du chargement d'un onglet, expliqué (refus Premium, greffon
+  /// absent) au lieu d'une liste vide.
+  Widget _loadErrorView(Object erreur) {
+    final l = AppLocalizations.of(context);
+    final url = erreur is TunePremiumRequiredException ? erreur.upgradeUrlSure : null;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline_rounded, size: 40, color: TuneColors.textTertiary),
+            const SizedBox(height: 12),
+            Text(expliquerRefus(erreur, l), style: TuneFonts.body, textAlign: TextAlign.center),
+            if (url != null) ...[
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => montrerRefus(context, erreur),
+                style: FilledButton.styleFrom(backgroundColor: TuneColors.accent),
+                child: Text(l.plSeeOffer),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _dateMs(Object? ms) {
+    final v = ms is int ? ms : int.tryParse('${ms ?? ''}');
+    if (v == null || v <= 0) return '';
+    return DateTime.fromMillisecondsSinceEpoch(v).toIso8601String().split('T').first;
+  }
+
   // ---------------------------------------------------------------------------
-  // Sync Tab
+  // Sync Tab — liens du greffon « Playlists converter »
   // ---------------------------------------------------------------------------
 
   Widget _buildSyncTab() {
@@ -572,6 +594,7 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: TuneColors.accent));
     }
+    if (_loadError != null && _tabCtrl.index == 3) return _loadErrorView(_loadError!);
     if (_links.isEmpty) {
       return Center(
         child: Column(
@@ -592,27 +615,38 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
       separatorBuilder: (_, __) => const Divider(height: 1, color: TuneColors.divider),
       itemBuilder: (_, i) {
         final link = _links[i];
+        final lienId = '${link['lien_id']}';
+        final a = (link['a'] as Map?)?.cast<String, dynamic>() ?? const {};
+        final b = (link['b'] as Map?)?.cast<String, dynamic>() ?? const {};
+        final fleche = link['sens'] == 'deux_sens' ? '⇄' : '→'; // i18n-ok
+        final cadence = link['cadence_minutes'] as int? ?? 0;
+        final derniere = _dateMs(link['derniere_synchro_ms']);
         return Dismissible(
-          key: ValueKey(link['id']),
+          key: ValueKey(lienId),
           direction: DismissDirection.endToStart,
           background: Container(color: TuneColors.error, alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), child: const Icon(Icons.delete, color: Colors.white)),
           onDismissed: (_) async {
             final app = context.read<AppState>();
-            await app.apiClient?.deletePlaylistLink(link['id'] as int);
-            _links.removeAt(i);
+            setState(() => _links.removeAt(i));
+            try {
+              await app.apiClient?.deletePlaylistLink(lienId);
+            } catch (e) {
+              if (mounted) montrerRefus(context, e);
+              _loadTab();
+            }
           },
           child: ListTile(
             leading: const Icon(Icons.sync_rounded, color: TuneColors.accent),
             title: Text(
-              (link['service_playlist_name'] as String?)?.isNotEmpty == true
-                  ? link['service_playlist_name'] as String
-                  : l.plPlaylistNumber('${link['local_playlist_id']}'),
+              '${a['nom'] ?? a['playlist_id'] ?? ''} $fleche ${b['nom'] ?? b['playlist_id'] ?? ''}',
               style: TuneFonts.body,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
-              '${link['service']} · ${link['sync_direction']}'
-              '${(link['sync_interval_minutes'] as int? ?? 0) > 0 ? ' · ${l.plAutoEveryMinutes('${link['sync_interval_minutes']}')}' : ''}'
-              '${link['last_synced_at'] != null ? ' · ${(link['last_synced_at'] as String).split('T').first}' : ''}',
+              '${a['service']} $fleche ${b['service']}'
+              '${cadence > 0 ? ' · ${l.plAutoEveryMinutes('$cadence')}' : ''}'
+              '${derniere.isNotEmpty ? ' · $derniere' : ''}',
               style: TuneFonts.footnote,
             ),
             trailing: Row(
@@ -627,24 +661,16 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
                   onPressed: () async {
                     final app = context.read<AppState>();
                     try {
-                      final result = await app.apiClient?.syncPlaylistLink(link['id'] as int);
+                      final result = await app.apiClient?.syncPlaylistLink(lienId);
                       if (!mounted || result == null) return;
-                      final addedLocal = result['added_to_local'] ?? 0;
-                      final removedLocal = result['removed_from_local'] ?? 0;
-                      final addedRemote = result['added_to_remote'] ?? 0;
-                      final removedRemote = result['removed_from_remote'] ?? 0;
-                      final conflicts = (result['conflicts'] as List?)?.length ?? 0;
+                      final entree = (result['entree'] as Map?)?.cast<String, dynamic>() ?? const {};
+                      final ajoutees = entree['ajoutees'] as int? ?? 0;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(
-                          l.plSyncDone('$addedLocal', '$removedLocal', '$addedRemote', '$removedRemote') +
-                              (conflicts > 0 ? l.plSyncConflicts(conflicts) : ''),
-                        )),
+                        SnackBar(content: Text(l.plLinkSyncDone(ajoutees))),
                       );
                     } catch (e) {
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l.plSyncError(e.toString()))),
-                      );
+                      montrerRefus(context, e);
                     }
                     _loadTab();
                   },
@@ -660,62 +686,44 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
   }
 
   // ---------------------------------------------------------------------------
-  // Backup Tab
+  // Backup Tab — copies datées du greffon « Playlists converter »
   // ---------------------------------------------------------------------------
 
   Widget _buildBackupTab() {
-    final services = context.watch<LibraryState>().streamingServices;
-    final authServices = services.where((s) => s.authenticated).map((s) => s.serviceId).toList();
     final l = AppLocalizations.of(context);
+    if (_loadError != null && _tabCtrl.index == 4 && !_loading) {
+      return _loadErrorView(_loadError!);
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Backup
           Text(l.plSectionBackup, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: _backingUp ? null : () async {
-                setState(() => _backingUp = true);
-                final app = context.read<AppState>();
-                try {
-                  final r = await app.apiClient?.backupPlaylists();
-                  setState(() => _backupResult = r as Map<String, dynamic>?);
-                  // Reload snapshots list
-                  final snaps = await app.apiClient?.listPlaylistSnapshots();
-                  if (snaps != null) {
-                    setState(() => _snapshots = snaps.cast<Map<String, dynamic>>());
-                  }
-                } catch (_) {}
-                setState(() => _backingUp = false);
-              },
+              onPressed: _backingUp ? null : _backupAll,
               icon: const Icon(Icons.backup_rounded),
               label: Text(_backingUp ? l.plBackingUp : l.plBackupAll),
               style: FilledButton.styleFrom(backgroundColor: TuneColors.accent, minimumSize: const Size.fromHeight(48)),
             ),
           ),
-          if (_backupResult != null) ...[
+          if (_backupMessage.isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(8)),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                  const SizedBox(width: 8),
-                  Text(l.plBackupResult('${_backupResult!['playlists_backed_up']}', '${_backupResult!['total_tracks_snapshot']}'),
-                      style: TuneFonts.footnote),
-                ],
-              ),
+              child: Text(_backupMessage, style: TuneFonts.footnote),
             ),
           ],
 
           const SizedBox(height: 20),
           Text(l.plSectionSnapshots, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
+          const SizedBox(height: 4),
+          Text(l.plSnapshotsNoDelete, style: TuneFonts.footnote),
           const SizedBox(height: 8),
           if (_restoreMessage.isNotEmpty) ...[
             Container(
@@ -731,99 +739,40 @@ class _PlaylistManagerViewState extends State<PlaylistManagerView>
               child: Text(l.plNoSnapshots, style: TuneFonts.footnote),
             )
           else
-            ..._snapshots.map((snap) => Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(6)),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(snap['playlist_name'] as String? ?? '—',
-                            style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text(
-                          '${snap['source_service']} · ${l.plTracksCount(int.tryParse('${snap['track_count'] ?? 0}') ?? 0)}'
-                          '${snap['created_at'] != null ? ' · ${(snap['created_at'] as String).split('T').first}' : ''}',
-                          style: TuneFonts.footnote,
-                        ),
-                      ],
+            ..._snapshots.map((snap) {
+              final key = '${snap['service']}:${snap['playlist_id']}';
+              final date = _dateMs(snap['dernier_le_ms']);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(6)),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(snap['nom'] as String? ?? '—', // i18n-ok
+                              style: TuneFonts.body, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            '${snap['service']} · ${l.plSnapshotCopies(snap['snapshots'] as int? ?? 0)}'
+                            '${date.isNotEmpty ? ' · $date' : ''}',
+                            style: TuneFonts.footnote,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: _restoringSnapshotId == snap['id']
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
-                        : const Icon(Icons.restore, color: TuneColors.accent, size: 20),
-                    tooltip: l.plRestore,
-                    onPressed: _restoringSnapshotId == snap['id'] ? null : () => _restoreSnapshot(snap),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: TuneColors.textSecondary, size: 20),
-                    tooltip: l.btnDelete,
-                    onPressed: () => _deleteSnapshot(snap),
-                  ),
-                ],
-              ),
-            )),
-
-          const SizedBox(height: 24),
-          const Divider(color: TuneColors.divider),
-          const SizedBox(height: 16),
-
-          // Batch Transfer
-          Text(l.plSectionBatchTransfer, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: TuneColors.textTertiary, letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Text(l.plBatchTransferHint, style: TuneFonts.footnote),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _batchSource.isEmpty ? null : _batchSource,
-                  decoration: InputDecoration(
-                    labelText: l.plSourceLabel,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    filled: true, fillColor: TuneColors.surface,
-                  ),
-                  dropdownColor: TuneColors.surfaceVariant,
-                  items: authServices.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
-                  onChanged: (v) => setState(() => _batchSource = v ?? ''),
+                    IconButton(
+                      icon: _restoringKey == key
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: TuneColors.accent))
+                          : const Icon(Icons.restore, color: TuneColors.accent, size: 20),
+                      tooltip: l.plRestore,
+                      onPressed: _restoringKey != null ? null : () => _restoreSnapshot(snap),
+                    ),
+                  ],
                 ),
-              ),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Icon(Icons.arrow_forward, color: TuneColors.textTertiary)),
-              Text(l.plLocal, style: TuneFonts.body),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _batchSource.isEmpty || _batching ? null : () async {
-                setState(() => _batching = true);
-                final app = context.read<AppState>();
-                try {
-                  final r = await app.apiClient?.batchTransfer(sourceService: _batchSource);
-                  setState(() => _batchResult = r as Map<String, dynamic>?);
-                } catch (_) {}
-                setState(() => _batching = false);
-              },
-              icon: const Icon(Icons.download_rounded),
-              label: Text(_batching ? l.plTransferring : l.plTransferAll),
-              style: FilledButton.styleFrom(
-                backgroundColor: _batchSource.isEmpty ? Colors.grey : TuneColors.accent,
-                minimumSize: const Size.fromHeight(48),
-              ),
-            ),
-          ),
-          if (_batchResult != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: TuneColors.surface, borderRadius: BorderRadius.circular(8)),
-              child: Text(l.plBatchResult('${_batchResult!['total_playlists']}', '${_batchResult!['status']}'), style: TuneFonts.footnote),
-            ),
-          ],
+              );
+            }),
         ],
       ),
     );
@@ -1620,7 +1569,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       widget.onChanged();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.errorWith(e.toString()))));
+      montrerRefus(context, e);
     }
   }
 

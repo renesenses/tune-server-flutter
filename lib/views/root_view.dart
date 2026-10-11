@@ -132,13 +132,21 @@ class _PlaybackErrorListenerState extends State<_PlaybackErrorListener> {
     final zoneErr = _app?.lastZoneError;
     if (zoneErr != null) {
       final l = AppLocalizations.of(context);
+      final zoneCount = _app!.lastZoneCount;
       _app!.clearZoneError();
       final messenger = ScaffoldMessenger.maybeOf(context);
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(zoneErr == 'zone_limit_reached'
-              ? l.zoneLimitReached(LicenseManager.freeMaxZones)
-              : zoneErr),
+          content: Text(switch (zoneErr) {
+            // #4077 : installation d'avant l'alignement du plafond. Ses zones
+            // restent en service, on ne lui annonce pas un plafond que son
+            // écran contredit.
+            'zone_limit_over_cap' =>
+              l.zoneLimitOverCap(zoneCount, LicenseManager.freeMaxZones),
+            'zone_limit_reached' =>
+              l.zoneLimitReached(LicenseManager.freeMaxZones),
+            _ => zoneErr,
+          }),
           duration: const Duration(seconds: 4),
           backgroundColor: TuneColors.accent,
         ),
