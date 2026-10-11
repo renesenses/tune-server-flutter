@@ -1,0 +1,6 @@
+# Version compilée dans libtuneserver.so (arm64-v8a), soit le tag de
+# tune-server-rust, soit X.Y.Z-dev pour une construction sans tag (convention
+# de tune_core::version()).
+# Aujourd'hui : 1.0.0-dev = batch/bugs-rc4-20261008 (fb82dc21) + renesenses/tune-server-rust#6033 (0b801263d).
+# Lu par scripts/check-native-libs.sh : la bibliothèque DOIT contenir cette chaîne.
+1.0.0-dev

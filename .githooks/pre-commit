@@ -38,10 +38,14 @@ fi
 #
 # Ne se déclenche que si la ligne `version:` bouge ou si un `.so` change : une
 # modification de dépendance dans pubspec.yaml ne paie pas le prix du contrôle.
+# Depuis l'application Tune serveur, la version du moteur vit dans
+# `tune-engine.version` (l'interface vient de tune-remote-flutter) : la
+# déplacer déclenche le contrôle, comme la ligne `version:` de pubspec.yaml.
 VERSION_TOUCHEE=$(git diff --cached -U0 -- pubspec.yaml 2>/dev/null | grep -cE '^[+-]version:' || true)
+MOTEUR_TOUCHE=$(git diff --cached --name-only 2>/dev/null | grep -c '^tune-engine.version$' || true)
 NATIFS_TOUCHES=$(git diff --cached --name-only 2>/dev/null | grep -c '^android/app/src/main/jniLibs/' || true)
 
-if [ "${VERSION_TOUCHEE:-0}" -gt 0 ] || [ "${NATIFS_TOUCHES:-0}" -gt 0 ]; then
+if [ "${VERSION_TOUCHEE:-0}" -gt 0 ] || [ "${MOTEUR_TOUCHE:-0}" -gt 0 ] || [ "${NATIFS_TOUCHES:-0}" -gt 0 ]; then
     RACINE=$(git rev-parse --show-toplevel)
     GARDE="$RACINE/scripts/check-native-libs.sh"
     if [ ! -x "$GARDE" ]; then

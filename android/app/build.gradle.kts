@@ -43,6 +43,23 @@ android {
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Seule libtuneserver.so arm64-v8a est livrée (voir
+        // scripts/check-native-libs.sh) : sans ce filtre, l'APK s'installerait
+        // sur un appareil x86 ou 32 bits et s'arrêterait au chargement du moteur.
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
+    }
+
+    // libtuneserver.so est liée à la libc++ PARTAGÉE du NDK (NEEDED
+    // libc++_shared.so : aws-lc, opus). Elle est livrée à côté d'elle, dans
+    // jniLibs/arm64-v8a ; si un greffon en apporte une aussi, on garde la nôtre
+    // (même NDK que le moteur) plutôt que d'échouer sur un doublon.
+    packaging {
+        jniLibs {
+            pickFirsts += listOf("lib/arm64-v8a/libc++_shared.so")
+        }
     }
 
     signingConfigs {

@@ -33,7 +33,8 @@ File _faussLibrairie(Directory racine, String abi, String version) {
 }
 
 /// Un dépôt jetable qui a la forme attendue par `check-native-libs.sh` :
-/// le vrai script, un `pubspec.yaml` minimal, trois `.so` factices.
+/// le vrai script, un `pubspec.yaml` minimal, `tune-engine.version` et le
+/// `.so` arm64 factice (seule ABI livrée depuis l'application Tune serveur).
 Directory _depotFactice(String version) {
   final racine = Directory.systemTemp.createTempSync('tune-native-guard');
   addTearDown(() => racine.deleteSync(recursive: true));
@@ -41,15 +42,14 @@ Directory _depotFactice(String version) {
   File('${racine.path}/pubspec.yaml').writeAsStringSync(
     'name: tune_server\nversion: $version+1\n',
   );
+  File('${racine.path}/tune-engine.version').writeAsStringSync('# moteur\n$version\n');
 
   final scripts = Directory('${racine.path}/scripts')..createSync(recursive: true);
   final copie = File('${scripts.path}/check-native-libs.sh');
   copie.writeAsBytesSync(File('scripts/check-native-libs.sh').readAsBytesSync());
   Process.runSync('chmod', ['+x', copie.path]);
 
-  for (final abi in const ['arm64-v8a', 'armeabi-v7a', 'x86_64']) {
-    _faussLibrairie(racine, abi, version);
-  }
+  _faussLibrairie(racine, 'arm64-v8a', version);
   return racine;
 }
 
@@ -60,9 +60,7 @@ ProcessResult _garde(Directory racine, List<String> args) => Process.runSync(
     );
 
 void _ecrireVersion(Directory racine, String version) =>
-    File('${racine.path}/pubspec.yaml').writeAsStringSync(
-      'name: tune_server\nversion: $version+2\n',
-    );
+    File('${racine.path}/tune-engine.version').writeAsStringSync('$version\n');
 
 void main() {
   group('check-native-libs.sh refuse un bump non reconstruit', () {
@@ -73,7 +71,7 @@ void main() {
       expect(_garde(racine, []).exitCode, 0);
     });
 
-    test('bumper pubspec.yaml sans reconstruire les .so fait ÉCHOUER', () {
+    test('changer tune-engine.version sans reconstruire les .so fait ÉCHOUER', () {
       final racine = _depotFactice('0.9.90');
       expect(_garde(racine, ['--update']).exitCode, 0);
 
@@ -115,6 +113,27 @@ void main() {
       );
     });
 
+    test('--staged lit tune-engine.version dans l\'index', () {
+      final racine = _depotFactice('0.9.90');
+      expect(_garde(racine, ['--update']).exitCode, 0);
+      String git(List<String> a) {
+        final r = Process.runSync('git', a, workingDirectory: racine.path);
+        expect(r.exitCode, 0, reason: '${r.stderr}');
+        return '${r.stdout}';
+      }
+
+      git(['init', '-q']);
+      git(['add', '-A']);
+      expect(_garde(racine, ['--staged']).exitCode, 0,
+          reason: 'un index cohérent doit passer : la version du moteur '
+              'doit être copiée avec le reste');
+
+      _ecrireVersion(racine, '0.9.91');
+      git(['add', 'tune-engine.version']);
+      expect(_garde(racine, ['--staged']).exitCode, 1,
+          reason: 'une version du moteur déplacée sans .so reconstruit');
+    });
+
     test('un argument inconnu ne passe pas pour un succès', () {
       final racine = _depotFactice('0.9.90');
       expect(_garde(racine, ['--wat']).exitCode, 2);
@@ -132,8 +151,8 @@ void main() {
       expect(source, contains('--staged'),
           reason: 'juger la copie de travail laisserait passer un .so '
               'reconstruit mais non ajouté à l\'index');
-      expect(source, contains('pubspec.yaml'),
-          reason: 'le déclencheur est le déplacement de la version');
+      expect(source, contains('tune-engine.version'),
+          reason: 'le déclencheur est le déplacement de la version du moteur');
       expect(RegExp(r'jniLibs').hasMatch(source), isTrue,
           reason: 'un .so remplacé seul doit aussi déclencher le contrôle');
     });
