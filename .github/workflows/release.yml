@@ -33,6 +33,20 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # L'interface vient de tune-remote-flutter (dépôt privé, dépendance git
+      # épinglée) : même accès que la CI.
+      - name: Accès en lecture à tune-remote-flutter
+        env:
+          JETON: ${{ secrets.TUNE_REMOTE_READ_TOKEN }}
+        run: |
+          if [ -z "$JETON" ]; then
+            echo "::error::Secret TUNE_REMOTE_READ_TOKEN absent : impossible de lire tune-remote-flutter."
+            exit 1
+          fi
+          git config --global \
+            url."https://x-access-token:${JETON}@github.com/renesenses/tune-remote-flutter".insteadOf \
+            "https://github.com/renesenses/tune-remote-flutter"
+
       - name: Extract version
         id: version
         run: |
@@ -70,8 +84,10 @@ jobs:
       # architecture at once (162 MB), including ~63 MB of x86_64 that only
       # emulators can use — enough to fail installation on a phone that is short
       # on free space. Per-ABI builds bring the phone download down to ~55 MB.
+      # Seule l'ABI arm64-v8a est livrée depuis l'application « Tune serveur »
+      # (moteur 1.0.0 : voir scripts/check-native-libs.sh).
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --target-platform android-arm64
 
       - name: Rename APK
         run: |
@@ -80,8 +96,6 @@ jobs:
           # arm64 is the default download: every 64-bit Android device, i.e.
           # anything sold in the last several years.
           cp "$OUT/app-arm64-v8a-release.apk"   "tune-server-${VERSION}-android-arm64.apk"
-          # Kept for older 32-bit devices.
-          cp "$OUT/app-armeabi-v7a-release.apk" "tune-server-${VERSION}-android-armv7.apk"
           for f in tune-server-${VERSION}-android-*.apk; do
             sha256sum "$f" | awk '{print $1}' > "$f.sha256"
           done
