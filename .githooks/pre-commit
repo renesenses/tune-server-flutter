@@ -22,6 +22,51 @@ if git diff --cached --name-only | grep -q 'schema.dart'; then
     fi
 fi
 
+# ── Bibliothèques natives : bump et reconstruction indissociables (#1751) ──
+#
+# Les `libtuneserver.so` sont versionnés ici, et le bump de version ne les
+# reconstruit pas. Sur 0.9.81, 0.9.85, 0.9.89, 0.9.90 et 0.9.91, le commit de
+# bump a donc laissé la CI rouge, et il a fallu un commit séparé de
+# reconstruction pour la repasser au vert — une heure de recompilation à la
+# main à chaque fois. Une fois, personne n'a vu la dérive : les testeurs
+# Android ont tourné trois semaines et demie sur un moteur du 21 juillet.
+#
+# La CI et `preBuild` refusent déjà, mais APRÈS coup. Ici on refuse AVANT : un
+# commit qui déplace `version:` sans embarquer les `.so` reconstruits et leur
+# empreinte n'existe pas. Le bump et la reconstruction deviennent le même
+# commit, ce qui est la seule façon de ne plus pouvoir les dissocier.
+#
+# Ne se déclenche que si la ligne `version:` bouge ou si un `.so` change : une
+# modification de dépendance dans pubspec.yaml ne paie pas le prix du contrôle.
+VERSION_TOUCHEE=$(git diff --cached -U0 -- pubspec.yaml 2>/dev/null | grep -cE '^[+-]version:' || true)
+NATIFS_TOUCHES=$(git diff --cached --name-only 2>/dev/null | grep -c '^android/app/src/main/jniLibs/' || true)
+
+if [ "${VERSION_TOUCHEE:-0}" -gt 0 ] || [ "${NATIFS_TOUCHES:-0}" -gt 0 ]; then
+    RACINE=$(git rev-parse --show-toplevel)
+    GARDE="$RACINE/scripts/check-native-libs.sh"
+    if [ ! -x "$GARDE" ]; then
+        echo "🚫 BLOQUÉ : $GARDE est absent ou non exécutable."
+        echo "   Ce garde-fou est ce qui empêche un bump de partir sans ses .so (#1751)."
+        exit 1
+    fi
+    if ! "$GARDE" --staged; then
+        echo ""
+        echo "🚫 BLOQUÉ : ce commit déplace la version sans les bibliothèques natives."
+        echo ""
+        echo "   Le bump et la reconstruction doivent tenir dans le MÊME commit."
+        echo "   Depuis tune-server-rust, sur la version déjà écrite dans pubspec.yaml :"
+        echo ""
+        echo "     ./tune-ffi/build-android.sh --release"
+        echo "     git add android/app/src/main/jniLibs"
+        echo ""
+        echo "   (build-android.sh régénère l'empreinte tout seul.)"
+        echo "   Ou, en une commande depuis tune-server-rust :"
+        echo "     scripts/bump-all.sh <version> --clients"
+        echo ""
+        exit 1
+    fi
+fi
+
 if [ -n "$MATCHES" ]; then
     echo "🚫 BLOCKED: Forbidden terms found in staged files!"
     echo "   Pattern: $FORBIDDEN"
