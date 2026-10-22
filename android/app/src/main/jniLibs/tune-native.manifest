@@ -2,4 +2,4 @@
 # Générée par scripts/check-native-libs.sh --update — ne pas éditer à la main.
 # Toute dérive entre cette empreinte et tune-engine.version fait ÉCHOUER le build (#1751).
 version=1.0.0-dev
-arm64-v8a=b30bee9b31ba12f4cdcfc2fc77091e51a9264b66e86a389741b967b3696a2fdf
+arm64-v8a=0f80b74fb44c725b4cbd6f957cc18a369704a17c05db6e48f319291a911c7a37

@@ -1,6 +1,6 @@
 name: tune_server
 description: "Tune serveur — le serveur Tune dans le téléphone, avec l'interface de la télécommande."
-version: 0.9.147+512
+version: 1.0.0+513
 publish_to: 'none'
 
 environment:
