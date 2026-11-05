@@ -8,6 +8,7 @@ import 'embarque/demarrage.dart';
 import 'embarque/lecteur_just_audio.dart';
 import 'embarque/preferences.dart';
 import 'embarque/sortie_telephone.dart';
+import 'embarque/telephone_interface.dart';
 
 // ---------------------------------------------------------------------------
 // Tune serveur — le serveur Tune dans le téléphone.
@@ -34,7 +35,14 @@ Future<void> main() async {
         // La zone « Ce téléphone », jouée ici par just_audio.
         unawaited(SortieTelephone(lecteur: LecteurJustAudio()).demarrer());
         // Remplace l'écran de démarrage par l'interface de la télécommande.
-        await lancerTune(paquet: 'tune_remote');
+        // Sans session système : l'application ne déclare pas audio_service
+        // (son propre service tient le moteur), et un seul lecteur joue
+        // « Ce téléphone » (voir embarque/telephone_interface.dart).
+        await lancerTune(
+          paquet: 'tune_remote',
+          surcharges: surchargesTelephone(),
+          sessionSysteme: false,
+        );
       },
     ),
   );

@@ -26,8 +26,13 @@ Pourquoi cette méthode plutôt qu'un sous-module ou un paquet extrait :
   dépôt (interdit) ;
 - pub résout les dépendances de l'interface (Riverpod, http…) avec les nôtres.
 
-Côté télécommande, `lancerTune(paquet: 'tune_remote')` lance l'interface ;
-`Jetons.paquet` fait résoudre polices et logos sous `packages/tune_remote/`.
+Côté télécommande, `lancerTune(paquet: 'tune_remote', surcharges: …,
+sessionSysteme: false)` lance l'interface ; `Jetons.paquet` fait résoudre
+polices et logos sous `packages/tune_remote/`. `sessionSysteme: false` :
+l'application ne déclare pas audio_service, la session de la voiture n'est
+pas ouverte. Les surcharges (`embarque/telephone_interface.dart`) donnent à
+l'interface un lecteur muet pour « Ce téléphone » : c'est `SortieTelephone`
+qui joue, une seule fois.
 
 **Monter l'interface** : changer `ref:` (et la ligne `tune_remote` de
 `pubspec.lock`), puis tests.
@@ -62,6 +67,7 @@ lib/
     ├── acces_medias.dart     # READ_MEDIA_AUDIO/IMAGES, accès par chemin
     ├── sortie_telephone.dart # zone « Ce téléphone » (browser) suivie
     ├── lecteur_just_audio.dart # … et jouée par just_audio
+    ├── telephone_interface.dart # lecteur muet côté interface (un seul son)
     └── tache_serveur.dart    # isolat du service : verrou multicast, arrêt
 packages/verrou_multicast/    # greffon local : WifiManager.MulticastLock
 ```

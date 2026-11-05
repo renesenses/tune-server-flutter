@@ -1,6 +1,6 @@
 name: tune_server
 description: "Tune serveur — le serveur Tune dans le téléphone, avec l'interface de la télécommande."
-version: 1.0.0+513
+version: 1.0.0+514
 publish_to: 'none'
 
 environment:
@@ -18,7 +18,11 @@ dependencies:
   tune_remote:
     git:
       url: https://github.com/renesenses/tune-remote-flutter.git
-      ref: 7776c86c7f439707a3df9467570a00979b93715d
+      ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
+
+  # Les surcharges passées à lancerTune (« Ce téléphone », un seul lecteur) :
+  # même version que l'interface.
+  flutter_riverpod: ^2.6.1
 
   # --- Le moteur : libtuneserver.so (Rust) par Dart FFI ---
   ffi: ^2.1.3
