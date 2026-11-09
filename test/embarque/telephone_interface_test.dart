@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tune_remote/etat/sources_reseau.dart';
 import 'package:tune_remote/etat/telephone.dart';
 import 'package:tune_remote/service/telephone.dart' show RappelsLecteur;
 import 'package:tune_server/embarque/sortie_telephone.dart';
@@ -25,5 +26,12 @@ void main() {
     final c = ProviderContainer(overrides: surchargesTelephone());
     addTearDown(c.dispose);
     expect(await c.read(nomAppareilProvider)(), nomZoneTelephone);
+  });
+
+  test('« Sources du réseau » sait que le moteur est dans ce téléphone (#8189)',
+      () {
+    final c = ProviderContainer(overrides: surchargesTelephone());
+    addTearDown(c.dispose);
+    expect(c.read(contexteDecouverteProvider).moteurSurCetAppareil, isTrue);
   });
 }

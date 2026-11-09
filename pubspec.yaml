@@ -18,7 +18,7 @@ dependencies:
   tune_remote:
     git:
       url: https://github.com/renesenses/tune-remote-flutter.git
-      ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
+      ref: beaba7597a54bc52d04bab130b1919d8f90b6966
 
   # Les surcharges passées à lancerTune (« Ce téléphone », un seul lecteur) :
   # même version que l'interface.
