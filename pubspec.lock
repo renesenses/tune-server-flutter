@@ -878,8 +878,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/tune_car_connection"
-      ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
-      resolved-ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
+      ref: beaba7597a54bc52d04bab130b1919d8f90b6966
+      resolved-ref: beaba7597a54bc52d04bab130b1919d8f90b6966
       url: "https://github.com/renesenses/tune-remote-flutter.git"
     source: git
     version: "1.0.0"
@@ -887,11 +887,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
-      resolved-ref: fb72aea15216d07e96776b5d08a4a022853d9ea8
+      ref: beaba7597a54bc52d04bab130b1919d8f90b6966
+      resolved-ref: beaba7597a54bc52d04bab130b1919d8f90b6966
       url: "https://github.com/renesenses/tune-remote-flutter.git"
     source: git
-    version: "1.0.32+2040"
+    version: "1.0.42+2050"
   typed_data:
     dependency: transitive
     description:

@@ -9,9 +9,15 @@
 /// - le nom de l'appareil est celui de la zone de l'application, pour que
 ///   « Écouter sur ce téléphone » reprenne cette zone au lieu d'en créer une
 ///   autre.
+///
+/// Et une troisième, pour « Sources du réseau » (#8189) : le moteur tourne
+/// DANS ce téléphone. Quand la découverte ne trouve rien, l'écran conseille
+/// alors de mettre le téléphone sur le même Wi-Fi que le NAS, au lieu de
+/// parler du réseau d'un serveur de bureau.
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tune_remote/etat/sources_reseau.dart';
 import 'package:tune_remote/etat/telephone.dart';
 import 'package:tune_remote/modele/zone.dart' show Piste;
 import 'package:tune_remote/service/pont.dart' show SourceFlux;
@@ -46,4 +52,7 @@ List<Override> surchargesTelephone() => [
     (commande, rappels) async => const LecteurMuet(),
   ),
   nomAppareilProvider.overrideWithValue(() async => nomZoneTelephone),
+  contexteDecouverteProvider.overrideWithValue(
+    const ContexteDecouverte(moteurSurCetAppareil: true),
+  ),
 ];
